@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - ReadNest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .sidebar-item {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-item:hover {
+            background-color: #d1d5db;
+            transform: translateX(5px);
+        }
+        
+        .sidebar-item.active {
+            background-color: #e5e7eb;
+            border-left: 4px solid #667eea;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+   <%- include("../../views/partials/user/header") %>
+    <!-- Main Content with Sidebar -->
+    <div class="flex min-h-screen">
+        <!-- Left Sidebar -->
+        <aside class="w-80 bg-gray-200 border-r border-gray-300">
+            <!-- User Greeting -->
+            <div class="px-6 py-6 border-b border-gray-300">
+                <p class="text-gray-600 text-sm mb-1">Hello,</p>
+                <h2 class="text-xl font-bold text-gray-900">Adithyan KS</h2>
+            </div>
+            
+            <!-- Menu Items -->
+            <nav>
+                <a href="/orders" class="sidebar-item flex items-center justify-between px-6 py-5 border-b border-gray-300 cursor-pointer">
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-box text-xl text-gray-800"></i>
+                        <span class="text-base font-semibold text-gray-900">My Orders</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-800"></i>
+                </a>
+                
+                <a href="/payment" class="sidebar-item flex items-center justify-between px-6 py-5 border-b border-gray-300 cursor-pointer">
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-credit-card text-xl text-gray-800"></i>
+                        <span class="text-base font-semibold text-gray-900">Payment</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-800"></i>
+                </a>
+                
+                <a href="/wishlist" class="sidebar-item flex items-center justify-between px-6 py-5 border-b border-gray-300 cursor-pointer">
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-heart text-xl text-gray-800"></i>
+                        <span class="text-base font-semibold text-gray-900">Wishlist</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-800"></i>
+                </a>
+                
+                <a href="/reviews" class="sidebar-item flex items-center justify-between px-6 py-5 border-b border-gray-300 cursor-pointer">
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-star text-xl text-gray-800"></i>
+                        <span class="text-base font-semibold text-gray-900">My Reviews</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-800"></i>
+                </a>
+            </nav>
+            
+            <!-- Log Out at Bottom -->
+            <div class="absolute bottom-0 w-80 bg-gray-200 border-t border-gray-300">
+              <a href="/logout">  <button  class="w-full px-6 py-5 text-left hover:bg-gray-300 transition-colors">
+                    <span class="text-base font-semibold text-gray-900">Log Out</span>
+                </button>
+            </a>
+            </div>
+        </aside>
+
+        <!-- Right Content Area -->
+        <main class="flex-1 bg-white p-8">
+            <!-- Personal Information Section -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Personal Information</h2>
+                    <button class="text-blue-600 font-semibold hover:text-blue-700">Edit</button>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-100 rounded-lg p-4 h-14"></div>
+                    <div class="bg-gray-100 rounded-lg p-4 h-14"></div>
+                </div>
+            </div>
+
+            <!-- Gender Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">Gender</h3>
+                <div class="flex items-center space-x-8">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="radio" name="gender" value="male" checked class="w-5 h-5 text-blue-600">
+                        <span class="text-base font-medium text-gray-900">Male</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="radio" name="gender" value="female" class="w-5 h-5 text-blue-600">
+                        <span class="text-base font-medium text-gray-900">Female</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Email Address Section -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">E-mail Adress</h3>
+                    <button class="text-blue-600 font-semibold hover:text-blue-700">Edit</button>
+                </div>
+                <div class="bg-gray-100 rounded-lg p-4 h-14 max-w-md"></div>
+            </div>
+
+            <!-- Mobile Number Section -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">Mobile Number</h3>
+                    <button class="text-blue-600 font-semibold hover:text-blue-700">Edit</button>
+                </div>
+                <div class="bg-gray-100 rounded-lg p-4 h-14 max-w-md"></div>
+            </div>
+
+            <!-- Password Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">Password</h3>
+                <div class="flex items-center space-x-4">
+                    <div class="bg-gray-100 rounded-lg p-4 h-14 flex-1 max-w-md flex items-center">
+                        <span class="text-2xl">••••••</span>
+                    </div>
+                    <button class="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                        CHANGE PASSWORD
+                    </button>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center space-x-4 mt-12">
+                <button class="bg-blue-600 text-white px-12 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors">
+                    Update
+                </button>
+                <button class="bg-blue-600 text-white px-12 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors">
+                    Reset
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- <script>
+        function logout() {
+            if (confirm('Are you sure you want to log out?')) {
+                fetch('/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    window.location.href = '/login';
+                })
+                .catch(error => {
+                    console.error('Logout error:', error);
+                    window.location.href = '/login';
+                });
+            }
+        }
+    </script> -->
+</body>
+  <%- include("../../views/partials/user/footer") %>
+</html>

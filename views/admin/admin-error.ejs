@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 - Admin Page Not Found | ReadNest Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    * {
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+      color: #e5e7eb;
+    }
+    .floating-book {
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .glitch {
+      position: relative;
+      animation: glitch 1s linear infinite;
+    }
+    @keyframes glitch {
+      2%, 64% { transform: translate(2px, 0); }
+      4%, 60% { transform: translate(-2px, 0); }
+      62% { transform: translate(0, 0) skew(5deg); }
+    }
+    .gradient-text {
+      background: linear-gradient(to right, #6366f1, #8b5cf6);
+      
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+
+<body class="flex flex-col items-center justify-center min-h-screen px-6">
+  <!-- Main Content -->
+  <div class="max-w-4xl w-full text-center">
+    <!-- Title -->
+    <h1 class="text-9xl font-extrabold glitch gradient-text mb-6">404</h1>
+    <h2 class="text-3xl md:text-4xl font-bold mb-3">Admin Page Not Found</h2>
+    <p class="text-gray-400 text-lg mb-8">
+      Looks like the admin page you're trying to access doesn't exist, was moved, or you're not authorized to view it.
+    </p>
+
+    <!-- Illustration -->
+    <div class="flex justify-center mb-10">
+      <div
+        class="w-48 h-56 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl flex flex-col items-center justify-center floating-book"
+      >
+        <i class="fas fa-user-shield text-indigo-400 text-6xl mb-3"></i>
+        <h3 class="font-bold text-indigo-300 text-lg">Admin Zone</h3>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row justify-center gap-4">
+      <button
+        onclick="goDashboard()"
+        class="px-8 py-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:from-indigo-700 hover:to-indigo-800 transform hover:scale-105 transition-all duration-300"
+      >
+        <i class="fas fa-tachometer-alt mr-2"></i> Go to Dashboard
+      </button>
+      <button
+        onclick="goBack()"
+        class="px-8 py-4 bg-gray-800 text-gray-300 font-semibold rounded-lg border border-gray-700 hover:bg-gray-700 hover:text-white transform hover:scale-105 transition-all duration-300"
+      >
+        <i class="fas fa-arrow-left mr-2"></i> Go Back
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-12 text-gray-500 text-sm">
+      <i class="fas fa-shield-alt text-indigo-500 mr-1"></i>
+      ReadNest Admin Panel — Secure Access Only
+    </div>
+  </div>
+
+  <script>
+    function goDashboard() {
+      window.location.href = '/admin';
+    }
+
+    function goBack() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = '/admin';
+      }
+    }
+
+    // Keyboard shortcuts: H for home, B for back
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'h' || e.key === 'H') goDashboard();
+      if (e.key === 'b' || e.key === 'B' || e.key === 'Escape') goBack();
+    });
+  </script>
+</body>
+</html>

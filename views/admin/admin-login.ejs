@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - ReadNest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .form-container {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .login-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(79, 70, 229, 0.4);
+        }
+        
+        .password-toggle {
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        
+        .password-toggle:hover {
+            color: #667eea;
+        }
+        
+        .error-message {
+            display: none;
+            animation: shake 0.3s ease;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .admin-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="form-container bg-gray-200 rounded-3xl shadow-2xl max-w-2xl w-full p-12 md:p-16 relative">
+        <!-- Admin Badge -->
+        <div class="absolute -top-6 left-1/2 transform -translate-x-1/2">
+            <div class="admin-badge text-white px-6 py-2 rounded-full shadow-lg">
+                <i class="fas fa-shield-alt mr-2"></i>
+                <span class="font-bold">ADMIN PANEL</span>
+            </div>
+        </div>
+        
+        <!-- Header -->
+        <div class="text-center mb-10 mt-6">
+            <h1 class="text-5xl font-bold text-gray-900 mb-2">Log-In</h1>
+        </div>
+        
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <span id="errorText"></span>
+        </div>
+        
+        <!-- Form -->
+        <form id="adminLoginForm" class="space-y-6" action="/admin/login" method="POST">
+            <!-- Email Input -->
+            <div>
+                <input 
+                    type="email" 
+                    id="email"
+                    name="email"
+                    placeholder="Enter Your Email" 
+                    class="input-field w-full px-8 py-5 bg-white rounded-3xl border-none outline-none text-gray-800 placeholder-gray-700 font-medium text-lg"
+                 
+                >
+                <p id="emailError" class="error-message text-red-500 text-sm mt-2 ml-4">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    <span></span>
+                </p>
+            </div>
+            
+            <!-- Password Input -->
+            <div class="relative">
+                <input 
+                    type="password" 
+                    id="password"
+                    name="password"
+                    placeholder="Enter Password" 
+                    class="input-field w-full px-8 py-5 bg-white rounded-3xl border-none outline-none text-gray-800 placeholder-gray-700 font-medium text-lg pr-14"
+                   
+                >
+                <i class="fas fa-eye password-toggle absolute right-6 top-1/2 transform -translate-y-1/2 text-gray-500 text-xl" onclick="togglePassword('password', this)"></i>
+                <p id="passwordError" class="error-message text-red-500 text-sm mt-2 ml-4">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    <span></span>
+                </p>
+            </div>
+            
+            <!-- Forget Password Link -->
+            <div class="text-right">
+                <a href="/admin/forgot-password" class="text-gray-700 font-medium text-base hover:text-indigo-600 hover:underline">
+                    Forget Password?
+                </a>
+            </div>
+            
+            <!-- Log-In Button -->
+            <button 
+                type="submit" 
+                class="login-btn w-full bg-indigo-600 text-white font-bold text-3xl py-5 rounded-3xl hover:bg-indigo-700 mt-8"
+            >
+                Log-In
+            </button>
+        </form>
+        
+        <!-- Security Notice -->
+        <div class="mt-8 text-center">
+            <div class="flex items-center justify-center space-x-2 text-gray-600 text-sm">
+                <i class="fas fa-lock"></i>
+                <span>Secure Admin Access Only</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle password visibility
+        function togglePassword(fieldId, icon) {
+            const field = document.getElementById(fieldId);
+            const type = field.getAttribute('type') === 'password' ? 'text' : 'password';
+            field.setAttribute('type', type);
+            
+            // Toggle icon
+            if (type === 'text') {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+        
+        // Show/Hide error messages
+        function showError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            errorElement.querySelector('span').textContent = message;
+            errorElement.style.display = 'block';
+            document.getElementById(fieldId).classList.add('border-2', 'border-red-500');
+        }
+        
+        function hideError(fieldId) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            errorElement.style.display = 'none';
+            document.getElementById(fieldId).classList.remove('border-2', 'border-red-500');
+        }
+        
+        function hideAllErrors() {
+            ['email', 'password'].forEach(field => {
+                hideError(field);
+            });
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        function showMainError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            document.getElementById('errorText').textContent = message;
+            errorMessage.style.display = 'block';
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Validation functions
+        function validateEmail(email) {
+            // Check if email is empty
+            if (!email || email.trim().length === 0) {
+                showError('email', 'Email address is required');
+                return false;
+            }
+            
+            // Email regex pattern for proper validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!emailRegex.test(email)) {
+                showError('email', 'Please enter a valid email address');
+                return false;
+            }
+            
+            // Additional checks for common email patterns
+            const domain = email.split('@')[1];
+            if (domain && domain.indexOf('.') === -1) {
+                showError('email', 'Please enter a valid email domain');
+                return false;
+            }
+            
+            hideError('email');
+            return true;
+        }
+        
+        function validatePassword(password) {
+            if (!password || password.length === 0) {
+                showError('password', 'Password is required');
+                return false;
+            }
+            
+            if (password.length < 6) {
+                showError('password', 'Password must be at least 6 characters long');
+                return false;
+            }
+            
+            hideError('password');
+            return true;
+        }
+        
+        // Real-time validation on blur
+        document.getElementById('email').addEventListener('blur', function() {
+            validateEmail(this.value);
+        });
+        
+        document.getElementById('password').addEventListener('blur', function() {
+            validatePassword(this.value);
+        });
+        
+        // Clear errors when user starts typing
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.classList.contains('border-red-500')) {
+                    hideError(this.id);
+                }
+            });
+        });
+        
+        // Form submission
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            hideAllErrors();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Validate fields
+            const isEmailValid = validateEmail(email);
+            const isPasswordValid = validatePassword(password);
+            
+            // If validations pass
+            if (isEmailValid && isPasswordValid) {
+                // Show loading state
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = 'Logging In...';
+                submitBtn.disabled = true;
+                
+                // Make API call
+                fetch('/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Redirect to admin dashboard
+                        window.location.href = '/admin';
+                    } else {
+                        showMainError(data.message || 'Invalid admin credentials');
+                        submitBtn.textContent = originalText;
+                        submitBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showMainError('An error occurred. Please try again.');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                });
+            }
+        });
+        
+        // Allow Enter key to submit form
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('adminLoginForm').dispatchEvent(new Event('submit'));
+                }
+            });
+        });
+        
+        // Prevent back button after logout
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = function() {
+            window.history.pushState(null, "", window.location.href);
+        };
+    </script>
+</body>
+</html>
