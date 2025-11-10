@@ -35,6 +35,11 @@ const { Schema } = mongoose;
     type: Boolean,
     default: false,
   },
+  status: {
+  type: String,
+  enum: ['ACTIVE', 'INACTIVE'],
+  default: 'ACTIVE',
+  },
   cart : [{
     type: Schema.Types.ObjectId,
     ref:"Cart"
@@ -43,6 +48,11 @@ const { Schema } = mongoose;
     type: Schema.Types.ObjectId,
     ref: "Wishlist"
   }],
+  walletBalance: {
+  type: Number,
+  default: 0,
+  min: 0
+  },
   orderHistory: [{
     type: Schema.Types.ObjectId,
     ref: "Order"
@@ -60,7 +70,7 @@ const { Schema } = mongoose;
         default: Date.now
     }
   }]
-});
+},{timestamps : true});
 
 
 const User = mongoose.model("User", userSchema);
