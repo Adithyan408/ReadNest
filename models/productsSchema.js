@@ -17,16 +17,20 @@ const productsSchema = new Schema(
     },
     authorDescription: {
       type: String,
-      required: true,
+      required: false,
     },
-    categotery: {
-      type: Schema.Types.ObjectId,
+    category: {
+      type: String,
       ref: "Cart",
       required: true,
     },
     language: {
       type: String,
       required: true,
+    },
+    stock : {
+      type: Number,
+      default:0
     },
     Translated: [
       {
@@ -55,17 +59,13 @@ const productsSchema = new Schema(
     },
     salesPrice: {
       type: Number,
-      required: true,
+      required: false,
     },
     productOffer: {
       type: Number,
-      required: true,
+      required: false,
     },
     quantity: {
-      type: Number,
-      required: true,
-    },
-    pages: {
       type: Number,
       required: true,
     },
@@ -77,12 +77,28 @@ const productsSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    publisher: {
+      type: String,
+      required: false
+    },
+    yearOfPublishing :{
+      type: Date,
+      required: false
+    },
+    pages:{
+      type: Number,
+      default:null
+    },
     status: {
       type: String,
       enum: ["Available", "Out of Stock", "Discontinued"],
       required: true,
       default: "Available",
     },
+    isbnNumber:{
+      type: Number,
+      required: false
+    }
   },
   { timestamps: true }
 );

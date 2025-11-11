@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Categories - ReadNest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+
+      * {
+        font-family: "Poppins", sans-serif;
+      }
+
+      .sidebar-item {
+        transition: all 0.3s ease;
+      }
+
+      .sidebar-item:hover {
+        background-color: #d1d5db;
+      }
+
+      .sidebar-item.active {
+        background-color: #d1d5db;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <!-- Header -->
+    <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
+      <div class="flex items-center justify-between px-6 py-4">
+        <!-- Logo -->
+        <a href="/admin">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-14 h-14 bg-orange-900 rounded-full flex items-center justify-center"
+            >
+              <i class="fas fa-book-open text-white text-2xl"></i>
+            </div>
+            <span class="text-2xl font-bold text-gray-800">ReadNest</span>
+          </div>
+        </a>
+
+        <!-- Right Side -->
+        <div class="flex items-center space-x-6">
+          <button
+            class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
+          >
+            <i class="fas fa-blog text-gray-700"></i>
+            <span class="text-base font-semibold text-gray-900">Blog</span>
+          </button>
+
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-user-circle text-4xl text-gray-600"></i>
+            <span class="text-base font-semibold text-gray-600">ADMIN</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside
+        class="w-80 bg-gray-300 min-h-screen border-r border-gray-400 relative"
+      >
+        <nav class="py-4 pb-24">
+          <a
+            href="/admin"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-th-large text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">DashBoard</span>
+          </a>
+
+          <a
+            href="/admin/products"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-box text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Products</span>
+          </a>
+
+          <a
+            href="/admin/orders"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-shopping-bag text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Orders List</span>
+          </a>
+
+          <a
+            href="/admin/users"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-users text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Customers</span>
+          </a>
+
+          <a
+            href="/admin/sales"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-chart-line text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Sales</span>
+          </a>
+
+          <a
+            href="/admin/category"
+            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-th text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Category</span>
+          </a>
+
+          <a
+            href="/admin/voucher"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-ticket-alt text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Voucher</span>
+          </a>
+
+          <a
+            href="/admin/banner"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-image text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Banner</span>
+          </a>
+        </nav>
+
+        <!-- Logout Button at Bottom -->
+        <div
+          class="absolute bottom-0 left-0 right-0 bg-gray-300 border-t-2 border-gray-400"
+        >
+          <a href="/admin/logout">
+            <button
+              class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
+            >
+              <i
+                class="fas fa-sign-out-alt text-xl mr-4 text-gray-700 group-hover:text-red-600"
+              ></i>
+              <span
+                class="text-lg font-semibold text-gray-900 group-hover:text-red-600"
+                >LOG OUT</span
+              >
+            </button>
+          </a>
+        </div>
+      </aside>
+
+      <!-- Main Content - Categories -->
+      <main class="flex-1 p-8 bg-gray-200">
+        <div class="bg-white rounded-2xl shadow-lg">
+          <!-- Header Section -->
+          <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-3xl font-bold text-gray-900">Products</h2>
+              <a href="/admin/addProducts">
+                <button
+                  class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-md"
+                >
+                  ADD Product
+                </button>
+              </a>
+            </div>
+            <div class="relative max-w-xl">
+              <input
+                type="text"
+                placeholder="Search Categories"
+                class="w-full px-4 py-3 pl-12 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-gray-300"
+              />
+              <i
+                class="fas fa-search absolute left-4 top-4 text-gray-400 text-lg"
+              ></i>
+            </div>
+          </div>
+
+          <!-- Table Section -->
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="bg-black text-white">
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    Image
+                  </th>
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    Name
+                  </th>
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    Language
+                  </th>
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    Category
+                  </th>
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    Stock
+                  </th>
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    List
+                  </th>
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="categoryTableBody">
+                <!-- Sample Category 1 -->
+                <% for(let i = 0; i < data.length; i++) { %>
+                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                  <td>
+                    <% if (data[i].productImage) { %>
+                    <img
+                      src="<%= data[i].productImage %>"
+                      alt="Product Image"
+                      class="h-16 w-16 rounded"
+                    />
+                    <% } else { %>
+                    <span>No Image</span>
+                    <% } %>
+                  </td>
+                  <td><%= data[i].productName %></td>
+                  <td><%= data[i].language %></td>
+                  <td><%= data[i].category %></td>
+                  <td><%= data[i].stock %></td>
+
+                  <td class="px-6 py-4">
+                    <% if (data[i].isListed) { %>
+                    <!-- If category is listed → show UNLIST button -->
+                    <a
+                      href="/admin/unlistProduct?id=<%= data[i]._id %>"
+                      class="inline-block px-6 py-1 rounded-full text-sm font-semibold transition bg-red-200 text-red-800 hover:bg-red-300"
+                    >
+                      UNLIST
+                    </a>
+                    <% } else { %>
+                    <!-- If category is unlisted → show LIST button -->
+                    <a
+                      href="/admin/listProduct?id=<%= data[i]._id %>"
+                      class="inline-block px-6 py-1 rounded-full text-sm font-semibold transition bg-green-200 text-green-800 hover:bg-green-300"
+                    >
+                      LIST
+                    </a>
+                    <% } %>
+                  </td>
+
+                  <td class="px-6 py-4 text-center">
+                    <div
+                      class="flex justify-center items-center space-x-4 text-gray-600"
+                    >
+                      <!-- Edit -->
+                      <a href="/admin/editProduct?id=<%=data[i]._id%>">
+                        <button
+                          class="hover:text-yellow-500 transition"
+                          title="Edit"
+                        >
+                          <i class="fas fa-edit text-lg"></i></button
+                      ></a>
+
+                      <!-- Delete -->
+                      <a
+                        href="/admin/deleteProduct?id=<%= data[i]._id %>"
+                        onclick="return confirm('Are you sure you want to delete this category?');"
+                      >
+                        <button
+                          class="hover:text-red-600 transition"
+                          title="Delete"
+                        >
+                          <i class="fas fa-trash-alt text-lg"></i>
+                        </button>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div
+            class="flex justify-end items-center gap-2 p-6 border-t border-gray-200"
+          >
+            <nav aria-label="Page navigation">
+              <ul class="flex items-center gap-2">
+                <% for(let i = 1; i <= totalPages; i++) { %>
+                <li>
+                  <a
+                    class="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 transition <%= (i === currentPage) ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700' : 'bg-white hover:bg-gray-100' %>"
+                    href="?page=<%= i %>"
+                  >
+                    <%= i %>
+                  </a>
+                </li>
+                <% } %>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
