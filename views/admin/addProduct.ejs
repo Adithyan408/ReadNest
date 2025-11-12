@@ -239,10 +239,14 @@
               </div>
 
               <!-- Row 2: Category and Language -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <!-- Category Dropdown -->
                 <div>
-                  <select name="category">
-                     <option value="">Select Category</option>
+                  <select
+                    name="category"
+                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base appearance-none cursor-pointer shadow-sm"
+                  >
+                    <option value="">Select Category *</option>
                     <% categories.forEach(category => { %>
                     <option value="<%= category.categoryName %>">
                       <%= category.categoryName %>
@@ -250,15 +254,16 @@
                     <% }) %>
                   </select>
                 </div>
+
+                <!-- Language Dropdown -->
                 <div>
                   <select
                     name="language"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base appearance-none cursor-pointer"
-                    required
+                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base appearance-none cursor-pointer shadow-sm"
                   >
                     <option value="">Language *</option>
-                    <option value="english">English</option>
-                    <option value="malayalam">Malayalam</option>
+                    <option value="English">English</option>
+                    <option value="Malayalam">Malayalam</option>
                   </select>
                 </div>
               </div>
@@ -382,7 +387,7 @@
                       </button>
                       <input
                         type="number"
-                        name="quantity"
+                        name="stock"
                         id="quantityInput"
                         value="0"
                         min="0"
@@ -415,6 +420,8 @@
                     name="productImage"
                     id="productImage"
                     accept="image/*"
+                    multiple
+                    class="hidden"
                   />
                   <button
                     type="button"

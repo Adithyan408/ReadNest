@@ -216,7 +216,7 @@
                   <td>
                     <% if (data[i].productImage) { %>
                     <img
-                      src="<%= data[i].productImage %>"
+                      src="<%= data[i].productImage[0] %>"
                       alt="Product Image"
                       class="h-16 w-16 rounded"
                     />
@@ -254,7 +254,7 @@
                       class="flex justify-center items-center space-x-4 text-gray-600"
                     >
                       <!-- Edit -->
-                      <a href="/admin/editProduct?id=<%=data[i]._id%>">
+                      <a href="/admin/updateProduct?id=<%= data[i]._id %>">
                         <button
                           class="hover:text-yellow-500 transition"
                           title="Edit"

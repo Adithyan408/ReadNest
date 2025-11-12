@@ -94,7 +94,7 @@ export const listCategory = async (req, res) => {
     await Category.findByIdAndUpdate(req.query.id, { isListed: true });
     res.redirect("/admin/category");
   } catch (err) {
-    res.redirect("/pageerror");
+    res.redirect("admin/pageerror");
   }
 };
 
@@ -103,7 +103,7 @@ export const unlistCategory = async (req, res) => {
     await Category.findByIdAndUpdate(req.query.id, { isListed: false });
     res.redirect("/admin/category");
   } catch (err) {
-    res.redirect("/pageerror");
+    res.redirect("admin/pageerror");
   }
 };
 

@@ -30,7 +30,7 @@ const productsSchema = new Schema(
     },
     stock : {
       type: Number,
-      default:0
+      required: true
     },
     Translated: [
       {
@@ -65,17 +65,13 @@ const productsSchema = new Schema(
       type: Number,
       required: false,
     },
-    quantity: {
-      type: Number,
-      required: true,
-    },
     productImage: {
       type: [String],
       required: true,
     },
     isListed: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     publisher: {
       type: String,
