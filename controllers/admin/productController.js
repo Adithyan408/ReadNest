@@ -195,11 +195,34 @@ export const listProduct = async (req, res) => {
     res.redirect("admin/pageerror");
   }
 };
+
+
 export const unlistProduct = async (req, res) => {
   try {
     await Product.findByIdAndUpdate(req.query.id, { isListed: false });
     res.redirect("/admin/products");
   } catch (err) {
     res.redirect("admin/pageerror");
+  }
+};
+
+
+
+export const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).send("Category ID not provided");
+    }
+
+    const deletedProduct = await Product.findByIdAndDelete(id);
+
+    if (!deletedProduct) {
+      return res.status(404).send("Category not found");
+    }
+    res.redirect("/admin/products?deleted=true");
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
   }
 };

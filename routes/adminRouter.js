@@ -3,7 +3,7 @@ import {loadLogin, login, loadDashboard, logout, loadPageError} from '../control
 import { customerInfo, blockCustomers, unblockCustomers} from "../controllers/admin/customerController.js"
 import {categoryInfo, addCategory, categoryAdd, listCategory, unlistCategory, geteditCategory, editCategory, deleteCategory} from "../controllers/admin/categoryController.js"
 import { userAuth, adminAuth } from "../middlewares/auth.js";
-import { editProduct, geteditProduct, getProducts, getProductsAdd, productsAdd, listProduct, unlistProduct } from "../controllers/admin/productController.js";
+import { editProduct, geteditProduct, getProducts, getProductsAdd, productsAdd, listProduct, unlistProduct, deleteProduct } from "../controllers/admin/productController.js";
 import upload from "../middlewares/multer.js";
 
 
@@ -38,6 +38,6 @@ adminRouter.get("/addProducts", adminAuth, getProductsAdd)
 adminRouter.post("/addProducts", adminAuth, upload.single("productImage"), productsAdd);
 adminRouter.get("/updateProduct", adminAuth, geteditProduct);
 adminRouter.post("/updateProduct", adminAuth, upload.array("productImage", 5), editProduct);
-
 adminRouter.get("/listProduct", adminAuth, listProduct)
 adminRouter.get("/unlistProduct", adminAuth, unlistProduct)
+adminRouter.get("/deleteProduct", adminAuth , deleteProduct);

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Edit Product - ReadNest</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -475,18 +476,14 @@
                   <i class="fas fa-save mr-2"></i>UPDATE
                 </button>
 
-                <!-- DELETE Button -->
-                <a
-                  href="/admin/deleteProduct?id=<%= data._id %>"
-                  onclick="return confirm('Are you sure you want to delete this product? This action cannot be undone.');"
+                <!-- DELETE BUTTON (with SweetAlert2) -->
+                <button
+                  type="button"
+                  onclick="confirmDelete('<%= data._id %>')"
+                  class="px-12 py-4 bg-red-600 text-white font-bold text-lg rounded-lg hover:bg-red-700 transition shadow-lg"
                 >
-                  <button
-                    type="button"
-                    class="px-12 py-4 bg-red-600 text-white font-bold text-lg rounded-lg hover:bg-red-700 transition shadow-lg"
-                  >
-                    <i class="fas fa-trash-alt mr-2"></i>DELETE
-                  </button>
-                </a>
+                  <i class="fas fa-trash-alt mr-2"></i>DELETE
+                </button>
 
                 <!-- CANCEL Button -->
                 <a href="/admin/products">
@@ -534,6 +531,26 @@
             fileNamesContainer.appendChild(fileName);
           });
         }
+      }
+
+      function confirmDelete(productId) {
+        Swal.fire({
+          title: "Are you sure?",
+          text: "This action cannot be undone!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#d33", // Red for delete
+          cancelButtonColor: "#6b7280", // Gray
+          confirmButtonText: "Yes, delete it!",
+          cancelButtonText: "Cancel",
+          reverseButtons: true,
+          focusCancel: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Redirect to your delete route
+            window.location.href = `/admin/deleteProduct?id=${productId}`;
+          }
+        });
       }
     </script>
   </body>

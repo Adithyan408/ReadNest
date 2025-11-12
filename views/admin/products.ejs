@@ -9,6 +9,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
 
@@ -263,17 +264,13 @@
                       ></a>
 
                       <!-- Delete -->
-                      <a
-                        href="/admin/deleteProduct?id=<%= data[i]._id %>"
-                        onclick="return confirm('Are you sure you want to delete this category?');"
+                      <button
+                        class="hover:text-red-600 transition"
+                        title="Delete"
+                        onclick="confirmDelete('<%= data[i]._id %>')"
                       >
-                        <button
-                          class="hover:text-red-600 transition"
-                          title="Delete"
-                        >
-                          <i class="fas fa-trash-alt text-lg"></i>
-                        </button>
-                      </a>
+                        <i class="fas fa-trash-alt text-lg"></i>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -305,4 +302,38 @@
       </main>
     </div>
   </body>
+  <script>
+    function confirmDelete(productId) {
+      Swal.fire({
+        title: "Are you sure?",
+        text: "This action cannot be undone!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#e3342f", // red
+        cancelButtonColor: "#6c757d", // gray
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "Cancel",
+        reverseButtons: true,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Redirect to delete route
+          window.location.href = `/admin/deleteProduct?id=${productId}`;
+        }
+      });
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("deleted") === "true") {
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "The product has been deleted successfully.",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+
+      const newUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  </script>
 </html>

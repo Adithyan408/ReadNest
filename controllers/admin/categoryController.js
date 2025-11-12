@@ -155,7 +155,7 @@ export const deleteCategory = async (req, res) => {
     if (!deletedCategory) {
       return res.status(404).send("Category not found");
     }
-    res.redirect("/admin/category"); 
+    res.redirect("/admin/category?deleted=true");
   } catch (error) {
     res.status(500).send("Internal Server Error");
   }
