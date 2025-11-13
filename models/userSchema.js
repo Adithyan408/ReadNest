@@ -27,6 +27,9 @@ const { Schema } = mongoose;
     type: String,
     required: false,
   },
+  newPassword: {
+    type: String
+  },
   isBlocked: {
     type: Boolean,
     default: false,

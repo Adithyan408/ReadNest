@@ -243,6 +243,9 @@
     </div>
   </body>
   <script>
+    
+    const fromForgotPassword = "<%= fromForgotPassword %>";
+    const isFromForgotPassword = (fromForgotPassword === 'true');
     sessionStorage.setItem("verificationEmail", "<%= email %>");
 
     let timeLeft = 120;
@@ -321,21 +324,28 @@
       confirmBtn.textContent = "Verifying...";
 
       try {
-        const res = await fetch("/verify-otp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ otp }),
-        });
+        const res = await fetch(
+          isFromForgotPassword ? "/forgot-verify-otp" : "/verify-otp",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ otp }),
+          }
+        );
 
         const data = await res.json();
 
         if (data.success) {
           showSuccess("Verification successful! Redirecting...");
-          setTimeout(() => (window.location.href = "/"), 1000);
-        } else {
-          showError(data.message || "Invalid OTP");
-          confirmBtn.disabled = false;
-          confirmBtn.textContent = "Confirm";
+          setTimeout(() => {
+            if (isFromForgotPassword) {
+              window.location.href = `/reset-password?email=${encodeURIComponent(
+                "<%= email %>"
+              )}`;
+            } else {
+              window.location.href = "/";
+            }
+          }, 1000);
         }
       } catch (err) {
         showError("Something went wrong. Try again.");
@@ -348,7 +358,6 @@
     async function resendCode() {
       if (resendLink.disabled) return;
       clearInterval(timerInterval);
-      
 
       try {
         const email = sessionStorage.getItem("verificationEmail");
