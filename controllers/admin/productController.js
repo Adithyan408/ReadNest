@@ -4,7 +4,7 @@ import Category from "../../models/categorySchema.js";
 export const getProducts = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 5;
+    const limit = 10;
     const skip = (page - 1) * limit;
 
     const productData = await Product.find({})
@@ -61,9 +61,20 @@ export const productsAdd = async (req, res) => {
       regularPrice,
       stock,
       isbnNumber,
+      category
     } = req.body;
+    
 
-    const imageUrls = req.files.map((file) => file.path);
+    if (!productName || !description || !category || !language || !regularPrice) {
+      const categories = await Category.find({ isListed: true });
+      const errorMessage = "Please fill all required fields.";
+      return res.render("addProduct", { errorMessage, categories });
+    }
+
+    const imageUrls =
+      req.files && req.files.length > 0
+        ? req.files.map((file) => file.path)
+        : [];
 
     const newProduct = new Product({
       productName,
@@ -85,7 +96,7 @@ export const productsAdd = async (req, res) => {
     await newProduct.save();
     console.log("new Product: ", newProduct); //logger
 
-    const limit = 5;
+    const limit = 10;
     const page = 1;
     const skip = (page - 1) * limit;
 
@@ -101,8 +112,9 @@ export const productsAdd = async (req, res) => {
     console.log("New Product Added:", newProduct);
 
     // ✅ Redirect to products page instead of rendering
-    res.redirect("/admin/products?added=true");
+    res.redirect("/admin/products?added=true&status=added");
   } catch (error) {
+    res.redirect("/admin/products?status=error");
     console.log("Product entry error", error); //logger
   }
 };
@@ -177,7 +189,7 @@ export const editProduct = async (req, res) => {
     });
 
     if (updateProduct) {
-      res.redirect("/admin/products");
+      res.redirect("/admin/products?status=updated");
     } else {
       res.status(400).json({ message: "Product not found" });
     }
@@ -196,7 +208,6 @@ export const listProduct = async (req, res) => {
   }
 };
 
-
 export const unlistProduct = async (req, res) => {
   try {
     await Product.findByIdAndUpdate(req.query.id, { isListed: false });
@@ -205,8 +216,6 @@ export const unlistProduct = async (req, res) => {
     res.redirect("admin/pageerror");
   }
 };
-
-
 
 export const deleteProduct = async (req, res) => {
   try {
@@ -221,7 +230,7 @@ export const deleteProduct = async (req, res) => {
     if (!deletedProduct) {
       return res.status(404).send("Category not found");
     }
-    res.redirect("/admin/products?deleted=true");
+    res.redirect("/admin/products?deleted=true&status=deleted");
   } catch (error) {
     res.status(500).send("Internal Server Error");
   }

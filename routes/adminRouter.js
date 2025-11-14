@@ -35,7 +35,7 @@ adminRouter.get("/deleteCategory", adminAuth , deleteCategory);
 //Products MAnagement
 adminRouter.get("/products", adminAuth, getProducts)
 adminRouter.get("/addProducts", adminAuth, getProductsAdd)
-adminRouter.post("/addProducts", adminAuth, upload.single("productImage"), productsAdd);
+adminRouter.post("/addProducts", adminAuth, upload.array("productImage", 5), productsAdd);
 adminRouter.get("/updateProduct", adminAuth, geteditProduct);
 adminRouter.post("/updateProduct", adminAuth, upload.array("productImage", 5), editProduct);
 adminRouter.get("/listProduct", adminAuth, listProduct)
