@@ -21,7 +21,7 @@ const productsSchema = new Schema(
     },
     category: {
       type: String,
-      ref: "Cart",
+      ref: "Category",
       required: true,
     },
     language: {

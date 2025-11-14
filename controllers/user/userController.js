@@ -5,24 +5,97 @@ import bcrypt from "bcrypt";
 import passport from "../../config/passport.js";
 import { generateOtp, sendVerificationEmail } from "../../helpers/verify.js";
 import Product from "../../models/productsSchema.js";
-
+import Category from "../../models/categorySchema.js";
 dotenv.config();
 
 export const loadHome = async (req, res) => {
   try {
     const user = req.session.user;
-    if(user){
-        const products = await Product.find({});
-        const userData = await User.findOne({_id:req.session.user._id});
-        res.render("home", {user:userData, products});
-    } else {
-        return res.render("home", {user:null});
+
+    // ----------------------------
+    // GET FILTERS
+    // ----------------------------
+    const category = req.query.category || null;
+    const min = req.query.min || null;
+    const max = req.query.max || null;
+
+    let selectedLanguages = [];
+
+    if (req.query.languages) {
+      if (Array.isArray(req.query.languages)) {
+        selectedLanguages = req.query.languages; // languages=English&languages=Tamil
+      } else {
+        selectedLanguages = req.query.languages.split(","); // languages=English,Tamil
+      }
     }
+
+    let filter = { isListed: true };
+
+    if (category) filter.category = category;
+
+    if (min || max) {
+      filter.regularPrice = {};
+      if (min) filter.regularPrice.$gte = parseInt(min);
+      if (max) filter.regularPrice.$lte = parseInt(max);
+    }
+
+    if (selectedLanguages.length > 0) {
+      filter.language = { $in: selectedLanguages };
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
+    const products = await Product.find(filter)
+      .sort({ productName: 1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalProducts = await Product.countDocuments(filter);
+    const totalPages = Math.ceil(totalProducts / limit);
+
+
+    let userData = null;
+    if (user) {
+      userData = await User.findById(user._id);
+    }
+
+    const categories = await Category.find({ isListed: true });
+    const languages = await Product.distinct("language", { isListed: true });
+
+    const queryParams = new URLSearchParams();
+
+    if (category) queryParams.set("category", category);
+    if (min) queryParams.set("min", min);
+    if (max) queryParams.set("max", max);
+
+    selectedLanguages.forEach((lang) => queryParams.append("languages", lang));
+
+    const baseQuery = queryParams.toString(); 
+   -
+    res.render("home", {
+      user: userData,
+      products,
+      totalPages,
+      currentPage: page,
+
+      categories,
+      selectedCategory: category,
+
+      selectedLanguages,
+      languages,
+
+      min,
+      max,
+      baseQuery
+    });
   } catch (error) {
-    console.log("Home page not Found");
+    console.log("Home page not Found", error);
     res.status(500).send("Server Error");
   }
 };
+
 
 export const loadNotFound = async (req, res) => {
   try {
@@ -80,7 +153,7 @@ export const login = async (req, res) => {
       return res.redirect("/login");
     }
     if (passwordMatch) {
-      req.session.user ={ _id: findUser._id};
+      req.session.user = { _id: findUser._id };
       res.redirect("/");
     }
   } catch (error) {
@@ -106,13 +179,13 @@ export const signup = async (req, res) => {
     const otp = generateOtp();
     console.log("Generated Otp:", otp);
 
-    const emailSent = await sendVerificationEmail(name,email, otp);
+    const emailSent = await sendVerificationEmail(name, email, otp);
     if (!emailSent) {
       return res.json("Email-error");
     }
 
     (req.session.userOtp = otp),
-    (req.session.userData = { name, email, password });
+      (req.session.userData = { name, email, password });
 
     res.redirect(`/verify-otp?email=${encodeURIComponent(email)}`);
     console.log("otp sent", otp);
@@ -142,7 +215,7 @@ export const verifyOtp = async (req, res) => {
         password: passwordHash,
       });
       await newUser.save();
-        req.session.user = { _id: newUser._id };
+      req.session.user = { _id: newUser._id };
 
       // Clear OTP and temp data
       req.session.userOtp = null;
@@ -167,16 +240,16 @@ export const verifyOtp = async (req, res) => {
 
 export const loadVerify = async (req, res) => {
   const { forgot, email } = req.query;
-  res.render("verify-otp", { 
-    email, 
-    fromForgotPassword: forgot === "true" 
+  res.render("verify-otp", {
+    email,
+    fromForgotPassword: forgot === "true",
   });
 };
 
 export const resendOtp = async (req, res) => {
   try {
     const { name, email } = req.session.userData || req.body;
-    
+
     console.log("Resend OTP request received for:", email);
 
     const otp = generateOtp();
@@ -188,7 +261,7 @@ export const resendOtp = async (req, res) => {
     }
 
     req.session.userOtp = otp;
-    res.json({ success: true , message: "OTP resent successfully" });
+    res.json({ success: true, message: "OTP resent successfully" });
   } catch (error) {
     console.error("Resend OTP error:", error);
     res.json({ success: false, message: "Server error" });
@@ -204,12 +277,11 @@ export const googleAuthCallback = (req, res) => {
     req,
     res,
     () => {
-        req.session.user = { _id: req.user._id };
+      req.session.user = { _id: req.user._id };
       res.redirect("/");
     }
   );
 };
-
 
 export const loadProfile = async (req, res) => {
   try {
@@ -221,25 +293,23 @@ export const loadProfile = async (req, res) => {
 
     const userData = await User.findById(userId).lean();
     res.render("profile", { user: userData });
-
   } catch (error) {
     console.error("Error loading profile:", error);
     res.status(500).send("Server Error");
   }
 };
 
-
-export const logout = async( req, res) => {
-    try {
-        req.session.destroy((err) => {
-            if(err){
-                console.log("Session Destruction error: ", err.message);
-                return res.redirect("/notfound");
-            }
-            return res.redirect("/");
-        })
-    } catch (error) {
-        console.log("Log out error", error);
-        res.redirect("/notfound");
-    }
-}
+export const logout = async (req, res) => {
+  try {
+    req.session.destroy((err) => {
+      if (err) {
+        console.log("Session Destruction error: ", err.message);
+        return res.redirect("/notfound");
+      }
+      return res.redirect("/");
+    });
+  } catch (error) {
+    console.log("Log out error", error);
+    res.redirect("/notfound");
+  }
+};
