@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import passport from "../../config/passport.js";
+import Product from "../../models/productsSchema.js";
 
 dotenv.config();
 
@@ -10,8 +11,9 @@ export const loadHome = async (req, res) => {
   try {
     const user = req.session.user;
     if(user){
+        const products = await Product.find({});
         const userData = await User.findOne({_id:req.session.user._id});
-        res.render("home", {user:userData});
+        res.render("home", {user:userData, products});
     } else {
         return res.render("home", {user:null});
     }
