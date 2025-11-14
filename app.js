@@ -19,8 +19,9 @@ connectDB();
 
 const app = express();
 
-app.use(express.json())
-app.use(express.urlencoded({extended:true}))
+app.use(express.json());
+app.use(express.urlencoded({extended:true}));
+
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -32,12 +33,15 @@ app.use(session({
     }
 }))
 
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.set("view engine","ejs")
 app.set("views", [path.join(__dirname,'views/user'),path.join(__dirname,'views/admin')])
 app.use(express.static(path.join(__dirname,'public')));
 
-app.use("/", router)
-app.use("/admin", adminRouter);
+
 
 
 app.use(async (req, res, next) => {
@@ -56,12 +60,8 @@ app.use(async (req, res, next) => {
   }
 });
 
-
-
-
-app.use(passport.initialize());
-app.use(passport.session());
-
+app.use("/", router)
+app.use("/admin", adminRouter);
 
 
 app.listen(process.env.PORT, () => {

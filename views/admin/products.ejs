@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Categories - ReadNest</title>
+    <title>Products - ReadNest</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
 
@@ -23,13 +23,18 @@
 
       .sidebar-item:hover {
         background-color: #d1d5db;
-        border-left: 4px solid #667eea;
       }
 
       .sidebar-item.active {
         background-color: #d1d5db;
-        border-left: 4px solid #667eea;
       }
+        #statusMessage {
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out;
+  }
+  #statusMessage.hidden {
+    opacity: 0;
+  }
     </style>
   </head>
   <body class="bg-gray-100">
@@ -150,7 +155,7 @@
               ></i>
               <span
                 class="text-lg font-semibold text-gray-900 group-hover:text-red-600"
-                >Log Out</span
+                >LOG OUT</span
               >
             </button>
           </a>
@@ -158,58 +163,86 @@
       </aside>
 
       <!-- Main Content - Categories -->
-      <main class="flex-1 p-8 bg-white">
-        <div class="bg-white rounded-2xl shadow-md border border-gray-200">
+      <main class="flex-1 p-8 bg-gray-200">
+        <div class="bg-white rounded-2xl shadow-lg">
           <!-- Header Section -->
           <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-2xl font-bold text-gray-900">Categories</h2>
-              <a href="/admin/addCategory">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-3xl font-bold text-gray-900">Products</h2>
+              <a href="/admin/addProducts">
                 <button
-                  class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition"
+                  class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-md"
                 >
-                  ADD Category
-                </button></a
-              >
+                  ADD Product
+                </button>
+              </a>
             </div>
-            <div class="relative max-w-md">
+            <div class="relative max-w-xl">
               <input
                 type="text"
-                placeholder="Search Category"
-                class="w-full px-4 py-3 pl-10 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-gray-300"
+                placeholder="Search Categories"
+                class="w-full px-4 py-3 pl-12 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-gray-300"
               />
-              <i class="fas fa-search absolute left-3 top-4 text-gray-400"></i>
+              <i
+                class="fas fa-search absolute left-4 top-4 text-gray-400 text-lg"
+              ></i>
             </div>
           </div>
 
           <!-- Table Section -->
+           <div id="statusMessage" class="hidden text-center py-3 font-semibold rounded-md mb-4"></div>
           <div class="overflow-x-auto">
             <table class="w-full">
               <thead>
                 <tr class="bg-black text-white">
-                  <th class="px-6 py-4 text-left font-semibold">SL</th>
-                  <th class="px-6 py-4 text-left font-semibold">
-                    Category Name
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    Image
                   </th>
-                  <!-- <th class="px-6 py-4 text-left font-semibold">Sales</th> -->
-                  <!-- <th class="px-6 py-4 text-left font-semibold">Stock</th> -->
-                  <th class="px-6 py-4 text-left font-semibold">List/Unlist</th>
-                  <th class="px-6 py-4 text-left font-semibold">Action</th>
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    Name
+                  </th>
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    Language
+                  </th>
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    Category
+                  </th>
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    Stock
+                  </th>
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    List
+                  </th>
+                  <th class="px-6 py-4 text-left font-semibold text-base">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody id="categoryTableBody">
+                <!-- Sample Category 1 -->
                 <% for(let i = 0; i < data.length; i++) { %>
-                <tr>
-                  <td><%= data[i].categoryNumber %></td>
-                  <td><%= data[i].categoryName %></td>
-                  <!-- <td><%= data[i].sales %></td> -->
-                  <!-- <td><%= data[i].stock %></td> -->
+                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                  <td>
+                    <% if (data[i].productImage) { %>
+                    <img
+                      src="<%= data[i].productImage[0] %>"
+                      alt="Product Image"
+                      class="h-16 w-16 rounded"
+                    />
+                    <% } else { %>
+                    <span>No Image</span>
+                    <% } %>
+                  </td>
+                  <td><%= data[i].productName %></td>
+                  <td><%= data[i].language %></td>
+                  <td><%= data[i].category %></td>
+                  <td><%= data[i].stock %></td>
 
                   <td class="px-6 py-4">
                     <% if (data[i].isListed) { %>
                     <!-- If category is listed → show UNLIST button -->
                     <a
-                      href="/admin/unlistCategory?id=<%= data[i]._id %>"
+                      href="/admin/unlistProduct?id=<%= data[i]._id %>"
                       class="inline-block px-6 py-1 rounded-full text-sm font-semibold transition bg-red-200 text-red-800 hover:bg-red-300"
                     >
                       UNLIST
@@ -217,7 +250,7 @@
                     <% } else { %>
                     <!-- If category is unlisted → show LIST button -->
                     <a
-                      href="/admin/listCategory?id=<%= data[i]._id %>"
+                      href="/admin/listProduct?id=<%= data[i]._id %>"
                       class="inline-block px-6 py-1 rounded-full text-sm font-semibold transition bg-green-200 text-green-800 hover:bg-green-300"
                     >
                       LIST
@@ -230,7 +263,7 @@
                       class="flex justify-center items-center space-x-4 text-gray-600"
                     >
                       <!-- Edit -->
-                      <a href="/admin/editCategory?id=<%=data[i]._id%>">
+                      <a href="/admin/updateProduct?id=<%= data[i]._id %>">
                         <button
                           class="hover:text-yellow-500 transition"
                           title="Edit"
@@ -278,7 +311,7 @@
     </div>
   </body>
   <script>
-    function confirmDelete(categoryId) {
+    function confirmDelete(productId) {
       Swal.fire({
         title: "Are you sure?",
         text: "This action cannot be undone!",
@@ -292,7 +325,7 @@
       }).then((result) => {
         if (result.isConfirmed) {
           // Redirect to delete route
-          window.location.href = `/admin/deleteCategory?id=${categoryId}`;
+          window.location.href = `/admin/deleteProduct?id=${productId}`;
         }
       });
     }
@@ -302,7 +335,7 @@
       Swal.fire({
         icon: "success",
         title: "Deleted!",
-        text: "The Category has been deleted successfully.",
+        text: "The product has been deleted successfully.",
         showConfirmButton: false,
         timer: 2000,
       });
@@ -310,5 +343,44 @@
       const newUrl = window.location.origin + window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
     }
+
+    //=======================
+    //  const urlParams = new URLSearchParams(window.location.search);
+  const status = urlParams.get("status");
+  const messageBox = document.getElementById("statusMessage");
+
+  if (status) {
+    let messageText = "";
+    let bgColor = "";
+
+    if (status === "added") {
+      messageText = " Product added successfully!";
+      bgColor = "bg-green-100 text-green-800 border border-green-300";
+    } else if (status === "deleted") {
+      messageText = " Product deleted successfully!";
+      bgColor = "bg-red-100 text-red-800 border border-red-300";
+    } else if (status === "error") {
+      messageText = " Something went wrong. Please try again.";
+      bgColor = "bg-yellow-100 text-yellow-800 border border-yellow-300";
+    } else if (status === "updated") {
+      messageText = " Product updated successfully!";
+      bgColor = "bg-blue-100 text-blue-800 border border-blue-300";
+    }
+
+    messageBox.textContent = messageText;
+    messageBox.className = `${bgColor} text-center py-3 font-semibold rounded-md mb-4 transition-all duration-500`;
+
+    // Show message box
+    messageBox.classList.remove("hidden");
+
+    // Hide after 5 seconds
+    setTimeout(() => {
+      messageBox.classList.add("hidden");
+    }, 5000);
+
+    // Remove query params from URL after showing message
+    const newUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, document.title, newUrl);
+  }
   </script>
 </html>

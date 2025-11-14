@@ -94,7 +94,7 @@ export const listCategory = async (req, res) => {
     await Category.findByIdAndUpdate(req.query.id, { isListed: true });
     res.redirect("/admin/category");
   } catch (err) {
-    res.redirect("/pageerror");
+    res.redirect("admin/pageerror");
   }
 };
 
@@ -103,7 +103,7 @@ export const unlistCategory = async (req, res) => {
     await Category.findByIdAndUpdate(req.query.id, { isListed: false });
     res.redirect("/admin/category");
   } catch (err) {
-    res.redirect("/pageerror");
+    res.redirect("admin/pageerror");
   }
 };
 
@@ -155,7 +155,7 @@ export const deleteCategory = async (req, res) => {
     if (!deletedCategory) {
       return res.status(404).send("Category not found");
     }
-    res.redirect("/admin/category"); 
+    res.redirect("/admin/category?deleted=true");
   } catch (error) {
     res.status(500).send("Internal Server Error");
   }
