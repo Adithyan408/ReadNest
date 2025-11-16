@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Alchemist - ReadNest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+      * {
+        font-family: "Poppins", sans-serif;
+      }
+
+      .thumbnail-active {
+        border: 2px solid #ea580c;
+      }
+
+      .rating-bar {
+        height: 8px;
+        border-radius: 4px;
+        background: #e5e7eb;
+        overflow: hidden;
+      }
+
+      .rating-fill {
+        height: 100%;
+        transition: width 0.3s ease;
+      }
+
+      .review-card {
+        transition: transform 0.2s ease;
+      }
+
+      .review-card:hover {
+        transform: translateY(-2px);
+      }
+
+      .product-card {
+        transition: transform 0.3s ease;
+      }
+
+      .product-card:hover {
+        transform: translateY(-5px);
+      }
+      .custom-scroll::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scroll {
+        overscroll-behavior: contain;
+      }
+
+      .custom-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Header -->
+    <%- include("../../views/partials/user/header") %>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+      <!-- PRODUCT SECTION: FIXED LEFT + SCROLLABLE RIGHT -->
+      <div class="flex gap-12">
+        <!-- LEFT: FIXED IMAGE SECTION -->
+        <!-- LEFT: FIXED IMAGE SECTION -->
+        <div class="w-1/2 sticky top-28 h-max">
+          <!-- IMAGE BLOCK -->
+          <div class="flex gap-4 mb-6">
+            <!-- Add margin-bottom -->
+
+            <!-- Thumbnails -->
+            <div class="flex flex-col gap-3">
+              <% product.productImage.forEach((img, index) => { %>
+              <img
+                src="<%= img %>"
+                class="w-16 h-24 object-cover rounded cursor-pointer <%= index === 0 ? 'thumbnail-active' : '' %>"
+                onclick="changeMainImage('<%= img %>')"
+              />
+              <% }); %>
+            </div>
+
+            <!-- Main Image -->
+            <div class="flex-1">
+              <img
+                id="mainImage"
+                src="<%= product.productImage[0] %>"
+                class="w-full h-96 object-contain rounded-lg"
+              />
+            </div>
+          </div>
+          <!-- END IMAGE BLOCK -->
+
+          <!-- BUTTONS BLOCK -->
+          <div class="flex gap-4 mt-6">
+            <!-- Add margin-top -->
+            <button
+              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold"
+            >
+              Add to Cart
+            </button>
+            <button
+              class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold"
+            >
+              Buy Now
+            </button>
+          </div>
+        </div>
+
+        <!-- RIGHT: SCROLLABLE SECTION (Details + Description + Reviews) -->
+        <div class="w-1/2 overflow-y-auto max-h-[82vh] pr-3 custom-scroll">
+          <!-- DETAILS -->
+          <div class="mb-10">
+            <h1 class="text-2xl font-bold text-gray-800 mb-4">
+              <%= product.productName%>
+            </h1>
+
+            <div class="flex items-center gap-3 mb-6">
+              <span class="text-3xl font-bold text-green-600"
+                >₹<%= product.regularPrice %></span
+              >
+              <span
+                class="bg-green-600 text-white px-2 py-1 rounded text-sm font-semibold"
+              >
+                <%= product.rating || "4.5" %>★
+              </span>
+            </div>
+
+            <p class="text-gray-600 font-medium mb-2">Author</p>
+            <p class="text-lg font-semibold text-gray-800 mb-6">
+              <%= product.author %>
+            </p>
+
+            <p class="text-gray-600 font-medium mb-3">Highlights</p>
+            <ul class="space-y-2 text-sm text-gray-700 mb-6">
+              <li>• Language: <%= product.language %></li>
+              <li>• Binding: Paperback</li>
+              <li>• Publisher: <%= product.publisher || "N.A" %></li>
+              <li>• Genre: <%= product.category %></li>
+              <li>• ISBN: <%= product.isbnNumber %></li>
+              <li>• Edition: <%= product.yearOfPublishing %></li>
+              <li>• Pages: <%= product.pages %></li>
+            </ul>
+          </div>
+
+          <!-- DESCRIPTION -->
+          <div class="border-t pt-6 mb-10">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Description</h3>
+            <p class="text-sm text-gray-700 mb-4"><%= product.description %></p>
+
+            <h3 class="text-lg font-bold text-gray-800 mt-6 mb-2">
+              About the Author
+            </h3>
+            <p class="text-sm text-gray-700">
+              <%= product.authorDescription %>
+            </p>
+          </div>
+
+          <!-- Ratings & Reviews -->
+          <div class="bg-white rounded-lg shadow-sm p-8 mb-8">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-2xl font-bold text-gray-800">
+                Ratings & Reviews
+              </h2>
+              <button class="text-orange-600 font-medium hover:underline">
+                Rate Product
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <!-- Left: Rating Summary -->
+              <div>
+                <div class="text-center mb-6">
+                  <div class="text-5xl font-bold text-gray-800 mb-2">4.4★</div>
+                  <p class="text-gray-600">2,126,158 Ratings &</p>
+                  <p class="text-gray-600">623 Reviews</p>
+                </div>
+
+                <!-- Rating Bars -->
+                <div class="space-y-3">
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-600 w-8">5★</span>
+                    <div class="flex-1 rating-bar">
+                      <div
+                        class="rating-fill bg-green-500"
+                        style="width: 85%"
+                      ></div>
+                    </div>
+                    <span class="text-sm text-gray-600 w-16 text-right"
+                      >1,827</span
+                    >
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-600 w-8">4★</span>
+                    <div class="flex-1 rating-bar">
+                      <div
+                        class="rating-fill bg-green-400"
+                        style="width: 20%"
+                      ></div>
+                    </div>
+                    <span class="text-sm text-gray-600 w-16 text-right"
+                      >405</span
+                    >
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-600 w-8">3★</span>
+                    <div class="flex-1 rating-bar">
+                      <div
+                        class="rating-fill bg-yellow-400"
+                        style="width: 5%"
+                      ></div>
+                    </div>
+                    <span class="text-sm text-gray-600 w-16 text-right"
+                      >94</span
+                    >
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-600 w-8">2★</span>
+                    <div class="flex-1 rating-bar">
+                      <div
+                        class="rating-fill bg-orange-400"
+                        style="width: 3%"
+                      ></div>
+                    </div>
+                    <span class="text-sm text-gray-600 w-16 text-right"
+                      >67</span
+                    >
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-600 w-8">1★</span>
+                    <div class="flex-1 rating-bar">
+                      <div
+                        class="rating-fill bg-red-400"
+                        style="width: 7%"
+                      ></div>
+                    </div>
+                    <span class="text-sm text-gray-600 w-16 text-right"
+                      >137</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Rating Categories -->
+              <div>
+                <div class="grid grid-cols-2 gap-6">
+                  <div class="text-center">
+                    <div
+                      class="w-20 h-20 rounded-full border-4 border-green-500 flex items-center justify-center mx-auto mb-2"
+                    >
+                      <span class="text-2xl font-bold text-gray-800">4.0</span>
+                    </div>
+                    <p class="text-sm text-gray-600">Picture</p>
+                  </div>
+                  <div class="text-center">
+                    <div
+                      class="w-20 h-20 rounded-full border-4 border-green-500 flex items-center justify-center mx-auto mb-2"
+                    >
+                      <span class="text-2xl font-bold text-gray-800">4.7</span>
+                    </div>
+                    <p class="text-sm text-gray-600">Sound</p>
+                  </div>
+                  <div class="text-center">
+                    <div
+                      class="w-20 h-20 rounded-full border-4 border-yellow-500 flex items-center justify-center mx-auto mb-2"
+                    >
+                      <span class="text-2xl font-bold text-gray-800">3.2</span>
+                    </div>
+                    <p class="text-sm text-gray-600">Connectivity</p>
+                  </div>
+                  <div class="text-center">
+                    <div
+                      class="w-20 h-20 rounded-full border-4 border-yellow-500 flex items-center justify-center mx-auto mb-2"
+                    >
+                      <span class="text-2xl font-bold text-gray-800">3.8</span>
+                    </div>
+                    <p class="text-sm text-gray-600">Delivery & Installation</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Reviews -->
+            <div class="mt-8 space-y-4">
+              <div class="review-card border-t pt-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span
+                    class="bg-green-600 text-white px-2 py-1 rounded text-xs font-semibold"
+                    >4★</span
+                  >
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">Classy product</h4>
+                <p class="text-sm text-gray-700 mb-2">
+                  Every book lover should read this book once in their lifetime.
+                </p>
+                <p class="text-sm text-gray-700">
+                  This is book inspires you, motivates you, gives you hope!
+                  Trust your intuition :) i wanna rate this 💯❤️
+                </p>
+              </div>
+
+              <div class="review-card border-t pt-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span
+                    class="bg-green-600 text-white px-2 py-1 rounded text-xs font-semibold"
+                    >5★</span
+                  >
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">
+                  Perfect product!
+                </h4>
+                <p class="text-sm text-gray-700">
+                  Dreams are made to be followed. life is meant to be lived.
+                  some books are meant to be read and it's one of them, its just
+                  awesome and again thank u readNest for your early and
+                </p>
+                <p class="text-sm text-gray-700">
+                  without any damaged delivery 😍😍😍
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Similar Products -->
+      <!-- Similar Products -->
+      <div class="bg-white rounded-lg shadow-sm p-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Similar Products</h2>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <% (similarProducts || []).slice(0, 4).forEach(similar => { %>
+          <div
+            class="product-card flex flex-col h-full bg-white rounded-lg overflow-hidden"
+            onclick="location.href='/product/?id=<%= similar._id %>'"
+          >
+            <!-- Image Box: fixed height to keep all cards aligned -->
+            <div class="bg-gray-100 p-4 h-56 flex items-center justify-center">
+              <img
+                src="<%= (similar.productImage && similar.productImage[0]) || '/images/placeholder.png' %>"
+                alt="<%= similar.productName %>"
+                class="max-h-full max-w-full object-contain"
+              />
+            </div>
+
+            <!-- Details: take remaining space so footer stays at bottom -->
+            <div class="p-4 flex-1 flex flex-col justify-between">
+              <div>
+                <h3 class="font-semibold text-sm mb-2 line-clamp-2">
+                  <%= similar.productName %>
+                </h3>
+
+                <div class="flex items-center gap-2 mb-2">
+                  <span
+                    class="bg-green-600 text-white px-2 py-1 rounded text-xs font-semibold"
+                  >
+                    <%= similar.rating || "4.5" %>★
+                  </span>
+                </div>
+              </div>
+
+              <!-- Price at bottom -->
+              <div>
+                <p class="text-lg font-bold text-gray-800">
+                  ₹<%= similar.regularPrice %>
+                </p>
+              </div>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+    </main>
+    <%- include("../../views/partials/user/footer") %>
+
+    <!-- Footer -->
+
+    <script>
+      function changeMainImage(src) {
+        document.getElementById("mainImage").src = src.replace(
+          "w=100&h=140",
+          "w=400&h=600"
+        );
+
+        // Update active thumbnail
+        document.querySelectorAll("img[onclick]").forEach((img) => {
+          img.classList.remove("thumbnail-active");
+        });
+        event.target.classList.add("thumbnail-active");
+      }
+
+      const scrollBox = document.querySelector(".custom-scroll");
+
+      scrollBox.addEventListener(
+        "wheel",
+        function (e) {
+          // SCROLLING DOWN
+          if (
+            e.deltaY > 0 &&
+            scrollBox.scrollTop + scrollBox.clientHeight >=
+              scrollBox.scrollHeight
+          ) {
+            // Pass scroll to page
+            window.scrollBy(0, e.deltaY);
+            e.preventDefault();
+          }
+
+          // SCROLLING UP
+          if (e.deltaY < 0 && scrollBox.scrollTop === 0) {
+            window.scrollBy(0, e.deltaY);
+            e.preventDefault();
+          }
+        },
+        { passive: false }
+      );
+    </script>
+  </body>
+</html>

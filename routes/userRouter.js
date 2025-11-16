@@ -1,7 +1,8 @@
 import express from 'express'
-import {loadHome, loadNotFound, loadSigup, loadLogin, signup, verifyOtp, loadVerify, resendOtp, googleAuth, googleAuthCallback,
+import { loadNotFound, loadSigup, loadLogin, signup, verifyOtp, loadVerify, resendOtp, googleAuth, googleAuthCallback,
      login, loadProfile, logout} from '../controllers/user/userController.js'
 import { forgotEmailValid, getForgotPassword, getResetPassword, postResetPassword, forgotVerifyOtp } from '../controllers/user/profileController.js';
+import { getProductsDetails, loadHome } from '../controllers/user/productController.js';
 
 export const router = express.Router();
 
@@ -28,4 +29,6 @@ router.get("/reset-password", getResetPassword)
 router.post("/reset-password", postResetPassword)
 
 router.post("/forgot-verify-otp", forgotVerifyOtp);
+
+router.get("/product",getProductsDetails)
  
