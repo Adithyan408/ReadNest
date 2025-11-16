@@ -277,57 +277,53 @@
         });
         
         // Form submission
-        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            hideAllErrors();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            // Validate fields
-            const isEmailValid = validateEmail(email);
-            const isPasswordValid = validatePassword(password);
-            
-            // If validations pass
-            if (isEmailValid && isPasswordValid) {
-                // Show loading state
-                const submitBtn = this.querySelector('button[type="submit"]');
-                const originalText = submitBtn.textContent;
-                submitBtn.textContent = 'Logging In...';
-                submitBtn.disabled = true;
-                
-                // Make API call
-                fetch('/admin/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        email: email,
-                        password: password
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Redirect to admin dashboard
-                        window.location.href = '/admin';
-                    } else {
-                        showMainError(data.message || 'Invalid admin credentials');
-                        submitBtn.textContent = originalText;
-                        submitBtn.disabled = false;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showMainError('An error occurred. Please try again.');
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                });
+       document.getElementById('adminLoginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    hideAllErrors();
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    // Validate fields
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+
+    if (isEmailValid && isPasswordValid) {
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+
+        submitBtn.textContent = 'Logging In...';
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch('/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                window.location.href = '/admin';
+            } else {
+                showMainError(data.message || 'Invalid admin credentials');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
             }
-        });
+
+        } catch (error) {
+            console.error("Error:", error);
+            showMainError("An error occurred. Please try again.");
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+});
+
         
         // Allow Enter key to submit form
         document.querySelectorAll('input').forEach(input => {
@@ -339,11 +335,7 @@
             });
         });
         
-        // Prevent back button after logout
-        window.history.pushState(null, "", window.location.href);
-        window.onpopstate = function() {
-            window.history.pushState(null, "", window.location.href);
-        };
+       
     </script>
 </body>
 </html>

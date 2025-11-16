@@ -78,7 +78,7 @@ const productsSchema = new Schema(
       required: false
     },
     yearOfPublishing :{
-      type: Date,
+      type: String,
       required: false
     },
     pages:{

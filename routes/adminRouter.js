@@ -1,5 +1,5 @@
 import express from "express";
-import {loadLogin, login, loadDashboard, logout, loadPageError} from '../controllers/admin/adminController.js'
+import {loadLogin, login, logout, loadPageError, loadDashboard} from '../controllers/admin/adminController.js'
 import { customerInfo, blockCustomers, unblockCustomers} from "../controllers/admin/customerController.js"
 import {categoryInfo, addCategory, categoryAdd, listCategory, unlistCategory, geteditCategory, editCategory, deleteCategory} from "../controllers/admin/categoryController.js"
 import { userAuth, adminAuth } from "../middlewares/auth.js";
@@ -12,7 +12,7 @@ export const adminRouter = express.Router();
 
 //Log-in Management
 adminRouter.get("/login", loadLogin);
-adminRouter.get("/",adminAuth, loadDashboard);
+adminRouter.get("/", adminAuth, loadDashboard );
 adminRouter.get("/logout", logout);
 adminRouter.get("/pageerror", loadPageError);
 adminRouter.post("/login", login)
