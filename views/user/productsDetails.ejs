@@ -7,6 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       rel="stylesheet"
+      href="https://unpkg.com/drift-zoom/dist/drift-basic.min.css"
+    />
+    <script src="https://unpkg.com/drift-zoom/dist/Drift.min.js"></script>
+
+    <link
+      rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <style>
@@ -58,6 +64,10 @@
         background: #cbd5e1;
         border-radius: 4px;
       }
+      #zoom-pane {
+        width: 400px;
+        height: 400px;
+      }
     </style>
   </head>
   <body class="bg-gray-50">
@@ -86,12 +96,15 @@
             </div>
 
             <!-- Main Image -->
-            <div class="flex-1">
+            <div class="flex-1 relative">
+              <div id="zoom-pane" class="ml-4">
               <img
                 id="mainImage"
+                data-zoom="<%= product.productImage[0] %>"
                 src="<%= product.productImage[0] %>"
-                class="w-full h-96 object-contain rounded-lg"
+                class="w-full h-96 object-contain rounded-lg drift-trigger"
               />
+            </div>
             </div>
           </div>
           <!-- END IMAGE BLOCK -->
@@ -381,12 +394,13 @@
 
     <script>
       function changeMainImage(src) {
-        document.getElementById("mainImage").src = src.replace(
-          "w=100&h=140",
-          "w=400&h=600"
-        );
+        const mainImage = document.getElementById("mainImage");
 
-        // Update active thumbnail
+        mainImage.src = src;
+        mainImage.setAttribute("data-zoom", src);
+
+        initZoom(); // Reinitialize Drift with new zoom image
+
         document.querySelectorAll("img[onclick]").forEach((img) => {
           img.classList.remove("thumbnail-active");
         });
@@ -417,6 +431,26 @@
         },
         { passive: false }
       );
+
+      //Image Zoom using Drift Library
+      let drift;
+
+      function initZoom() {
+        const mainImage = document.getElementById("mainImage");
+
+        // Destroy previous instance if exists (for thumbnail changes)
+        if (drift) drift.disable();
+
+        drift = new Drift(mainImage, {
+          paneContainer: document.getElementById("zoom-pane"),
+          inlinePane: false,
+          hoverBoundingBox: true, // Flipkart-style moving box
+          zoomFactor: 1.5,
+          passive: false,
+        });
+      }
+
+      initZoom();
     </script>
   </body>
 </html>
