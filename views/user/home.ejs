@@ -65,7 +65,7 @@
 
               <li>
                 <a
-                  href="/?category=<%= category.categoryName %>"
+                  href="/?category=<%= category.categoryName %><%= baseQuery ? '&' + baseQuery : '' %>"
                   class="flex justify-between items-center cursor-pointer <%= selectedCategory == category.categoryName ? 'text-orange-600 font-semibold' : 'hover:text-orange-600' %>"
                 >
                   <span class="text-sm"><%= category.categoryName %></span>
@@ -82,6 +82,23 @@
             <h3 class="font-semibold text-gray-800 mb-3">PRICE</h3>
 
             <form action="/" method="GET" class="space-y-3">
+              <% if (selectedCategory) { %>
+              <input
+                type="hidden"
+                name="category"
+                value="<%= selectedCategory %>"
+              />
+              <% } %> <% selectedLanguages.forEach(lang => { %>
+              <input type="hidden" name="languages" value="<%= lang %>" />
+              <% }); %>
+
+              <!-- Keep old min/max if present -->
+              <% if (min) { %>
+              <input type="hidden" name="min" value="<%= min %>" />
+              <% } %> <% if (max) { %>
+              <input type="hidden" name="max" value="<%= max %>" />
+              <% } %>
+
               <!-- Price Inputs -->
               <div class="flex items-center space-x-3">
                 <input
@@ -136,7 +153,17 @@
           <div class="mb-6">
             <h3 class="font-semibold text-gray-800 mb-3">LANGUAGES</h3>
             <form action="/" method="GET" id="languageForm" class="space-y-2">
-              <% languages.forEach(lang => { %>
+              <% if (selectedCategory) { %>
+              <input
+                type="hidden"
+                name="category"
+                value="<%= selectedCategory %>"
+              />
+              <% } %> <% if (min) { %>
+              <input type="hidden" name="min" value="<%= min %>" />
+              <% } %> <% if (max) { %>
+              <input type="hidden" name="max" value="<%= max %>" />
+              <% } %> <% languages.forEach(lang => { %>
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" name="languages" class="w-4 h-4
                 lang-check" value="<%= lang %>" <%=
@@ -190,7 +217,10 @@
             <% } %>
 
             <!-- Dynamic Book Card -->
-            <a href="/product?id=<%= product._id %>" class="block group">
+            <a
+              href="/product?id=<%= product._id %><%= baseQuery ? '&' + baseQuery : '' %>"
+              class="block group"
+            >
               <div
                 class="relative w-full h-72 bg-gray-100 rounded-xl overflow-hidden shadow-sm"
               >

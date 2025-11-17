@@ -76,6 +76,13 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-8">
+      <a
+        href="/?<%= baseQuery %>"
+        class="text-blue-600 font-semibold hover:underline flex items-center gap-2 mb-4"
+      >
+        <i class="fas fa-arrow-left"></i> Back to Products
+      </a>
+
       <!-- PRODUCT SECTION: FIXED LEFT + SCROLLABLE RIGHT -->
       <div class="flex gap-12">
         <!-- LEFT: FIXED IMAGE SECTION -->
@@ -98,13 +105,13 @@
             <!-- Main Image -->
             <div class="flex-1 relative">
               <div id="zoom-pane" class="ml-4">
-              <img
-                id="mainImage"
-                data-zoom="<%= product.productImage[0] %>"
-                src="<%= product.productImage[0] %>"
-                class="w-full h-96 object-contain rounded-lg drift-trigger"
-              />
-            </div>
+                <img
+                  id="mainImage"
+                  data-zoom="<%= product.productImage[0] %>"
+                  src="<%= product.productImage[0] %>"
+                  class="w-full h-96 object-contain rounded-lg drift-trigger"
+                />
+              </div>
             </div>
           </div>
           <!-- END IMAGE BLOCK -->

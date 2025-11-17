@@ -4,18 +4,19 @@ import { loadNotFound, loadSigup, loadLogin, signup, verifyOtp, loadVerify, rese
 import { forgotEmailValid, getForgotPassword, getResetPassword, postResetPassword, forgotVerifyOtp } from '../controllers/user/profileController.js';
 import { getProductsDetails, loadHome } from '../controllers/user/productController.js';
 import { liveSearch } from '../controllers/user/searchController.js';
+import nocache from 'nocache';
 
 export const router = express.Router();
 
 router.get("/notfound", loadNotFound)
-router.get("/", loadHome)
-router.get("/signup",loadSigup)
-router.get("/login", loadLogin)
+router.get("/", nocache(), loadHome)
+router.get("/signup", nocache(),loadSigup)
+router.get("/login", nocache(), loadLogin)
 router.get("/verify-otp",loadVerify);
 router.get("/auth/google", googleAuth)
 router.get("/auth/google/callback", googleAuthCallback)
 router.get("/profile", loadProfile); 
-router.get("/logout", logout)
+router.get("/logout", nocache(), logout)
 
 
 router.post("/signup", signup);
@@ -26,7 +27,7 @@ router.post("/login", login)
 router.get("/forgot-password", getForgotPassword);
 router.post("/forgot-password", forgotEmailValid )
 
-router.get("/reset-password", getResetPassword)
+router.get("/reset-password", nocache(), getResetPassword)
 router.post("/reset-password", postResetPassword)
 
 router.post("/forgot-verify-otp", forgotVerifyOtp);

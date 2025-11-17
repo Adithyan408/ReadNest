@@ -2,8 +2,6 @@ import User from "../../models/userSchema.js";
 import Product from "../../models/productsSchema.js";
 import Category from "../../models/categorySchema.js";
 
-
-
 export const loadHome = async (req, res) => {
   try {
     const user = req.session.user;
@@ -51,7 +49,6 @@ export const loadHome = async (req, res) => {
     const totalProducts = await Product.countDocuments(filter);
     const totalPages = Math.ceil(totalProducts / limit);
 
-
     let userData = null;
     if (user) {
       userData = await User.findById(user._id);
@@ -68,8 +65,7 @@ export const loadHome = async (req, res) => {
 
     selectedLanguages.forEach((lang) => queryParams.append("languages", lang));
 
-    const baseQuery = queryParams.toString(); 
-   -
+    const baseQuery = queryParams.toString();
     res.render("home", {
       user: userData,
       products,
@@ -84,7 +80,7 @@ export const loadHome = async (req, res) => {
 
       min,
       max,
-      baseQuery
+      baseQuery,
     });
   } catch (error) {
     console.log("Home page not Found", error);
@@ -94,21 +90,32 @@ export const loadHome = async (req, res) => {
 
 export const getProductsDetails = async (req, res) => {
   try {
-
     const productId = req.query.id;
-    let product = null;
+    const page = req.query.page || 1;
 
-    if (productId) {
-      product = await Product.findById(productId);
-    }
+    // Clone all query params except id
+    const q = { ...req.query };
+    delete q.id; // remove product ID
+
+    // Build the query string for BACK button
+    const baseQuery = new URLSearchParams(q).toString();
+
+    const product = await Product.findById(productId);
+    if (!product) return res.redirect("/notfound");
+
     const similarProducts = await Product.find({
       category: product.category,
-      _id: { $ne: productId }
-    })
-      .limit(4);
-    res.render("productsDetails", { product, similarProducts });
+      _id: { $ne: productId },
+    }).limit(4);
+
+    res.render("productsDetails", {
+      product,
+      similarProducts,
+      currentPage: page,
+      baseQuery,
+    });
   } catch (error) {
-    console.log("Add product page rendering error : ", error);
+    console.log(error);
     res.redirect("/notfound");
   }
 };
