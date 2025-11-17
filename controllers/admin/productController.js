@@ -2,28 +2,30 @@ import Product from "../../models/productsSchema.js";
 import Category from "../../models/categorySchema.js";
 
 export const getProducts = async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 10;
-    const skip = (page - 1) * limit;
-
-    const productData = await Product.find({})
-      .sort({ productName: 1 })
-      .skip(skip)
-      .limit(limit);
-
-    const totalProducts = await Product.countDocuments();
-    const totalPages = Math.ceil(totalProducts / limit);
-    res.render("products", {
-      data: productData,
-      currentPage: page,
-      totalPages: totalPages,
-      totalProducts: totalProducts,
-    });
-  } catch (error) {
-    console.log(error);
-    res.redirect("/admin/pageerror");
-  }
+  //   try {
+  //     const page = parseInt(req.query.page) || 1;
+  //     const limit = 10;
+  //     const skip = (page - 1) * limit;
+  //     const productData = await Product.find({})
+  //       .sort({ productName: 1 })
+  //       .skip(skip)
+  //       .limit(limit);
+  //       const categories = await Category.find({ isListed: true });
+  //     const totalProducts = await Product.countDocuments();
+  //     const totalPages = Math.ceil(totalProducts / limit);
+  //     res.render("products", {
+  //       data: productData,
+  //       currentPage: page,
+  //       totalPages: totalPages,
+  //       totalProducts: totalProducts,
+  //       categories,
+  //       category: "",
+  //       search: ""
+  //     });
+  //   } catch (error) {
+  //     console.log(error);
+  //     res.redirect("/admin/pageerror");
+  //   }
 };
 
 export const getProductsAdd = async (req, res) => {
@@ -61,11 +63,16 @@ export const productsAdd = async (req, res) => {
       regularPrice,
       stock,
       isbnNumber,
-      category
+      category,
     } = req.body;
-    
 
-    if (!productName || !description || !category || !language || !regularPrice) {
+    if (
+      !productName ||
+      !description ||
+      !category ||
+      !language ||
+      !regularPrice
+    ) {
       const categories = await Category.find({ isListed: true });
       const errorMessage = "Please fill all required fields.";
       return res.render("addProduct", { errorMessage, categories });
@@ -201,21 +208,29 @@ export const editProduct = async (req, res) => {
 
 export const listProduct = async (req, res) => {
   try {
-    await Product.findByIdAndUpdate(req.query.id, { isListed: true });
-    res.redirect("/admin/products");
+    const { id, page, search, category } = req.query;
+
+    await Product.findByIdAndUpdate(id, { isListed: true });
+
+    res.redirect(`/admin/products?page=${page || 1}&search=${search || ""}&category=${category || ""}`);
   } catch (err) {
-    res.redirect("admin/pageerror");
+    res.redirect("/admin/pageerror");
   }
 };
 
+
 export const unlistProduct = async (req, res) => {
   try {
-    await Product.findByIdAndUpdate(req.query.id, { isListed: false });
-    res.redirect("/admin/products");
+    const { id, page, search, category } = req.query;
+
+    await Product.findByIdAndUpdate(id, { isListed: false });
+
+    res.redirect(`/admin/products?page=${page || 1}&search=${search || ""}&category=${category || ""}`);
   } catch (err) {
-    res.redirect("admin/pageerror");
+    res.redirect("/admin/pageerror");
   }
 };
+
 
 export const deleteProduct = async (req, res) => {
   try {
@@ -235,3 +250,56 @@ export const deleteProduct = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
+
+export const getFilteredProducts = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+    const category = req.query.category || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const query = {};
+
+    // 🔍 SEARCH CONDITION
+    if (search.trim() !== "") {
+      query.$or = [
+        { productName: new RegExp(search, "i") },
+        { author: new RegExp(search, "i") },
+        { language: new RegExp(search, "i") }
+      ];
+    }
+
+    // 📂 CATEGORY FILTER
+    if (category) {
+      query.category = category;
+    }
+
+    // 🟦 FETCH FILTERED PRODUCTS WITH PAGINATION
+    const data = await Product.find(query)
+      .sort({ productName: 1 })
+      .skip(skip)
+      .limit(limit);
+
+    // 📌 Count total filtered products
+    const totalProducts = await Product.countDocuments(query);
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    // 📌 Categories for dropdown
+    const categories = await Category.find();
+
+    res.render("products", {
+      data,
+      categories,
+      search,
+      category,
+      currentPage: page,
+      totalPages
+    });
+
+  } catch (error) {
+    console.log("Filter error:", error);
+    res.redirect("/admin/pageerror");
+  }
+};
+;

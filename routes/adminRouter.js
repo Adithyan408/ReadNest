@@ -3,7 +3,8 @@ import {loadLogin, login, logout, loadPageError, loadDashboard} from '../control
 import { customerInfo, blockCustomers, unblockCustomers} from "../controllers/admin/customerController.js"
 import {categoryInfo, addCategory, categoryAdd, listCategory, unlistCategory, geteditCategory, editCategory, deleteCategory} from "../controllers/admin/categoryController.js"
 import { userAuth, adminAuth } from "../middlewares/auth.js";
-import { editProduct, geteditProduct, getProducts, getProductsAdd, productsAdd, listProduct, unlistProduct, deleteProduct } from "../controllers/admin/productController.js";
+import { editProduct, geteditProduct, getProducts, getProductsAdd, productsAdd, listProduct, unlistProduct, 
+    deleteProduct, getFilteredProducts } from "../controllers/admin/productController.js";
 import upload from "../middlewares/multer.js";
 import nocache from "nocache";
 
@@ -34,7 +35,7 @@ adminRouter.post("/editCategory", adminAuth, editCategory)
 adminRouter.get("/deleteCategory", nocache(), adminAuth , deleteCategory);
 
 //Products MAnagement
-adminRouter.get("/products", nocache(), adminAuth, getProducts)
+// adminRouter.get("/products", nocache(), adminAuth, getProducts)
 adminRouter.get("/addProducts", nocache(), adminAuth, getProductsAdd)
 adminRouter.post("/addProducts", adminAuth, upload.array("productImage", 5), productsAdd);
 adminRouter.get("/updateProduct", nocache(), adminAuth, geteditProduct);
@@ -42,3 +43,4 @@ adminRouter.post("/updateProduct", adminAuth, upload.array("productImage", 5), e
 adminRouter.get("/listProduct", nocache(), adminAuth, listProduct)
 adminRouter.get("/unlistProduct", nocache(), adminAuth, unlistProduct)
 adminRouter.get("/deleteProduct", nocache(), adminAuth , deleteProduct);
+adminRouter.get("/products", nocache(), adminAuth , getFilteredProducts);
