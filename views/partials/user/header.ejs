@@ -23,33 +23,48 @@
       <div class="flex items-center justify-between">
         <!-- Logo -->
         <div class="flex items-center space-x-2">
-          <!-- <div
-            class="w-12 h-12 bg-orange-900 rounded-full flex items-center justify-center"
-          >
-            <i class="fas fa-book-open text-white text-xl"></i>
-          </div> -->
+          
           <div class="w-14 h-14 rounded-full overflow-hidden">
-            <img
+           <a href="/"> <img
               src="/images/logo2.png"
               alt="ReadNest Logo"
               class="w-full h-full object-cover"
-            />
+            /></a>
           </div>
 
-          <span class="text-xl font-bold text-gray-800">ReadNest</span>
+         <a href="/"> <span class="text-xl font-bold text-gray-800">ReadNest</span></a>
         </div>
 
         <!-- Search Bar -->
         <div class="flex-1 max-w-md mx-8">
-          <div class="relative">
+          <div class="relative w-full">
+            <!-- Search Input -->
             <input
               type="text"
-              placeholder="Search"
-              class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-orange-500"
+              id="searchInput"
+              placeholder="Search books, authors..."
+              class="w-full pl-10 pr-10 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-orange-500"
+              autocomplete="off"
             />
+
+            <!-- Search Icon -->
             <i
               class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
             ></i>
+
+            <!-- Clear Button -->
+            <button
+              id="clearSearch"
+              class="hidden absolute right-3 top-2.5 text-gray-500 hover:text-black"
+            >
+              ✕
+            </button>
+
+            <!-- LIVE SEARCH RESULTS DROPDOWN -->
+            <div
+              id="searchResults"
+              class="absolute w-full bg-white border border-gray-200 rounded-lg mt-1 shadow hidden z-50 max-h-60 overflow-y-auto"
+            ></div>
           </div>
         </div>
 
@@ -94,3 +109,73 @@
     </div>
   </header>
 </html>
+<script>
+  const searchInput = document.getElementById("searchInput");
+  const searchResults = document.getElementById("searchResults");
+  const clearBtn = document.getElementById("clearSearch");
+
+  let debounceTimer;
+
+  // Auto Search (debounced)
+  searchInput.addEventListener("input", () => {
+    const query = searchInput.value.trim();
+
+    clearBtn.classList.toggle("hidden", query === "");
+
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      if (query === "") {
+        searchResults.innerHTML = "";
+        searchResults.classList.add("hidden");
+        return;
+      }
+
+      fetch(`/live-search?q=${encodeURIComponent(query)}`)
+        .then((res) => res.json())
+        .then((products) => {
+          if (!products.length) {
+            searchResults.innerHTML = `<p class="p-3 text-gray-500">No results found</p>`;
+            searchResults.classList.remove("hidden");
+            return;
+          }
+
+          searchResults.innerHTML = products
+            .map(
+              (p) => `
+            <a href="/product?id=${p._id}" class="block p-3 hover:bg-gray-100 border-b last:border-none">
+              <div class="flex items-center gap-3">
+                <img src="${p.productImage[0]}" class="w-12 h-16 object-cover rounded">
+                <div>
+                  <p class="font-semibold text-sm">${p.productName}</p>
+                  <p class="text-xs text-gray-500">${p.author}</p>
+                </div>
+              </div>
+            </a>
+          `
+            )
+            .join("");
+
+          searchResults.classList.remove("hidden");
+        });
+    }, 300);
+  });
+
+  // Clear Search
+  clearBtn.addEventListener("click", () => {
+    searchInput.value = "";
+    searchResults.innerHTML = "";
+    searchResults.classList.add("hidden");
+    clearBtn.classList.add("hidden");
+    searchInput.focus();
+  });
+
+  // Hide dropdown on outside click
+  document.addEventListener("click", (e) => {
+    if (
+      !e.target.closest("#searchResults") &&
+      !e.target.closest("#searchInput")
+    ) {
+      searchResults.classList.add("hidden");
+    }
+  });
+</script>

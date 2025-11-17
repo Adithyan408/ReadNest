@@ -3,6 +3,7 @@ import { loadNotFound, loadSigup, loadLogin, signup, verifyOtp, loadVerify, rese
      login, loadProfile, logout} from '../controllers/user/userController.js'
 import { forgotEmailValid, getForgotPassword, getResetPassword, postResetPassword, forgotVerifyOtp } from '../controllers/user/profileController.js';
 import { getProductsDetails, loadHome } from '../controllers/user/productController.js';
+import { liveSearch } from '../controllers/user/searchController.js';
 
 export const router = express.Router();
 
@@ -31,4 +32,5 @@ router.post("/reset-password", postResetPassword)
 router.post("/forgot-verify-otp", forgotVerifyOtp);
 
 router.get("/product",getProductsDetails)
+router.get("/live-search", liveSearch)
  
