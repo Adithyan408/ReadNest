@@ -77,10 +77,11 @@
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-8">
       <a
-        href="/?<%= baseQuery %>"
+        href="#"
+        onclick="goBack()"
         class="text-blue-600 font-semibold hover:underline flex items-center gap-2 mb-4"
       >
-        <i class="fas fa-arrow-left"></i> Back to Products
+        <i class="fas fa-arrow-left"></i> Back
       </a>
 
       <!-- PRODUCT SECTION: FIXED LEFT + SCROLLABLE RIGHT -->
@@ -455,6 +456,14 @@
           zoomFactor: 1.5,
           passive: false,
         });
+      }
+      function goBack() {
+        if (document.referrer && document.referrer !== window.location.href) {
+          window.location.href = document.referrer;
+        } else {
+          // fallback → go to home if referrer is empty
+          window.location.href = "/";
+        }
       }
 
       initZoom();

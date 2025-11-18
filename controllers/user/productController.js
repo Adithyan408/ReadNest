@@ -5,10 +5,6 @@ import Category from "../../models/categorySchema.js";
 export const loadHome = async (req, res) => {
   try {
     const user = req.session.user;
-
-    // ----------------------------
-    // GET FILTERS
-    // ----------------------------
     const category = req.query.category || null;
     const min = req.query.min || null;
     const max = req.query.max || null;
@@ -23,7 +19,10 @@ export const loadHome = async (req, res) => {
       }
     }
 
-    let filter = { isListed: true };
+    let filter = {
+      isListed: true,
+      specialOfferType: { $in: ["none", null, undefined] }
+    };
 
     if (category) filter.category = category;
 
@@ -119,3 +118,168 @@ export const getProductsDetails = async (req, res) => {
     res.redirect("/notfound");
   }
 };
+
+
+export const getComboOffers = async (req, res) => {
+  try {
+    const user = req.session.user;
+
+  
+    const min = req.query.min || null;
+    const max = req.query.max || null;
+
+    let selectedLanguages = [];
+    if (req.query.languages) {
+      if (Array.isArray(req.query.languages)) {
+        selectedLanguages = req.query.languages;
+      } else {
+        selectedLanguages = req.query.languages.split(",");
+      }
+    }
+
+    if (req.query.category) {
+      return res.redirect("/");
+    }
+
+ 
+    let filter = {
+      isListed: true,
+      specialOfferType: "combo",
+    };
+    const categories = await Category.find({ isListed: true });
+
+
+    if (min || max) {
+      filter.regularPrice = {};
+      if (min) filter.regularPrice.$gte = parseInt(min);
+      if (max) filter.regularPrice.$lte = parseInt(max);
+    }
+
+    if (selectedLanguages.length > 0) {
+      filter.language = { $in: selectedLanguages };
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
+    const comboProducts = await Product.find(filter)
+      .sort({ productName: 1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalProducts = await Product.countDocuments(filter);
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    const languages = await Product.distinct("language", {
+      specialOfferType: "combo",
+    });
+
+    const queryParams = new URLSearchParams();
+
+    if (min) queryParams.set("min", min);
+    if (max) queryParams.set("max", max);
+    selectedLanguages.forEach((lang) => queryParams.append("languages", lang));
+
+    const baseQuery = queryParams.toString();
+
+    res.render("combo", {
+      products: comboProducts,
+      totalPages,
+      totalProducts,
+      currentPage: page,
+      languages,
+      selectedLanguages,
+      min,
+      max,
+      baseQuery,
+      user,
+      categories
+    });
+  } catch (error) {
+    console.log(error);
+    res.redirect("/notfound");
+  }
+};
+
+export const getRushHourOffers = async (req, res) => {
+  try {
+    const user = req.session.user;
+
+    const min = req.query.min || null;
+    const max = req.query.max || null;
+
+    let selectedLanguages = [];
+    if (req.query.languages) {
+      if (Array.isArray(req.query.languages)) {
+        selectedLanguages = req.query.languages;
+      } else {
+        selectedLanguages = req.query.languages.split(",");
+      }
+    }
+
+    if (req.query.category) {
+      return res.redirect("/");
+    }
+
+    let filter = {
+      isListed: true,
+      specialOfferType: "rush-hour",
+    };
+
+    const categories = await Category.find({ isListed: true });
+
+    if (min || max) {
+      filter.regularPrice = {};
+      if (min) filter.regularPrice.$gte = parseInt(min);
+      if (max) filter.regularPrice.$lte = parseInt(max);
+    }
+
+    if (selectedLanguages.length > 0) {
+      filter.language = { $in: selectedLanguages };
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
+    const rushProducts = await Product.find(filter)
+      .sort({ productName: 1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalProducts = await Product.countDocuments(filter);
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    const languages = await Product.distinct("language", {
+      specialOfferType: "rush-hour",
+    });
+
+    const queryParams = new URLSearchParams();
+
+    if (min) queryParams.set("min", min);
+    if (max) queryParams.set("max", max);
+    selectedLanguages.forEach((lang) => queryParams.append("languages", lang));
+
+    const baseQuery = queryParams.toString();
+
+
+    res.render("rush-hour", {
+      products: rushProducts,
+      totalPages,
+      totalProducts,
+      currentPage: page,
+      languages,
+      selectedLanguages,
+      min,
+      max,
+      baseQuery,
+      user,
+      categories,
+    });
+  } catch (error) {
+    console.log(error);
+    res.redirect("/notfound");
+  }
+};
+

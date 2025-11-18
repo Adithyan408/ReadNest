@@ -2,7 +2,7 @@ import express from 'express'
 import { loadNotFound, loadSigup, loadLogin, signup, verifyOtp, loadVerify, resendOtp, googleAuth, googleAuthCallback,
      login, loadProfile, logout} from '../controllers/user/userController.js'
 import { forgotEmailValid, getForgotPassword, getResetPassword, postResetPassword, forgotVerifyOtp } from '../controllers/user/profileController.js';
-import { getProductsDetails, loadHome } from '../controllers/user/productController.js';
+import { getProductsDetails, loadHome, getComboOffers, getRushHourOffers } from '../controllers/user/productController.js';
 import { liveSearch } from '../controllers/user/searchController.js';
 import nocache from 'nocache';
 
@@ -34,4 +34,8 @@ router.post("/forgot-verify-otp", forgotVerifyOtp);
 
 router.get("/product",getProductsDetails)
 router.get("/live-search", liveSearch)
+
+router.get("/offers/combo", getComboOffers);
+router.get("/offers/rush-hour", getRushHourOffers);
+
  

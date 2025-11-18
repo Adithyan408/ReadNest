@@ -1,32 +1,7 @@
 import Product from "../../models/productsSchema.js";
 import Category from "../../models/categorySchema.js";
 
-export const getProducts = async (req, res) => {
-  //   try {
-  //     const page = parseInt(req.query.page) || 1;
-  //     const limit = 10;
-  //     const skip = (page - 1) * limit;
-  //     const productData = await Product.find({})
-  //       .sort({ productName: 1 })
-  //       .skip(skip)
-  //       .limit(limit);
-  //       const categories = await Category.find({ isListed: true });
-  //     const totalProducts = await Product.countDocuments();
-  //     const totalPages = Math.ceil(totalProducts / limit);
-  //     res.render("products", {
-  //       data: productData,
-  //       currentPage: page,
-  //       totalPages: totalPages,
-  //       totalProducts: totalProducts,
-  //       categories,
-  //       category: "",
-  //       search: ""
-  //     });
-  //   } catch (error) {
-  //     console.log(error);
-  //     res.redirect("/admin/pageerror");
-  //   }
-};
+
 
 export const getProductsAdd = async (req, res) => {
   try {
@@ -61,21 +36,45 @@ export const productsAdd = async (req, res) => {
       yearOfPublishing,
       pages,
       regularPrice,
+      salePrice,
       stock,
       isbnNumber,
       category,
+      specialOfferType,
     } = req.body;
 
-    if (
-      !productName ||
-      !description ||
-      !category ||
-      !language ||
-      !regularPrice
-    ) {
-      const categories = await Category.find({ isListed: true });
-      const errorMessage = "Please fill all required fields.";
-      return res.render("addProduct", { errorMessage, categories });
+
+
+    let isOfferProduct =
+      specialOfferType === "combo" || specialOfferType === "rush-hour";
+
+    if (isOfferProduct) {
+      // OFFER PRODUCTS → Only these 4 fields MUST be required
+      if (!productName || !regularPrice || !salePrice || !stock) {
+        const categories = await Category.find({ isListed: true });
+        return res.render("addProduct", {
+          errorMessage:
+            "For Combo/Rush Hour: Product name, stock, regular price and sale price are required.",
+          categories,
+        });
+      }
+    } else {
+      // NORMAL PRODUCTS → FULL VALIDATION
+      if (
+        !productName ||
+        !description ||
+        !author ||
+        !category ||
+        !language ||
+        !regularPrice ||
+        !stock
+      ) {
+        const categories = await Category.find({ isListed: true });
+        return res.render("addProduct", {
+          errorMessage: "Please fill all required fields for normal products.",
+          categories,
+        });
+      }
     }
 
     const imageUrls =
@@ -95,9 +94,11 @@ export const productsAdd = async (req, res) => {
       yearOfPublishing,
       pages,
       regularPrice,
+      salePrice: req.body.salePrice,
       stock,
       productImage: imageUrls,
       isbnNumber,
+      specialOfferType,
     });
 
     await newProduct.save();
@@ -212,12 +213,15 @@ export const listProduct = async (req, res) => {
 
     await Product.findByIdAndUpdate(id, { isListed: true });
 
-    res.redirect(`/admin/products?page=${page || 1}&search=${search || ""}&category=${category || ""}`);
+    res.redirect(
+      `/admin/products?page=${page || 1}&search=${search || ""}&category=${
+        category || ""
+      }`
+    );
   } catch (err) {
     res.redirect("/admin/pageerror");
   }
 };
-
 
 export const unlistProduct = async (req, res) => {
   try {
@@ -225,12 +229,15 @@ export const unlistProduct = async (req, res) => {
 
     await Product.findByIdAndUpdate(id, { isListed: false });
 
-    res.redirect(`/admin/products?page=${page || 1}&search=${search || ""}&category=${category || ""}`);
+    res.redirect(
+      `/admin/products?page=${page || 1}&search=${search || ""}&category=${
+        category || ""
+      }`
+    );
   } catch (err) {
     res.redirect("/admin/pageerror");
   }
 };
-
 
 export const deleteProduct = async (req, res) => {
   try {
@@ -266,7 +273,7 @@ export const getFilteredProducts = async (req, res) => {
       query.$or = [
         { productName: new RegExp(search, "i") },
         { author: new RegExp(search, "i") },
-        { language: new RegExp(search, "i") }
+        { language: new RegExp(search, "i") },
       ];
     }
 
@@ -294,12 +301,10 @@ export const getFilteredProducts = async (req, res) => {
       search,
       category,
       currentPage: page,
-      totalPages
+      totalPages,
     });
-
   } catch (error) {
     console.log("Filter error:", error);
     res.redirect("/admin/pageerror");
   }
 };
-;

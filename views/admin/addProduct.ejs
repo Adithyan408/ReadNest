@@ -236,6 +236,19 @@
                     class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base resize-none"
                   ></textarea>
                 </div>
+                <!-- Offer Type Selection -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <select
+                      name="specialOfferType"
+                      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base appearance-none cursor-pointer"
+                    >
+                      <option value="none">No Offer</option>
+                      <option value="combo">Combo Offer</option>
+                      <option value="rush-hour">Rush Hour Special Sale</option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
               <!-- Row 2: Category and Language -->
@@ -404,6 +417,16 @@
                     </div>
                   </div>
                 </div>
+                <!-- Sale Price (Only for offers) -->
+                <div id="salePriceWrapper" class="hidden">
+                  <input
+                    type="number"
+                    name="salePrice"
+                    placeholder="Sale Price (Only for Combo / Rush Hour)"
+                    step="0.01"
+                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
+                  />
+                </div>
               </div>
 
               <!-- Image Upload Section -->
@@ -421,7 +444,6 @@
                     id="productImage"
                     accept="image/*"
                     multiple
-                    
                   />
                   <button
                     type="button"
@@ -461,5 +483,17 @@
         input.value = parseInt(input.value) - 1;
       }
     }
+    const offerSelect = document.querySelector(
+      "select[name='specialOfferType']"
+    );
+    const salePriceWrapper = document.getElementById("salePriceWrapper");
+
+    offerSelect.addEventListener("change", function () {
+      if (this.value === "combo" || this.value === "rush-hour") {
+        salePriceWrapper.classList.remove("hidden");
+      } else {
+        salePriceWrapper.classList.add("hidden");
+      }
+    });
   </script>
 </html>

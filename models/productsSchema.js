@@ -7,98 +7,124 @@ const productsSchema = new Schema(
       type: String,
       required: true,
     },
+
+    // DESCRIPTION VALIDATION
     description: {
       type: String,
-      required: true,
+      default: "",
+      validate: {
+        validator: function (v) {
+          if (this.specialOfferType === "none") {
+            return v && v.trim().length > 0;
+          }
+          return true;
+        },
+        message: "Description is required for normal products.",
+      },
     },
+
+    // AUTHOR VALIDATION
     author: {
       type: String,
-      required: true,
+      default: "",
+      validate: {
+        validator: function (v) {
+          if (this.specialOfferType === "none") {
+            return v && v.trim().length > 0;
+          }
+          return true;
+        },
+        message: "Author is required for normal products.",
+      },
     },
+
     authorDescription: {
       type: String,
-      required: false,
+      default: "",
     },
+
+    // CATEGORY VALIDATION
     category: {
       type: String,
-      ref: "Category",
-      required: true,
+      default: "",
+      validate: {
+        validator: function (v) {
+          if (this.specialOfferType === "none") {
+            return v && v.trim().length > 0;
+          }
+          return true;
+        },
+        message: "Category is required for normal products.",
+      },
     },
+
+    // LANGUAGE VALIDATION
     language: {
       type: String,
+      default: "",
+      validate: {
+        validator: function (v) {
+          if (this.specialOfferType === "none") {
+            return v && v.trim().length > 0;
+          }
+          return true;
+        },
+        message: "Language is required for normal products.",
+      },
+    },
+
+    stock: {
+      type: Number,
       required: true,
     },
-    stock : {
-      type: Number,
-      required: true
+
+    specialOfferType: {
+      type: String,
+      enum: ["none", "combo", "rush-hour"],
+      default: "none",
     },
-    Translated: [
-      {
-        isTranslated: {
-          type: Boolean,
-          required: true,
-          defalut: false,
-        },
-        transaltor: {
-          type: String,
-          required: true,
-        },
-        translatedLanguage: {
-          type: String,
-          required: true,
-        },
-        transaltorDescription: {
-          type: String,
-          required: true,
-        },
-      },
-    ],
+
     regularPrice: {
       type: Number,
       required: true,
     },
-    salesPrice: {
+
+    // SALE PRICE VALIDATION
+    salePrice: {
       type: Number,
-      required: false,
+      default: null,
+      validate: {
+        validator: function (v) {
+          if (this.specialOfferType === "none") return true;
+          return v !== null && v !== undefined && v > 0;
+        },
+        message: "Sale price is required for combo or rush-hour.",
+      },
     },
-    productOffer: {
-      type: Number,
-      required: false,
-    },
+
     productImage: {
       type: [String],
       required: true,
     },
+
     isListed: {
       type: Boolean,
       default: true,
     },
-    publisher: {
-      type: String,
-      required: false
-    },
-    yearOfPublishing :{
-      type: String,
-      required: false
-    },
-    pages:{
-      type: Number,
-      default:null
-    },
+
+    publisher: { type: String, default: "" },
+    yearOfPublishing: { type: String, default: "" },
+    pages: { type: Number, default: null },
+    isbnNumber: { type: String, default: "" },
+
     status: {
       type: String,
       enum: ["Available", "Out of Stock", "Discontinued"],
-      required: true,
       default: "Available",
     },
-    isbnNumber:{
-      type: Number,
-      required: false
-    }
   },
   { timestamps: true }
 );
 
 const Product = mongoose.model("Product", productsSchema);
-
 export default Product;
