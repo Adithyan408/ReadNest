@@ -219,6 +219,18 @@
               </option>
               <% }) %>
   </select>
+  <select
+  id="offerFilter"
+  class="px-4 py-3 bg-gray-100 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+>
+  <option value="" <%= !offer ? "selected" : "" %>>No Offer</option>
+  <option value="rushHour" <%= offer === "rushHour" ? "selected" : "" %>>
+    Rush Hour
+  </option>
+  <option value="combo" <%= offer === "combo" ? "selected" : "" %>>
+    Combo
+  </option>
+</select>
 
             </div>
           </div>
@@ -438,18 +450,21 @@
   clearBtn.classList.remove("hidden");
 }
 
+const offerSelect = document.getElementById("offerFilter");
   function applyFilters() {
-    const search = searchInput.value.trim();
-    const category = categorySelect.value;
+  const search = searchInput.value.trim();
+  const category = categorySelect.value;
+  const offer = offerSelect.value;
 
-    const params = new URLSearchParams();
+  const params = new URLSearchParams();
 
-    if (search) params.append("search", search);
-    if (category) params.append("category", category);
+  if (search) params.append("search", search);
+  if (category) params.append("category", category);
+  if (offer) params.append("offer", offer);  // NEW
 
-    // Reload page with the correct filters
-    window.location.href = `/admin/products?${params.toString()}`;
-  }
+  window.location.href = `/admin/products?${params.toString()}`;
+}
+
 
   // 🟦 Debounced Search — does NOT refresh immediately
   let typingTimer;
@@ -475,6 +490,9 @@
 
   // 🟩 Category Filter
   categorySelect.addEventListener("change", applyFilters);
+  
+  offerSelect.addEventListener("change", applyFilters);
+
 
   // 🟨 Clear Search
   clearBtn.addEventListener("click", () => {

@@ -1,8 +1,6 @@
 import Product from "../../models/productsSchema.js";
 import Category from "../../models/categorySchema.js";
 
-
-
 export const getProductsAdd = async (req, res) => {
   try {
     const categories = await Category.find({ isListed: true });
@@ -42,8 +40,6 @@ export const productsAdd = async (req, res) => {
       category,
       specialOfferType,
     } = req.body;
-
-
 
     let isOfferProduct =
       specialOfferType === "combo" || specialOfferType === "rush-hour";
@@ -259,13 +255,14 @@ export const getFilteredProducts = async (req, res) => {
   try {
     const search = req.query.search || "";
     const category = req.query.category || "";
+    const offer = req.query.offer || "";
+
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
     const skip = (page - 1) * limit;
 
     const query = {};
 
-    // 🔍 SEARCH CONDITION
     if (search.trim() !== "") {
       query.$or = [
         { productName: new RegExp(search, "i") },
@@ -274,22 +271,24 @@ export const getFilteredProducts = async (req, res) => {
       ];
     }
 
-    // 📂 CATEGORY FILTER
     if (category) {
       query.category = category;
     }
 
-    // 🟦 FETCH FILTERED PRODUCTS WITH PAGINATION
+    if (offer === "rushHour") {
+      query.specialOfferType = "rushHour";
+    } else if (offer === "combo") {
+      query.specialOfferType = "combo";
+    }
+
     const data = await Product.find(query)
       .sort({ productName: 1 })
       .skip(skip)
       .limit(limit);
 
-    // 📌 Count total filtered products
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
 
-    // 📌 Categories for dropdown
     const categories = await Category.find();
 
     res.render("products", {
@@ -299,6 +298,7 @@ export const getFilteredProducts = async (req, res) => {
       category,
       currentPage: page,
       totalPages,
+      offer
     });
   } catch (error) {
     console.log("Filter error:", error);

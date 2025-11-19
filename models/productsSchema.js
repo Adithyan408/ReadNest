@@ -88,8 +88,7 @@ const productsSchema = new Schema(
       type: Number,
       required: true,
     },
-
-    // SALE PRICE VALIDATION
+    
     salePrice: {
       type: Number,
       default: null,
