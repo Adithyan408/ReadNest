@@ -52,24 +52,19 @@
         >
           <i class="fas fa-arrow-left mr-2"></i> Back
         </a>
+        <div
+          class="w-full h-64 md:h-80 lg:h-96 bg-gray-200 rounded-xl shadow-lg flex items-center justify-center overflow-hidden mb-8"
+        >
+          <img
+            src="<%= comboBanner %>"
+            alt="Banner"
+            class="max-w-full max-h-full object-contain"
+          />
+        </div>
+
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div class="grid grid-cols-4 gap-6">
             <% products.forEach((product, index) => { %>
-
-            <!-- Insert Banner After 2 Rows (2 × 4 = 8 items) -->
-            <% if (index === 8) { %>
-          </div>
-          <!-- close grid -->
-
-          <!-- Special Banner -->
-          <div
-            class="banner-special rounded-lg p-8 mb-6 text-white relative overflow-hidden"
-          >
-            <%- include("../../views/partials/admin/banner") %>
-          </div>
-
-          <div class="grid grid-cols-4 gap-6">
-            <% } %>
 
             <!-- Dynamic Book Card -->
             <a

@@ -1,6 +1,7 @@
 import User from "../../models/userSchema.js";
 import Product from "../../models/productsSchema.js";
 import Category from "../../models/categorySchema.js";
+import Banner from "../../models/bannerSchema.js";
 
 export const loadHome = async (req, res) => {
   try {
@@ -13,15 +14,15 @@ export const loadHome = async (req, res) => {
 
     if (req.query.languages) {
       if (Array.isArray(req.query.languages)) {
-        selectedLanguages = req.query.languages; // languages=English&languages=Tamil
+        selectedLanguages = req.query.languages;
       } else {
-        selectedLanguages = req.query.languages.split(","); // languages=English,Tamil
+        selectedLanguages = req.query.languages.split(",");
       }
     }
 
     let filter = {
       isListed: true,
-      specialOfferType: { $in: ["none", null, undefined] }
+      specialOfferType: { $in: ["none", null, undefined] },
     };
 
     if (category) filter.category = category;
@@ -70,20 +71,16 @@ export const loadHome = async (req, res) => {
       products,
       totalPages,
       currentPage: page,
-
       categories,
       selectedCategory: category,
-
       selectedLanguages,
       languages,
-
       min,
       max,
       baseQuery,
     });
   } catch (error) {
-    console.log("Home page not Found", error);
-    res.status(500).send("Server Error");
+    res.redirect("/notfound");
   }
 };
 
@@ -92,11 +89,9 @@ export const getProductsDetails = async (req, res) => {
     const productId = req.query.id;
     const page = req.query.page || 1;
 
-    // Clone all query params except id
     const q = { ...req.query };
-    delete q.id; // remove product ID
+    delete q.id;
 
-    // Build the query string for BACK button
     const baseQuery = new URLSearchParams(q).toString();
 
     const product = await Product.findById(productId);
@@ -114,17 +109,14 @@ export const getProductsDetails = async (req, res) => {
       baseQuery,
     });
   } catch (error) {
-    console.log(error);
     res.redirect("/notfound");
   }
 };
-
 
 export const getComboOffers = async (req, res) => {
   try {
     const user = req.session.user;
 
-  
     const min = req.query.min || null;
     const max = req.query.max || null;
 
@@ -141,13 +133,11 @@ export const getComboOffers = async (req, res) => {
       return res.redirect("/");
     }
 
- 
     let filter = {
       isListed: true,
       specialOfferType: "combo",
     };
     const categories = await Category.find({ isListed: true });
-
 
     if (min || max) {
       filter.regularPrice = {};
@@ -183,21 +173,27 @@ export const getComboOffers = async (req, res) => {
 
     const baseQuery = queryParams.toString();
 
-    res.render("combo", {
-      products: comboProducts,
-      totalPages,
-      totalProducts,
-      currentPage: page,
-      languages,
-      selectedLanguages,
-      min,
-      max,
-      baseQuery,
-      user,
-      categories
-    });
+    const comboBanner = await Banner.findOne({ title: "combo" });
+
+    if (totalProducts < 0) {
+      res.render("noOffers");
+    } else {
+      res.render("combo", {
+        products: comboProducts,
+        totalPages,
+        totalProducts,
+        currentPage: page,
+        languages,
+        selectedLanguages,
+        min,
+        max,
+        baseQuery,
+        user,
+        categories,
+        comboBanner: comboBanner ? comboBanner.bannerImage : null,
+      });
+    }
   } catch (error) {
-    console.log(error);
     res.redirect("/notfound");
   }
 };
@@ -263,23 +259,28 @@ export const getRushHourOffers = async (req, res) => {
 
     const baseQuery = queryParams.toString();
 
+    const rushHourBanner = await Banner.findOne({ title: "rushHour" });
 
-    res.render("rush-hour", {
-      products: rushProducts,
-      totalPages,
-      totalProducts,
-      currentPage: page,
-      languages,
-      selectedLanguages,
-      min,
-      max,
-      baseQuery,
-      user,
-      categories,
-    });
+    if (totalProducts <= 0) {
+      res.render("noOffers");
+    } else {
+      res.render("rush-hour", {
+        products: rushProducts,
+        totalPages,
+        totalProducts,
+        currentPage: page,
+        languages,
+        selectedLanguages,
+        min,
+        max,
+        baseQuery,
+        user,
+        categories,
+        rushHourBanner: rushHourBanner ? rushHourBanner.bannerImage : null,
+      });
+    }
   } catch (error) {
     console.log(error);
     res.redirect("/notfound");
   }
 };
-

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>No Offers Available | ReadNest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .floating-tag {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+        
+        .bounce-tag {
+            animation: bounce 2s ease-in-out infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: rotate(-5deg) translateY(0px);
+            }
+            50% {
+                transform: rotate(5deg) translateY(-10px);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: rise 10s infinite ease-in;
+        }
+        
+        @keyframes rise {
+            0% {
+                bottom: -10%;
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                bottom: 110%;
+                opacity: 0;
+            }
+        }
+
+        .pulse-ring {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 overflow-hidden">
+    <!-- Animated Background -->
+    <div class="particles" id="particles"></div>
+    
+    <!-- Main Container -->
+    <div class="min-h-screen flex items-center justify-center px-4 relative">
+        <div class="max-w-5xl w-full">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-12">
+                <!-- Left Side - Illustration -->
+                <div class="lg:w-1/2 relative">
+                    <!-- Empty Tag Illustration -->
+                    <div class="relative h-80 flex items-center justify-center">
+                        <!-- Background Tags -->
+                        <div class="absolute left-0 bounce-tag">
+                            <div class="w-24 h-32 bg-gradient-to-br from-orange-300 to-orange-500 rounded-lg shadow-2xl transform -rotate-12 flex items-center justify-center">
+                                <i class="fas fa-percent text-white text-3xl opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="absolute right-0 bounce-tag" style="animation-delay: 0.5s;">
+                            <div class="w-24 h-32 bg-gradient-to-br from-purple-300 to-purple-500 rounded-lg shadow-2xl transform rotate-12 flex items-center justify-center">
+                                <i class="fas fa-tag text-white text-3xl opacity-50"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Center Empty Box -->
+                        <div class="floating-tag relative z-10">
+                            <div class="w-56 h-72 bg-gradient-to-br from-gray-100 to-gray-300 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300 border-4 border-dashed border-gray-400">
+                                <div class="text-center">
+                                    <i class="fas fa-tags text-7xl text-gray-400 mb-4"></i>
+                                    <div class="text-gray-500 font-bold">
+                                        <div class="text-2xl">No Offers</div>
+                                        <div class="text-sm text-gray-400 mt-2">Check Back Later</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Floating Elements -->
+                        <div class="absolute top-10 left-20 floating-tag" style="animation-delay: 1s;">
+                            <i class="fas fa-ticket-alt text-4xl text-orange-400 opacity-30"></i>
+                        </div>
+                        <div class="absolute bottom-10 right-20 floating-tag" style="animation-delay: 1.5s;">
+                            <i class="fas fa-gift text-3xl text-purple-400 opacity-30"></i>
+                        </div>
+                        <div class="absolute top-20 right-10 floating-tag" style="animation-delay: 0.5s;">
+                            <i class="fas fa-certificate text-3xl text-orange-300 opacity-30"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Side - Content -->
+                <div class="lg:w-1/2 text-center lg:text-left fade-in">
+                    <div class="mb-6">
+                        <div class="inline-block px-4 py-2 bg-orange-100 rounded-full mb-4">
+                            <span class="text-orange-600 font-semibold text-sm">
+                                <i class="fas fa-info-circle mr-2"></i>No Active Offers
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+                        No Offers Running Now
+                    </h2>
+                    
+                    <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                        We currently don't have any active offers or promotions. But don't worry! 
+                        Great deals are coming soon. Stay tuned and check back regularly for exciting offers!
+                    </p>
+                    
+                    <!-- Info Box -->
+                    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center pulse-ring">
+                                    <i class="fas fa-bell text-purple-600 text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="text-left">
+                                <h3 class="font-semibold text-gray-800 mb-2">What can you do?</h3>
+                                <ul class="text-sm text-gray-600 space-y-1">
+                                    <li>• Browse our collection of amazing books</li>
+                                    <li>• Subscribe to get notified about new offers</li>
+                                    <li>• Explore different categories and bestsellers</li>
+                                    <li>• Check our blog for reading recommendations</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <button onclick="goHome()" class="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-lg shadow-lg hover:from-orange-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-300">
+                            <i class="fas fa-home mr-2"></i>
+                            Back to Home
+                        </button>
+                        <button onclick="browseBooks()" class="px-8 py-4 bg-white text-gray-700 font-semibold rounded-lg shadow-lg hover:bg-gray-50 transform hover:scale-105 transition-all duration-300 border-2 border-gray-200">
+                            <i class="fas fa-book mr-2"></i>
+                            Browse Books
+                        </button>
+                    </div>
+                    
+                    <!-- Popular Links -->
+                    <div class="mt-12">
+                        <p class="text-sm text-gray-500 mb-4 font-semibold">Quick Links:</p>
+                        <div class="flex flex-wrap gap-3 justify-center lg:justify-start">
+                            <a href="/" class="px-4 py-2 bg-purple-50 text-purple-600 rounded-full text-sm font-medium hover:bg-purple-100 transition-colors">
+                                <i class="fas fa-home mr-1"></i> Home
+                            </a>
+                            <a href="/books" class="px-4 py-2 bg-orange-50 text-orange-600 rounded-full text-sm font-medium hover:bg-orange-100 transition-colors">
+                                <i class="fas fa-book-open mr-1"></i> All Books
+                            </a>
+                            <a href="/categories" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-sm font-medium hover:bg-blue-100 transition-colors">
+                                <i class="fas fa-th-large mr-1"></i> Categories
+                            </a>
+                            <a href="/contact" class="px-4 py-2 bg-green-50 text-green-600 rounded-full text-sm font-medium hover:bg-green-100 transition-colors">
+                                <i class="fas fa-envelope mr-1"></i> Contact
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Newsletter Signup -->
+                    <div class="mt-8 p-6 bg-gradient-to-r from-orange-50 to-purple-50 rounded-xl border-2 border-orange-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-800 mb-1">Get Notified!</h4>
+                                <p class="text-sm text-gray-600">Subscribe to receive updates on new offers</p>
+                            </div>
+                            <button onclick="subscribe()" class="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors ml-4">
+                                Subscribe
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer Mini -->
+    <div class="absolute bottom-6 left-0 right-0 text-center">
+        <p class="text-gray-500 text-sm">
+            <i class="fas fa-book-open text-orange-500 mr-2"></i>
+            <span class="font-semibold">ReadNest</span> - Your Digital Library
+        </p>
+    </div>
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 15;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // Navigation functions
+        function goHome() {
+            window.location.href = '/';
+        }
+        
+        function browseBooks() {
+            window.location.href = '/';
+        }
+
+        function subscribe() {
+            // Show subscription modal or redirect to subscription page
+            alert('Thank you for your interest! We will notify you when new offers are available.');
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Press 'H' to go home
+            if (e.key === 'h' || e.key === 'H') {
+                goHome();
+            }
+            // Press 'B' to browse books
+            if (e.key === 'b' || e.key === 'B') {
+                browseBooks();
+            }
+        });
+        
+        // Initialize particles on load
+        window.addEventListener('load', createParticles);
+        
+        // Add console message
+        console.log('%cNo Offers Available', 'color: #f97316; font-size: 24px; font-weight: bold;');
+        console.log('%cPress "H" to go Home or "B" to Browse Books', 'color: #9333ea; font-size: 14px;');
+        console.log('%c📚 ReadNest - Happy Reading!', 'color: #f97316; font-size: 12px;');
+    </script>
+</body>
+</html>
