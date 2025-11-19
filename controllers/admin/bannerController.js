@@ -10,7 +10,10 @@ export const getBanner = async (req, res) => {
       .sort({ createdAt: 1 })
       .skip(skip)
       .limit(limit);
-    res.render("banner", { data: findBanner, currentPage: page });
+
+    const total = await Banner.countDocuments();
+    const totalPages = Math.ceil(total / limit);
+    res.render("banner", { data: findBanner,  currentPage:page, totalPages });
   } catch (error) {
     res.redirect("/pageerror");
   }
