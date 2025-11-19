@@ -49,7 +49,6 @@ export const productsAdd = async (req, res) => {
       specialOfferType === "combo" || specialOfferType === "rush-hour";
 
     if (isOfferProduct) {
-      // OFFER PRODUCTS → Only these 4 fields MUST be required
       if (!productName || !regularPrice || !salePrice || !stock) {
         const categories = await Category.find({ isListed: true });
         return res.render("addProduct", {
@@ -59,7 +58,6 @@ export const productsAdd = async (req, res) => {
         });
       }
     } else {
-      // NORMAL PRODUCTS → FULL VALIDATION
       if (
         !productName ||
         !description ||
@@ -119,7 +117,6 @@ export const productsAdd = async (req, res) => {
     await newProduct.save();
     console.log("New Product Added:", newProduct);
 
-    // ✅ Redirect to products page instead of rendering
     res.redirect("/admin/products?added=true&status=added");
   } catch (error) {
     res.redirect("/admin/products?status=error");

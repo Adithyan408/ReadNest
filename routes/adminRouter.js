@@ -8,6 +8,7 @@ import { editProduct, geteditProduct, getProductsAdd, productsAdd, listProduct, 
     deleteProduct, getFilteredProducts } from "../controllers/admin/productController.js";
 import upload from "../middlewares/multer.js";
 import nocache from "nocache";
+import { getBanner, getBannerAdd, bannerAdd, geteditBanner, editBanner, deleteBanner } from "../controllers/admin/bannerController.js";
 
 
 
@@ -44,3 +45,12 @@ adminRouter.get("/listProduct", nocache(), adminAuth, listProduct)
 adminRouter.get("/unlistProduct", nocache(), adminAuth, unlistProduct)
 adminRouter.get("/deleteProduct", nocache(), adminAuth , deleteProduct);
 adminRouter.get("/products", nocache(), adminAuth , getFilteredProducts);
+
+
+//Banner Management
+adminRouter.get("/banner", adminAuth, getBanner);
+adminRouter.get("/addBanner", nocache(), adminAuth, getBannerAdd);
+adminRouter.post("/addBanner", nocache(), adminAuth, upload.single("bannerImage"), bannerAdd);
+adminRouter.get("/updateBanner", nocache(), adminAuth, geteditBanner)
+adminRouter.post("/updateBanner", nocache(), adminAuth, upload.single("bannerImage"), editBanner);
+adminRouter.get("/deleteBanner", nocache(), adminAuth, deleteBanner);
