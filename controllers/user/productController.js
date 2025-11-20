@@ -7,8 +7,13 @@ export const loadHome = async (req, res) => {
   try {
     const user = req.session.user;
     const category = req.query.category || null;
-    const min = req.query.min || null;
-    const max = req.query.max || null;
+    const min = Array.isArray(req.query.min)
+      ? req.query.min.at(-1)
+      : req.query.min;
+
+    const max = Array.isArray(req.query.max)
+      ? req.query.max.at(-1)
+      : req.query.max;
     let sort = req.query.sort || null;
     let selectedLanguages = [];
 
@@ -36,7 +41,7 @@ export const loadHome = async (req, res) => {
     if (selectedLanguages.length > 0) {
       filter.language = { $in: selectedLanguages };
     }
-   
+
     let sortQuery = {};
 
     switch (sort) {
@@ -65,7 +70,7 @@ export const loadHome = async (req, res) => {
         break;
 
       default:
-        sortQuery = {}; // no sorting
+        sortQuery = {};
     }
 
     const page = parseInt(req.query.page) || 1;
