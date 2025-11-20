@@ -76,7 +76,7 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-8">
-       <%- include('../../views/partials/breadcrumb') %>
+      <%- include('../../views/partials/breadcrumb') %>
       <a
         href="#"
         onclick="goBack()"
@@ -117,6 +117,11 @@
             </div>
           </div>
           <!-- END IMAGE BLOCK -->
+          <% if (!categoryAvailable) { %>
+          <p class="text-red-500 text-sm mb-2">
+            The category for this product is no longer available.
+          </p>
+          <% } %>
 
           <!-- BUTTONS BLOCK -->
           <div class="flex gap-4 mt-6">

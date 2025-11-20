@@ -1,4 +1,4 @@
-import { Timestamp } from "bson";
+
 import User from "../../models/userSchema.js";
 
 export const customerInfo = async (req, res) => {

@@ -44,7 +44,7 @@ const productsSchema = new Schema(
     },
 
     // CATEGORY VALIDATION
-    category: {
+      category: {
       type: String,
       default: "",
       validate: {
@@ -88,7 +88,7 @@ const productsSchema = new Schema(
       type: Number,
       required: true,
     },
-    
+
     salePrice: {
       type: Number,
       default: null,

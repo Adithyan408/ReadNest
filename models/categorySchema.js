@@ -7,10 +7,7 @@ const categorySchema = new Schema({
         type: String,
         required: true
     },
-    categoryNumber : {
-        type: String,
-        required: true
-    },
+   
     isListed: {
         type: Boolean,
         default: true

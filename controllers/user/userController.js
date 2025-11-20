@@ -4,8 +4,7 @@ import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import passport from "../../config/passport.js";
 import { generateOtp, sendVerificationEmail } from "../../helpers/verify.js";
-import Product from "../../models/productsSchema.js";
-import Category from "../../models/categorySchema.js";
+
 dotenv.config();
 
 
@@ -24,8 +23,7 @@ export const loadSigup = async (req, res) => {
     req.session.message = null;
     return res.render("signup", { message });
   } catch (error) {
-    console.log("Signup page not loading");
-    res.status(500).send("Server Error");
+    res.status(500).render("notFound");
   }
 };
 
@@ -48,7 +46,6 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const findUser = await User.findOne({ isAdmin: false, email: email });
-    console.log("Find User: ", findUser); //logger
 
     if (!findUser) {
       req.session.message = "User not found";
@@ -60,7 +57,7 @@ export const login = async (req, res) => {
     }
 
     const passwordMatch = await bcrypt.compare(password, findUser.password);
-    console.log("Bcrypt: ", passwordMatch); //logger
+
     if (!passwordMatch) {
       req.session.message = "Invalide Credentials";
       return res.redirect("/login");
@@ -70,7 +67,6 @@ export const login = async (req, res) => {
       res.redirect("/");
     }
   } catch (error) {
-    console.log(error);
     req.session.message = "Please try again";
     res.redirect("/login");
   }
@@ -90,7 +86,6 @@ export const signup = async (req, res) => {
     }
 
     const otp = generateOtp();
-    console.log("Generated Otp:", otp);
 
     const emailSent = await sendVerificationEmail(name, email, otp);
     if (!emailSent) {
@@ -130,7 +125,6 @@ export const verifyOtp = async (req, res) => {
       await newUser.save();
       req.session.user = { _id: newUser._id };
 
-      // Clear OTP and temp data
       req.session.userOtp = null;
       req.session.userData = null;
 
@@ -207,7 +201,6 @@ export const loadProfile = async (req, res) => {
     const userData = await User.findById(userId).lean();
     res.render("profile", { user: userData });
   } catch (error) {
-    console.error("Error loading profile:", error);
     res.status(500).send("Server Error");
   }
 };

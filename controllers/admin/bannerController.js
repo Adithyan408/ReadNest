@@ -26,7 +26,9 @@ export const getBannerAdd = async (req, res) => {
         oldInput:{}
     }
     );
-  } catch (error) {}
+  } catch (error) {
+    res.render("admin-error")
+  }
 };
 
 export const bannerAdd = async (req, res) => {
@@ -76,7 +78,6 @@ export const bannerAdd = async (req, res) => {
     await newBanner.save();
     res.redirect("/admin/banner?status=added");
   } catch (error) {
-    console.log("Banner adding error", error);
     res.redirect("/pageerror");
   }
 };
@@ -137,6 +138,6 @@ export const deleteBanner = async (req, res) => {
     }
     res.redirect("/admin/banner?deleted=true&status=deleted");
   } catch (error) {
-    res.status(500).send("Internal Server Error");
+    res.status(500).redirect("/pageerror");
   }
 };

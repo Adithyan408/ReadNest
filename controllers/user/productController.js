@@ -32,12 +32,11 @@ export const loadHome = async (req, res) => {
       if (min) filter.regularPrice.$gte = parseInt(min);
       if (max) filter.regularPrice.$lte = parseInt(max);
     }
-    
 
     if (selectedLanguages.length > 0) {
       filter.language = { $in: selectedLanguages };
     }
-
+   
     let sortQuery = {};
 
     switch (sort) {
@@ -89,9 +88,9 @@ export const loadHome = async (req, res) => {
     const categories = await Category.find({ isListed: true });
     let languages = await Product.distinct("language", { isListed: true });
 
-    languages = languages.filter(lang => lang && lang.trim() !== "");
+    languages = languages.filter((lang) => lang && lang.trim() !== "");
 
-    const homeBanner = await Banner.findOne({title:"home-page"});
+    const homeBanner = await Banner.findOne({ title: "home-page" });
 
     const queryParams = new URLSearchParams();
 
@@ -116,7 +115,7 @@ export const loadHome = async (req, res) => {
       max,
       baseQuery,
       sort,
-      homeBanner : homeBanner ? homeBanner.bannerImage : null
+      homeBanner: homeBanner ? homeBanner.bannerImage : null,
     });
   } catch (error) {
     res.redirect("/notfound");
@@ -133,22 +132,37 @@ export const getProductsDetails = async (req, res) => {
 
     const baseQuery = new URLSearchParams(q).toString();
 
-    const product = await Product.findById(productId);
-    if (!product) return res.redirect("/notfound");
+    const product = await Product.findById(productId).populate("category");
+    if (!product) return res.redirect("/");
 
-    const similarProducts = await Product.find({
-      category: product.category,
-      _id: { $ne: productId },
-    }).limit(4);
+    const categoryDoc = await Category.findOne({
+      categoryName: product.category,
+    });
 
-    res.render("productsDetails", {
+    if (!categoryDoc || !categoryDoc.isListed) {
+      return res.redirect("/");
+    }
+
+    let similarProducts = [];
+
+    if (product.category && product.category.isListed) {
+      similarProducts = await Product.find({
+        category: product.category._id,
+        _id: { $ne: productId },
+        isListed: true,
+      }).limit(4);
+    }
+
+    return res.render("productsDetails", {
       product,
       similarProducts,
       currentPage: page,
       baseQuery,
+      categoryAvailable: product.category && product.category.isListed,
     });
   } catch (error) {
-    res.redirect("/notfound");
+    console.log(error);
+    return res.redirect("/notFound");
   }
 };
 

@@ -25,28 +25,25 @@ export const categoryInfo = async (req, res) => {
 };
 
 export const addCategory = async (req, res) => {
-  const { categoryName, categoryNumber } = req.body;
+  const { categoryName } = req.body;
   try {
-    if (!categoryName || !categoryNumber) {
+    if (!categoryName) {
       return res.status(400).render("addCategory", {
         errorMessage: "Both category name and number are required.",
-        category: { categoryName, categoryNumber },
+        category: { categoryName },
       });
     }
 
-    const existingCategory = await Category.findOne({
-      $or: [{ categoryName }, { categoryNumber }],
-    });
+    const existingCategory = await Category.findOne({categoryName})
     if (existingCategory) {
       return res.status(400).render("addCategory", {
         errorMessage: "Category already exists.",
-        category: { categoryName, categoryNumber },
+        category: { categoryName}
       });
     }
 
     const newCategory = new Category({
       categoryName,
-      categoryNumber,
     });
     await newCategory.save();
 
@@ -55,7 +52,7 @@ export const addCategory = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const categories = await Category.find({})
-      .sort({ categoryNumber: 1 })
+      .sort({ categoryName: 1 })
       .skip(skip)
       .limit(limit);
 
@@ -67,6 +64,7 @@ export const addCategory = async (req, res) => {
       currentPage: page,
       totalPages: totalPages,
       totalCategories: totalCategories,
+      status:"added"
     });
   } catch (error) {
     return res.status(500).json({ error: "Internal Server Error" });
@@ -84,28 +82,34 @@ export const categoryAdd = async (req, res) => {
 
     res.render("addCategory", { category });
   } catch (error) {
-    console.log("Error loading addCategory page:", error.message);
     res.redirect("/pageerror");
   }
 };
 
 export const listCategory = async (req, res) => {
   try {
+    const page = req.query.page || 1;
+
     await Category.findByIdAndUpdate(req.query.id, { isListed: true });
-    res.redirect("/admin/category");
+
+    res.redirect(`/admin/category?page=${page}`);
   } catch (err) {
-    res.redirect("admin/pageerror");
+    res.redirect("/admin/pageerror");
   }
 };
 
 export const unlistCategory = async (req, res) => {
   try {
+    const page = req.query.page || 1;
+
     await Category.findByIdAndUpdate(req.query.id, { isListed: false });
-    res.redirect("/admin/category");
+
+    res.redirect(`/admin/category?page=${page}`);
   } catch (err) {
-    res.redirect("admin/pageerror");
+    res.redirect("/admin/pageerror");
   }
 };
+
 
 export const geteditCategory = async (req, res) => {
   try {
@@ -133,7 +137,7 @@ export const editCategory = async (req, res) => {
       { new: true }
     );
     if (updateCategory) {
-      res.redirect("/admin/category");
+      res.redirect("/admin/category?status=updated");
     } else {
         res.json({message:"Something went wrong when editing"})
     }
@@ -155,8 +159,8 @@ export const deleteCategory = async (req, res) => {
     if (!deletedCategory) {
       return res.status(404).send("Category not found");
     }
-    res.redirect("/admin/category?deleted=true");
+    res.redirect("/admin/category?deleted=true&status=deleted");
   } catch (error) {
-    res.status(500).send("Internal Server Error");
+    res.redirect("/pageerror");
   }
 };

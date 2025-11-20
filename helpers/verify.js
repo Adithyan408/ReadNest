@@ -1,8 +1,6 @@
-// import User from "../../models/userSchema.js";
+
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import bcrypt from "bcrypt";
-// import passport from "../../config/passport.js";
 
 dotenv.config();
 

@@ -36,7 +36,7 @@ adminRouter.get("/editCategory", nocache(), adminAuth, geteditCategory)
 adminRouter.post("/editCategory", adminAuth, editCategory)
 adminRouter.get("/deleteCategory", nocache(), adminAuth , deleteCategory);
 
-//Products MAnagement
+//Products Management
 adminRouter.get("/addProducts", nocache(), adminAuth, getProductsAdd)
 adminRouter.post("/addProducts", nocache(), adminAuth, upload.array("productImage", 5), productsAdd);
 adminRouter.get("/updateProduct", nocache(), adminAuth, geteditProduct);

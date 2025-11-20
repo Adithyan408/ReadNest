@@ -13,7 +13,6 @@ export const getProductsAdd = async (req, res) => {
     }
     res.render("addProduct", { product, categories, errors: {}, oldInput: {} });
   } catch (error) {
-    console.log("Add product page rendering error : ", error);
     res.redirect("/pageerror");
   }
 };
@@ -92,8 +91,6 @@ export const productsAdd = async (req, res) => {
     });
 
     await newProduct.save();
-    console.log("new Product: ", newProduct); //logger
-
     const limit = 10;
     const page = 1;
     const skip = (page - 1) * limit;
@@ -106,13 +103,10 @@ export const productsAdd = async (req, res) => {
     const totalProducts = await Product.countDocuments();
     const totalPages = Math.ceil(totalProducts / limit);
 
-    await newProduct.save();
-    console.log("New Product Added:", newProduct);
 
     res.redirect("/admin/products?added=true&status=added");
   } catch (error) {
     res.redirect("/admin/products?status=error");
-    console.log("Product entry error", error); //logger
   }
 };
 
@@ -173,7 +167,6 @@ export const editProduct = async (req, res) => {
       updatedFields.productImage = existingProduct.productImage;
     }
 
-    // Remove undefined or empty string fields to prevent overwriting
     Object.keys(updatedFields).forEach(
       (key) =>
         (updatedFields[key] === undefined || updatedFields[key] === "") &&
@@ -181,8 +174,8 @@ export const editProduct = async (req, res) => {
     );
 
     const updateProduct = await Product.findByIdAndUpdate(id, updatedFields, {
-      new: true, // returns updated doc
-      runValidators: true, // ensures schema validation
+      new: true, 
+      runValidators: true, 
     });
 
     if (updateProduct) {
@@ -191,7 +184,6 @@ export const editProduct = async (req, res) => {
       res.status(400).json({ message: "Product not found" });
     }
   } catch (error) {
-    console.error("Error editing product:", error);
     res.redirect("/pageerror");
   }
 };
@@ -243,7 +235,7 @@ export const deleteProduct = async (req, res) => {
     }
     res.redirect("/admin/products?deleted=true&status=deleted");
   } catch (error) {
-    res.status(500).send("Internal Server Error");
+    res.redirect("/pageerror");
   }
 };
 
@@ -329,7 +321,6 @@ export const getFilteredProducts = async (req, res) => {
       sort,
     });
   } catch (error) {
-    console.log("Filter error:", error);
     res.redirect("/admin/pageerror");
   }
 };

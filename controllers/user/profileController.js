@@ -15,18 +15,14 @@ export const getForgotPassword = async (req, res) => {
 export const forgotEmailValid = async (req, res) => {
   try {
     const { email } = req.body;
-    console.log(req.body); //Logger
 
     const findUser = await User.findOne({ email });
     if (!findUser) {
       return res.json({ message: "This user NOt exist" });
     }
     const name = findUser.name;
-    console.log(findUser); //logger
-    console.log(findUser.name); //logger
 
     const otp = generateOtp();
-    console.log(otp); //logger
 
     const emailSent = await sendVerificationEmail(name, email, otp);
     if (!emailSent) {
@@ -34,7 +30,7 @@ export const forgotEmailValid = async (req, res) => {
     }
     req.session.userOtp = {
       code: otp,
-      expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
+      expiresAt: Date.now() + 5 * 60 * 1000, 
     };
     req.session.userData = { email };
 
@@ -51,13 +47,12 @@ export const forgotVerifyOtp = async (req, res) => {
     const storedOtp = req.session.userOtp;
 
     if (!storedOtp || Date.now() > storedOtp.expiresAt) {
-      req.session.userOtp = null; // clear expired OTP
+      req.session.userOtp = null; 
       return res.render("verify-otp", {
         message: "OTP expired. Please request a new one.",
       });
     }
 
-    console.log(req.body); //logger
 
     if (otp === storedOtp.code) {
       const email = req.session.userData.email;
@@ -75,7 +70,6 @@ export const forgotVerifyOtp = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("OTP verification error:", error);
     res.render("verify-otp", { message: "Something went wrong." });
   }
 };
@@ -85,16 +79,16 @@ export const getResetPassword = async (req, res) => {
     const {email} = req.query;
     if (!email) return res.redirect("/forgot-password");
     res.render("reset-password", { email });
-  } catch (error) {}
+  } catch (error) {
+
+  }
 };
 
 
 export const postResetPassword = async (req, res) => {
   try {
     const { email , newPassword, confirmPassword } = req.body;
-    console.log(req.body); //logger
- 
-
+    
     if (newPassword !== confirmPassword) {
       return res.render("reset-password", {
         message: "Passwords do not match.",
@@ -110,7 +104,6 @@ export const postResetPassword = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     const result = await User.updateOne( {email}, { password: hashedPassword });
-    console.log(result); //loggger
 
     if (result.modifiedCount === 0) {
       return res.render("reset-password", { message: "User not found." });
@@ -122,7 +115,6 @@ export const postResetPassword = async (req, res) => {
 
     return res.redirect("/login");
   } catch (error) {
-    console.log("Reset password error:", error);
     res.render("reset-password", { message: "Something went wrong."});
   }
 };
