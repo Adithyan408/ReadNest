@@ -6,25 +6,22 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// ✅ Configure Cloudinary
 cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,          // from your Cloudinary dashboard
+  cloud_name: process.env.CLOUD_NAME,          
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// ✅ Configure Cloudinary storage for Multer
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "re-image",                        // folder name in Cloudinary
+    folder: "re-image",                       
     allowed_formats: ["jpg", "jpeg", "png", "webp"],
     public_id: (req, file) =>
-      `${Date.now()}-${path.parse(file.originalname).name}`, // filename without extension
+      `${Date.now()}-${path.parse(file.originalname).name}`, 
   },
 });
 
-// ✅ Optional file filter
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|webp/;
   const mimeType = allowedTypes.test(file.mimetype);
@@ -37,7 +34,6 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// ✅ Initialize multer with Cloudinary storage
 const upload = multer({ storage, fileFilter });
 
 export default upload;

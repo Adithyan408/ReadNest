@@ -43,6 +43,80 @@
   <%- include("../../views/partials/user/header") %>
   <!-- Main Content -->
   <div class="max-w-7xl mx-auto px-4 py-6">
+    <%- include('../../views/partials/breadcrumb') %>
+    <!-- Compact Sort Bar -->
+    <div
+      class="bg-white rounded-lg shadow-sm px-4 py-2 mb-4 flex items-center gap-6 text-sm border border-gray-200"
+    >
+      <span class="font-semibold text-gray-700">Sort By:</span>
+
+      <form id="sortForm" method="GET" class="flex items-center gap-6">
+        <!-- Preserve all filters -->
+        <% if (selectedCategory) { %>
+        <input type="hidden" name="category" value="<%= selectedCategory %>" />
+        <% } %> <% selectedLanguages.forEach(lang => { %>
+        <input type="hidden" name="languages" value="<%= lang %>" />
+        <% }) %> <% if (min) { %><input
+          type="hidden"
+          name="min"
+          value="<%= min %>"
+        /><% } %> <% if (max) { %><input
+          type="hidden"
+          name="max"
+          value="<%= max %>"
+        /><% } %>
+
+        <!-- Sort Options -->
+        <label
+          class="flex items-center gap-2 cursor-pointer hover:text-indigo-600 transition"
+        >
+          <input type="radio" name="sort" value="priceAsc" <%=
+          sort==="priceAsc"?"checked":"" %> class="w-4 h-4 text-indigo-600">
+          <span>Price Low - High</span>
+        </label>
+
+        <label
+          class="flex items-center gap-2 cursor-pointer hover:text-indigo-600 transition"
+        >
+          <input type="radio" name="sort" value="priceDesc" <%=
+          sort==="priceDesc"?"checked":"" %> class="w-4 h-4 text-indigo-600">
+          <span>Price High - Low</span>
+        </label>
+
+        <label
+          class="flex items-center gap-2 cursor-pointer hover:text-indigo-600 transition"
+        >
+          <input type="radio" name="sort" value="nameAsc" <%=
+          sort==="nameAsc"?"checked":"" %> class="w-4 h-4 text-indigo-600">
+          <span>Name A - Z</span>
+        </label>
+
+        <label
+          class="flex items-center gap-2 cursor-pointer hover:text-indigo-600 transition"
+        >
+          <input type="radio" name="sort" value="nameDesc" <%=
+          sort==="nameDesc"?"checked":"" %> class="w-4 h-4 text-indigo-600">
+          <span>Name Z - A</span>
+        </label>
+
+        <label
+          class="flex items-center gap-2 cursor-pointer hover:text-indigo-600 transition"
+        >
+          <input type="radio" name="sort" value="newest" <%=
+          sort==="newest"?"checked":"" %> class="w-4 h-4 text-indigo-600">
+          <span>Newest First</span>
+        </label>
+
+        <label
+          class="flex items-center gap-2 cursor-pointer hover:text-indigo-600 transition"
+        >
+          <input type="radio" name="sort" value="oldest" <%=
+          sort==="oldest"?"checked":"" %> class="w-4 h-4 text-indigo-600">
+          <span>Oldest First</span>
+        </label>
+      </form>
+    </div>
+
     <div class="flex gap-6">
       <!-- Sidebar Filters -->
       <aside class="w-64 flex-shrink-0">
@@ -65,7 +139,7 @@
 
               <li>
                 <a
-                  href="/?category=<%= category.categoryName %><%= baseQuery ? '&' + baseQuery : '' %>"
+                  href="/?category=<%= category.categoryName %><%= sort ? '&sort=' + sort : '' %>"
                   class="flex justify-between items-center cursor-pointer <%= selectedCategory == category.categoryName ? 'text-orange-600 font-semibold' : 'hover:text-orange-600' %>"
                 >
                   <span class="text-sm"><%= category.categoryName %></span>
@@ -134,24 +208,27 @@
           <div class="mb-6">
             <h3 class="font-semibold text-gray-800 mb-3">OFFERS</h3>
             <ul class="space-y-2">
-              <a href="/offers/combo"><li
-                class="flex justify-between items-center cursor-pointer hover:text-orange-600"
-              >
-                <span class="text-sm">Combo Offers</span>
-                <i class="fas fa-chevron-right text-xs"></i>
-              </li></a>
-              <a href="/offers/rush-hour"><li
-                class="flex justify-between items-center cursor-pointer hover:text-orange-600"
-              >
-                <span class="text-sm">Rush Hour</span>
-                <i class="fas fa-chevron-right text-xs"></i>
-              </li></a>
+              <a href="/combo"
+                ><li
+                  class="flex justify-between items-center cursor-pointer hover:text-orange-600"
+                >
+                  <span class="text-sm">Combo Offers</span>
+                  <i class="fas fa-chevron-right text-xs"></i></li
+              ></a>
+              <a href="/rush-hour"
+                ><li
+                  class="flex justify-between items-center cursor-pointer hover:text-orange-600"
+                >
+                  <span class="text-sm">Rush Hour</span>
+                  <i class="fas fa-chevron-right text-xs"></i></li
+              ></a>
             </ul>
           </div>
 
           <!-- Languages -->
           <div class="mb-6">
             <h3 class="font-semibold text-gray-800 mb-3">LANGUAGES</h3>
+
             <form action="/" method="GET" id="languageForm" class="space-y-2">
               <% if (selectedCategory) { %>
               <input
@@ -163,6 +240,8 @@
               <input type="hidden" name="min" value="<%= min %>" />
               <% } %> <% if (max) { %>
               <input type="hidden" name="max" value="<%= max %>" />
+              <% } %> <% if (sort) { %>
+              <input type="hidden" name="sort" value="<%= sort %>" />
               <% } %> <% languages.forEach(lang => { %>
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" name="languages" class="w-4 h-4
@@ -171,8 +250,6 @@
                 <span class="text-sm"><%= lang %></span>
               </label>
               <% }) %>
-
-              <input type="hidden" name="languages" id="languagesInput" />
 
               <button
                 type="submit"
@@ -208,9 +285,13 @@
 
           <!-- Special Banner -->
           <div
-            class="banner-special rounded-lg p-8 mb-6 text-white relative overflow-hidden"
+            class="w-full h-64 md:h-80 lg:h-96 bg-gray-200 rounded-xl shadow-lg flex items-center justify-center overflow-hidden mb-8"
           >
-            <%- include("../../views/partials/admin/banner") %>
+            <img
+              src="<%= homeBanner %>"
+              alt="Banner"
+              class="max-w-full max-h-full object-contain"
+            />
           </div>
 
           <div class="grid grid-cols-4 gap-6">
@@ -293,6 +374,12 @@
 </body>
 
 <script>
+  document.querySelectorAll("input[name='sort']").forEach((radio) => {
+    radio.addEventListener("change", () => {
+      document.getElementById("sortForm").submit();
+    });
+  });
+
   const form = document.getElementById("languageForm");
   const hiddenInput = document.getElementById("languagesInput");
 

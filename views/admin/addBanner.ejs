@@ -86,6 +86,7 @@
 
     <!-- Main Content -->
     <div class="flex">
+      
       <!-- Sidebar -->
       <aside
         class="w-80 bg-gray-300 min-h-screen border-r border-gray-400 relative"
@@ -178,10 +179,16 @@
 
       <!-- Main Content - Add Banner Form -->
       <main class="flex-1 p-8 bg-gray-200">
+        <%- include('../../views/partials/breadcrumb') %>
         <div class="max-w-4xl mx-auto">
           <!-- Page Title -->
-          <div class="mb-6">
-            <h2 class="text-3xl font-bold text-gray-900">Banners</h2>
+          <div class="flex items-center mb-6">
+            <a href="/admin/banner" class="mr-4">
+              <i
+                class="fas fa-chevron-left text-2xl text-gray-700 hover:text-gray-900"
+              ></i>
+            </a>
+            <h2 class="text-3xl font-bold text-gray-900">Add Banner</h2>
           </div>
 
 
@@ -190,108 +197,136 @@
             <h3 class="text-2xl font-bold text-gray-900 text-center mb-8">
               ADD Banner
             </h3>
-
+          
             <form
-              id="bannerForm"
-              action="/admin/addBanner"
-              method="POST"
-              enctype="multipart/form-data"
-            >
-              <div class="space-y-6">
-                <!-- Title Input -->
-                <div>
-                  <input
-                    type="text"
-                    name="title"
-                    id="bannerTitle"
-                    placeholder="Title"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                    
-                  />
-                </div>
+  id="bannerForm"
+  action="/admin/addBanner"
+  method="POST"
+  enctype="multipart/form-data"
+>
+  <div class="space-y-6">
 
-                <!-- Image Upload Section -->
-                <div class="bg-white rounded-lg p-8">
-                  <div class="upload-area rounded-lg p-8">
-                    <div class="text-center">
-                      <div class="mb-4">
-                        <i class="fas fa-image text-6xl text-gray-400"></i>
-                      </div>
-                      <p class="text-gray-600 mb-4">
-                        Drag and drop image or Click add image
-                      </p>
-                      <input
-                        type="file"
-                        name="bannerImage"
-                        id="bannerImage"
-                        accept="image/*"
-                       
-                
-                      />
-                      <button
-                        type="button"
-                        onclick="document.getElementById('bannerImage').click()"
-                        class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition"
-                      >
-                        ADD IMAGE
-                      </button>
-                      <div id="imagePreview" class="mt-6"></div>
-                    </div>
-                  </div>
-                </div>
+    <!-- Title -->
+    <div>
+      <input
+        type="text"
+        name="title"
+        id="bannerTitle"
+        placeholder="Title"
+        value="<%= oldInput?.title || '' %>"
+        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+      />
 
-                <!-- Active Status, Starting Date, Ending Date -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <!-- Active Dropdown -->
-                  <div>
-                    <select
-                      name="status"
-                      id="activeStatus"
-                      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base appearance-none cursor-pointer"
-                      required
-                    >
-                      <option value="">Status</option>
-                      <option value="ACTIVE">Active</option>
-                      <option value="INACTIVE">INACTIVE</option>
-                    </select>
-                  </div>
+      <% if (errors?.title) { %>
+        <p class="text-red-600 text-sm mt-1"><%= errors.title %></p>
+      <% } %>
+    </div>
 
-                  <!-- Starting Date -->
-                  <div>
-                    <input
-                      type="date"
-                      name="startDate"
-                      id="startDate"
-                      placeholder="Starting Date"
-                      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base text-gray-500"
-                      required
-                    />
-                  </div>
+    <!-- Image Upload -->
+    <div class="bg-white rounded-lg p-8">
+      <div class="upload-area rounded-lg p-8">
+        <div class="text-center">
 
-                  <!-- Ending Date -->
-                  <div>
-                    <input
-                      type="date"
-                      name="endDate"
-                      id="endDate"
-                      placeholder="Ending Date"
-                      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base text-gray-500"
-                      required
-                    />
-                  </div>
-                </div>
+          <div class="mb-4">
+            <i class="fas fa-image text-6xl text-gray-400"></i>
+          </div>
 
-                <!-- Submit Button -->
-                <div class="flex justify-center pt-6">
-                  <button
-                    type="submit"
-                    class="px-20 py-4 bg-indigo-600 text-white text-lg font-bold rounded-lg hover:bg-indigo-700 transition shadow-lg"
-                  >
-                    ADD
-                  </button>
-                </div>
-              </div>
-            </form>
+          <p class="text-gray-600 mb-4">Drag and drop image or Click add image</p>
+
+          <input
+            type="file"
+            name="bannerImage"
+            id="bannerImage"
+            accept="image/*"
+          />
+
+          <button
+            type="button"
+            onclick="document.getElementById('bannerImage').click()"
+            class="px-8 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          >
+            ADD IMAGE
+          </button>
+
+          <% if (errors?.bannerImage) { %>
+            <p class="text-red-600 text-sm mt-2"><%= errors.bannerImage %></p>
+          <% } %>
+
+          <div id="imagePreview" class="mt-6"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status, Start Date, End Date -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <!-- Status -->
+      <div>
+        <select
+          name="status"
+          id="activeStatus"
+          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+        >
+          <option value="">Status</option>
+          <option value="ACTIVE" <%= oldInput?.status === 'ACTIVE' ? 'selected' : '' %>>ACTIVE</option>
+          <option value="INACTIVE" <%= oldInput?.status === 'INACTIVE' ? 'selected' : '' %>>INACTIVE</option>
+        </select>
+
+        <% if (errors?.status) { %>
+          <p class="text-red-600 text-sm mt-1"><%= errors.status %></p>
+        <% } %>
+      </div>
+
+      <!-- Start Date -->
+      <div>
+        <input
+          type="date"
+          name="startDate"
+          id="startDate"
+          value="<%= oldInput?.startDate || '' %>"
+          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 text-gray-500 focus:ring-2 focus:ring-indigo-500"
+        />
+
+        <% if (errors?.startDate) { %>
+          <p class="text-red-600 text-sm mt-1"><%= errors.startDate %></p>
+        <% } %>
+      </div>
+
+      <!-- End Date -->
+      <div>
+        <input
+          type="date"
+          name="endDate"
+          id="endDate"
+          value="<%= oldInput?.endDate || '' %>"
+          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 text-gray-500 focus:ring-2 focus:ring-indigo-500"
+        />
+
+        <% if (errors?.endDate) { %>
+          <p class="text-red-600 text-sm mt-1"><%= errors.endDate %></p>
+        <% } %>
+
+        <% if (errors?.dateRange) { %>
+          <p class="text-red-600 text-sm mt-1"><%= errors.dateRange %></p>
+        <% } %>
+      </div>
+
+    </div>
+
+    <!-- Submit Button -->
+    <div class="flex justify-center pt-6">
+      <button
+        type="submit"
+        class="px-20 py-4 bg-indigo-600 text-white text-lg font-bold rounded-lg hover:bg-indigo-700 shadow-lg"
+      >
+        ADD
+      </button>
+    </div>
+
+  </div>
+</form>
+        
+          
           </div>
         </div>
       </main>

@@ -35,7 +35,7 @@ router.post("/forgot-verify-otp", forgotVerifyOtp);
 router.get("/product",getProductsDetails)
 router.get("/live-search", liveSearch)
 
-router.get("/offers/combo", getComboOffers);
-router.get("/offers/rush-hour", getRushHourOffers);
+router.get("/combo", getComboOffers);
+router.get("/rush-hour", getRushHourOffers);
 
  

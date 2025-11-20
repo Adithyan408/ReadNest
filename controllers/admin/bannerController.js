@@ -21,14 +21,50 @@ export const getBanner = async (req, res) => {
 
 export const getBannerAdd = async (req, res) => {
   try {
-    res.render("addBanner");
+    res.render("addBanner",
+       {errors:{},
+        oldInput:{}
+    }
+    );
   } catch (error) {}
 };
 
 export const bannerAdd = async (req, res) => {
   try {
-    console.log(req.body);
     const { title, startDate, endDate, status } = req.body;
+    let errors = {};
+
+     if (!title || title.trim() === "") {
+      errors.title = "Banner title is required.";
+    }
+
+    if (!startDate) {
+      errors.startDate = "Start Date is required.";
+    }
+
+    if (!endDate) {
+      errors.endDate = "End Date is required.";
+    }
+
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      errors.dateRange = "Start Date cannot be after End Date.";
+    }
+
+    if (!status) {
+      errors.status = "Please select a banner status.";
+    }
+
+    if (!req.file) {
+      errors.bannerImage = "Banner image is required.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.render("addBanner", {
+        errors,
+        oldInput: req.body
+      });
+    }
+
     const imageUrl = req.file ? req.file.path : null;
     const newBanner = new Banner({
       title,

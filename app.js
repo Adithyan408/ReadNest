@@ -9,6 +9,7 @@ import session from 'express-session';
 import passport from 'passport';
 import User from './models/userSchema.js';
 import {adminRouter} from './routes/adminRouter.js'
+import { generateBreadcrumbs } from './middlewares/breadCrumb.js';
 
 
 const __filename = fileURLToPath(import.meta.url)
@@ -40,6 +41,8 @@ app.use(passport.session());
 app.set("view engine","ejs")
 app.set("views", [path.join(__dirname,'views/user'),path.join(__dirname,'views/admin')])
 app.use(express.static(path.join(__dirname,'public')));
+
+app.use(generateBreadcrumbs);
 
 
 

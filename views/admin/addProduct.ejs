@@ -190,6 +190,7 @@
 
       <!-- Main Content - Add Product Form -->
       <main class="flex-1 p-8 bg-gray-200">
+        <%- include('../../views/partials/breadcrumb') %>
         <div class="max-w-6xl">
           <!-- Page Title -->
           <div class="flex items-center mb-6">
@@ -202,271 +203,235 @@
           </div>
 
           <!-- Form -->
-          <form
-            action="/admin/addProducts"
-            method="POST"
-            enctype="multipart/form-data"
-          >
-            <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
-            <div id="errorMsg" class="text-red-600 font-semibold mb-3">
-              <%= errorMessage %>
-            </div>
-            <% } else { %>
-            <div
-              id="errorMsg"
-              class="text-red-600 font-semibold mb-3 hidden"
-            ></div>
-            <% } %>
-            <div class="space-y-6">
-              <!-- Row 1: Product Number, Product Name, Product Description -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <input
-                    type="text"
-                    name="productName"
-                    placeholder="Product Name *"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                  />
-                </div>
-                <div>
-                  <textarea
-                    name="description"
-                    placeholder="Product Description *"
-                    rows="3"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base resize-none"
-                  ></textarea>
-                </div>
-                <!-- Offer Type Selection -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <select
-                      name="specialOfferType"
-                      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base appearance-none cursor-pointer"
-                    >
-                      <option value="none">No Offer</option>
-                      <option value="combo">Combo Offer</option>
-                      <option value="rush-hour">Rush Hour Special Sale</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
+          <form action="/admin/addProducts" method="POST" enctype="multipart/form-data">
+  <div class="space-y-6">
 
-              <!-- Row 2: Category and Language -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <!-- Category Dropdown -->
-                <div>
-                  <select
-                    name="category"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base appearance-none cursor-pointer shadow-sm"
-                  >
-                    <option value="">Select Category *</option>
-                    <% categories.forEach(category => { %>
-                    <option value="<%= category.categoryName %>">
-                      <%= category.categoryName %>
-                    </option>
-                    <% }) %>
-                  </select>
-                </div>
+    <!-- Row 1: Product Name + Description -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-                <!-- Language Dropdown -->
-                <div>
-                  <select
-                    name="language"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base appearance-none cursor-pointer shadow-sm"
-                  >
-                    <option value="">Language *</option>
-                    <option value="English">English</option>
-                    <option value="Malayalam">Malayalam</option>
-                  </select>
-                </div>
-              </div>
+      <!-- Product Name -->
+      <div>
+        <input
+          type="text"
+          name="productName"
+          placeholder="Product Name *"
+          value="<%= oldInput?.productName || '' %>"
+          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+        />
+        <% if (errors?.productName) { %>
+          <p class="text-red-600 text-sm mt-1"><%= errors.productName %></p>
+        <% } %>
+      </div>
 
-              <!-- Row 3: Author Name and Author Description -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <input
-                    type="text"
-                    name="author"
-                    placeholder="Author name"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                  />
-                </div>
-                <div>
-                  <textarea
-                    name="authorDescription"
-                    placeholder="Author Description"
-                    rows="3"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base resize-none"
-                  ></textarea>
-                </div>
-              </div>
+      <!-- Description -->
+      <div>
+        <textarea
+          name="description"
+          placeholder="Product Description *"
+          rows="3"
+          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 resize-none"
+        ><%= oldInput?.description || '' %></textarea>
 
-              <!-- Row 4: Publisher, Year of Publishing, Number of Pages -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <input
-                    type="text"
-                    name="publisher"
-                    placeholder="Publisher"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    name="yearOfPublishing"
-                    placeholder="Year Of Publishing"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="number"
-                    name="pages"
-                    placeholder="Number of Pages"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                  />
-                </div>
-              </div>
+        <% if (errors?.description) { %>
+          <p class="text-red-600 text-sm mt-1"><%= errors.description %></p>
+        <% } %>
+      </div>
 
-              <!-- Row 5: Translator and Translator Description -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <input
-                    type="text"
-                    name="translator"
-                    placeholder="Translator"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                  />
-                </div>
-                <div>
-                  <textarea
-                    name="translatorDescription"
-                    placeholder="Translator Description"
-                    rows="3"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base resize-none"
-                  ></textarea>
-                </div>
-              </div>
+      <!-- Offer Type -->
+     <div>
+  <select
+    name="specialOfferType"
+    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+  >
+    <option value="none" <%= oldInput?.specialOfferType === 'none' ? 'selected' : '' %>>No Offer</option>
+    <option value="combo" <%= oldInput?.specialOfferType === 'combo' ? 'selected' : '' %>>Combo Offer</option>
+    <option value="rush-hour" <%= oldInput?.specialOfferType === 'rush-hour' ? 'selected' : '' %>>Rush Hour</option>
+  </select>
+</div>
 
-              <!-- Row 6: Translated Language and ISBN Number -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <select
-                    name="translatedLanguage"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base appearance-none cursor-pointer"
-                  >
-                    <option value="">Translated Language</option>
-                    <option value="english">English</option>
-                    <option value="malayalam">Malayalam</option>
-                  </select>
-                </div>
-                <div class="relative">
-                  <input
-                    type="text"
-                    name="isbnNumber"
-                    placeholder="ISBN Number"
-                    class="w-full px-4 py-4 pr-12 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                  />
-                  <i
-                    class="fas fa-barcode absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl"
-                  ></i>
-                </div>
-              </div>
+    </div>
 
-              <!-- Row 7: Price and Stock (Quantity) -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <input
-                    type="number"
-                    name="regularPrice"
-                    placeholder="Price *"
-                    step="0.01"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                  />
-                </div>
-                <div>
-                  <div class="flex items-center">
-                    <span class="text-gray-700 font-medium mr-4 text-base"
-                      >Quantity</span
-                    >
-                    <div class="flex items-center">
-                      <button
-                        type="button"
-                        class="quantity-btn rounded-l-lg"
-                        onclick="decrementQuantity()"
-                      >
-                        <i class="fas fa-minus text-sm"></i>
-                      </button>
-                      <input
-                        type="number"
-                        name="stock"
-                        id="quantityInput"
-                        value="0"
-                        min="0"
-                        class="quantity-input px-4 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base text-center"
-                        required
-                      />
-                      <button
-                        type="button"
-                        class="quantity-btn rounded-r-lg"
-                        onclick="incrementQuantity()"
-                      >
-                        <i class="fas fa-plus text-sm"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <!-- Sale Price (Only for offers) -->
-                <div id="salePriceWrapper" class="hidden">
-                  <input
-                    type="number"
-                    name="salePrice"
-                    placeholder="Sale Price (Only for Combo / Rush Hour)"
-                    step="0.01"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                  />
-                </div>
-              </div>
+    <!-- Row 2: Category + Language -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
 
-              <!-- Image Upload Section -->
-              <div class="bg-white rounded-lg p-8">
-                <div class="upload-area rounded-lg p-12 text-center">
-                  <div class="mb-4">
-                    <i class="fas fa-image text-6xl text-gray-400"></i>
-                  </div>
-                  <p class="text-gray-600 mb-2">
-                    Drag and drop image or Click add image
-                  </p>
-                  <input
-                    type="file"
-                    name="productImage"
-                    id="productImage"
-                    accept="image/*"
-                    multiple
-                  />
-                  <button
-                    type="button"
-                    onclick="document.getElementById('productImage').click()"
-                    class="mt-4 px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition"
-                  >
-                    ADD IMAGE
-                  </button>
-                  <div id="imagePreview" class="mt-4"></div>
-                </div>
-              </div>
+      <!-- Category -->
+      <div>
+        <select
+          name="category"
+          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+        >
+          <option value="">Select Category *</option>
+          <% categories.forEach(cat => { %>
+            <option
+              value="<%= cat.categoryName %>"
+              <%= oldInput?.category === cat.categoryName ? 'selected' : '' %>
+            >
+              <%= cat.categoryName %>
+            </option>
+          <% }) %>
+        </select>
 
-              <!-- Submit Button -->
-              <div class="flex justify-center pt-4">
-                <button
-                  type="submit"
-                  class="px-16 py-4 bg-indigo-600 text-white text-lg font-bold rounded-lg hover:bg-indigo-700 transition shadow-lg"
-                >
-                  ADD Product
-                </button>
-              </div>
-            </div>
-          </form>
+        <% if (errors?.category) { %>
+          <p class="text-red-600 text-sm mt-1"><%= errors.category %></p>
+        <% } %>
+      </div>
+
+      <!-- Language -->
+      <div>
+        <select
+          name="language"
+          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+        >
+          <option value="">Language *</option>
+
+          <option value="English" <%= oldInput?.language === 'English' ? 'selected' : '' %>>English</option>
+          <option value="Malayalam" <%= oldInput?.language === 'Malayalam' ? 'selected' : '' %>>Malayalam</option>
+        </select>
+
+        <% if (errors?.language) { %>
+          <p class="text-red-600 text-sm mt-1"><%= errors.language %></p>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Row 3: Author + Author Description -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <input
+          type="text"
+          name="author"
+          placeholder="Author Name"
+          value="<%= oldInput?.author || '' %>"
+          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+        />
+        <% if (errors?.author) { %>
+          <p class="text-red-600 text-sm mt-1"><%= errors.author %></p>
+        <% } %>
+      </div>
+
+      <div>
+        <textarea
+          name="authorDescription"
+          placeholder="Author Description"
+          rows="3"
+          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 resize-none"
+        ><%= oldInput?.authorDescription || '' %></textarea>
+      </div>
+    </div>
+
+    <!-- Row 4: Publisher, Year, Pages -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <input type="text" name="publisher" placeholder="Publisher"
+        value="<%= oldInput?.publisher || '' %>"
+        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
+
+      <input type="text" name="yearOfPublishing" placeholder="Year Of Publishing"
+        value="<%= oldInput?.yearOfPublishing || '' %>"
+        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
+
+      <input type="number" name="pages" placeholder="Number of Pages"
+        value="<%= oldInput?.pages || '' %>"
+        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <!-- Row 5: Translator -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <input type="text" name="translator" placeholder="Translator"
+        value="<%= oldInput?.translator || '' %>"
+        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
+
+      <textarea name="translatorDescription" placeholder="Translator Description" rows="3"
+        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 resize-none"
+      ><%= oldInput?.translatorDescription || '' %></textarea>
+    </div>
+
+    <!-- Row 6: Translated Language + ISBN -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <select name="translatedLanguage"
+        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300"
+      >
+        <option value="">Translated Language</option>
+        <option value="english" <%= oldInput?.translatedLanguage === 'english' ? 'selected' : '' %>>English</option>
+        <option value="malayalam" <%= oldInput?.translatedLanguage === 'malayalam' ? 'selected' : '' %>>Malayalam</option>
+      </select>
+
+      <input type="text" name="isbnNumber" placeholder="ISBN Number"
+        value="<%= oldInput?.isbnNumber || '' %>"
+        class="w-full px-4 py-4 pr-12 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <!-- Row 7: Price + Quantity -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <input type="number" name="regularPrice" placeholder="Price *" step="0.01"
+          value="<%= oldInput?.regularPrice || '' %>"
+          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
+        <% if (errors?.regularPrice) { %>
+          <p class="text-red-600 text-sm"><%= errors.regularPrice %></p>
+        <% } %>
+      </div>
+
+      <div>
+        <span class="text-gray-700 font-medium">Quantity</span>
+
+        <input
+          type="number"
+          name="stock"
+          id="quantityInput"
+          value="<%= oldInput?.stock || 0 %>"
+          min="0"
+          class="quantity-input px-4 py-4 border rounded-lg text-center focus:ring-2 focus:ring-indigo-500"
+          required
+        />
+
+        <% if (errors?.stock) { %>
+          <p class="text-red-600 text-sm"><%= errors.stock %></p>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Sale Price for offer -->
+    <div id="salePriceWrapper" class="<%= (oldInput?.specialOfferType === 'combo' || oldInput?.specialOfferType === 'rush-hour') ? '' : 'hidden' %>">
+      <input type="number" name="salePrice" placeholder="Sale Price"
+        value="<%= oldInput?.salePrice || '' %>"
+        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
+
+      <% if (errors?.salePrice) { %>
+        <p class="text-red-600 text-sm"><%= errors.salePrice %></p>
+      <% } %>
+    </div>
+
+    <!-- Image Upload -->
+    <div class="bg-white rounded-lg p-8">
+      <div class="upload-area rounded-lg p-12 text-center">
+        <i class="fas fa-image text-6xl text-gray-400 mb-4"></i>
+        <p class="text-gray-600">Drag and drop image or Click add image</p>
+
+        <input type="file" name="productImage" id="productImage" accept="image/*" multiple />
+
+        <!-- <button type="button"
+          onclick="document.getElementById('productImage').click()"
+          class="mt-4 px-8 py-3 bg-indigo-600 text-white rounded-lg"
+        >
+          ADD IMAGE
+        </button> -->
+
+        <div id="imagePreview" class="mt-4"></div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="flex justify-center pt-4">
+      <button type="submit"
+        class="px-16 py-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-lg"
+      >
+        ADD PRODUCT
+      </button>
+    </div>
+
+  </div>
+</form>
+
         </div>
       </main>
     </div>

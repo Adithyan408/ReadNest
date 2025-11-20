@@ -1,0 +1,11 @@
+<nav class="text-sm text-gray-500 mb-4">
+  <% breadcrumbs.forEach((crumb, index) => { %>
+    <a href="<%= crumb.url %>" class="text-blue-600 hover:underline">
+      <%= crumb.name %>
+    </a>
+
+    <% if (index < breadcrumbs.length - 1) { %>
+      ›
+    <% } %>
+  <% }) %>
+</nav>

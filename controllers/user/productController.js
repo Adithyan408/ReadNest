@@ -9,7 +9,7 @@ export const loadHome = async (req, res) => {
     const category = req.query.category || null;
     const min = req.query.min || null;
     const max = req.query.max || null;
-
+    let sort = req.query.sort || null;
     let selectedLanguages = [];
 
     if (req.query.languages) {
@@ -32,9 +32,41 @@ export const loadHome = async (req, res) => {
       if (min) filter.regularPrice.$gte = parseInt(min);
       if (max) filter.regularPrice.$lte = parseInt(max);
     }
+    
 
     if (selectedLanguages.length > 0) {
       filter.language = { $in: selectedLanguages };
+    }
+
+    let sortQuery = {};
+
+    switch (sort) {
+      case "priceAsc":
+        sortQuery = { regularPrice: 1 };
+        break;
+
+      case "priceDesc":
+        sortQuery = { regularPrice: -1 };
+        break;
+
+      case "nameAsc":
+        sortQuery = { productName: 1 };
+        break;
+
+      case "nameDesc":
+        sortQuery = { productName: -1 };
+        break;
+
+      case "newest":
+        sortQuery = { createdAt: -1 };
+        break;
+
+      case "oldest":
+        sortQuery = { createdAt: 1 };
+        break;
+
+      default:
+        sortQuery = {}; // no sorting
     }
 
     const page = parseInt(req.query.page) || 1;
@@ -42,7 +74,7 @@ export const loadHome = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const products = await Product.find(filter)
-      .sort({ productName: 1 })
+      .sort(sortQuery)
       .skip(skip)
       .limit(limit);
 
@@ -55,13 +87,18 @@ export const loadHome = async (req, res) => {
     }
 
     const categories = await Category.find({ isListed: true });
-    const languages = await Product.distinct("language", { isListed: true });
+    let languages = await Product.distinct("language", { isListed: true });
+
+    languages = languages.filter(lang => lang && lang.trim() !== "");
+
+    const homeBanner = await Banner.findOne({title:"home-page"});
 
     const queryParams = new URLSearchParams();
 
     if (category) queryParams.set("category", category);
     if (min) queryParams.set("min", min);
     if (max) queryParams.set("max", max);
+    if (sort) queryParams.set("sort", sort);
 
     selectedLanguages.forEach((lang) => queryParams.append("languages", lang));
 
@@ -78,6 +115,8 @@ export const loadHome = async (req, res) => {
       min,
       max,
       baseQuery,
+      sort,
+      homeBanner : homeBanner ? homeBanner.bannerImage : null
     });
   } catch (error) {
     res.redirect("/notfound");

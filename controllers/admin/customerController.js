@@ -40,8 +40,9 @@ export const customerInfo = async (req, res) => {
 export const blockCustomers = async (req, res) => {
   try {
     let id = req.query.id;
+    const page = req.query.page || 1;
     await User.updateOne({ _id: id }, { $set: { isBlocked: true } });
-    res.redirect("/admin/users");
+    res.redirect(`/admin/users?page=${page}`);
   } catch (error) {
     res.redirect("/admin/pageerror");
   }
@@ -50,8 +51,9 @@ export const blockCustomers = async (req, res) => {
 export const unblockCustomers = async (req, res) => {
   try {
     let id = req.query.id;
+    const page = req.query.page || 1;
     await User.updateOne({ _id: id }, { $set: { isBlocked: false } });
-    res.redirect("/admin/users");
+    res.redirect(`/admin/users?page=${page}`);
   } catch (error) {
     res.redirect("/pageerror");
   }

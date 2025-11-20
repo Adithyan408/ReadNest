@@ -11,7 +11,7 @@ export const getProductsAdd = async (req, res) => {
     if (productId) {
       product = await Product.findById(productId);
     }
-    res.render("addProduct", { product, categories });
+    res.render("addProduct", { product, categories, errors: {}, oldInput: {} });
   } catch (error) {
     console.log("Add product page rendering error : ", error);
     res.redirect("/pageerror");
@@ -19,9 +19,6 @@ export const getProductsAdd = async (req, res) => {
 };
 
 export const productsAdd = async (req, res) => {
-  console.log(req.body); //logger
-  console.log(req.file);
-
   try {
     const {
       productName,
@@ -41,34 +38,33 @@ export const productsAdd = async (req, res) => {
       specialOfferType,
     } = req.body;
 
+    let errors = {};
+    const categories = await Category.find({ isListed: true });
+
     let isOfferProduct =
       specialOfferType === "combo" || specialOfferType === "rush-hour";
 
     if (isOfferProduct) {
-      if (!productName || !regularPrice || !salePrice || !stock) {
-        const categories = await Category.find({ isListed: true });
-        return res.render("addProduct", {
-          errorMessage:
-            "For Combo/Rush Hour: Product name, stock, regular price and sale price are required.",
-          categories,
-        });
-      }
+      if (!productName) errors.productName = "Product Name is required.";
+      if (!regularPrice) errors.regularPrice = "Regular Price is required.";
+      if (!salePrice) errors.salePrice = "Sale Price is required.";
+      if (!stock) errors.stock = "Stock is required.";
     } else {
-      if (
-        !productName ||
-        !description ||
-        !author ||
-        !category ||
-        !language ||
-        !regularPrice ||
-        !stock
-      ) {
-        const categories = await Category.find({ isListed: true });
-        return res.render("addProduct", {
-          errorMessage: "Please fill all required fields for normal products.",
-          categories,
-        });
-      }
+      if (!productName) errors.productName = "Product Name is required.";
+      if (!description) errors.description = "Product Description is required.";
+      if (!author) errors.author = "Author Name is required.";
+      if (!category) errors.category = "Category is required.";
+      if (!language) errors.language = "Language is required.";
+      if (!regularPrice) errors.regularPrice = "Price is required.";
+      if (!stock) errors.stock = "Stock is required.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.render("addProduct", {
+        errors,
+        categories,
+        oldInput: req.body,
+      });
     }
 
     const imageUrls =
@@ -256,6 +252,7 @@ export const getFilteredProducts = async (req, res) => {
     const search = req.query.search || "";
     const category = req.query.category || "";
     const offer = req.query.offer || "";
+    const sort = req.query.sort || "";
 
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
@@ -280,9 +277,39 @@ export const getFilteredProducts = async (req, res) => {
     } else if (offer === "combo") {
       query.specialOfferType = "combo";
     }
+    let sortQuery = {};
+
+    switch (sort) {
+      case "priceAsc":
+        sortQuery = { regularPrice: 1 };
+        break;
+
+      case "priceDesc":
+        sortQuery = { regularPrice: -1 };
+        break;
+
+      case "nameAsc":
+        sortQuery = { productName: 1 };
+        break;
+
+      case "nameDesc":
+        sortQuery = { productName: -1 };
+        break;
+
+      case "newest":
+        sortQuery = { createdAt: -1 };
+        break;
+
+      case "oldest":
+        sortQuery = { createdAt: 1 };
+        break;
+
+      default:
+        sortQuery = {};
+    }
 
     const data = await Product.find(query)
-      .sort({ productName: 1 })
+      .sort(sortQuery)
       .skip(skip)
       .limit(limit);
 
@@ -298,7 +325,8 @@ export const getFilteredProducts = async (req, res) => {
       category,
       currentPage: page,
       totalPages,
-      offer
+      offer,
+      sort,
     });
   } catch (error) {
     console.log("Filter error:", error);

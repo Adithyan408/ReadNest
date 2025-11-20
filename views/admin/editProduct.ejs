@@ -157,6 +157,7 @@
 
       <!-- Main Content - Edit Product -->
       <main class="flex-1 p-8 bg-gray-200">
+         <%- include('../../views/partials/breadcrumb') %>
         <div class="bg-white rounded-2xl shadow-lg">
           <!-- Header Section -->
           <div class="p-6 border-b border-gray-200">
@@ -279,22 +280,6 @@
                     />
                   </div>
 
-                  <!-- Product Number -->
-                  <!-- <div>
-                    <label class="block text-lg font-bold text-gray-900 mb-2">
-                      Product Number <span class="text-red-600">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="productNumber"
-                      value="<%= data.productNumber || '' %>"
-                      required
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                      placeholder="Enter product number"
-                    />
-                  </div> -->
-
-                  <!-- Category -->
                   <!-- Category -->
                   <div>
                     <label class="block text-lg font-bold text-gray-900 mb-2">
