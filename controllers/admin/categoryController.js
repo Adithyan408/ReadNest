@@ -18,6 +18,7 @@ export const categoryInfo = async (req, res) => {
       currentPage: page,
       totalPages: totalPages,
       totalCategories: totalCategories,
+      limit
     });
   } catch (error) {
     res.redirect("/pageerror");

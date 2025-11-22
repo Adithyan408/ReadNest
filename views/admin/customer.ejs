@@ -30,6 +30,17 @@
         background-color: #d1d5db;
         border-left: 4px solid #667eea;
       }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden; /* disable full page scroll */
+      }
+
+      .main-scroll-area {
+        height: calc(100vh - 80px); /* header height is ~80px */
+        overflow-y: auto; /* enable vertical scroll only on the right */
+        overflow-x: hidden;
+      }
     </style>
   </head>
   <body class="bg-gray-100">
@@ -69,9 +80,9 @@
     <div class="flex">
       <!-- Sidebar -->
       <aside
-        class="w-80 bg-gray-300 min-h-screen border-r border-gray-400 relative"
+        class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col"
       >
-        <nav class="py-4 pb-24">
+        <nav class="flex-1 overflow-y-auto py-4">
           <a
             href="/admin"
             class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
@@ -138,9 +149,8 @@
         </nav>
 
         <!-- Logout Button at Bottom -->
-        <div
-          class="absolute bottom-0 left-0 right-0 bg-gray-300 border-t-2 border-gray-400"
-        >
+
+        <div class="border-t-2 border-gray-400 bg-gray-300">
           <a href="/admin/logout">
             <button
               class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
@@ -158,7 +168,7 @@
       </aside>
 
       <!-- Main Content - Customers List -->
-      <main class="flex-1 p-8 bg-white">
+      <main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
         <%- include('../../views/partials/breadcrumb') %>
         <div class="bg-white rounded-2xl shadow-md border border-gray-200">
           <!-- Header Section -->
@@ -178,63 +188,87 @@
 
           <!-- Table Section -->
           <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full border-collapse">
               <thead>
                 <tr class="bg-black text-white">
-                  <th class="px-6 py-4 text-left font-semibold">Name</th>
-                  <th class="px-6 py-4 text-left font-semibold">Email</th>
-                  <th class="px-6 py-4 text-left font-semibold">Balance</th>
-                  <th class="px-6 py-4 text-left font-semibold">
-                    Block/Unblock
+                  <th class="px-6 py-4 text-left font-semibold border">Name</th>
+                  <th class="px-6 py-4 text-left font-semibold border">
+                    Email
                   </th>
-                  <th class="px-6 py-4 text-left font-semibold">Action</th>
+                  <th class="px-6 py-4 text-left font-semibold border">
+                    Balance
+                  </th>
+                  <th class="px-6 py-4 text-left font-semibold border">
+                    Block / Unblock
+                  </th>
+                  <th class="px-6 py-4 text-center font-semibold border">
+                    Action
+                  </th>
                 </tr>
               </thead>
+
               <tbody id="customerTableBody">
-                <% for(let i = 0; i < data.length; i++) { %>
-                <tr
-                  class="border-b border-gray-200 hover:bg-gray-50 transition"
-                >
-                  <td class="px-6 py-4 font-semibold text-gray-800">
+                <% if (data.length === 0) { %>
+                <tr>
+                  <td
+                    colspan="5"
+                    class="text-center py-10 text-gray-500 text-lg border"
+                  >
+                    <i
+                      class="fas fa-search-minus text-3xl mb-3 text-gray-300"
+                    ></i>
+                    <div>No users found.</div>
+                  </td>
+                </tr>
+                <% } else { %> <% for (let i = 0; i < data.length; i++) { %>
+                <tr class="border-b hover:bg-gray-50">
+                  <!-- NAME -->
+                  <td class="px-6 py-4 border font-semibold text-gray-800">
                     <%= data[i].name %>
                   </td>
+
+                  <!-- EMAIL -->
                   <td
-                    class="px-6 py-4 text-gray-600 underline cursor-pointer hover:text-indigo-600"
+                    class="px-6 py-4 border text-gray-600 underline cursor-pointer hover:text-indigo-600"
                   >
                     <%= data[i].email %>
                   </td>
-                  <td class="px-6 py-4 font-semibold text-gray-800">
-                    <%= data[i].walletBalance %>
+
+                  <!-- WALLET BALANCE -->
+                  <td class="px-6 py-4 border font-semibold text-gray-800">
+                    ₹ <%= data[i].walletBalance %>
                   </td>
 
-                  <td class="px-6 py-4">
+                  <!-- BLOCK / UNBLOCK -->
+                  <td class="px-6 py-4 border">
                     <% if (data[i].isBlocked) { %>
-                    <!-- If user is blocked → show UNBLOCK button -->
                     <button
                       onclick="confirmAction('<%= data[i]._id %>', 'unblock')"
-                      class="inline-block px-6 py-1 rounded-full text-sm font-semibold transition bg-green-200 text-green-800 hover:bg-green-300"
+                      class="px-6 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800 hover:bg-green-300 transition"
                     >
                       UNBLOCK
                     </button>
                     <% } else { %>
-                    <!-- If user is not blocked → show BLOCK button -->
                     <button
                       onclick="confirmAction('<%= data[i]._id %>', 'block')"
-                      class="inline-block px-6 py-1 rounded-full text-sm font-semibold transition bg-red-200 text-red-800 hover:bg-red-300"
+                      class="px-6 py-1 rounded-full text-sm font-semibold bg-red-200 text-red-800 hover:bg-red-300 transition"
                     >
                       BLOCK
                     </button>
                     <% } %>
                   </td>
-                  <td class="px-6 py-4">
+
+                  <!-- ACTION -->
+                  <td class="px-6 py-4 border text-center">
                     <button
                       class="text-gray-600 hover:text-indigo-600 transition"
+                      title="View Details"
                     >
                       <i class="fas fa-eye text-xl"></i>
                     </button>
                   </td>
                 </tr>
-                <% } %>
+                <% } %> <% } %>
               </tbody>
             </table>
           </div>

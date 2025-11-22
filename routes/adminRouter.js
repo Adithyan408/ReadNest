@@ -28,7 +28,7 @@ adminRouter.get("/unblockUsers", adminAuth, unblockCustomers);
 
 //Category Management
 adminRouter.get("/category", nocache(), adminAuth, categoryInfo);
-adminRouter.get("/addCategory", nocache(), adminAuth, categoryAdd);
+adminRouter.get("/category/addCategory", nocache(), adminAuth, categoryAdd);
 adminRouter.post("/addCategory", nocache(), adminAuth, addCategory);
 adminRouter.get("/listCategory", nocache(), adminAuth, listCategory)
 adminRouter.get("/unlistCategory", nocache(), adminAuth, unlistCategory)
@@ -37,7 +37,7 @@ adminRouter.post("/editCategory", adminAuth, editCategory)
 adminRouter.get("/deleteCategory", nocache(), adminAuth , deleteCategory);
 
 //Products Management
-adminRouter.get("/addProducts", nocache(), adminAuth, getProductsAdd)
+adminRouter.get("/products/addProducts", nocache(), adminAuth, getProductsAdd)
 adminRouter.post("/addProducts", nocache(), adminAuth, upload.array("productImage", 5), productsAdd);
 adminRouter.get("/updateProduct", nocache(), adminAuth, geteditProduct);
 adminRouter.post("/updateProduct", adminAuth, upload.array("productImage", 5), editProduct);
@@ -49,7 +49,7 @@ adminRouter.get("/products", nocache(), adminAuth , getFilteredProducts);
 
 //Banner Management
 adminRouter.get("/banner", adminAuth, getBanner);
-adminRouter.get("/addBanner", nocache(), adminAuth, getBannerAdd);
+adminRouter.get("/banner/addBanner", nocache(), adminAuth, getBannerAdd);
 adminRouter.post("/addBanner", nocache(), adminAuth, upload.single("bannerImage"), bannerAdd);
 adminRouter.get("/updateBanner", nocache(), adminAuth, geteditBanner)
 adminRouter.post("/updateBanner", nocache(), adminAuth, upload.single("bannerImage"), editBanner);

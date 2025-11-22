@@ -51,15 +51,15 @@ export const loadDashboard = (req, res) => {
   }
 };
 
-export const logout = (req, res) => {
+export const logout = async (req, res) => {
   try {
-    req.session.destroy((err) => {
-      if (err) {
-        return res.redirect("/pageerror");
-      }
-      return res.redirect("/admin/login");
-    });
+    delete req.session.admin;
+    delete req.session.adminData;  
+
+    return res.redirect("/admin/login");
   } catch (error) {
+    console.log("Admin Logout error", error);
     res.redirect("/pageerror");
   }
 };
+

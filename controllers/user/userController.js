@@ -207,15 +207,10 @@ export const loadProfile = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    req.session.destroy((err) => {
-      if (err) {
-        console.log("Session Destruction error: ", err.message);
-        return res.redirect("/notfound");
-      }
-      return res.redirect("/");
-    });
+    delete req.session.user;   
+    return res.redirect("/");
   } catch (error) {
-    console.log("Log out error", error);
+    console.log("Logout error", error);
     res.redirect("/notfound");
   }
 };

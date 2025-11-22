@@ -28,6 +28,17 @@
       .sidebar-item.active {
         background-color: #d1d5db;
       }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden; /* disable full page scroll */
+      }
+
+      .main-scroll-area {
+        height: calc(100vh - 80px); /* header height is ~80px */
+        overflow-y: auto; /* enable vertical scroll only on the right */
+        overflow-x: hidden;
+      }
     </style>
   </head>
   <body class="bg-gray-100">
@@ -67,9 +78,9 @@
     <div class="flex">
       <!-- Sidebar -->
       <aside
-        class="w-80 bg-gray-300 min-h-screen border-r border-gray-400 relative"
+        class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col"
       >
-        <nav class="py-4 pb-24">
+        <nav class="flex-1 overflow-y-auto py-4">
           <a
             href="/admin"
             class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
@@ -136,9 +147,8 @@
         </nav>
 
         <!-- Logout Button at Bottom -->
-        <div
-          class="absolute bottom-0 left-0 right-0 bg-gray-300 border-t-2 border-gray-400"
-        >
+
+        <div class="border-t-2 border-gray-400 bg-gray-300">
           <a href="/admin/logout">
             <button
               class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
@@ -156,14 +166,14 @@
       </aside>
 
       <!-- Main Content - Banners -->
-      <main class="flex-1 p-8 bg-gray-200">
+      <main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
         <%- include('../../views/partials/breadcrumb') %>
         <div class="bg-white rounded-2xl shadow-lg">
           <!-- Header Section -->
           <div class="p-6 border-b border-gray-200">
             <div class="flex items-center justify-between mb-6">
               <h2 class="text-3xl font-bold text-gray-900">Banners</h2>
-              <a href="/admin/addBanner">
+              <a href="/admin/banner/addBanner">
                 <button
                   onclick="addBanner()"
                   class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-md"
@@ -189,99 +199,126 @@
 
           <!-- Table Section -->
           <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full border-collapse">
               <thead>
                 <tr class="bg-black text-white">
-                  <th class="px-6 py-4 text-left font-semibold text-base">
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-base border"
+                  >
                     Image
                   </th>
-                  <th class="px-6 py-4 text-left font-semibold text-base">
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-base border"
+                  >
                     Title
                   </th>
-                  <th class="px-6 py-4 text-left font-semibold text-base">
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-base border"
+                  >
                     Start Date
                   </th>
-                  <th class="px-6 py-4 text-left font-semibold text-base">
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-base border"
+                  >
                     End Date
                   </th>
-                  <th class="px-6 py-4 text-left font-semibold text-base">
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-base border"
+                  >
                     Active
                   </th>
-                  <th class="px-6 py-4 text-left font-semibold text-base">
+                  <th
+                    class="px-6 py-4 text-center font-semibold text-base border"
+                  >
                     Action
                   </th>
                 </tr>
               </thead>
+
               <tbody id="bannerTableBody">
-                <!-- Banner Row 1 -->
-                <% for(let i = 0; i < data.length; i++) { %>
-                <tr class="border-b border-gray-200 hover:bg-gray-50">
-                  <td>
+                <% if (data.length === 0) { %>
+                <tr>
+                  <td
+                    colspan="6"
+                    class="text-center py-10 text-gray-500 text-lg border"
+                  >
+                    <i
+                      class="fas fa-search-minus text-3xl mb-2 text-gray-400"
+                    ></i>
+                    <div>No banners found.</div>
+                  </td>
+                </tr>
+                <% } else { %> <% for (let i = 0; i < data.length; i++) { %>
+                <tr class="border-b hover:bg-gray-50">
+                  <!-- IMAGE -->
+                  <td class="px-6 py-4 border">
                     <% if (data[i].bannerImage) { %>
                     <img
                       src="<%= data[i].bannerImage %>"
-                      alt="Banner Image"
-                      class="h-16 w-16 rounded"
+                      alt="Banner"
+                      class="h-16 w-28 object-cover rounded border"
                     />
                     <% } else { %>
-                    <span>No Image</span>
+                    <span class="text-gray-500">No Image</span>
                     <% } %>
                   </td>
-                  <td><%= data[i].title %></td>
-                  <td><%= data[i].startDate %></td>
-                  <td><%= data[i].endDate %></td>
 
-                  <td class="px-6 py-4">
+                  <!-- TITLE -->
+                  <td class="px-6 py-4 border font-medium">
+                    <%= data[i].title %>
+                  </td>
+
+                  <!-- START DATE -->
+                  <td class="px-6 py-4 border"><%= data[i].startDate %></td>
+
+                  <!-- END DATE -->
+                  <td class="px-6 py-4 border"><%= data[i].endDate %></td>
+
+                  <!-- STATUS -->
+                  <td class="px-6 py-4 border">
                     <% if (data[i].status === "ACTIVE") { %>
-
-                    <!-- Status: ACTIVE (Green) -->
                     <span
-                      class="inline-block px-6 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800"
+                      class="px-4 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800"
                     >
                       ACTIVE
                     </span>
-
-                    <% } else if(data[i].status === "INACTIVE") { %>
-
-                    <!-- Status: INACTIVE (Red) -->
+                    <% } else if (data[i].status === "INACTIVE") { %>
                     <span
-                      class="inline-block px-6 py-1 rounded-full text-sm font-semibold bg-red-200 text-red-800"
+                      class="px-4 py-1 rounded-full text-sm font-semibold bg-red-200 text-red-800"
                     >
                       INACTIVE
                     </span>
-
                     <% } %>
                   </td>
 
-                  <td class="px-6 py-4 text-center">
+                  <!-- ACTION -->
+                  <td class="px-6 py-4 border text-center">
                     <div
                       class="flex justify-center items-center space-x-4 text-gray-600"
                     >
-                      <!-- Edit -->
+                      <!-- EDIT -->
                       <a href="/admin/updateBanner?id=<%= data[i]._id %>">
-                        <button
-                          class="hover:text-yellow-500 transition"
-                          title="Edit"
-                        >
-                          <i class="fas fa-edit text-lg"></i></button
-                      ></a>
+                        <i
+                          class="fas fa-edit text-lg hover:text-yellow-500 transition"
+                        ></i>
+                      </a>
 
-                      <!-- Delete -->
+                      <!-- DELETE -->
                       <button
-                        class="hover:text-red-600 transition"
-                        title="Delete"
                         onclick="confirmDelete('<%= data[i]._id %>')"
+                        class="hover:text-red-600 transition"
                       >
                         <i class="fas fa-trash-alt text-lg"></i>
                       </button>
                     </div>
                   </td>
                 </tr>
-                <% } %>
+                <% } %> <% } %>
               </tbody>
             </table>
           </div>
-           <!-- Pagination -->
+
+          <!-- Pagination -->
           <div
             class="flex justify-end items-center gap-2 p-6 border-t border-gray-200"
           >
@@ -324,7 +361,6 @@
       });
 
       // Add Banner
-     
 
       // Delete Banner
       function confirmDelete(bannerId) {

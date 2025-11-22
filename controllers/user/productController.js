@@ -106,6 +106,8 @@ export const loadHome = async (req, res) => {
 
     selectedLanguages.forEach((lang) => queryParams.append("languages", lang));
 
+    const isHome = req.originalUrl === "/" ;
+   
     const baseQuery = queryParams.toString();
     res.render("home", {
       user: userData,
@@ -121,6 +123,7 @@ export const loadHome = async (req, res) => {
       baseQuery,
       sort,
       homeBanner: homeBanner ? homeBanner.bannerImage : null,
+      isHome : isHome
     });
   } catch (error) {
     res.redirect("/notfound");
@@ -163,7 +166,7 @@ export const getProductsDetails = async (req, res) => {
       similarProducts,
       currentPage: page,
       baseQuery,
-      categoryAvailable: product.category && product.category.isListed,
+     
     });
   } catch (error) {
     console.log(error);
