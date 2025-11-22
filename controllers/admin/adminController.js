@@ -1,65 +1,23 @@
-import User from "../../models/userSchema.js";
-import bcrypt from "bcrypt";
 
+import { getDashboard, pageError, postLogout, getLogin, postLogin } from "../../services/admin/adminService.js";
 
-export const loadPageError = (req, res) => {
-  res.render("admin-error");
+export const loadPageError = async(req, res) => {
+  await pageError(req, res);
 };
 
-export const loadLogin = (req, res) => {
-  if (req.session.admin) {
-    return res.redirect("/admin");
-  }
-  res.render("admin-login", { message: null });
+export const loadLogin = async(req, res) => {
+  await getLogin(req, res);
 };
 
 export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const admin = await User.findOne({ email, isAdmin: true });
-  
-    if (!admin) {
-      return res.render("admin-login", { message: "Admin not found" });
-    }
-
-    const passwordMatch = await bcrypt.compare(password, admin.password);
-    if (!passwordMatch) {
-      return res.render("admin-login", { message: "Invalid password" });
-    }
-
-    req.session.admin = true;
-    req.session.adminData = admin;
-
-     return res.json({ success: true });
-     
-  } catch (error) {
-    return res.redirect("/pageerror");
-  }
+  await postLogin(req, res);
 };
 
-export const loadDashboard = (req, res) => {
-  try {
-    if (!req.session.admin) {
-      return res.redirect("/admin/login");
-    }
-
-    res.render("dashboard");
-
-  } catch (error) {
-    res.redirect("/pageerror");
-  }
+export const loadDashboard = async(req, res) => {
+  await getDashboard(req, res);
 };
 
 export const logout = async (req, res) => {
-  try {
-    delete req.session.admin;
-    delete req.session.adminData;  
-
-    return res.redirect("/admin/login");
-  } catch (error) {
-    console.log("Admin Logout error", error);
-    res.redirect("/pageerror");
-  }
+  await postLogout(req, res);
 };
 
