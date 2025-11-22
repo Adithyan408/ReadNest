@@ -2,8 +2,7 @@ import express from 'express'
 import { loadNotFound, loadSigup, loadLogin, signup, verifyOtp, loadVerify, resendOtp, googleAuth, googleAuthCallback,
      login, loadProfile, logout} from '../controllers/user/userController.js'
 import { forgotEmailValid, getForgotPassword, getResetPassword, postResetPassword, forgotVerifyOtp } from '../controllers/user/profileController.js';
-import { getProductsDetails, loadHome, getComboOffers, getRushHourOffers } from '../controllers/user/productController.js';
-import { liveSearch } from '../controllers/user/searchController.js';
+import { getProductsDetails, loadHome, getComboOffers, getRushHourOffers, liveSearch } from '../controllers/user/productController.js';
 import nocache from 'nocache';
 
 export const router = express.Router();
