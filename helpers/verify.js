@@ -1,6 +1,7 @@
 
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import bcrypt from 'bcrypt';
 
 dotenv.config();
 
@@ -75,3 +76,12 @@ export async function sendVerificationEmail(name ,email, otp) {
     return false;
   }
 }
+
+export async function securePassword(password) {
+  try {
+    const passwordHash = await bcrypt.hash(password, 10);
+    return passwordHash;
+  } catch (error) {
+    res.render("notFound");
+  }
+};

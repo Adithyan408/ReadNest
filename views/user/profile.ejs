@@ -1,103 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account</title>
 
-   <!DOCTYPE html>
-   <html lang="en">
-   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-   </head>
-   <body>
-    
-        <body>
-            <%- include("../../views/partials/user/account") %>
-      <!-- Right Content Area -->
+    <!-- SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  </head>
+
+  <body class="bg-gray-100">
+    <div>
+      <%- include("../../views/partials/user/account") %>
+
       <main class="main-scroll-area flex-1 bg-gray-100 p-10">
+        <!-- PERSONAL INFO CARD -->
+        <div class="bg-white rounded-xl shadow p-6 mb-8">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">
+              Personal Information
+            </h2>
 
-  <!-- PERSONAL INFO CARD -->
-  <div class="bg-white rounded-xl shadow p-6 mb-8">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-gray-900">Personal Information</h2>
-      <button class="text-blue-600 font-semibold hover:text-blue-700">Edit</button>
+            <button
+              type="button"
+              id="nameEditBtn"
+              onclick="toggleNameEdit()"
+              class="text-blue-600 font-semibold hover:text-blue-700"
+            >
+              Edit
+            </button>
+          </div>
+
+          <% const nameParts = user.name.split(" "); const firstName =
+          nameParts[0]; const lastName = nameParts.slice(1).join(" "); %>
+
+          <div class="grid grid-cols-2 gap-4">
+            <input
+              id="firstName"
+              type="text"
+              value="<%= firstName %>"
+              class="bg-gray-100 rounded-lg p-4 h-14 text-gray-700 font-medium"
+              disabled
+            />
+
+            <input
+              id="lastName"
+              type="text"
+              value="<%= lastName %>"
+              class="bg-gray-100 rounded-lg p-4 h-14 text-gray-700 font-medium"
+              disabled
+            />
+          </div>
+        </div>
+
+        <!-- EMAIL SECTION -->
+        <div class="bg-white rounded-xl shadow p-6 mb-8">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-gray-900">E-mail Address</h3>
+            <button
+              type="button"
+              onclick="openEmailModal()"
+              class="text-blue-600 font-semibold hover:text-blue-700"
+            >
+              Edit
+            </button>
+          </div>
+
+          <input
+            type="email"
+            value="<%= user.email %>"
+            class="bg-gray-100 rounded-lg p-4 h-14 w-[400px] text-gray-700 font-medium"
+            disabled
+          />
+        </div>
+
+        <!-- ================= EMAIL UPDATE MODAL ================= -->
+        <div
+          id="emailUpdateModal"
+          class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center hidden z-50"
+        >
+          <div class="bg-white w-[450px] p-6 rounded-xl shadow-lg">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-bold">Update Email</h2>
+
+              <button
+                onclick="closeEmailModal()"
+                class="text-gray-600 hover:text-gray-900"
+              >
+                <i class="fas fa-arrow-left text-xl"></i>
+              </button>
+            </div>
+
+            <!-- EMAIL INPUT -->
+            <label class="block font-medium text-gray-700 mb-1"
+              >New Email</label
+            >
+            <input
+              id="emailInputField"
+              type="email"
+              placeholder="Enter new email"
+              class="w-full bg-gray-100 p-3 rounded-lg mb-3"
+            />
+
+            <!-- SEND OTP BTN -->
+            <button
+              id="sendOtpEmailBtn"
+              onclick="sendOtpForEmailUpdate()"
+              class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold mb-4"
+            >
+              Send OTP
+            </button>
+
+            <!-- OTP + VERIFY SECTION (hidden until OTP sent) -->
+            <div id="emailOtpSection" class="hidden">
+              <label class="block font-medium text-gray-700 mb-1"
+                >Enter OTP</label
+              >
+              <input
+                id="emailOtpInput"
+                type="text"
+                placeholder="OTP"
+                class="w-full bg-gray-100 p-3 rounded-lg mb-4"
+              />
+
+              <button
+                onclick="verifyEmailOtp()"
+                class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold"
+              >
+                Verify & Update Email
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MOBILE SECTION -->
+        <div class="bg-white rounded-xl shadow p-6 mb-8">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-900">Mobile Number</h3>
+
+            <button
+              type="button"
+              id="phoneEditBtn"
+              onclick="togglePhoneEdit()"
+              class="text-blue-600 font-semibold hover:text-blue-700"
+            >
+              <% if(user.phone){ %> Edit <% } else { %> Add <% } %>
+            </button>
+          </div>
+
+          <input
+            type="text"
+            id="phoneInput"
+            value="<%= user.phone %>"
+            class="bg-gray-100 rounded-lg p-4 h-14 max-w-md text-gray-700 font-medium"
+            disabled
+          />
+        </div>
+
+        <!-- PASSWORD SECTION -->
+        <div class="bg-white rounded-xl shadow p-6 mb-8">
+          <h3 class="text-xl font-bold text-gray-900 mb-4">Password</h3>
+
+          <% if(!user.password){ %>
+          <!-- Google Auth user -->
+          <button
+            type="button"
+            onclick="openSetPasswordModal()"
+            class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+          >
+            SET PASSWORD
+          </button>
+          <% } else { %>
+          <!-- Normal user -->
+          <button
+            type="button"
+            onclick="openChangePasswordModal()"
+            class="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition"
+          >
+            CHANGE PASSWORD
+          </button>
+          <% } %>
+        </div>
+
+        <!-- ================= SET PASSWORD MODAL ================= -->
+        <div
+          id="setPassModal"
+          class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center hidden z-50"
+        >
+          <div class="bg-white w-[450px] p-6 rounded-xl shadow-lg">
+            <!-- HEADER + BACK BUTTON -->
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-bold">Set Password</h2>
+
+              <button
+                onclick="closeSetPasswordModal()"
+                class="text-gray-600 hover:text-gray-900 transition"
+                title="Back"
+              >
+                <i class="fas fa-arrow-left text-xl"></i>
+              </button>
+            </div>
+
+            <label class="block font-medium text-gray-700">Email</label>
+            <input
+              id="setPassEmail"
+              type="email"
+              value="<%= user.email %>"
+              disabled
+              class="w-full bg-gray-100 p-3 rounded-lg mb-3"
+            />
+
+            <button
+              id="sendOtpBtn"
+              onclick="sendOtpForSetPassword()"
+              class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold mb-4"
+            >
+              Send OTP
+            </button>
+
+            <div id="setPassOtpArea" class="hidden">
+              <!-- (rest of your modal content remains same) -->
+
+              <label class="block font-medium text-gray-700">OTP</label>
+              <input
+                id="setPassOtp"
+                name="otp"
+                type="text"
+                class="w-full bg-gray-100 p-3 rounded-lg mb-3"
+              />
+
+              <!-- NEW PASSWORD -->
+              <label class="block font-medium text-gray-700"
+                >New Password</label
+              >
+              <div class="relative mb-3">
+                <input
+                  id="setNewPassword"
+                  name="password"
+                  type="password"
+                  class="w-full bg-gray-100 p-3 rounded-lg"
+                />
+                <button
+                  type="button"
+                  onclick="toggleSetPassVisibility('setNewPassword', 'eyeNewPass')"
+                  class="absolute right-3 top-3 text-gray-600 hover:text-gray-800"
+                >
+                  <i id="eyeNewPass" class="fas fa-eye"></i>
+                </button>
+              </div>
+
+              <!-- CONFIRM PASSWORD -->
+              <label class="block font-medium text-gray-700"
+                >Confirm Password</label
+              >
+              <div class="relative mb-5">
+                <input
+                  id="setConfirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  class="w-full bg-gray-100 p-3 rounded-lg"
+                />
+                <button
+                  type="button"
+                  onclick="toggleSetPassVisibility('setConfirmPassword', 'eyeConfirmPass')"
+                  class="absolute right-3 top-3 text-gray-600 hover:text-gray-800"
+                >
+                  <i id="eyeConfirmPass" class="fas fa-eye"></i>
+                </button>
+              </div>
+
+              <button
+                onclick="submitSetPassword()"
+                class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold"
+              >
+                Update Password
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= CHANGE PASSWORD MODAL ================= -->
+        <div
+          id="changePassModal"
+          class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center hidden z-50"
+        >
+          <div class="bg-white w-[450px] p-6 rounded-xl shadow-lg">
+            <!-- HEADER + BACK BUTTON -->
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-bold">Change Password</h2>
+
+              <button
+                onclick="closeChangePasswordModal()"
+                class="text-gray-600 hover:text-gray-900 transition"
+                title="Back"
+              >
+                <i class="fas fa-arrow-left text-xl"></i>
+              </button>
+            </div>
+
+            <!-- CURRENT PASSWORD -->
+            <label class="block font-medium text-gray-700"
+              >Current Password</label
+            >
+            <div class="relative mb-3">
+              <input
+                id="currentPass"
+                type="password"
+                class="w-full bg-gray-100 p-3 rounded-lg"
+              />
+              <button
+                type="button"
+                onclick="toggleVisibility('currentPass', 'eyeCurrentPass')"
+                class="absolute right-3 top-3 text-gray-600 hover:text-gray-800"
+              >
+                <i id="eyeCurrentPass" class="fas fa-eye"></i>
+              </button>
+            </div>
+
+            <!-- NEW PASSWORD -->
+            <label class="block font-medium text-gray-700">New Password</label>
+            <div class="relative mb-3">
+              <input
+                id="newPass"
+                type="password"
+                class="w-full bg-gray-100 p-3 rounded-lg"
+              />
+              <button
+                type="button"
+                onclick="toggleVisibility('newPass', 'eyeNewPassChange')"
+                class="absolute right-3 top-3 text-gray-600 hover:text-gray-800"
+              >
+                <i id="eyeNewPassChange" class="fas fa-eye"></i>
+              </button>
+            </div>
+
+            <!-- CONFIRM PASSWORD -->
+            <label class="block font-medium text-gray-700"
+              >Confirm Password</label
+            >
+            <div class="relative mb-5">
+              <input
+                id="confirmPass"
+                type="password"
+                class="w-full bg-gray-100 p-3 rounded-lg"
+              />
+              <button
+                type="button"
+                onclick="toggleVisibility('confirmPass', 'eyeConfirmPassChange')"
+                class="absolute right-3 top-3 text-gray-600 hover:text-gray-800"
+              >
+                <i id="eyeConfirmPassChange" class="fas fa-eye"></i>
+              </button>
+            </div>
+
+            <button
+              id="updatePassBtn"
+              onclick="submitChangePassword()"
+              class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold"
+            >
+              Update Password
+            </button>
+          </div>
+        </div>
+      </main>
     </div>
-
-    <div class="grid grid-cols-2 gap-4">
-      <!-- Full Name -->
-      <div class="bg-gray-100 rounded-lg p-4 h-14 flex items-center text-gray-700 font-medium">
-        Adithyan K S
-      </div>
-
-      <!-- Username -->
-      <div class="bg-gray-100 rounded-lg p-4 h-14 flex items-center text-gray-700 font-medium">
-        adithyan_ks
-      </div>
-    </div>
-  </div>
-
-  <!-- GENDER SECTION -->
-  <div class="bg-white rounded-xl shadow p-6 mb-8">
-    <h3 class="text-xl font-bold text-gray-900 mb-4">Gender</h3>
-    <div class="flex items-center space-x-8">
-      <label class="flex items-center space-x-2 cursor-pointer">
-        <input type="radio" name="gender" value="male" checked class="w-5 h-5 text-blue-600" />
-        <span class="text-base font-medium text-gray-900">Male</span>
-      </label>
-
-      <label class="flex items-center space-x-2 cursor-pointer">
-        <input type="radio" name="gender" value="female" class="w-5 h-5 text-blue-600" />
-        <span class="text-base font-medium text-gray-900">Female</span>
-      </label>
-    </div>
-  </div>
-
-  <!-- EMAIL SECTION -->
-  <div class="bg-white rounded-xl shadow p-6 mb-8">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-xl font-bold text-gray-900">E-mail Address</h3>
-      <button class="text-blue-600 font-semibold hover:text-blue-700">Edit</button>
-    </div>
-    <div class="bg-gray-100 rounded-lg p-4 h-14 max-w-md flex items-center text-gray-700 font-medium">
-      adithyan.ks@example.com
-    </div>
-  </div>
-
-  <!-- MOBILE SECTION -->
-  <div class="bg-white rounded-xl shadow p-6 mb-8">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-xl font-bold text-gray-900">Mobile Number</h3>
-      <button class="text-blue-600 font-semibold hover:text-blue-700">Edit</button>
-    </div>
-    <div class="bg-gray-100 rounded-lg p-4 h-14 max-w-md flex items-center text-gray-700 font-medium">
-      +91 98765 43210
-    </div>
-  </div>
-
-  <!-- PASSWORD SECTION -->
-  <div class="bg-white rounded-xl shadow p-6 mb-8">
-    <h3 class="text-xl font-bold text-gray-900 mb-4">Password</h3>
-    <div class="flex items-center space-x-4">
-      <div class="bg-gray-100 rounded-lg p-4 h-14 flex-1 max-w-md flex items-center">
-        <span class="text-2xl tracking-widest">••••••••</span>
-      </div>
-      <button class="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition">
-        CHANGE PASSWORD
-      </button>
-    </div>
-  </div>
-
-  <!-- ACTION BUTTONS -->
-  <div class="flex items-center space-x-4 mt-6">
-    <button class="bg-blue-600 text-white px-12 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition">
-      Update
-    </button>
-    <button class="bg-gray-300 text-gray-800 px-12 py-3 rounded-lg text-lg font-semibold hover:bg-gray-400 transition">
-      Reset
-    </button>
-  </div>
-
-</main>
-
-</div>  
     <%- include("../../views/partials/user/footer") %>
   </body>
-  
+
+  <!-- ============================================= -->
+  <!--                 JAVASCRIPT FIXES              -->
+  <!-- ============================================= -->
+
+  <script>
+    /* ======================== MODAL CONTROL ======================== */
+    function closeSetPasswordModal() {
+      document.getElementById("setPassModal").classList.add("hidden");
+    }
+    function closeChangePasswordModal() {
+      document.getElementById("changePassModal").classList.add("hidden");
+    }
+    function closeEmailModal() {
+      document.getElementById("emailUpdateModal").classList.add("hidden");
+      document.getElementById("emailOtpSection").classList.add("hidden");
+    }
+
+    /* ======================== NAME UPDATE ======================== */
+    function toggleNameEdit() {
+      const first = document.getElementById("firstName");
+      const last = document.getElementById("lastName");
+      const btn = document.getElementById("nameEditBtn");
+
+      if (first.disabled) {
+        first.disabled = false;
+        last.disabled = false;
+
+        btn.textContent = "Save";
+        btn.classList.remove("text-blue-600");
+        btn.classList.add("text-green-600");
+        return;
+      }
+
+      Swal.fire({
+        title: "Confirm Changes?",
+        text: "Are you sure you want to update your name?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#16a34a",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Yes, Save",
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        fetch("/account/update-name", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            firstName: first.value,
+            lastName: last.value,
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.success) {
+              Swal.fire("Error", data.message, "error");
+              return;
+            }
+
+            Swal.fire("Updated!", "Name updated successfully.", "success");
+
+            first.disabled = true;
+            last.disabled = true;
+
+            btn.textContent = "Edit";
+            btn.classList.remove("text-green-600");
+            btn.classList.add("text-blue-600");
+          });
+      });
+    }
+
+    /* ======================== PHONE UPDATE ======================== */
+    function togglePhoneEdit() {
+      const phoneInput = document.getElementById("phoneInput");
+      const phoneBtn = document.getElementById("phoneEditBtn");
+
+      if (phoneInput.disabled) {
+        phoneInput.disabled = false;
+        phoneBtn.textContent = "Save";
+
+        phoneBtn.classList.remove("text-blue-600");
+        phoneBtn.classList.add("text-green-600");
+        return;
+      }
+
+      Swal.fire({
+        title: "Confirm Changes?",
+        text: "Update mobile number?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#16a34a",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Yes, Save",
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        fetch("/account/update-phone", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: phoneInput.value }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.success) {
+              Swal.fire("Error", data.message, "error");
+              return;
+            }
+
+            Swal.fire("Updated!", "Mobile number updated!", "success");
+
+            phoneInput.disabled = true;
+            phoneBtn.textContent = "Edit";
+
+            phoneBtn.classList.remove("text-green-600");
+            phoneBtn.classList.add("text-blue-600");
+          });
+      });
+    }
+
+    /* ======================== PASSWORD VISIBILITY ======================== */
+    function toggleVisibility(inputId, eyeId) {
+      const input = document.getElementById(inputId);
+      const eye = document.getElementById(eyeId);
+
+      if (input.type === "password") {
+        input.type = "text";
+        eye.classList.remove("fa-eye");
+        eye.classList.add("fa-eye-slash");
+      } else {
+        input.type = "password";
+        eye.classList.remove("fa-eye-slash");
+        eye.classList.add("fa-eye");
+      }
+    }
+
+    /* ======================== OPEN PASSWORD MODALS ======================== */
+    function openSetPasswordModal() {
+      document.getElementById("setPassModal").classList.remove("hidden");
+    }
+    function openChangePasswordModal() {
+      document.getElementById("changePassModal").classList.remove("hidden");
+    }
+
+    /* ======================== SEND OTP FOR SET PASSWORD ======================== */
+    function sendOtpForSetPassword() {
+      const email = document.getElementById("setPassEmail").value;
+      const btn = document.getElementById("sendOtpBtn");
+
+      if (!email.trim()) {
+        Swal.fire("Error", "Email missing!", "error");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "Sending...";
+
+      fetch("/account/set-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          btn.innerText = "Send OTP";
+
+          if (!data.success) {
+            btn.disabled = false;
+            Swal.fire("Error", data.message, "error");
+            return;
+          }
+
+          Swal.fire("OTP Sent!", "Check your email.", "success");
+
+          btn.disabled = true;
+          btn.classList.add("opacity-50", "cursor-not-allowed");
+
+          document.getElementById("setPassOtpArea").classList.remove("hidden");
+        })
+        .catch(() => {
+          btn.disabled = false;
+          btn.innerText = "Send OTP";
+          Swal.fire("Error", "Server failure.", "error");
+        });
+    }
+
+    /* ======================== SUBMIT SET PASSWORD ======================== */
+    function submitSetPassword() {
+      const email = document.getElementById("setPassEmail").value;
+      const otp = document.getElementById("setPassOtp").value;
+      const password = document.getElementById("setNewPassword").value;
+      const confirmPassword =
+        document.getElementById("setConfirmPassword").value;
+
+      if (!otp || !password || !confirmPassword) {
+        Swal.fire("Error", "All fields required!", "error");
+        return;
+      }
+
+      fetch("/account/verifypassword", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, otp, password, confirmPassword }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data.success) {
+            Swal.fire("Error", data.message, "error");
+            return;
+          }
+
+          Swal.fire("Success!", "Password updated.", "success");
+          closeSetPasswordModal();
+        })
+        .catch(() => Swal.fire("Error", "Server error", "error"));
+    }
+
+    /* ======================== CHANGE PASSWORD ======================== */
+    function submitChangePassword() {
+      const currentPassword = document.getElementById("currentPass").value;
+      const newPassword = document.getElementById("newPass").value;
+      const confirmPassword = document.getElementById("confirmPass").value;
+      const updateBtn = document.getElementById("updatePassBtn");
+
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        Swal.fire("Error", "All fields required!", "error");
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        Swal.fire("Error", "Passwords do not match", "error");
+        return;
+      }
+
+      updateBtn.disabled = true;
+      updateBtn.innerText = "Updating...";
+
+      fetch("/account/change-password", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          updateBtn.disabled = false;
+          updateBtn.innerText = "Update Password";
+
+          if (!data.success) {
+            Swal.fire("Error", data.message, "error");
+            return;
+          }
+
+          Swal.fire("Updated!", "Password changed!", "success");
+          closeChangePasswordModal();
+        })
+        .catch(() => {
+          updateBtn.disabled = false;
+          updateBtn.innerText = "Update Password";
+          Swal.fire("Error", "Server error", "error");
+        });
+    }
+
+    /* ======================== EMAIL UPDATE FLOW ======================== */
+    function openEmailModal() {
+      document.getElementById("emailUpdateModal").classList.remove("hidden");
+    }
+
+    function sendOtpForEmailUpdate() {
+      const email = document.getElementById("emailInputField").value.trim();
+      const btn = document.getElementById("sendOtpEmailBtn");
+
+      if (!email) {
+        Swal.fire("Error", "Enter email", "error");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+
+      fetch("/account/email-update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          btn.textContent = "Send OTP";
+
+          if (!data.success) {
+            btn.disabled = false;
+            Swal.fire("Error", data.message, "error");
+            return;
+          }
+
+          Swal.fire("OTP sent!", "Check your inbox.", "success");
+
+          // Disable send OTP completely
+          btn.disabled = true;
+          btn.classList.add("opacity-50", "cursor-not-allowed");
+
+          document.getElementById("emailOtpSection").classList.remove("hidden");
+        })
+        .catch(() => {
+          btn.disabled = false;
+          btn.textContent = "Send OTP";
+          Swal.fire("Error", "Server failure", "error");
+        });
+    }
+
+    function verifyEmailOtp() {
+      const otp = document.getElementById("emailOtpInput").value.trim();
+      const email = document.getElementById("emailInputField").value.trim();
+
+      if (!otp) {
+        Swal.fire("Error", "OTP required!", "error");
+        return;
+      }
+
+      fetch("/account/verify-email-update", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp, email }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data.success) {
+            Swal.fire("Error", data.message, "error");
+            return;
+          }
+
+          Swal.fire("Success!", "Email updated!", "success");
+
+          closeEmailModal();
+          setTimeout(() => location.reload(), 1500);
+        })
+        .catch(() => Swal.fire("Error", "Server error", "error"));
+    }
+  </script>
 </html>

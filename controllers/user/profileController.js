@@ -1,5 +1,5 @@
 
-import { forgotEmail, forgotPassword, forgotVerify, resetPassword, resetPasswordPost } from "../../services/user/profileSerive.js";
+import { forgotEmail, forgotPassword, forgotVerify, nameUpdate, passwordSet, phoneUpdate, resetPassword, resetPasswordPost, passwordVerify, passwordChange, emailUpdate, verifyEmailUpdate } from "../../services/user/profileSerive.js";
 
 export const getForgotPassword = async (req, res) => {
   await forgotPassword(req, res);
@@ -20,3 +20,33 @@ export const getResetPassword = async (req, res) => {
 export const postResetPassword = async (req, res) => {
   await resetPasswordPost(req, res);
 };
+
+export const updateName = async(req, res) => {
+   
+  await nameUpdate(req, res);
+}
+
+export const updatePhone = async (req, res) => {
+  await phoneUpdate(req, res);
+};
+
+export const updateEmail = async(req, res) => {
+  await emailUpdate(req, res);
+}
+ 
+export const updateVerifyEmail = async(req, res) => {
+  await verifyEmailUpdate(req, res);
+}
+
+export const setPassword = async(req, res) => {
+ 
+  await passwordSet(req, res);
+}
+
+export const verifyPassword = async(req, res) => {
+   console.log("ROUTE HIT!");
+  await passwordVerify(req, res);
+}
+export const changePassword = async(req, res) => {
+  await passwordChange(req, res);
+}

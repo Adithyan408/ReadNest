@@ -1,5 +1,5 @@
 import User from "../../models/userSchema.js";
-
+import { securePassword } from "../../helpers/verify.js";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import passport from "../../config/passport.js";
@@ -100,14 +100,7 @@ export const postSignup = async(req, res) => {
       }
 }
 
-const securePassword = async (password) => {
-  try {
-    const passwordHash = await bcrypt.hash(password, 10);
-    return passwordHash;
-  } catch (error) {
-    res.render("notFound");
-  }
-};
+
 
 export const otpVerify = async(req, res) => {
     try {
