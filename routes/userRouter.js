@@ -14,7 +14,7 @@ router.get("/login", nocache(), loadLogin)
 router.get("/verify-otp",loadVerify);
 router.get("/auth/google", googleAuth)
 router.get("/auth/google/callback", googleAuthCallback)
-router.get("/profile", loadProfile); 
+router.get("/account", loadProfile); 
 router.get("/logout", nocache(), logout)
 
 
