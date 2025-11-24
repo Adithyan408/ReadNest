@@ -91,8 +91,8 @@ export const loadEditBanner = async (req, res) => {
 export const postEditBanner = async (req, res) => {
   try {
     const id = req.query.id;
-    const { title, startDate, endDate, status } = req.body;
-    const newImageUrl = req.file ? req.file.path : null;
+    const { title, startDate, endDate, status, existingImage } = req.body;
+    const newImageUrl =  req.file.path || existingImage;
 
     const updatedData = {
       title,

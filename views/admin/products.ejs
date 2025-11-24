@@ -328,15 +328,21 @@
         <!-- LIST / UNLIST -->
         <td class="px-6 py-4 border">
           <% if (data[i].isListed) { %>
-            <a href="/admin/unlistProduct?id=<%= data[i]._id %>&page=<%= currentPage %>"
-               class="inline-block px-6 py-1 rounded-full text-sm font-semibold bg-red-200 text-red-800 hover:bg-red-300">
-              UNLIST
-            </a>
+           <a 
+                   href="/admin/unlistProduct?id=<%= data[i]._id %>&page=<%= currentPage %>&category=<%= category || '' %>&search=<%= search || '' %>"
+                   class="inline-block px-6 py-1 rounded-full text-sm font-semibold bg-red-200 text-red-800 hover:bg-red-300"
+                    >
+                 UNLIST
+              </a>
+
           <% } else { %>
-            <a href="/admin/listProduct?id=<%= data[i]._id %>&page=<%= currentPage %>"
-               class="inline-block px-6 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800 hover:bg-green-300">
-              LIST
-            </a>
+            <a 
+             href="/admin/listProduct?id=<%= data[i]._id %>&page=<%= currentPage %>&category=<%= category || '' %>&search=<%= search || '' %>"
+              class="inline-block px-6 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800 hover:bg-green-300"
+              >
+                LIST
+              </a>
+
           <% } %>
         </td>
 

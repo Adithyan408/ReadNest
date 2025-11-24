@@ -1,5 +1,5 @@
 
-import { loadEditProducts, loadFilteredProducts, loadProductsAdd, postEditProducts, postProducts, productDelete, productList, productUnlist } from "../../services/admin/productService.js";
+import { imageCropper, loadEditProducts, loadFilteredProducts, loadProductsAdd, postEditProducts, postProducts, productDelete, productList, productUnlist } from "../../services/admin/productService.js";
 
 export const getProductsAdd = async (req, res) => {
   await loadProductsAdd(req, res);
@@ -32,3 +32,7 @@ export const deleteProduct = async (req, res) => {
 export const getFilteredProducts = async (req, res) => {
   await loadFilteredProducts(req, res);
 };
+
+export const imageUpload = async(req, res) => {
+  await imageCropper(req, res);
+}

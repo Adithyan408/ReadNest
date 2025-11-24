@@ -323,3 +323,20 @@ export const loadFilteredProducts = async (req, res) => {
     res.redirect("/admin/pageerror");
   }
 };
+
+export const imageCropper = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.json({ success: false, message: "No file uploaded" });
+    }
+
+    // req.file.path = Cloudinary URL
+    return res.json({
+      success: true,
+      url: req.file.path,
+    });
+  } catch (error) {
+    console.error("Crop upload error:", error);
+    return res.json({ success: false, message: "Upload failed" });
+  }
+};

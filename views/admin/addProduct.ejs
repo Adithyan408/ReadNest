@@ -9,6 +9,12 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <!-- Cropper CSS -->
+    <link
+      href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css"
+      rel="stylesheet"
+    />
+
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
 
@@ -60,6 +66,21 @@
         border: 1px solid #d1d5db;
         border-left: none;
         border-right: none;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .animate-fadeIn {
+        animation: fadeIn 0.2s ease-out;
       }
     </style>
   </head>
@@ -203,262 +224,627 @@
           </div>
 
           <!-- Form -->
-          <form action="/admin/addProducts" method="POST" enctype="multipart/form-data">
-  <div class="space-y-6">
+          <form
+            action="/admin/addProducts"
+            method="POST"
+            enctype="multipart/form-data"
+          >
+            <div class="space-y-6">
+              <!-- Row 1: Product Name + Description -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Product Name -->
+                <div>
+                  <input
+                    type="text"
+                    name="productName"
+                    placeholder="Product Name *"
+                    value="<%= oldInput?.productName || '' %>"
+                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <% if (errors?.productName) { %>
+                  <p class="text-red-600 text-sm mt-1">
+                    <%= errors.productName %>
+                  </p>
+                  <% } %>
+                </div>
 
-    <!-- Row 1: Product Name + Description -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Description -->
+                <div>
+                  <textarea
+                    name="description"
+                    placeholder="Product Description *"
+                    rows="3"
+                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 resize-none"
+                  ><%= oldInput?.description || '' %></textarea
+                  >
 
-      <!-- Product Name -->
-      <div>
-        <input
-          type="text"
-          name="productName"
-          placeholder="Product Name *"
-          value="<%= oldInput?.productName || '' %>"
-          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-        />
-        <% if (errors?.productName) { %>
-          <p class="text-red-600 text-sm mt-1"><%= errors.productName %></p>
-        <% } %>
-      </div>
+                  <% if (errors?.description) { %>
+                  <p class="text-red-600 text-sm mt-1">
+                    <%= errors.description %>
+                  </p>
+                  <% } %>
+                </div>
 
-      <!-- Description -->
-      <div>
-        <textarea
-          name="description"
-          placeholder="Product Description *"
-          rows="3"
-          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 resize-none"
-        ><%= oldInput?.description || '' %></textarea>
+                <!-- Offer Type -->
+                <div>
+                  <select
+                    name="specialOfferType"
+                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                  >
+                    <option
+                      value="none"
+                      <%= oldInput?.specialOfferType === 'none' ? 'selected' :
+                      '' %>
+                    >
+                      No Offer
+                    </option>
+                    <option
+                      value="combo"
+                      <%= oldInput?.specialOfferType === 'combo' ? 'selected' :
+                      '' %>
+                    >
+                      Combo Offer
+                    </option>
+                    <option
+                      value="rush-hour"
+                      <%= oldInput?.specialOfferType === 'rush-hour' ?
+                      'selected' : '' %>
+                    >
+                      Rush Hour
+                    </option>
+                  </select>
+                </div>
+              </div>
 
-        <% if (errors?.description) { %>
-          <p class="text-red-600 text-sm mt-1"><%= errors.description %></p>
-        <% } %>
-      </div>
+              <!-- Row 2: Category + Language -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <!-- Category -->
+                <div>
+                  <select
+                    name="category"
+                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                  >
+                    <option value="">Select Category *</option>
+                    <% categories.forEach(cat => { %>
+                    <option
+                      value="<%= cat.categoryName %>"
+                      <%= oldInput?.category === cat.categoryName ? 'selected'
+                      : '' %>
+                    >
+                      <%= cat.categoryName %>
+                    </option>
+                    <% }) %>
+                  </select>
 
-      <!-- Offer Type -->
-     <div>
-  <select
-    name="specialOfferType"
-    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-  >
-    <option value="none" <%= oldInput?.specialOfferType === 'none' ? 'selected' : '' %>>No Offer</option>
-    <option value="combo" <%= oldInput?.specialOfferType === 'combo' ? 'selected' : '' %>>Combo Offer</option>
-    <option value="rush-hour" <%= oldInput?.specialOfferType === 'rush-hour' ? 'selected' : '' %>>Rush Hour</option>
-  </select>
-</div>
+                  <% if (errors?.category) { %>
+                  <p class="text-red-600 text-sm mt-1">
+                    <%= errors.category %>
+                  </p>
+                  <% } %>
+                </div>
 
-    </div>
+                <!-- Language -->
+                <div>
+                  <select
+                    name="language"
+                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                  >
+                    <option value="">Language *</option>
 
-    <!-- Row 2: Category + Language -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <option
+                      value="English"
+                      <%= oldInput?.language === 'English' ? 'selected' : '' %>
+                    >
+                      English
+                    </option>
+                    <option
+                      value="Malayalam"
+                      <%= oldInput?.language === 'Malayalam' ? 'selected' : ''
+                      %>
+                    >
+                      Malayalam
+                    </option>
+                  </select>
 
-      <!-- Category -->
-      <div>
-        <select
-          name="category"
-          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-        >
-          <option value="">Select Category *</option>
-          <% categories.forEach(cat => { %>
-            <option
-              value="<%= cat.categoryName %>"
-              <%= oldInput?.category === cat.categoryName ? 'selected' : '' %>
-            >
-              <%= cat.categoryName %>
-            </option>
-          <% }) %>
-        </select>
+                  <% if (errors?.language) { %>
+                  <p class="text-red-600 text-sm mt-1">
+                    <%= errors.language %>
+                  </p>
+                  <% } %>
+                </div>
+              </div>
 
-        <% if (errors?.category) { %>
-          <p class="text-red-600 text-sm mt-1"><%= errors.category %></p>
-        <% } %>
-      </div>
+              <!-- Row 3: Author + Author Description -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <input
+                    type="text"
+                    name="author"
+                    placeholder="Author Name"
+                    value="<%= oldInput?.author || '' %>"
+                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <% if (errors?.author) { %>
+                  <p class="text-red-600 text-sm mt-1"><%= errors.author %></p>
+                  <% } %>
+                </div>
 
-      <!-- Language -->
-      <div>
-        <select
-          name="language"
-          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-        >
-          <option value="">Language *</option>
+                <div>
+                  <textarea
+                    name="authorDescription"
+                    placeholder="Author Description"
+                    rows="3"
+                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 resize-none"
+                  ><%= oldInput?.authorDescription || '' %></textarea>
+                </div>
+              </div>
 
-          <option value="English" <%= oldInput?.language === 'English' ? 'selected' : '' %>>English</option>
-          <option value="Malayalam" <%= oldInput?.language === 'Malayalam' ? 'selected' : '' %>>Malayalam</option>
-        </select>
+              <!-- Row 4: Publisher, Year, Pages -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <input
+                  type="text"
+                  name="publisher"
+                  placeholder="Publisher"
+                  value="<%= oldInput?.publisher || '' %>"
+                  class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+                />
 
-        <% if (errors?.language) { %>
-          <p class="text-red-600 text-sm mt-1"><%= errors.language %></p>
-        <% } %>
-      </div>
-    </div>
+                <input
+                  type="text"
+                  name="yearOfPublishing"
+                  placeholder="Year Of Publishing"
+                  value="<%= oldInput?.yearOfPublishing || '' %>"
+                  class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+                />
 
-    <!-- Row 3: Author + Author Description -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <input
-          type="text"
-          name="author"
-          placeholder="Author Name"
-          value="<%= oldInput?.author || '' %>"
-          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-        />
-        <% if (errors?.author) { %>
-          <p class="text-red-600 text-sm mt-1"><%= errors.author %></p>
-        <% } %>
-      </div>
+                <input
+                  type="number"
+                  name="pages"
+                  placeholder="Number of Pages"
+                  value="<%= oldInput?.pages || '' %>"
+                  class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
 
-      <div>
-        <textarea
-          name="authorDescription"
-          placeholder="Author Description"
-          rows="3"
-          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 resize-none"
-        ><%= oldInput?.authorDescription || '' %></textarea>
-      </div>
-    </div>
+              <!-- Row 5: Translator -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <input
+                  type="text"
+                  name="translator"
+                  placeholder="Translator"
+                  value="<%= oldInput?.translator || '' %>"
+                  class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+                />
 
-    <!-- Row 4: Publisher, Year, Pages -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <input type="text" name="publisher" placeholder="Publisher"
-        value="<%= oldInput?.publisher || '' %>"
-        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
+                <textarea
+                  name="translatorDescription"
+                  placeholder="Translator Description"
+                  rows="3"
+                  class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 resize-none"
+                ><%= oldInput?.translatorDescription || '' %></textarea>
+              </div>
 
-      <input type="text" name="yearOfPublishing" placeholder="Year Of Publishing"
-        value="<%= oldInput?.yearOfPublishing || '' %>"
-        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
+              <!-- Row 6: Translated Language + ISBN -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <select
+                  name="translatedLanguage"
+                  class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300"
+                >
+                  <option value="">Translated Language</option>
+                  <option
+                    value="english"
+                    <%= oldInput?.translatedLanguage === 'english'
+                    ? 'selected' : '' %>
+                  >
+                    English
+                  </option>
+                  <option
+                    value="malayalam"
+                    <%= oldInput?.translatedLanguage === 'malayalam'
+                    ? 'selected' : '' %>
+                  >
+                    Malayalam
+                  </option>
+                </select>
 
-      <input type="number" name="pages" placeholder="Number of Pages"
-        value="<%= oldInput?.pages || '' %>"
-        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
-    </div>
+                <input
+                  type="text"
+                  name="isbnNumber"
+                  placeholder="ISBN Number"
+                  value="<%= oldInput?.isbnNumber || '' %>"
+                  class="w-full px-4 py-4 pr-12 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
 
-    <!-- Row 5: Translator -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <input type="text" name="translator" placeholder="Translator"
-        value="<%= oldInput?.translator || '' %>"
-        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
+              <!-- Row 7: Price + Quantity -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <input
+                    type="number"
+                    name="regularPrice"
+                    placeholder="Price *"
+                    step="0.01"
+                    value="<%= oldInput?.regularPrice || '' %>"
+                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <% if (errors?.regularPrice) { %>
+                  <p class="text-red-600 text-sm">
+                    <%= errors.regularPrice %>
+                  </p>
+                  <% } %>
+                </div>
 
-      <textarea name="translatorDescription" placeholder="Translator Description" rows="3"
-        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 resize-none"
-      ><%= oldInput?.translatorDescription || '' %></textarea>
-    </div>
+                <div>
+                  <span class="text-gray-700 font-medium">Quantity</span>
 
-    <!-- Row 6: Translated Language + ISBN -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <select name="translatedLanguage"
-        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300"
-      >
-        <option value="">Translated Language</option>
-        <option value="english" <%= oldInput?.translatedLanguage === 'english' ? 'selected' : '' %>>English</option>
-        <option value="malayalam" <%= oldInput?.translatedLanguage === 'malayalam' ? 'selected' : '' %>>Malayalam</option>
-      </select>
+                  <input
+                    type="number"
+                    name="stock"
+                    id="quantityInput"
+                    value="<%= oldInput?.stock || 0 %>"
+                    min="0"
+                    class="quantity-input px-4 py-4 border rounded-lg text-center focus:ring-2 focus:ring-indigo-500"
+                    required
+                  />
 
-      <input type="text" name="isbnNumber" placeholder="ISBN Number"
-        value="<%= oldInput?.isbnNumber || '' %>"
-        class="w-full px-4 py-4 pr-12 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
-    </div>
+                  <% if (errors?.stock) { %>
+                  <p class="text-red-600 text-sm"><%= errors.stock %></p>
+                  <% } %>
+                </div>
+              </div>
 
-    <!-- Row 7: Price + Quantity -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <input type="number" name="regularPrice" placeholder="Price *" step="0.01"
-          value="<%= oldInput?.regularPrice || '' %>"
-          class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
-        <% if (errors?.regularPrice) { %>
-          <p class="text-red-600 text-sm"><%= errors.regularPrice %></p>
-        <% } %>
-      </div>
+              <!-- Sale Price for offer -->
+              <div
+                id="salePriceWrapper"
+                class="<%= (oldInput?.specialOfferType === 'combo' || oldInput?.specialOfferType === 'rush-hour') ? '' : 'hidden' %>"
+              >
+                <input
+                  type="number"
+                  name="salePrice"
+                  placeholder="Sale Price"
+                  value="<%= oldInput?.salePrice || '' %>"
+                  class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+                />
 
-      <div>
-        <span class="text-gray-700 font-medium">Quantity</span>
+                <% if (errors?.salePrice) { %>
+                <p class="text-red-600 text-sm"><%= errors.salePrice %></p>
+                <% } %>
+              </div>
 
-        <input
-          type="number"
-          name="stock"
-          id="quantityInput"
-          value="<%= oldInput?.stock || 0 %>"
-          min="0"
-          class="quantity-input px-4 py-4 border rounded-lg text-center focus:ring-2 focus:ring-indigo-500"
-          required
-        />
+              <!-- Image Upload -->
+              <div class="bg-white rounded-lg p-8">
+                <div class="upload-area rounded-lg p-12 text-center">
+                  <i class="fas fa-image text-6xl text-gray-400 mb-4"></i>
+                  <p class="text-gray-600">
+                    Drag and drop image or Click add image
+                  </p>
 
-        <% if (errors?.stock) { %>
-          <p class="text-red-600 text-sm"><%= errors.stock %></p>
-        <% } %>
-      </div>
-    </div>
+                  <!-- IMPORTANT: name="productImage" for multer -->
+                  <input
+                    type="file"
+                    id="productImageInput"
+                    name="productImage"
+                    accept="image/*"
+                    class="hidden"
+                    multiple
+                  />
+                  <button
+                    type="button"
+                    onclick="document.getElementById('productImageInput').click()"
+                    class="px-8 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                  >
+                    Add Images
+                  </button>
 
-    <!-- Sale Price for offer -->
-    <div id="salePriceWrapper" class="<%= (oldInput?.specialOfferType === 'combo' || oldInput?.specialOfferType === 'rush-hour') ? '' : 'hidden' %>">
-      <input type="number" name="salePrice" placeholder="Sale Price"
-        value="<%= oldInput?.salePrice || '' %>"
-        class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" />
+                  <!-- Preview Thumbnails -->
+                  <div
+                    id="imagePreview"
+                    class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"
+                  ></div>
+                </div>
+              </div>
 
-      <% if (errors?.salePrice) { %>
-        <p class="text-red-600 text-sm"><%= errors.salePrice %></p>
-      <% } %>
-    </div>
-
-    <!-- Image Upload -->
-    <div class="bg-white rounded-lg p-8">
-      <div class="upload-area rounded-lg p-12 text-center">
-        <i class="fas fa-image text-6xl text-gray-400 mb-4"></i>
-        <p class="text-gray-600">Drag and drop image or Click add image</p>
-
-        <input type="file" name="productImage" id="productImage" accept="image/*" multiple />
-
-        <!-- <button type="button"
-          onclick="document.getElementById('productImage').click()"
-          class="mt-4 px-8 py-3 bg-indigo-600 text-white rounded-lg"
-        >
-          ADD IMAGE
-        </button> -->
-
-        <div id="imagePreview" class="mt-4"></div>
-      </div>
-    </div>
-
-    <!-- Submit -->
-    <div class="flex justify-center pt-4">
-      <button type="submit"
-        class="px-16 py-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-lg"
-      >
-        ADD PRODUCT
-      </button>
-    </div>
-
-  </div>
-</form>
-
+              <!-- Submit -->
+              <div class="flex justify-center pt-4">
+                <button
+                  type="submit"
+                  class="px-16 py-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-lg"
+                >
+                  ADD PRODUCT
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       </main>
     </div>
+
+    <!-- Cropper Modal (Page Local, No Partial) -->
+    <div
+      id="cropperModal"
+      class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center hidden z-50"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl p-4 w-[95%] max-w-xl animate-fadeIn"
+      >
+        <!-- HEADER -->
+        <div class="flex items-center justify-between mb-3">
+          <h2 id="cropperTitle" class="text-lg font-semibold text-gray-800">
+            Crop Product Image (3:4)
+          </h2>
+
+          <button
+            type="button"
+            onclick="handleCropCancel()"
+            class="text-gray-600 hover:text-gray-900 text-xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- IMAGE AREA -->
+        <div
+          class="h-[60vh] overflow-hidden flex items-center justify-center bg-gray-100 rounded-lg border"
+        >
+          <img
+            id="cropperImage"
+            class="max-w-full max-h-full select-none"
+            alt="Crop preview"
+          />
+        </div>
+
+        <!-- FOOTER -->
+        <div class="flex justify-end gap-3 mt-5">
+          <button
+            type="button"
+            onclick="handleCropCancel()"
+            class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-200 transition"
+          >
+            Cancel
+          </button>
+
+          <button
+            id="cropperConfirmBtn"
+            type="button"
+            class="px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+          >
+            Crop & Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cropper JS -->
+    <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
+    <!-- SweetAlert (if not globally included you can uncomment this)
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    -->
+
+    <script>
+      function incrementQuantity() {
+        const input = document.getElementById("quantityInput");
+        input.value = parseInt(input.value || "0") + 1;
+      }
+
+      function decrementQuantity() {
+        const input = document.getElementById("quantityInput");
+        const current = parseInt(input.value || "0");
+        if (current > 0) {
+          input.value = current - 1;
+        }
+      }
+
+      const offerSelect = document.querySelector(
+        "select[name='specialOfferType']"
+      );
+      const salePriceWrapper = document.getElementById("salePriceWrapper");
+
+      if (offerSelect) {
+        offerSelect.addEventListener("change", function () {
+          if (this.value === "combo" || this.value === "rush-hour") {
+            salePriceWrapper.classList.remove("hidden");
+          } else {
+            salePriceWrapper.classList.add("hidden");
+          }
+        });
+      }
+
+      // -----------------------------
+      // Cropper Logic (Page Local)
+      // -----------------------------
+      const fileInput = document.getElementById("productImageInput");
+      const previewContainer = document.getElementById("imagePreview");
+      const cropperModal = document.getElementById("cropperModal");
+      const cropperImage = document.getElementById("cropperImage");
+      const cropperConfirmBtn = document.getElementById("cropperConfirmBtn");
+
+      let cropper = null;
+      let pendingFiles = [];
+      let currentFileIndex = 0;
+      let croppedFiles = []; // { file, url }
+
+      // Handle file selection
+      fileInput.addEventListener("change", function (e) {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+
+        pendingFiles = files;
+        currentFileIndex = 0;
+
+        // reset input so user can reselect same files later if needed
+        fileInput.value = "";
+        openCropperForCurrentFile();
+      });
+
+      function openCropperForCurrentFile() {
+        if (
+          !pendingFiles.length ||
+          currentFileIndex < 0 ||
+          currentFileIndex >= pendingFiles.length
+        ) {
+          return;
+        }
+
+        const file = pendingFiles[currentFileIndex];
+        const imageUrl = URL.createObjectURL(file);
+
+        cropperImage.src = imageUrl;
+        cropperModal.classList.remove("hidden");
+
+        // Initialize cropper once image is loaded
+        cropperImage.onload = function () {
+          if (cropper) {
+            cropper.destroy();
+          }
+
+          cropper = new Cropper(cropperImage, {
+            aspectRatio: 3 / 4,
+            viewMode: 1,
+            autoCropArea: 1,
+          });
+        };
+      }
+
+      function closeCropperModal() {
+        cropperModal.classList.add("hidden");
+        if (cropper) {
+          cropper.destroy();
+          cropper = null;
+        }
+      }
+
+      // Cancel crop for current file → move to next
+      function handleCropCancel() {
+        closeCropperModal();
+        currentFileIndex++;
+        if (currentFileIndex < pendingFiles.length) {
+          openCropperForCurrentFile();
+        } else {
+          pendingFiles = [];
+          currentFileIndex = 0;
+        }
+      }
+
+      // Confirm crop
+      cropperConfirmBtn.addEventListener("click", function () {
+        if (!cropper) return;
+
+        cropperConfirmBtn.disabled = true;
+        cropperConfirmBtn.innerText = "Processing...";
+
+        const canvas = cropper.getCroppedCanvas({
+          // optional sizing, but keeps 3:4 aspect ratio
+          width: 600,
+          height: 800,
+        });
+
+        if (!canvas) {
+          cropperConfirmBtn.disabled = false;
+          cropperConfirmBtn.innerText = "Crop & Save";
+          alert("Something went wrong while cropping.");
+          return;
+        }
+
+        canvas.toBlob(
+          function (blob) {
+            cropperConfirmBtn.disabled = false;
+            cropperConfirmBtn.innerText = "Crop & Save";
+
+            if (!blob) {
+              alert("Failed to generate cropped image.");
+              return;
+            }
+
+            const fileName = `product_${Date.now()}_${
+              currentFileIndex + 1
+            }.jpg`;
+            const croppedFile = new File([blob], fileName, {
+              type: "image/jpeg",
+            });
+            const url = URL.createObjectURL(croppedFile);
+
+            // Save to array
+            const item = { file: croppedFile, url };
+            croppedFiles.push(item);
+
+            // Show preview
+            addProductPreview(item);
+
+            // Move to next image
+            closeCropperModal();
+            currentFileIndex++;
+            if (currentFileIndex < pendingFiles.length) {
+              openCropperForCurrentFile();
+            } else {
+              pendingFiles = [];
+              currentFileIndex = 0;
+            }
+          },
+          "image/jpeg",
+          0.9
+        );
+      });
+
+      // Show preview thumbnails
+      function addProductPreview(item) {
+        const box = document.createElement("div");
+        box.className = "relative group";
+        box.dataset.url = item.url;
+
+        box.innerHTML = `
+          <img src="${item.url}" class="w-full h-[200px] object-cover rounded-lg shadow">
+          <button type="button"
+            class="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded text-sm opacity-90 hover:opacity-100">
+            X
+          </button>
+        `;
+
+        const btn = box.querySelector("button");
+        btn.addEventListener("click", function () {
+          removeProductImage(item.url, box);
+        });
+
+        previewContainer.appendChild(box);
+      }
+
+      // Remove image from preview + array
+      function removeProductImage(url, boxElement) {
+        // Remove from array
+        croppedFiles = croppedFiles.filter((item) => item.url !== url);
+
+        // Remove DOM
+        if (boxElement && boxElement.parentElement) {
+          boxElement.parentElement.removeChild(boxElement);
+        }
+      }
+
+      // Before submitting → attach cropped files to actual file input
+      const form = document.querySelector("form");
+      form.addEventListener("submit", function (e) {
+        if (croppedFiles.length < 3) {
+          e.preventDefault();
+          if (window.Swal) {
+            Swal.fire(
+              "Error",
+              "Please upload and crop at least 3 product images",
+              "error"
+            );
+          } else {
+            alert("Please upload and crop at least 3 product images");
+          }
+          return;
+        }
+
+        const dataTransfer = new DataTransfer();
+        croppedFiles.forEach((item) => {
+          dataTransfer.items.add(item.file);
+        });
+
+        fileInput.files = dataTransfer.files;
+      });
+
+      // Expose cancel handler for modal close button
+      window.handleCropCancel = handleCropCancel;
+    </script>
   </body>
-  <script>
-    function incrementQuantity() {
-      const input = document.getElementById("quantityInput");
-      input.value = parseInt(input.value) + 1;
-    }
-
-    function decrementQuantity() {
-      const input = document.getElementById("quantityInput");
-      if (parseInt(input.value) > 0) {
-        input.value = parseInt(input.value) - 1;
-      }
-    }
-    const offerSelect = document.querySelector(
-      "select[name='specialOfferType']"
-    );
-    const salePriceWrapper = document.getElementById("salePriceWrapper");
-
-    offerSelect.addEventListener("change", function () {
-      if (this.value === "combo" || this.value === "rush-hour") {
-        salePriceWrapper.classList.remove("hidden");
-      } else {
-        salePriceWrapper.classList.add("hidden");
-      }
-    });
-  </script>
 </html>
