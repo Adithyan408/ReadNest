@@ -52,6 +52,6 @@ adminRouter.post("/upload-cropped", nocache(), adminAuth, upload.array("croppedI
 adminRouter.get("/banner", adminAuth, getBanner);
 adminRouter.get("/banner/addBanner", nocache(), adminAuth, getBannerAdd);
 adminRouter.post("/banner/addBanner", nocache(), adminAuth, upload.single("bannerImage"), bannerAdd);
-adminRouter.get("/updateBanner", nocache(), adminAuth, geteditBanner)
-adminRouter.post("/updateBanner", nocache(), adminAuth, upload.single("bannerImage"), editBanner);
+adminRouter.get("/banner/updateBanner", nocache(), adminAuth, geteditBanner)
+adminRouter.post("/banner/updateBanner", nocache(), adminAuth, upload.single("bannerImage"), editBanner);
 adminRouter.get("/deleteBanner", nocache(), adminAuth, deleteBanner);

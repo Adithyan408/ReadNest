@@ -8,7 +8,10 @@ import { generateOtp, sendVerificationEmail } from "../../helpers/verify.js";
 
 export const forgotPassword = async(req, res) => {
      try {
-    res.render("forgot-password");
+      const { error } = req.query;
+    res.render("forgot-password", {
+      error 
+    });
   } catch (error) {
     res.render("notFound");
   }
@@ -20,15 +23,15 @@ export const forgotEmail = async(req, res) => {
     
         const findUser = await User.findOne({ email });
         if (!findUser) {
-          return res.json({ message: "This user NOt exist" });
+          return res.redirect(`/forgot-password?error=User does not exist`);
         }
         const name = findUser.name;
     
         const otp = generateOtp();
     
-        const emailSent = await sendVerificationEmail(name, email, otp);
+        const emailSent =  sendVerificationEmail(name, email, otp);
         if (!emailSent) {
-          return res.json("Email-error");
+         return res.render("forgot-password", { message: "Can't send Email , Try after some time" });
         }
         req.session.userOtp = {
           code: otp,
@@ -37,6 +40,7 @@ export const forgotEmail = async(req, res) => {
         req.session.userData = { email };
     
         res.redirect(`/verify-otp?forgot=true&email=${encodeURIComponent(email)}`);
+        // return res.redirect(`/verify-otp?forgot=true&email=${email}`);
         console.log("otp sent", otp);
       } catch (error) {
         res.redirect("/notfound")
