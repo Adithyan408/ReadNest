@@ -126,7 +126,7 @@ export const bannerDelete = async (req, res) => {
     }
 
     const deletedBanner = await Banner.findByIdAndDelete(id);
-    console.log(deleteBanner);
+    console.log(deletedBanner);
 
     if (!deletedBanner) {
       return res.status(404).send("Banner not found");

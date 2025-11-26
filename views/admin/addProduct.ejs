@@ -541,7 +541,11 @@
                     id="imagePreview"
                     class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"
                   ></div>
-                </div>
+                
+                <% if (errors?.imageUrls) { %>
+                  <p class="text-red-600 text-sm"><%= errors.imageUrls %></p>
+                  <% } %>
+                  </div>
               </div>
 
               <!-- Submit -->
@@ -821,20 +825,6 @@
       // Before submitting → attach cropped files to actual file input
       const form = document.querySelector("form");
       form.addEventListener("submit", function (e) {
-        if (croppedFiles.length < 3) {
-          e.preventDefault();
-          if (window.Swal) {
-            Swal.fire(
-              "Error",
-              "Please upload and crop at least 3 product images",
-              "error"
-            );
-          } else {
-            alert("Please upload and crop at least 3 product images");
-          }
-          return;
-        }
-
         const dataTransfer = new DataTransfer();
         croppedFiles.forEach((item) => {
           dataTransfer.items.add(item.file);
