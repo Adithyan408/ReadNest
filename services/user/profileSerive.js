@@ -4,48 +4,49 @@ import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import passport from "../../config/passport.js";
 import session from "express-session";
+import { v2 as cloudinary } from "cloudinary";
 import {
   generateOtp,
   securePassword,
   sendVerificationEmail,
 } from "../../helpers/verify.js";
 
-export const forgotPassword = async(req, res) => {
-     try {
+export const forgotPassword = async (req, res) => {
+  try {
     res.render("forgot-password");
   } catch (error) {
     res.render("notFound");
   }
 };
 
-export const forgotEmail = async(req, res) => {
-    try {
-        const { email } = req.body;
-    
-        const findUser = await User.findOne({ email });
-        if (!findUser) {
-          return res.json({ message: "This user NOt exist" });
-        }
-        const name = findUser.name;
-    
-        const otp = generateOtp();
-    
-        const emailSent = await sendVerificationEmail(name, email, otp);
-        if (!emailSent) {
-          return res.json("Email-error");
-        }
-        req.session.userOtp = {
-          code: otp,
-          expiresAt: Date.now() + 5 * 60 * 1000, 
-        };
-        req.session.userData = { email };
-    
-        res.redirect(`/verify-otp?forgot=true&email=${encodeURIComponent(email)}`);
-        console.log("otp sent", otp);
-      } catch (error) {
-        res.redirect("/notfound")
-      }
-}
+export const forgotEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const findUser = await User.findOne({ email });
+    if (!findUser) {
+      return res.json({ message: "This user NOt exist" });
+    }
+    const name = findUser.name;
+
+    const otp = generateOtp();
+
+    const emailSent = await sendVerificationEmail(name, email, otp);
+    if (!emailSent) {
+      return res.json("Email-error");
+    }
+    req.session.userOtp = {
+      code: otp,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    };
+    req.session.userData = { email };
+
+    res.redirect(`/verify-otp?forgot=true&email=${encodeURIComponent(email)}`);
+    console.log("otp sent", otp);
+  } catch (error) {
+    res.redirect("/notfound");
+  }
+};
 
 export const forgotVerify = async (req, res) => {
   try {
@@ -212,7 +213,6 @@ export const verifyEmailUpdate = async (req, res) => {
   }
 };
 
-
 export const passwordSet = async (req, res) => {
   try {
     const { email } = req.body;
@@ -299,5 +299,64 @@ export const passwordChange = async (req, res) => {
     return res.json({ success: true });
   } catch (error) {
     return res.json({ success: false, message: "Server Error" });
+  }
+};
+
+export const profileImage = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+    const user = await User.findById(userId);
+
+    let errors = {};
+
+    if (!req.file) {
+      errors.profileImage = "Profile photo is required.";
+      return res.render("user/profile", {
+        user,
+        errors,
+        message: "Please upload a valid image.",
+        status: "error",
+      });
+    }
+
+    // DELETE OLD IMAGE (extract public_id from existing URL)
+    if (user.profileImage) {
+      const oldUrl = user.profileImage;
+
+      // Extract public_id from URL:
+      // https://res.cloudinary.com/.../folder/abcd123.jpg
+      const publicId = oldUrl.split("/").pop().split(".")[0];
+
+      if (publicId) {
+        await cloudinary.uploader.destroy(`re-image/${publicId}`);
+      }
+    }
+
+    // NEW IMAGE URL
+    const imageUrl = req.file ? req.file.path : null;
+
+    user.profileImage = imageUrl;
+    await user.save();
+
+    // Update session
+    req.session.user.profileImage = imageUrl;
+
+    return res.render("user/profile", {
+      user,
+      message: "Profile photo updated successfully!",
+      status: "success",
+      errors: {},
+    });
+  } catch (err) {
+    console.error("Upload profile image error:", err);
+
+    const user = await User.findById(req.session.user?._id);
+
+    return res.render("user/profile", {
+      user,
+      message: "Server error occurred.",
+      status: "error",
+      errors: {},
+    });
   }
 };

@@ -7,6 +7,11 @@
 
     <!-- SweetAlert -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link
+      href="https://unpkg.com/cropperjs/dist/cropper.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
   </head>
 
   <body class="bg-gray-100">
@@ -14,6 +19,72 @@
       <%- include("../../views/partials/user/account") %>
 
       <main class="main-scroll-area flex-1 bg-gray-100 p-10">
+        <% if (typeof message !== 'undefined') { %> <% if (status === 'success')
+        { %>
+        <div class="bg-green-100 text-green-700 p-3 rounded-lg mb-4">
+          <%= message %>
+        </div>
+        <% } else { %>
+        <div class="bg-red-100 text-red-700 p-3 rounded-lg mb-4">
+          <%= message %>
+        </div>
+        <% } %> <% } %>
+
+        <!-- PROFILE IMAGE SECTION -->
+        <div
+          class="bg-white rounded-xl shadow p-6 mb-8 flex flex-col items-center"
+        >
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Profile Photo</h2>
+
+          <!-- If image exists -->
+          <% if (user.profileImage) { %>
+          <div class="relative">
+            <!-- Profile Image -->
+            <img
+              id="profileImagePreview"
+              src="<%= user.profileImage %>"
+              class="w-40 h-40 object-cover rounded-full border shadow"
+            />
+
+            <!-- Replace Button -->
+            <button
+              onclick="document.getElementById('profileImageInput').click()"
+              class="absolute -right-2 top-2 bg-blue-600 text-white p-2 rounded-full shadow hover:bg-blue-700"
+              title="Change photo"
+            >
+              <i class="fas fa-pen"></i>
+            </button>
+
+            <!-- Delete Button -->
+            <button
+              onclick="deleteProfileImage()"
+              class="absolute -right-2 bottom-2 bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700"
+              title="Delete photo"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+
+          <% } else { %>
+          <!-- If no image -->
+          <button
+            onclick="document.getElementById('profileImageInput').click()"
+            class="px-6 py-3 bg-blue-600 text-white rounded-lg shadow font-semibold hover:bg-blue-700"
+          >
+            Upload Profile Photo
+          </button>
+          <% } %>
+
+          <input
+            type="file"
+            name="profileImage"
+            id="profileImageInput"
+            accept="image/*"
+            class="hidden"
+            onchange="openCropper(event)"
+          />
+        </div>
+
         <!-- PERSONAL INFO CARD -->
         <div class="bg-white rounded-xl shadow p-6 mb-8">
           <div class="flex items-center justify-between mb-6">
@@ -363,113 +434,387 @@
             </button>
           </div>
         </div>
+        <form
+          id="profileImageForm"
+          action="/account/profile-image"
+          method="POST"
+          enctype="multipart/form-data"
+          class="hidden"
+        >
+          <input type="file" name="profileImage" id="hiddenProfileImageInput" />
+        </form>
       </main>
     </div>
+    <!-- CROP IMAGE MODAL -->
+    <!-- PROFILE CROP MODAL -->
+    <div
+      id="cropperModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50"
+    >
+      <div class="bg-white p-6 rounded-xl shadow-lg w-[420px]">
+        <h2 class="text-xl font-bold mb-4">Crop Image</h2>
+
+        <div
+          class="w-full h-64 bg-gray-200 flex justify-center items-center overflow-hidden rounded-lg"
+        >
+          <img id="cropperImage" class="max-h-64 select-none" />
+        </div>
+
+        <div class="flex justify-between mt-4">
+          <button
+            onclick="closeCropperModal()"
+            class="px-4 py-2 bg-gray-600 text-white rounded-lg"
+          >
+            Cancel
+          </button>
+
+          <button
+            onclick="uploadCroppedImage()"
+            class="px-4 py-2 bg-green-600 text-white rounded-lg"
+          >
+            Save Image
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Include CropperJS CDN -->
+
     <%- include("../../views/partials/user/footer") %>
-  </body>
 
-  <!-- ============================================= -->
-  <!--                 JAVASCRIPT FIXES              -->
-  <!-- ============================================= -->
+    <!-- ============================================= -->
+    <!--                 JAVASCRIPT FIXES              -->
+    <!-- ============================================= -->
 
-  <script>
-    /* ======================== MODAL CONTROL ======================== */
-    function closeSetPasswordModal() {
-      document.getElementById("setPassModal").classList.add("hidden");
-    }
-    function closeChangePasswordModal() {
-      document.getElementById("changePassModal").classList.add("hidden");
-    }
-    function closeEmailModal() {
-      document.getElementById("emailUpdateModal").classList.add("hidden");
-      document.getElementById("emailOtpSection").classList.add("hidden");
-    }
-
-    /* ======================== NAME UPDATE ======================== */
-    function toggleNameEdit() {
-      const first = document.getElementById("firstName");
-      const last = document.getElementById("lastName");
-      const btn = document.getElementById("nameEditBtn");
-
-      if (first.disabled) {
-        first.disabled = false;
-        last.disabled = false;
-
-        btn.textContent = "Save";
-        btn.classList.remove("text-blue-600");
-        btn.classList.add("text-green-600");
-        return;
+    <script>
+      /* ======================== MODAL CONTROL ======================== */
+      function closeSetPasswordModal() {
+        document.getElementById("setPassModal").classList.add("hidden");
+      }
+      function closeChangePasswordModal() {
+        document.getElementById("changePassModal").classList.add("hidden");
+      }
+      function closeEmailModal() {
+        document.getElementById("emailUpdateModal").classList.add("hidden");
+        document.getElementById("emailOtpSection").classList.add("hidden");
       }
 
-      Swal.fire({
-        title: "Confirm Changes?",
-        text: "Are you sure you want to update your name?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#16a34a",
-        cancelButtonColor: "#6b7280",
-        confirmButtonText: "Yes, Save",
-      }).then((result) => {
-        if (!result.isConfirmed) return;
+      /* ======================== NAME UPDATE ======================== */
+      function toggleNameEdit() {
+        const first = document.getElementById("firstName");
+        const last = document.getElementById("lastName");
+        const btn = document.getElementById("nameEditBtn");
 
-        fetch("/account/update-name", {
+        if (first.disabled) {
+          first.disabled = false;
+          last.disabled = false;
+
+          btn.textContent = "Save";
+          btn.classList.remove("text-blue-600");
+          btn.classList.add("text-green-600");
+          return;
+        }
+
+        Swal.fire({
+          title: "Confirm Changes?",
+          text: "Are you sure you want to update your name?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#16a34a",
+          cancelButtonColor: "#6b7280",
+          confirmButtonText: "Yes, Save",
+        }).then((result) => {
+          if (!result.isConfirmed) return;
+
+          fetch("/account/update-name", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              firstName: first.value,
+              lastName: last.value,
+            }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (!data.success) {
+                Swal.fire("Error", data.message, "error");
+                return;
+              }
+
+              Swal.fire("Updated!", "Name updated successfully.", "success");
+
+              first.disabled = true;
+              last.disabled = true;
+
+              btn.textContent = "Edit";
+              btn.classList.remove("text-green-600");
+              btn.classList.add("text-blue-600");
+            });
+        });
+      }
+
+      /* ======================== PHONE UPDATE ======================== */
+      function togglePhoneEdit() {
+        const phoneInput = document.getElementById("phoneInput");
+        const phoneBtn = document.getElementById("phoneEditBtn");
+
+        if (phoneInput.disabled) {
+          phoneInput.disabled = false;
+          phoneBtn.textContent = "Save";
+
+          phoneBtn.classList.remove("text-blue-600");
+          phoneBtn.classList.add("text-green-600");
+          return;
+        }
+
+        Swal.fire({
+          title: "Confirm Changes?",
+          text: "Update mobile number?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#16a34a",
+          cancelButtonColor: "#6b7280",
+          confirmButtonText: "Yes, Save",
+        }).then((result) => {
+          if (!result.isConfirmed) return;
+
+          fetch("/account/update-phone", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: phoneInput.value }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (!data.success) {
+                Swal.fire("Error", data.message, "error");
+                return;
+              }
+
+              Swal.fire("Updated!", "Mobile number updated!", "success");
+
+              phoneInput.disabled = true;
+              phoneBtn.textContent = "Edit";
+
+              phoneBtn.classList.remove("text-green-600");
+              phoneBtn.classList.add("text-blue-600");
+            });
+        });
+      }
+
+      /* ======================== PASSWORD VISIBILITY ======================== */
+      function toggleVisibility(inputId, eyeId) {
+        const input = document.getElementById(inputId);
+        const eye = document.getElementById(eyeId);
+
+        if (input.type === "password") {
+          input.type = "text";
+          eye.classList.remove("fa-eye");
+          eye.classList.add("fa-eye-slash");
+        } else {
+          input.type = "password";
+          eye.classList.remove("fa-eye-slash");
+          eye.classList.add("fa-eye");
+        }
+      }
+
+      /* ======================== OPEN PASSWORD MODALS ======================== */
+      function openSetPasswordModal() {
+        document.getElementById("setPassModal").classList.remove("hidden");
+      }
+      function openChangePasswordModal() {
+        document.getElementById("changePassModal").classList.remove("hidden");
+      }
+
+      /* ======================== SEND OTP FOR SET PASSWORD ======================== */
+      function sendOtpForSetPassword() {
+        const email = document.getElementById("setPassEmail").value;
+        const btn = document.getElementById("sendOtpBtn");
+
+        if (!email.trim()) {
+          Swal.fire("Error", "Email missing!", "error");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Sending...";
+
+        fetch("/account/set-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            btn.innerText = "Send OTP";
+
+            if (!data.success) {
+              btn.disabled = false;
+              Swal.fire("Error", data.message, "error");
+              return;
+            }
+
+            Swal.fire("OTP Sent!", "Check your email.", "success");
+
+            btn.disabled = true;
+            btn.classList.add("opacity-50", "cursor-not-allowed");
+
+            document
+              .getElementById("setPassOtpArea")
+              .classList.remove("hidden");
+          })
+          .catch(() => {
+            btn.disabled = false;
+            btn.innerText = "Send OTP";
+            Swal.fire("Error", "Server failure.", "error");
+          });
+      }
+
+      /* ======================== SUBMIT SET PASSWORD ======================== */
+      function submitSetPassword() {
+        const email = document.getElementById("setPassEmail").value;
+        const otp = document.getElementById("setPassOtp").value;
+        const password = document.getElementById("setNewPassword").value;
+        const confirmPassword =
+          document.getElementById("setConfirmPassword").value;
+
+        if (!otp || !password || !confirmPassword) {
+          Swal.fire("Error", "All fields required!", "error");
+          return;
+        }
+
+        fetch("/account/verifypassword", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, otp, password, confirmPassword }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.success) {
+              Swal.fire("Error", data.message, "error");
+              return;
+            }
+
+            Swal.fire("Success!", "Password updated.", "success");
+            closeSetPasswordModal();
+          })
+          .catch(() => Swal.fire("Error", "Server error", "error"));
+      }
+
+      /* ======================== CHANGE PASSWORD ======================== */
+      function submitChangePassword() {
+        const currentPassword = document.getElementById("currentPass").value;
+        const newPassword = document.getElementById("newPass").value;
+        const confirmPassword = document.getElementById("confirmPass").value;
+        const updateBtn = document.getElementById("updatePassBtn");
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          Swal.fire("Error", "All fields required!", "error");
+          return;
+        }
+        if (newPassword !== confirmPassword) {
+          Swal.fire("Error", "Passwords do not match", "error");
+          return;
+        }
+
+        updateBtn.disabled = true;
+        updateBtn.innerText = "Updating...";
+
+        fetch("/account/change-password", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            firstName: first.value,
-            lastName: last.value,
+            currentPassword,
+            newPassword,
+            confirmPassword,
           }),
         })
           .then((res) => res.json())
           .then((data) => {
+            updateBtn.disabled = false;
+            updateBtn.innerText = "Update Password";
+
             if (!data.success) {
               Swal.fire("Error", data.message, "error");
               return;
             }
 
-            Swal.fire("Updated!", "Name updated successfully.", "success");
-
-            first.disabled = true;
-            last.disabled = true;
-
-            btn.textContent = "Edit";
-            btn.classList.remove("text-green-600");
-            btn.classList.add("text-blue-600");
+            Swal.fire("Updated!", "Password changed!", "success");
+            closeChangePasswordModal();
+          })
+          .catch(() => {
+            updateBtn.disabled = false;
+            updateBtn.innerText = "Update Password";
+            Swal.fire("Error", "Server error", "error");
           });
-      });
-    }
-
-    /* ======================== PHONE UPDATE ======================== */
-    function togglePhoneEdit() {
-      const phoneInput = document.getElementById("phoneInput");
-      const phoneBtn = document.getElementById("phoneEditBtn");
-
-      if (phoneInput.disabled) {
-        phoneInput.disabled = false;
-        phoneBtn.textContent = "Save";
-
-        phoneBtn.classList.remove("text-blue-600");
-        phoneBtn.classList.add("text-green-600");
-        return;
       }
 
-      Swal.fire({
-        title: "Confirm Changes?",
-        text: "Update mobile number?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#16a34a",
-        cancelButtonColor: "#6b7280",
-        confirmButtonText: "Yes, Save",
-      }).then((result) => {
-        if (!result.isConfirmed) return;
+      /* ======================== EMAIL UPDATE FLOW ======================== */
+      function openEmailModal() {
+        document.getElementById("emailUpdateModal").classList.remove("hidden");
+      }
 
-        fetch("/account/update-phone", {
+      function sendOtpForEmailUpdate() {
+        const email = document.getElementById("emailInputField").value.trim();
+        const btn = document.getElementById("sendOtpEmailBtn");
+
+        if (!email) {
+          Swal.fire("Error", "Enter email", "error");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Sending...";
+
+        fetch("/account/email-update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            btn.textContent = "Send OTP";
+
+            if (!data.success) {
+              btn.disabled = false;
+              Swal.fire("Error", data.message, "error");
+              return;
+            }
+
+            Swal.fire("OTP sent!", "Check your inbox.", "success");
+
+            // Disable send OTP completely
+            btn.disabled = true;
+            btn.classList.add("opacity-50", "cursor-not-allowed");
+
+            document
+              .getElementById("emailOtpSection")
+              .classList.remove("hidden");
+          })
+          .catch(() => {
+            btn.disabled = false;
+            btn.textContent = "Send OTP";
+            Swal.fire("Error", "Server failure", "error");
+          });
+      }
+
+      function verifyEmailOtp() {
+        const otp = document.getElementById("emailOtpInput").value.trim();
+        const email = document.getElementById("emailInputField").value.trim();
+
+        if (!otp) {
+          Swal.fire("Error", "OTP required!", "error");
+          return;
+        }
+
+        fetch("/account/verify-email-update", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: phoneInput.value }),
+          body: JSON.stringify({ otp, email }),
         })
           .then((res) => res.json())
           .then((data) => {
@@ -478,235 +823,122 @@
               return;
             }
 
-            Swal.fire("Updated!", "Mobile number updated!", "success");
+            Swal.fire("Success!", "Email updated!", "success");
 
-            phoneInput.disabled = true;
-            phoneBtn.textContent = "Edit";
+            closeEmailModal();
+            setTimeout(() => location.reload(), 1500);
+          })
+          .catch(() => Swal.fire("Error", "Server error", "error"));
+      }
+      /* ================= PROFILE IMAGE + CROPPER ================= */
+      let cropperProfile = null;
+      let selectedProfileFile = null;
 
-            phoneBtn.classList.remove("text-green-600");
-            phoneBtn.classList.add("text-blue-600");
+      const profileInput = document.getElementById("profileImageInput");
+      const cropModal = document.getElementById("cropperModal");
+      const cropImg = document.getElementById("cropperImage");
+      const hiddenInput = document.getElementById("hiddenProfileImageInput");
+      const form = document.getElementById("profileImageForm");
+
+      profileInput.addEventListener("change", (event) => {
+        selectedProfileFile = event.target.files[0];
+        if (!selectedProfileFile) return;
+
+        cropImg.src = URL.createObjectURL(selectedProfileFile);
+        cropModal.classList.remove("hidden");
+
+        cropImg.onload = function () {
+          if (cropperProfile) cropperProfile.destroy();
+          cropperProfile = new Cropper(cropImg, {
+            aspectRatio: 1,
+            viewMode: 1,
+            autoCropArea: 1,
           });
+        };
       });
-    }
 
-    /* ======================== PASSWORD VISIBILITY ======================== */
-    function toggleVisibility(inputId, eyeId) {
-      const input = document.getElementById(inputId);
-      const eye = document.getElementById(eyeId);
-
-      if (input.type === "password") {
-        input.type = "text";
-        eye.classList.remove("fa-eye");
-        eye.classList.add("fa-eye-slash");
-      } else {
-        input.type = "password";
-        eye.classList.remove("fa-eye-slash");
-        eye.classList.add("fa-eye");
-      }
-    }
-
-    /* ======================== OPEN PASSWORD MODALS ======================== */
-    function openSetPasswordModal() {
-      document.getElementById("setPassModal").classList.remove("hidden");
-    }
-    function openChangePasswordModal() {
-      document.getElementById("changePassModal").classList.remove("hidden");
-    }
-
-    /* ======================== SEND OTP FOR SET PASSWORD ======================== */
-    function sendOtpForSetPassword() {
-      const email = document.getElementById("setPassEmail").value;
-      const btn = document.getElementById("sendOtpBtn");
-
-      if (!email.trim()) {
-        Swal.fire("Error", "Email missing!", "error");
-        return;
+      /* Cancel Crop */
+      function closeCropperModal() {
+        cropModal.classList.add("hidden");
+        if (cropperProfile) cropperProfile.destroy();
+        cropperProfile = null;
+        profileInput.value = "";
       }
 
-      btn.disabled = true;
-      btn.innerText = "Sending...";
+      /* Save Cropped Image */
+      function uploadCroppedImage() {
+        if (!cropperProfile) {
+          Swal.fire("Error", "Image not ready.", "error");
+          return;
+        }
 
-      fetch("/account/set-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          btn.innerText = "Send OTP";
-
-          if (!data.success) {
-            btn.disabled = false;
-            Swal.fire("Error", data.message, "error");
-            return;
-          }
-
-          Swal.fire("OTP Sent!", "Check your email.", "success");
-
-          btn.disabled = true;
-          btn.classList.add("opacity-50", "cursor-not-allowed");
-
-          document.getElementById("setPassOtpArea").classList.remove("hidden");
-        })
-        .catch(() => {
-          btn.disabled = false;
-          btn.innerText = "Send OTP";
-          Swal.fire("Error", "Server failure.", "error");
+        const canvas = cropperProfile.getCroppedCanvas({
+          width: 400,
+          height: 400,
         });
-    }
 
-    /* ======================== SUBMIT SET PASSWORD ======================== */
-    function submitSetPassword() {
-      const email = document.getElementById("setPassEmail").value;
-      const otp = document.getElementById("setPassOtp").value;
-      const password = document.getElementById("setNewPassword").value;
-      const confirmPassword =
-        document.getElementById("setConfirmPassword").value;
+        canvas.toBlob(
+          (blob) => {
+            const croppedFile = new File([blob], `profile_${Date.now()}.jpg`, {
+              type: "image/jpeg",
+            });
 
-      if (!otp || !password || !confirmPassword) {
-        Swal.fire("Error", "All fields required!", "error");
-        return;
+            const dt = new DataTransfer();
+            dt.items.add(croppedFile);
+            hiddenInput.files = dt.files;
+
+            console.log("✔ Cropped image prepared → submitting");
+
+            cropModal.classList.add("hidden");
+            cropperProfile.destroy();
+            cropperProfile = null;
+
+            form.submit();
+          },
+          "image/jpeg",
+          0.9
+        );
       }
 
-      fetch("/account/verifypassword", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, otp, password, confirmPassword }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (!data.success) {
-            Swal.fire("Error", data.message, "error");
-            return;
-          }
+      // Debug: see if form actually submits
+      document.addEventListener("DOMContentLoaded", () => {
+        const form = document.getElementById("profileImageForm");
+        if (form) {
+          form.addEventListener("submit", () => {
+            console.log("📨 profileImageForm SUBMITTED");
+          });
+        }
+      });
 
-          Swal.fire("Success!", "Password updated.", "success");
-          closeSetPasswordModal();
-        })
-        .catch(() => Swal.fire("Error", "Server error", "error"));
-    }
+      /* Delete Image */
+      function deleteProfileImage() {
+        Swal.fire({
+          title: "Delete Profile Photo?",
+          text: "This action cannot be undone.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#dc2626",
+          cancelButtonColor: "#6b7280",
+          confirmButtonText: "Delete",
+        }).then(async (result) => {
+          if (!result.isConfirmed) return;
 
-    /* ======================== CHANGE PASSWORD ======================== */
-    function submitChangePassword() {
-      const currentPassword = document.getElementById("currentPass").value;
-      const newPassword = document.getElementById("newPass").value;
-      const confirmPassword = document.getElementById("confirmPass").value;
-      const updateBtn = document.getElementById("updatePassBtn");
+          const res = await fetch("/account/delete-profile-image", {
+            method: "DELETE",
+            credentials: "include",
+          });
 
-      if (!currentPassword || !newPassword || !confirmPassword) {
-        Swal.fire("Error", "All fields required!", "error");
-        return;
-      }
-      if (newPassword !== confirmPassword) {
-        Swal.fire("Error", "Passwords do not match", "error");
-        return;
-      }
-
-      updateBtn.disabled = true;
-      updateBtn.innerText = "Updating...";
-
-      fetch("/account/change-password", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          updateBtn.disabled = false;
-          updateBtn.innerText = "Update Password";
+          const data = await res.json();
 
           if (!data.success) {
             Swal.fire("Error", data.message, "error");
             return;
           }
 
-          Swal.fire("Updated!", "Password changed!", "success");
-          closeChangePasswordModal();
-        })
-        .catch(() => {
-          updateBtn.disabled = false;
-          updateBtn.innerText = "Update Password";
-          Swal.fire("Error", "Server error", "error");
+          Swal.fire("Deleted!", "Profile photo removed.", "success");
+          location.reload();
         });
-    }
-
-    /* ======================== EMAIL UPDATE FLOW ======================== */
-    function openEmailModal() {
-      document.getElementById("emailUpdateModal").classList.remove("hidden");
-    }
-
-    function sendOtpForEmailUpdate() {
-      const email = document.getElementById("emailInputField").value.trim();
-      const btn = document.getElementById("sendOtpEmailBtn");
-
-      if (!email) {
-        Swal.fire("Error", "Enter email", "error");
-        return;
       }
-
-      btn.disabled = true;
-      btn.textContent = "Sending...";
-
-      fetch("/account/email-update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          btn.textContent = "Send OTP";
-
-          if (!data.success) {
-            btn.disabled = false;
-            Swal.fire("Error", data.message, "error");
-            return;
-          }
-
-          Swal.fire("OTP sent!", "Check your inbox.", "success");
-
-          // Disable send OTP completely
-          btn.disabled = true;
-          btn.classList.add("opacity-50", "cursor-not-allowed");
-
-          document.getElementById("emailOtpSection").classList.remove("hidden");
-        })
-        .catch(() => {
-          btn.disabled = false;
-          btn.textContent = "Send OTP";
-          Swal.fire("Error", "Server failure", "error");
-        });
-    }
-
-    function verifyEmailOtp() {
-      const otp = document.getElementById("emailOtpInput").value.trim();
-      const email = document.getElementById("emailInputField").value.trim();
-
-      if (!otp) {
-        Swal.fire("Error", "OTP required!", "error");
-        return;
-      }
-
-      fetch("/account/verify-email-update", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ otp, email }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (!data.success) {
-            Swal.fire("Error", data.message, "error");
-            return;
-          }
-
-          Swal.fire("Success!", "Email updated!", "success");
-
-          closeEmailModal();
-          setTimeout(() => location.reload(), 1500);
-        })
-        .catch(() => Swal.fire("Error", "Server error", "error"));
-    }
-  </script>
+    </script>
+  </body>
 </html>
