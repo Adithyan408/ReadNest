@@ -40,6 +40,11 @@ export const postProducts = async (req, res) => {
     let errors = {};
     const categories = await Category.find({ isListed: true });
 
+     const imageUrls =
+      req.files && req.files.length > 0
+        ? req.files.map((file) => file.path)
+        : [];
+
     let isOfferProduct =
       specialOfferType === "combo" || specialOfferType === "rush-hour";
 
@@ -48,6 +53,7 @@ export const postProducts = async (req, res) => {
       if (!regularPrice) errors.regularPrice = "Regular Price is required.";
       if (!salePrice) errors.salePrice = "Sale Price is required.";
       if (!stock) errors.stock = "Stock is required.";
+      if(!req.files || req.files.length < 1) errors.imageUrls = "Image is required";
     } else {
       if (!productName) errors.productName = "Product Name is required.";
       if (!description) errors.description = "Product Description is required.";
@@ -56,6 +62,7 @@ export const postProducts = async (req, res) => {
       if (!language) errors.language = "Language is required.";
       if (!regularPrice) errors.regularPrice = "Price is required.";
       if (!stock) errors.stock = "Stock is required.";
+      if(!req.files || req.files.length < 1) errors.imageUrls = "Image is required";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -66,10 +73,7 @@ export const postProducts = async (req, res) => {
       });
     }
 
-    const imageUrls =
-      req.files && req.files.length > 0
-        ? req.files.map((file) => file.path)
-        : [];
+   
 
     const newProduct = new Product({
       productName,
@@ -321,5 +325,22 @@ export const loadFilteredProducts = async (req, res) => {
     });
   } catch (error) {
     res.redirect("/admin/pageerror");
+  }
+};
+
+export const imageCropper = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.json({ success: false, message: "No file uploaded" });
+    }
+
+    // req.file.path = Cloudinary URL
+    return res.json({
+      success: true,
+      url: req.file.path,
+    });
+  } catch (error) {
+    console.error("Crop upload error:", error);
+    return res.json({ success: false, message: "Upload failed" });
   }
 };

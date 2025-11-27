@@ -355,29 +355,35 @@
     }
 
     //  AJAX call for resending OTP
-    async function resendCode() {
-      if (resendLink.disabled) return;
-      clearInterval(timerInterval);
+   async function resendCode() {
+  if (resendLink.disabled) return;
 
-      try {
-        const email = sessionStorage.getItem("verificationEmail");
-        const res = await fetch("/resend-otp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
+  clearInterval(timerInterval);
 
-        const data = await res.json();
-        if (data.success) {
-          showSuccess("New OTP sent to your email!");
-          startTimer();
-        } else {
-          showError(data.message || "Failed to resend OTP");
-        }
-      } catch (err) {
-        showError("Error resending OTP");
-      }
+  try {
+    const email = sessionStorage.getItem("verificationEmail");
+
+    // Show instant feedback before waiting
+    showSuccess("Sending new OTP...");
+    
+    const res = await fetch("/resend-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    if (res.status === 200) {
+      // Instant success — no lag
+      showSuccess("New OTP sent!");
+      startTimer();
+    } else {
+      showError("Failed to resend OTP");
     }
+  } catch (err) {
+    showError("Error resending OTP");
+  }
+}
+
 
     function showError(msg) {
       const errorBox = document.getElementById("errorMessage");

@@ -147,7 +147,9 @@ export const productDetails = async (req, res) => {
       categoryName: product.category,
     });
 
-    
+    if(!product || !product.isListed){
+      return res.redirect("/");
+    }
     if (!categoryDoc || !categoryDoc.isListed) {
       return res.redirect("/");
     }

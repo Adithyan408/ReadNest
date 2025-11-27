@@ -10,42 +10,42 @@ import {
   sendVerificationEmail,
 } from "../../helpers/verify.js";
 
-export const forgotPassword = async (req, res) => {
-  try {
+export const forgotPassword = async(req, res) => {
+     try {
     res.render("forgot-password");
   } catch (error) {
     res.render("notFound");
   }
 };
 
-export const forgotEmail = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    const findUser = await User.findOne({ email });
-    if (!findUser) {
-      return res.json({ message: "This user NOt exist" });
-    }
-    const name = findUser.name;
-
-    const otp = generateOtp();
-
-    const emailSent = await sendVerificationEmail(name, email, otp);
-    if (!emailSent) {
-      return res.json("Email-error");
-    }
-    req.session.userOtp = {
-      code: otp,
-      expiresAt: Date.now() + 5 * 60 * 1000,
-    };
-    req.session.userData = { email };
-
-    res.redirect(`/verify-otp?forgot=true&email=${encodeURIComponent(email)}`);
-    console.log("otp sent", otp);
-  } catch (error) {
-    res.redirect("/notfound");
-  }
-};
+export const forgotEmail = async(req, res) => {
+    try {
+        const { email } = req.body;
+    
+        const findUser = await User.findOne({ email });
+        if (!findUser) {
+          return res.json({ message: "This user NOt exist" });
+        }
+        const name = findUser.name;
+    
+        const otp = generateOtp();
+    
+        const emailSent = await sendVerificationEmail(name, email, otp);
+        if (!emailSent) {
+          return res.json("Email-error");
+        }
+        req.session.userOtp = {
+          code: otp,
+          expiresAt: Date.now() + 5 * 60 * 1000, 
+        };
+        req.session.userData = { email };
+    
+        res.redirect(`/verify-otp?forgot=true&email=${encodeURIComponent(email)}`);
+        console.log("otp sent", otp);
+      } catch (error) {
+        res.redirect("/notfound")
+      }
+}
 
 export const forgotVerify = async (req, res) => {
   try {
