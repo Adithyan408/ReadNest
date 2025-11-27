@@ -14,7 +14,7 @@ cloudinary.v2.config({
 
 const CloudinaryStorage = pkg.default || pkg.CloudinaryStorage;
 
-// STORAGE
+
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary.v2,
   params: {
@@ -25,7 +25,7 @@ const storage = new CloudinaryStorage({
   },
 });
 
-// FILE FILTER
+
 const fileFilter = (req, file, cb) => {
   const allowed = /jpeg|jpg|png|webp/;
   const mime = allowed.test(file.mimetype);
@@ -37,7 +37,7 @@ const fileFilter = (req, file, cb) => {
   else cb(new Error("Only image files allowed"));
 };
 
-// MULTER
+
 const upload = multer({ storage, fileFilter });
 
 export default upload;
