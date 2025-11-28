@@ -38,7 +38,7 @@ import {
 } from "../controllers/user/productController.js";
 import nocache from "nocache";
 import upload from "../middlewares/multer.js";
-import { addAddress, getAddress } from "../controllers/user/addressController.js";
+import { addAddress, getAddress, getSingleAddress, updateAddress } from "../controllers/user/addressController.js";
 
 export const router = express.Router();
 
@@ -68,6 +68,9 @@ router.post("/account/email-update", updateEmail);
 router.post("/account/verify-email-update", updateVerifyEmail);
 router.post("/account/profile-image", upload.single("profileImage"), uploadProfileImage);
 router.post("/account/add-address", addAddress);
+router.get("/account/address/:id", getSingleAddress);
+router.put("/account/address/update/:id", updateAddress);
+
 
 router.get("/forgot-password", getForgotPassword);
 router.post("/forgot-password", forgotEmailValid);

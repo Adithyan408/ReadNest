@@ -50,13 +50,12 @@
                 </h3>
 
                 <p class="text-gray-700 mt-1 leading-relaxed">
-                 
                   <%= addr.houseNumber %>, <%= addr.houseName %><br />
                   <%= addr.street %>, <%= addr.post %><br />
                   <%= addr.district %>, <%= addr.state %> - <%= addr.pincode
                   %><br />
-                  Phone: <%= addr.phone %>
-                  Alternate - Phone: <%= addr.altPhone %>
+                  Phone: <%= addr.phone %> Alternate - Phone: <%= addr.altPhone
+                  %>
                 </p>
               </div>
 
@@ -260,6 +259,19 @@
 
         <!-- FORM GRID -->
         <div class="grid grid-cols-2 gap-6">
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >Address Type:</label
+            >
+            <select
+              id="editAddrLabel"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            >
+              <option value="Home">Home</option>
+              <option value="Office">Office</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
           <!-- HOUSE NAME -->
           <div>
             <label class="block text-gray-700 font-medium mb-1"
@@ -357,16 +369,30 @@
               value="<%= editAddress ? editAddress.phone : '' %>"
             />
           </div>
+
+          <!-- ALT PHONE NUMBER -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >Phone Number:</label
+            >
+            <input
+              id="editAltPhone"
+              type="number"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+              value="<%= editAddress ? editAddress.altPhone : '' %>"
+            />
+          </div>
         </div>
 
         <!-- BUTTONS -->
         <div class="mt-8 flex justify-center gap-5">
           <button
-            onclick="updateAddress(`<%= editAddress ? editAddress._id : '' %>`)"
-            class="px-8 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
-          >
-            UPDATE
-          </button>
+  onclick="updateAddress(window.editingAddressId)"
+  class="px-8 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+>
+  UPDATE
+</button>
+
 
           <button
             onclick="closeEditAddressModal()"
@@ -442,6 +468,10 @@
           .then((data) => {
             if (!data.success) return Swal.fire("Error", data.message, "error");
 
+            const addr = data.address;
+
+            document.getElementById("editAddrLabel").value = addr.addressLabel;
+
             // fill modal input values dynamically
             document.getElementById("editHouseName").value =
               data.address.houseName;
@@ -454,6 +484,8 @@
             document.getElementById("editState").value = data.address.state;
             document.getElementById("editPincode").value = data.address.pincode;
             document.getElementById("editPhone").value = data.address.phone;
+            document.getElementById("editAltPhone").value =
+              data.address.altPhone;
 
             // store ID
             window.editingAddressId = id;
@@ -463,9 +495,47 @@
               .classList.remove("hidden");
           });
       }
-
+      function closeEditAddressModal() {
+        document.getElementById("editAddressModal").classList.add("hidden");
+      }
       function deleteAddress(type) {
         Swal.fire("Deleted", "Address removed successfully!", "success");
+      }
+
+      async function updateAddress(id) {
+        const body = {
+          addressLabel: document.getElementById("editAddrLabel").value,
+          houseName: document.getElementById("editHouseName").value,
+          houseNumber: document.getElementById("editHouseNumber").value,
+          street: document.getElementById("editStreet").value,
+          post: document.getElementById("editPost").value,
+          district: document.getElementById("editDistrict").value,
+          state: document.getElementById("editState").value,
+          pincode: document.getElementById("editPincode").value,
+          phone: document.getElementById("editPhone").value,
+          altPhone: document.getElementById("editAltPhone").value,
+        };
+
+        const res = await fetch(`/account/address/update/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(body),
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          Swal.fire("Error", data.message, "error");
+          return;
+        }
+
+        Swal.fire("Success", "Address updated successfully!", "success");
+
+        // close modal
+        closeEditAddressModal();
+
+        setTimeout(() => location.reload(), 700);
       }
     </script>
   </body>

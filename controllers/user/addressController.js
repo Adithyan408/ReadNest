@@ -1,4 +1,4 @@
-import { loadAddress, postAddress } from "../../services/user/addressService.js"
+import { geteditAddress, loadAddress, postAddress, updateEditAddress } from "../../services/user/addressService.js"
 
 
 export const getAddress = async(req, res) => {
@@ -6,6 +6,15 @@ export const getAddress = async(req, res) => {
 }
 
 export const addAddress = async(req,res) => {
-    console.log("Route Hit");
     await postAddress(req, res);
+}
+
+export const getSingleAddress = async(req, res) => {
+   
+    await geteditAddress(req, res);
+}
+
+export const updateAddress = async(req, res) => {
+     console.log("Route Hit");
+    await updateEditAddress(req, res);
 }
