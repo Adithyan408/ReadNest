@@ -18,7 +18,7 @@ export const categoryLoad = async (req, res) => {
       currentPage: page,
       totalPages: totalPages,
       totalCategories: totalCategories,
-      limit,
+      limit
     });
   } catch (error) {
     res.redirect("/pageerror");
@@ -66,6 +66,7 @@ export const postCategory = async (req, res) => {
       totalPages: totalPages,
       totalCategories: totalCategories,
       status: "added",
+      limit
     });
   } catch (error) {
     return res.status(500).json({ error: "Internal Server Error" });
@@ -125,12 +126,11 @@ export const getEditCategory = async(req, res) => {
 export const postEditCategory = async(req, res) => {
     try {
     const id = req.query.id;
-    const { categoryName, categoryNumber, stock, sales } = req.body;
+    const { categoryName,  stock, sales } = req.body;
     const updateCategory = await Category.findByIdAndUpdate(
       id,
       {
         categoryName,
-        categoryNumber,
         stock,
         sales
       },
