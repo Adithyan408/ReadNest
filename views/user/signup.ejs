@@ -414,7 +414,7 @@
       document
         .getElementById("signupForm")
         .addEventListener("submit", function (e) {
-          // e.preventDefault();
+          // e.preventDefault();//just now
 
           hideAllErrors();
 
@@ -440,11 +440,10 @@
             isPasswordValid &&
             isConfirmPasswordValid
           ) {
-            // Show success message
+
             const successMessage = document.getElementById("successMessage");
             successMessage.style.display = "block";
 
-            // Here you would typically send data to server
             console.log("Form submitted successfully!");
             console.log({
               name: name,
@@ -452,13 +451,12 @@
               password: password,
             });
 
-            // Reset form after 2 seconds
-            setTimeout(() => {
-              this.reset();
-              successMessage.style.display = "none";
-              // Redirect to login or home page
-              window.location.href = '/verify-otp';
-            }, 1000);
+            // setTimeout(() => {
+            //   this.reset();
+            //   successMessage.style.display = "none";
+            //   // Redirect to login or home page
+            //   window.location.href = '/verify-otp';
+            // }, 1000);
           }
         });
 

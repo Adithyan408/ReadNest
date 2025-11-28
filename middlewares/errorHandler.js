@@ -8,8 +8,9 @@ export default function errorHandler(err, req, res, next) {
     return next(err);
   }
 
-  res.status(500).render("error", {
-    message: err.message || "Something went wrong",
-    statusCode: 500
-  });
+    res.status(500).send(`
+    <h1 style="font-family: sans-serif; color: #b91c1c;">
+      Something went wrong: ${err.message}
+    </h1>
+  `);
 }

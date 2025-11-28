@@ -36,74 +36,79 @@ export const getLogin = async (req, res) => {
     }
   } catch (error) {
     res.redirect("/notfound");
-    res.status(500).send("Server Error");
+    res.status(500);
   }
 };
 
-export const postLogin = async(req, res) => {
-    try {
-        const { email, password } = req.body;
-        const findUser = await User.findOne({ isAdmin: false, email: email });
-    
-        if (!findUser) {
-          req.session.message = "User not found";
-          return res.redirect("/login");
-        }
-        if (findUser.isBlocked) {
-          req.session.message = "User is Blocked by Admin";
-          return res.redirect("/login");
-        }
-    
-        const passwordMatch = await bcrypt.compare(password, findUser.password);
-    
-        if (!passwordMatch) {
-          req.session.message = "Invalide Credentials";
-          return res.redirect("/login");
-        }
-        if (passwordMatch) {
-          req.session.user = { _id: findUser._id };
-          res.redirect("/");
-        }
-      } catch (error) {
-        req.session.message = "Please try again";
-        res.redirect("/login");
-      }
-} 
+export const postLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const findUser = await User.findOne({ isAdmin: false, email: email });
 
-export const postSignup = async(req, res) => {
-    try {
-        const { name, email, password, confirmPassword } = req.body;
-        if (password !== confirmPassword) {
-          req.session.message = "Passwords do not Match";
-          return res.redirect("/signup");
-        }
-        const findUser = await User.findOne({ email });
-        if (findUser) {
-          req.session.message = "User with this email already exits";
-          return res.redirect("/signup");
-        }
+    if (!findUser) {
+      req.session.message = "User not found";
+      return res.redirect("/login");
+    }
+    if (findUser.isBlocked) {
+      req.session.message = "User is Blocked by Admin";
+      return res.redirect("/login");
+    }
+
+    const passwordMatch = await bcrypt.compare(password, findUser.password);
+
+    if (!passwordMatch) {
+      req.session.message = "Invalide Credentials";
+      return res.redirect("/login");
+    }
+    if (passwordMatch) {
+      req.session.user = { _id: findUser._id };
+      res.redirect("/");
+    }
+  } catch (error) {
+    req.session.message = "Please try again";
+    res.redirect("/login");
+  }
+};
+
+export const postSignup = async (req, res) => {
+  try {
+    const { name, email, password, confirmPassword } = req.body;
     
-        const otp = generateOtp();
-    
-        const emailSent = await sendVerificationEmail(name, email, otp);
-        if (!emailSent) {
-          return res.json("Email-error");
-        }
-    
-        (req.session.userOtp = otp),
-          (req.session.userData = { name, email, password });
-    
-        res.redirect(`/verify-otp?email=${encodeURIComponent(email)}`);
-        console.log("otp sent", otp);
-      } catch (error) {
-        res.redirect("/notfound");
-      }
-}
+    if (!name || !email || !password || !confirmPassword) {
+      req.session.message = "All fields are required";
+      return res.redirect("/signup");
+    }
+    if (password !== confirmPassword) {
+      req.session.message = "Passwords do not Match";
+      return res.redirect("/signup");
+    }
+    const findUser = await User.findOne({ email });
+    if (findUser) {
+      req.session.message = "User with this email already exits";
+      return res.redirect("/signup");
+    }
+
+    const otp = generateOtp();
+
+    const emailSent = sendVerificationEmail(name, email, otp);
+    if (!emailSent) {
+      return res.json("Email-error");
+    }
+
+    (req.session.userOtp = otp),
+      (req.session.userData = { name, email, password });
+
+    res.redirect(`/verify-otp?email=${encodeURIComponent(email)}`);
+    console.log("otp sent", otp);
+  } catch (error) {
+    res.redirect("/notfound");
+  }
+};
 
 
 
-export const otpVerify = async(req, res) => {
-    try {
+export const otpVerify = async (req, res) => {
+  try {
     const { otp } = req.body;
 
     if (otp === req.session.userOtp) {
@@ -134,66 +139,66 @@ export const otpVerify = async(req, res) => {
   } catch (error) {
     res.json({ success: false, message: "Internal server error" });
   }
-}
+};
 
-export const verifyLoad = async(req, res) => {
-    const { forgot, email } = req.query;
-      res.render("verify-otp", {
-        email,
-        fromForgotPassword: forgot === "true",
-      });
-}
+export const verifyLoad = async (req, res) => {
+  const { forgot, email } = req.query;
+  res.render("verify-otp", {
+    email,
+    fromForgotPassword: forgot === "true",
+  });
+};
+export const otpResend = async (req, res) => {
+  try {
+    const { name, email } = req.session.userData || req.body;
 
-export const otpResend = async(req, res) => {
-    try {
-        const { name, email } = req.session.userData || req.body;
-    
-        console.log("Resend OTP request received for:", email);
-    
-        const otp = generateOtp();
-        console.log("Resent otp: ", otp);
-        const emailSent = await sendVerificationEmail(name, email, otp);
-    
-        if (!emailSent) {
-          return res.json({ success: false, message: "Failed to send email" });
-        }
-    
-        req.session.userOtp = otp;
-        res.json({ success: true, message: "OTP resent successfully" });
-      } catch (error) {
-        res.json({ success: false, message: "Server error" });
-      }
-}
+    const otp = generateOtp();
+    console.log("Resent OTP:", otp);
 
-export const authGoogle = async(req, res) => {
-    passport.authenticate("google", { failureRedirect: "/signup" })(
-        req,
-        res,
-        () => {
-          req.session.user = { _id: req.user._id };
-          res.redirect("/");
-        }
-      );
-}
+    req.session.userOtp = {
+      code: otp,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    };
 
-export const profileLoad = async(req, res) => {
-    try {
-        const userId = req.session?.user?._id;
-        if (!userId) {
-          return res.redirect("/login");
-        }
-        const userData = await User.findById(userId).lean();
-        res.render("profile", { user: userData });
-      } catch (error) {
-        res.render("notFound");
-      }
-}
+    sendVerificationEmail(name, email, otp)
+      .then(() => console.log("OTP email sent"))
+      .catch((err) => console.error("OTP email error:", err));
 
-export const logoutLoad = async(req, res) => {
-     try {
-    delete req.session.user;   
+    res.sendStatus(200);
+  } catch (error) {
+    res.sendStatus(500);
+  }
+};
+
+export const authGoogle = async (req, res) => {
+  passport.authenticate("google", { failureRedirect: "/signup" })(
+    req,
+    res,
+    () => {
+      req.session.user = { _id: req.user._id };
+      res.redirect("/");
+    }
+  );
+};
+
+export const profileLoad = async (req, res) => {
+  try {
+    const userId = req.session?.user?._id;
+    if (!userId) {
+      return res.redirect("/login");
+    }
+    const userData = await User.findById(userId).lean();
+    res.render("profile", { user: userData });
+  } catch (error) {
+    res.render("notFound");
+  }
+};
+
+export const logoutLoad = async (req, res) => {
+  try {
+    delete req.session.user;
     return res.redirect("/");
   } catch (error) {
     res.redirect("/notfound");
   }
-}
+};
