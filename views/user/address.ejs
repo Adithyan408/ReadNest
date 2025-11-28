@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account</title>
+
+    <!-- SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  </head>
+
+  <body class="bg-gray-100">
+    <div>
+      <%- include("../../views/partials/user/account") %>
+
+      <main class="main-scroll-area flex-1 bg-gray-100 p-10">
+        <% if (typeof message !== 'undefined') { %> <% if (status === 'success')
+        { %>
+        <div class="bg-green-100 text-green-700 p-3 rounded-lg mb-4">
+          <%= message %>
+        </div>
+        <% } else { %>
+        <div class="bg-red-100 text-red-700 p-3 rounded-lg mb-4">
+          <%= message %>
+        </div>
+        <% } %> <% } %>
+
+        <!-- ========================= ADDRESS SECTION ========================= -->
+        <div class="bg-white rounded-xl shadow p-6 mb-8">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">Your Addresses</h2>
+
+            <button
+              onclick="openAddAddressModal()"
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-semibold"
+            >
+              + Add Address
+            </button>
+          </div>
+
+          <!-- DUMMY ADDRESS 1: HOME -->
+          <% if (addresses && addresses.length > 0) { %> <%
+          addresses.forEach((addr, i) => { %>
+          <div class="border p-5 rounded-lg mb-4 hover:shadow transition">
+            <div class="flex justify-between items-start">
+              <!-- LEFT SIDE -->
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">
+                  <%= addr.addressLabel || `Address ${i + 1}` %>
+                </h3>
+
+                <p class="text-gray-700 mt-1 leading-relaxed">
+                 
+                  <%= addr.houseNumber %>, <%= addr.houseName %><br />
+                  <%= addr.street %>, <%= addr.post %><br />
+                  <%= addr.district %>, <%= addr.state %> - <%= addr.pincode
+                  %><br />
+                  Phone: <%= addr.phone %>
+                  Alternate - Phone: <%= addr.altPhone %>
+                </p>
+              </div>
+
+              <!-- RIGHT SIDE BUTTONS -->
+              <div class="flex gap-3">
+                <button
+                  class="text-blue-600 font-semibold hover:text-blue-800"
+                  onclick="editAddress('<%= addr._id %>')"
+                >
+                  Edit
+                </button>
+
+                <button
+                  class="text-red-600 font-semibold hover:text-red-800"
+                  onclick="deleteAddress('<%= addr._id %>')"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+          <% }) %> <% } else { %>
+
+          <!-- NO ADDRESS FOUND -->
+          <div class="border p-5 rounded-lg text-center text-gray-600">
+            No address found. Add your first address.
+          </div>
+
+          <% } %>
+        </div>
+      </main>
+    </div>
+    <!-- ADDRESS MODAL (ADD/EDIT) -->
+    <div
+      id="addAddressModal"
+      class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center hidden z-50"
+    >
+      <div class="bg-white w-[650px] p-8 rounded-xl shadow-lg">
+        <!-- HEADER -->
+        <div class="flex items-center gap-3 mb-6">
+          <button
+            onclick="closeAddAddressModal()"
+            class="text-gray-700 hover:text-black text-xl"
+          >
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <h2 class="text-2xl font-bold text-gray-900">Change Address</h2>
+        </div>
+
+        <!-- FORM GRID -->
+        <div class="grid grid-cols-2 gap-6">
+          <!-- ADDRESS LABEL -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >Address Type:</label
+            >
+            <select id="addrLabel" class="w-full bg-gray-100 p-3 rounded-lg">
+              <option value="Home">Home</option>
+              <option value="Office">Office</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <!-- HOUSE NAME -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >House Name:</label
+            >
+            <input
+              id="addrHouseName"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <!-- HOUSE NUMBER -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >House Number:</label
+            >
+            <input
+              id="addrHouseNumber"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <!-- STREET -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Street:</label>
+            <input
+              id="addrStreet"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <!-- POST -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Post:</label>
+            <input
+              id="addrPost"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <!-- DISTRICT -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >District:</label
+            >
+            <input
+              id="addrDistrict"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <!-- STATE -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">State:</label>
+            <input
+              id="addrState"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <!-- PIN CODE -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >PIN Code:</label
+            >
+            <input
+              id="addrPincode"
+              type="number"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <!-- PHONE NUMBER -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >Phone Number:</label
+            >
+            <input
+              id="addrPhone"
+              type="number"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+          <!-- ALTERNATE PHONE NUMBER -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >Phone Number:</label
+            >
+            <input
+              id="addrAltPhone"
+              type="number"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="mt-8 flex justify-center gap-5">
+          <button
+            onclick="saveNewAddress()"
+            class="px-8 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+          >
+            UPDATE
+          </button>
+
+          <button
+            onclick="resetAddressFields()"
+            class="px-8 py-3 rounded-lg bg-gray-300 text-gray-800 font-semibold hover:bg-gray-400"
+          >
+            RESET
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDIT ADDRESS MODAL -->
+    <div
+      id="editAddressModal"
+      class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center hidden z-50"
+    >
+      <div class="bg-white w-[650px] p-8 rounded-xl shadow-lg">
+        <!-- HEADER -->
+        <div class="flex items-center gap-3 mb-6">
+          <button
+            onclick="closeEditAddressModal()"
+            class="text-gray-700 hover:text-black text-xl"
+          >
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <h2 class="text-2xl font-bold text-gray-900">Edit Address</h2>
+        </div>
+
+        <!-- FORM GRID -->
+        <div class="grid grid-cols-2 gap-6">
+          <!-- HOUSE NAME -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >House Name:</label
+            >
+            <input
+              id="editHouseName"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+              value="<%= editAddress ? editAddress.houseName : '' %>"
+            />
+          </div>
+
+          <!-- HOUSE NUMBER -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >House Number:</label
+            >
+            <input
+              id="editHouseNumber"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+              value="<%= editAddress ? editAddress.houseNumber : '' %>"
+            />
+          </div>
+
+          <!-- STREET -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Street:</label>
+            <input
+              id="editStreet"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+              value="<%= editAddress ? editAddress.street : '' %>"
+            />
+          </div>
+
+          <!-- POST -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Post:</label>
+            <input
+              id="editPost"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+              value="<%= editAddress ? editAddress.post : '' %>"
+            />
+          </div>
+
+          <!-- DISTRICT -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >District:</label
+            >
+            <input
+              id="editDistrict"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+              value="<%= editAddress ? editAddress.district : '' %>"
+            />
+          </div>
+
+          <!-- STATE -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">State:</label>
+            <input
+              id="editState"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+              value="<%= editAddress ? editAddress.state : '' %>"
+            />
+          </div>
+
+          <!-- PINCODE -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >PIN Code:</label
+            >
+            <input
+              id="editPincode"
+              type="number"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+              value="<%= editAddress ? editAddress.pincode : '' %>"
+            />
+          </div>
+
+          <!-- PHONE NUMBER -->
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >Phone Number:</label
+            >
+            <input
+              id="editPhone"
+              type="number"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+              value="<%= editAddress ? editAddress.phone : '' %>"
+            />
+          </div>
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="mt-8 flex justify-center gap-5">
+          <button
+            onclick="updateAddress(`<%= editAddress ? editAddress._id : '' %>`)"
+            class="px-8 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+          >
+            UPDATE
+          </button>
+
+          <button
+            onclick="closeEditAddressModal()"
+            class="px-8 py-3 rounded-lg bg-gray-300 text-gray-800 font-semibold hover:bg-gray-400"
+          >
+            CANCEL
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <%- include("../../views/partials/user/footer") %>
+
+    <!-- Include CropperJS CDN -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+    <!-- ============================================= -->
+    <!--                 JAVASCRIPT FIXES              -->
+    <!-- ============================================= -->
+    <script>
+      function openAddAddressModal() {
+        document.getElementById("addAddressModal").classList.remove("hidden");
+      }
+
+      function closeAddAddressModal() {
+        document.getElementById("addAddressModal").classList.add("hidden");
+      }
+
+      async function saveNewAddress() {
+        const body = {
+          addressLabel: document.getElementById("addrLabel").value,
+          houseName: document.getElementById("addrHouseName").value,
+          houseNumber: document.getElementById("addrHouseNumber").value,
+          street: document.getElementById("addrStreet").value,
+          post: document.getElementById("addrPost").value,
+          district: document.getElementById("addrDistrict").value,
+          state: document.getElementById("addrState").value,
+          pincode: document.getElementById("addrPincode").value,
+          phone: document.getElementById("addrPhone").value,
+          altPhone: document.getElementById("addrAltPhone").value,
+        };
+
+        const res = await fetch("/account/add-address", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(body),
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          Swal.fire("Error", data.message, "error");
+          return;
+        }
+
+        Swal.fire("Success", "Address added successfully!", "success");
+
+        closeAddAddressModal();
+
+        setTimeout(() => {
+          location.reload(); // refresh to show new address
+        }, 800);
+      }
+
+      function editAddress(id) {
+        fetch(`/account/address/${id}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.success) return Swal.fire("Error", data.message, "error");
+
+            // fill modal input values dynamically
+            document.getElementById("editHouseName").value =
+              data.address.houseName;
+            document.getElementById("editHouseNumber").value =
+              data.address.houseNumber;
+            document.getElementById("editStreet").value = data.address.street;
+            document.getElementById("editPost").value = data.address.post;
+            document.getElementById("editDistrict").value =
+              data.address.district;
+            document.getElementById("editState").value = data.address.state;
+            document.getElementById("editPincode").value = data.address.pincode;
+            document.getElementById("editPhone").value = data.address.phone;
+
+            // store ID
+            window.editingAddressId = id;
+
+            document
+              .getElementById("editAddressModal")
+              .classList.remove("hidden");
+          });
+      }
+
+      function deleteAddress(type) {
+        Swal.fire("Deleted", "Address removed successfully!", "success");
+      }
+    </script>
+  </body>
+</html>
