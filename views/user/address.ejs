@@ -387,12 +387,11 @@
         <!-- BUTTONS -->
         <div class="mt-8 flex justify-center gap-5">
           <button
-  onclick="updateAddress(window.editingAddressId)"
-  class="px-8 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
->
-  UPDATE
-</button>
-
+            onclick="updateAddress(window.editingAddressId)"
+            class="px-8 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+          >
+            UPDATE
+          </button>
 
           <button
             onclick="closeEditAddressModal()"
@@ -498,8 +497,37 @@
       function closeEditAddressModal() {
         document.getElementById("editAddressModal").classList.add("hidden");
       }
-      function deleteAddress(type) {
-        Swal.fire("Deleted", "Address removed successfully!", "success");
+      function deleteAddress(id) {
+        Swal.fire({
+          title: "Delete Address?",
+          text: "This action cannot be undone.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#d33",
+          cancelButtonColor: "#6b7280",
+          confirmButtonText: "Delete",
+        }).then((result) => {
+          if (!result.isConfirmed) return;
+
+          fetch(`/account/address/delete/${id}`, {
+            method: "GET",
+            credentials: "include",
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (!data.success) {
+                Swal.fire("Error", data.message, "error");
+                return;
+              }
+
+              Swal.fire("Deleted!", "Address removed successfully!", "success");
+
+              setTimeout(() => location.reload(), 700);
+            })
+            .catch(() => {
+              Swal.fire("Error", "Something went wrong", "error");
+            });
+        });
       }
 
       async function updateAddress(id) {

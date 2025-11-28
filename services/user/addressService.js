@@ -11,9 +11,9 @@ export const loadAddress = async (req, res) => {
       return res.redirect("/login");
     }
     const userData = await User.findById(userId).lean();
-     const addressDoc = await Address.findOne({ userId }).lean();
-     const addresses = addressDoc ? addressDoc.addresses : []; 
-    // console.log(addresses);
+    const addressDoc = await Address.findOne({ userId }).lean();
+    const addresses = addressDoc ? addressDoc.addresses : [];
+
     return res.render("address", {
       addresses,
       user: userData,
@@ -53,25 +53,19 @@ export const postAddress = async (req, res) => {
       altPhone,
     } = req.body;
 
-    // Check if user already has an address document
     let existing = await Address.findOne({ userId });
 
     if (!existing) {
-      // Create new document
       existing = new Address({
         userId,
         addresses: [],
       });
     }
 
-    // Push new address object
     existing.addresses.push({
       addressLabel,
-      addressType,
       houseName,
       houseNumber,
-      city,
-      landMark,
       street,
       post,
       district,
@@ -96,7 +90,6 @@ export const postAddress = async (req, res) => {
     });
   }
 };
-
 
 export const geteditAddress = async (req, res) => {
   try {
@@ -134,7 +127,6 @@ export const geteditAddress = async (req, res) => {
   }
 };
 
-
 export const updateEditAddress = async (req, res) => {
   try {
     const userId = req.session.user?._id;
@@ -157,14 +149,12 @@ export const updateEditAddress = async (req, res) => {
       altPhone,
     } = req.body;
 
-    // Find address document
     const addressDoc = await Address.findOne({ userId });
 
     if (!addressDoc) {
       return res.json({ success: false, message: "No address found" });
     }
 
-    // Find the address inside the array
     const index = addressDoc.addresses.findIndex(
       (addr) => addr._id.toString() === addressId
     );
@@ -173,7 +163,6 @@ export const updateEditAddress = async (req, res) => {
       return res.json({ success: false, message: "Address not found" });
     }
 
-    // Update the address fields
     addressDoc.addresses[index] = {
       ...addressDoc.addresses[index],
       addressLabel,
@@ -188,14 +177,12 @@ export const updateEditAddress = async (req, res) => {
       altPhone,
     };
 
-    // Save document
     await addressDoc.save();
 
     return res.json({
       success: true,
       message: "Address updated successfully",
     });
-
   } catch (err) {
     console.error("Update address error:", err);
     return res.json({
@@ -205,3 +192,41 @@ export const updateEditAddress = async (req, res) => {
   }
 };
 
+export const addressDelete = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+    const addressId = req.params.id;
+
+    if (!userId) {
+      return res.json({ success: false, message: "Not logged in" });
+    }
+
+    const addressDoc = await Address.findOne({ userId });
+
+    if (!addressDoc) {
+      return res.json({ success: false, message: "Address record not found" });
+    }
+
+    const updatedAddresses = addressDoc.addresses.filter(
+      (addr) => addr._id.toString() !== addressId
+    );
+
+    if (updatedAddresses.length === addressDoc.addresses.length) {
+      return res.json({ success: false, message: "Address not found" });
+    }
+
+    addressDoc.addresses = updatedAddresses;
+    await addressDoc.save();
+
+    return res.json({
+      success: true,
+      message: "Address removed successfully",
+    });
+  } catch (err) {
+    console.error("Delete address error:", err);
+    return res.json({
+      success: false,
+      message: "Server error while deleting address",
+    });
+  }
+};
