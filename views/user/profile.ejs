@@ -7,11 +7,7 @@
 
     <!-- SweetAlert -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link
-      href="https://unpkg.com/cropperjs/dist/cropper.min.css"
-      rel="stylesheet"
-    />
-    <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
+ 
   </head>
 
   <body class="bg-gray-100">
@@ -81,7 +77,6 @@
             id="profileImageInput"
             accept="image/*"
             class="hidden"
-            onchange="openCropper(event)"
           />
         </div>
 
@@ -449,38 +444,53 @@
     <!-- PROFILE CROP MODAL -->
     <div
       id="cropperModal"
-      class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50"
+      class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden justify-center items-center z-50"
     >
-      <div class="bg-white p-6 rounded-xl shadow-lg w-[420px]">
-        <h2 class="text-xl font-bold mb-4">Crop Image</h2>
-
-        <div
-          class="w-full h-64 bg-gray-200 flex justify-center items-center overflow-hidden rounded-lg"
-        >
-          <img id="cropperImage" class="max-h-64 select-none" />
+      <div
+        class="bg-white rounded-xl shadow-2xl p-4 w-[95%] max-w-xl animate-fadeIn"
+      >
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold text-gray-800">Crop Image</h2>
+          <button
+            onclick="cancelCrop()"
+            class="text-gray-600 hover:text-gray-900 text-xl"
+          >
+            ✕
+          </button>
         </div>
 
-        <div class="flex justify-between mt-4">
+        <div
+          class="h-[60vh] flex items-center justify-center bg-gray-100 rounded-lg overflow-hidden border"
+        >
+          <img id="cropperImage" class="max-w-full max-h-full select-none" />
+        </div>
+
+        <div class="flex justify-end gap-3 mt-5">
           <button
-            onclick="closeCropperModal()"
-            class="px-4 py-2 bg-gray-600 text-white rounded-lg"
+            onclick="cancelCrop()"
+            class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-200"
           >
             Cancel
           </button>
 
           <button
-            onclick="uploadCroppedImage()"
-            class="px-4 py-2 bg-green-600 text-white rounded-lg"
+            onclick="applyCrop()"
+            class="px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
           >
-            Save Image
+            Crop & Apply
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Include CropperJS CDN -->
-
     <%- include("../../views/partials/user/footer") %>
+
+    <!-- Include CropperJS CDN -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <!-- ============================================= -->
     <!--                 JAVASCRIPT FIXES              -->
@@ -830,16 +840,24 @@
           })
           .catch(() => Swal.fire("Error", "Server error", "error"));
       }
-      /* ================= PROFILE IMAGE + CROPPER ================= */
+      /* ================= PROFILE IMAGE + CROPPER FIXED CODE ================= */
       let cropperProfile = null;
       let selectedProfileFile = null;
 
       const profileInput = document.getElementById("profileImageInput");
       const cropModal = document.getElementById("cropperModal");
       const cropImg = document.getElementById("cropperImage");
-      const hiddenInput = document.getElementById("hiddenProfileImageInput");
-      const form = document.getElementById("profileImageForm");
 
+      const hiddenFileInput = document.getElementById(
+        "hiddenProfileImageInput"
+      );
+      const profileForm = document.getElementById("profileImageForm");
+
+      profileForm.addEventListener("submit", () => {
+        console.log("🔥 FORM SUBMITTED — Backend should receive the image");
+      });
+
+      /* When user selects image */
       profileInput.addEventListener("change", (event) => {
         selectedProfileFile = event.target.files[0];
         if (!selectedProfileFile) return;
@@ -848,69 +866,66 @@
         cropModal.classList.remove("hidden");
 
         cropImg.onload = function () {
+          console.log(typeof Cropper);
+
           if (cropperProfile) cropperProfile.destroy();
+
           cropperProfile = new Cropper(cropImg, {
             aspectRatio: 1,
             viewMode: 1,
             autoCropArea: 1,
+            background: false,
           });
         };
       });
 
-      /* Cancel Crop */
-      function closeCropperModal() {
+      /* Cancel crop */
+      function cancelCrop() {
         cropModal.classList.add("hidden");
-        if (cropperProfile) cropperProfile.destroy();
-        cropperProfile = null;
+
+        if (cropperProfile) {
+          cropperProfile.destroy();
+          cropperProfile = null;
+        }
+
         profileInput.value = "";
       }
 
-      /* Save Cropped Image */
-      function uploadCroppedImage() {
-        if (!cropperProfile) {
-          Swal.fire("Error", "Image not ready.", "error");
-          return;
-        }
+      /* Apply crop and submit to server */
+      function applyCrop() {
+        if (!cropperProfile) return;
 
         const canvas = cropperProfile.getCroppedCanvas({
-          width: 400,
-          height: 400,
+          width: 500,
+          height: 500,
+          imageSmoothingQuality: "high",
         });
 
         canvas.toBlob(
           (blob) => {
-            const croppedFile = new File([blob], `profile_${Date.now()}.jpg`, {
+            const croppedFile = new File([blob], "profile.jpg", {
               type: "image/jpeg",
+              lastModified: Date.now(),
             });
 
             const dt = new DataTransfer();
             dt.items.add(croppedFile);
-            hiddenInput.files = dt.files;
+            hiddenFileInput.files = dt.files;
 
-            console.log("✔ Cropped image prepared → submitting");
+            // Submit form
+            profileForm.submit();
 
+            // Close cropper modal
             cropModal.classList.add("hidden");
             cropperProfile.destroy();
             cropperProfile = null;
-
-            form.submit();
           },
           "image/jpeg",
           0.9
         );
       }
 
-      // Debug: see if form actually submits
-      document.addEventListener("DOMContentLoaded", () => {
-        const form = document.getElementById("profileImageForm");
-        if (form) {
-          form.addEventListener("submit", () => {
-            console.log("📨 profileImageForm SUBMITTED");
-          });
-        }
-      });
-
-      /* Delete Image */
+      /* DELETE PROFILE IMAGE */
       function deleteProfileImage() {
         Swal.fire({
           title: "Delete Profile Photo?",
@@ -924,7 +939,7 @@
           if (!result.isConfirmed) return;
 
           const res = await fetch("/account/delete-profile-image", {
-            method: "DELETE",
+            method: "GET",
             credentials: "include",
           });
 

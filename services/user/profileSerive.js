@@ -305,58 +305,108 @@ export const passwordChange = async (req, res) => {
 export const profileImage = async (req, res) => {
   try {
     const userId = req.session.user?._id;
+
+    if (!userId) {
+      req.session.status = "error";
+      req.session.message = "User session expired. Please log in again.";
+      return res.redirect("/account");
+    }
+
     const user = await User.findById(userId);
 
-    let errors = {};
-
+    // NO FILE UPLOADED
     if (!req.file) {
-      errors.profileImage = "Profile photo is required.";
-      return res.render("user/profile", {
-        user,
-        errors,
-        message: "Please upload a valid image.",
-        status: "error",
+      req.session.status = "error";
+      req.session.message = "Please upload a valid image.";
+      return res.redirect("/account");
+    }
+
+    // DELETE OLD IMAGE
+    if (user.profileImage) {
+      try {
+        const oldUrl = user.profileImage;
+        const publicId = oldUrl.split("/").pop().split(".")[0];
+
+        if (publicId) {
+          await cloudinary.uploader.destroy(`re-image/${publicId}`);
+        }
+      } catch (err) {
+        console.error("Cloudinary delete failed:", err);
+      }
+    }
+
+    // SAVE NEW IMAGE
+    const newImageUrl = req.file.path;
+    user.profileImage = newImageUrl;
+    await user.save();
+
+    // UPDATE SESSION
+    req.session.user.profileImage = newImageUrl;
+
+    // SUCCESS MESSAGE
+    req.session.status = "success";
+    req.session.message = "Profile photo updated successfully!";
+
+    return res.redirect("/account");
+  } catch (err) {
+    console.error("Upload profile image error:", err);
+
+    req.session.status = "error";
+    req.session.message = "Server error while uploading the image.";
+
+    return res.redirect("/account");
+  }
+};
+
+export const profileImageDelete = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+
+    if (!userId) {
+      return res.json({
+        success: false,
+        message: "User session expired. Please log in again.",
       });
     }
 
-    // DELETE OLD IMAGE (extract public_id from existing URL)
-    if (user.profileImage) {
-      const oldUrl = user.profileImage;
+    const user = await User.findById(userId);
 
-      // Extract public_id from URL:
-      // https://res.cloudinary.com/.../folder/abcd123.jpg
+    if (!user || !user.profileImage) {
+      return res.json({
+        success: false,
+        message: "No profile image to delete.",
+      });
+    }
+
+    // DELETE FROM CLOUDINARY
+    try {
+      const oldUrl = user.profileImage;
       const publicId = oldUrl.split("/").pop().split(".")[0];
 
       if (publicId) {
         await cloudinary.uploader.destroy(`re-image/${publicId}`);
       }
+    } catch (err) {
+      console.error("Cloudinary delete failed:", err);
     }
 
-    // NEW IMAGE URL
-    const imageUrl = req.file ? req.file.path : null;
-
-    user.profileImage = imageUrl;
+    user.profileImage = null;
     await user.save();
 
-    // Update session
-    req.session.user.profileImage = imageUrl;
-
-    return res.render("user/profile", {
-      user,
-      message: "Profile photo updated successfully!",
-      status: "success",
-      errors: {},
+    req.session.user.profileImage = null;
+    
+    req.session.status = "error";
+    req.session.message = "Profile photo removed successfully!";
+    return res.json({
+      success: true,
+      message: "Profile photo removed successfully.",
     });
   } catch (err) {
-    console.error("Upload profile image error:", err);
+    console.error("Delete profile image error:", err);
 
-    const user = await User.findById(req.session.user?._id);
-
-    return res.render("user/profile", {
-      user,
-      message: "Server error occurred.",
-      status: "error",
-      errors: {},
+    return res.json({
+      success: false,
+      message: "Server error while deleting the image.",
     });
   }
 };

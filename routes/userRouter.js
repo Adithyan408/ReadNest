@@ -26,7 +26,8 @@ import {
   changePassword,
   updateEmail,
   updateVerifyEmail,
-  uploadProfileImage
+  uploadProfileImage,
+  deleteProfileImage
 } from "../controllers/user/profileController.js";
 import {
   getProductsDetails,
@@ -49,6 +50,8 @@ router.get("/auth/google", googleAuth);
 router.get("/auth/google/callback", googleAuthCallback);
 router.get("/account", loadProfile);
 router.get("/logout", nocache(), logout);
+router.get("/account/delete-profile-image", deleteProfileImage);
+
 
 router.post("/signup", signup);
 router.post("/verify-otp", verifyOtp);
