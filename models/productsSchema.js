@@ -7,8 +7,6 @@ const productsSchema = new Schema(
       type: String,
       required: true,
     },
-
-    // DESCRIPTION VALIDATION
     description: {
       type: String,
       default: "",
@@ -23,7 +21,6 @@ const productsSchema = new Schema(
       },
     },
 
-    // AUTHOR VALIDATION
     author: {
       type: String,
       default: "",
@@ -43,7 +40,6 @@ const productsSchema = new Schema(
       default: "",
     },
 
-    // CATEGORY VALIDATION
       category: {
       type: String,
       default: "",
@@ -58,7 +54,6 @@ const productsSchema = new Schema(
       },
     },
 
-    // LANGUAGE VALIDATION
     language: {
       type: String,
       default: "",

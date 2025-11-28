@@ -73,7 +73,7 @@ export const postLogin = async (req, res) => {
 export const postSignup = async (req, res) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
-    
+
     if (!name || !email || !password || !confirmPassword) {
       req.session.message = "All fields are required";
       return res.redirect("/signup");
@@ -104,8 +104,6 @@ export const postSignup = async (req, res) => {
     res.redirect("/notfound");
   }
 };
-
-
 
 export const otpVerify = async (req, res) => {
   try {
@@ -183,12 +181,16 @@ export const authGoogle = async (req, res) => {
 
 export const profileLoad = async (req, res) => {
   try {
+    const message = req.session.message;
+    const status = req.session.status;
     const userId = req.session?.user?._id;
     if (!userId) {
       return res.redirect("/login");
     }
     const userData = await User.findById(userId).lean();
-    res.render("profile", { user: userData });
+    req.session.message = null;
+    req.session.status = null;
+    res.render("profile", { user: userData , message, status});
   } catch (error) {
     res.render("notFound");
   }

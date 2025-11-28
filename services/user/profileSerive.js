@@ -4,19 +4,25 @@ import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import passport from "../../config/passport.js";
 import session from "express-session";
+import { v2 as cloudinary } from "cloudinary";
 import {
   generateOtp,
   securePassword,
   sendVerificationEmail,
 } from "../../helpers/verify.js";
 
+
 export const forgotPassword = async(req, res) => {
      try {
-    res.render("forgot-password");
+      const { error } = req.query;
+    res.render("forgot-password", {
+      error 
+    });
   } catch (error) {
     res.render("notFound");
   }
 };
+
 
 export const forgotEmail = async(req, res) => {
     try {
@@ -24,15 +30,15 @@ export const forgotEmail = async(req, res) => {
     
         const findUser = await User.findOne({ email });
         if (!findUser) {
-          return res.json({ message: "This user NOt exist" });
+          return res.redirect(`/forgot-password?error=User does not exist`);
         }
         const name = findUser.name;
     
         const otp = generateOtp();
     
-        const emailSent = await sendVerificationEmail(name, email, otp);
+        const emailSent =  sendVerificationEmail(name, email, otp);
         if (!emailSent) {
-          return res.json("Email-error");
+         return res.render("forgot-password", { message: "Can't send Email , Try after some time" });
         }
         req.session.userOtp = {
           code: otp,
@@ -46,6 +52,7 @@ export const forgotEmail = async(req, res) => {
         res.redirect("/notfound")
       }
 }
+
 
 export const forgotVerify = async (req, res) => {
   try {
@@ -212,7 +219,6 @@ export const verifyEmailUpdate = async (req, res) => {
   }
 };
 
-
 export const passwordSet = async (req, res) => {
   try {
     const { email } = req.body;
@@ -301,3 +307,112 @@ export const passwordChange = async (req, res) => {
     return res.json({ success: false, message: "Server Error" });
   }
 };
+
+export const profileImage = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+
+    if (!userId) {
+      req.session.status = "error";
+      req.session.message = "User session expired. Please log in again.";
+      return res.redirect("/account");
+    }
+
+    const user = await User.findById(userId);
+
+    // NO FILE UPLOADED
+    if (!req.file) {
+      req.session.status = "error";
+      req.session.message = "Please upload a valid image.";
+      return res.redirect("/account");
+    }
+
+    // DELETE OLD IMAGE
+    if (user.profileImage) {
+      try {
+        const oldUrl = user.profileImage;
+        const publicId = oldUrl.split("/").pop().split(".")[0];
+
+        if (publicId) {
+          await cloudinary.uploader.destroy(`re-image/${publicId}`);
+        }
+      } catch (err) {
+        console.error("Cloudinary delete failed:", err);
+      }
+    }
+
+    // SAVE NEW IMAGE
+    const newImageUrl = req.file.path;
+    user.profileImage = newImageUrl;
+    await user.save();
+
+    // UPDATE SESSION
+    req.session.user.profileImage = newImageUrl;
+
+    // SUCCESS MESSAGE
+    req.session.status = "success";
+    req.session.message = "Profile photo updated successfully!";
+
+    return res.redirect("/account");
+  } catch (err) {
+    console.error("Upload profile image error:", err);
+
+    req.session.status = "error";
+    req.session.message = "Server error while uploading the image.";
+
+    return res.redirect("/account");
+  }
+};
+
+export const profileImageDelete = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+
+    if (!userId) {
+      return res.json({
+        success: false,
+        message: "User session expired. Please log in again.",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user || !user.profileImage) {
+      return res.json({
+        success: false,
+        message: "No profile image to delete.",
+      });
+    }
+
+    // DELETE FROM CLOUDINARY
+    try {
+      const oldUrl = user.profileImage;
+      const publicId = oldUrl.split("/").pop().split(".")[0];
+
+      if (publicId) {
+        await cloudinary.uploader.destroy(`re-image/${publicId}`);
+      }
+    } catch (err) {
+      console.error("Cloudinary delete failed:", err);
+    }
+
+    user.profileImage = null;
+    await user.save();
+
+    req.session.user.profileImage = null;
+    
+    req.session.status = "error";
+    req.session.message = "Profile photo removed successfully!";
+    return res.json({
+      success: true,
+      message: "Profile photo removed successfully.",
+    });
+  } catch (err) {
+    console.error("Delete profile image error:", err);
+
+    return res.json({
+      success: false,
+      message: "Server error while deleting the image.",
+    });
+  }
+}
