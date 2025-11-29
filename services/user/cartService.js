@@ -6,7 +6,6 @@ export const loadCart = async (req, res) => {
   try {
     const userId = req.session.user?._id;
 
-    // load cart + product details
     const cartDoc = await Cart.findOne({ userId }).populate("items.productId");
 
     const cart = cartDoc
@@ -16,10 +15,11 @@ export const loadCart = async (req, res) => {
           price: i.productId.salePrice || i.productId.regularPrice,
           image: i.productId.productImage[0],
           quantity: i.quantity,
+          stock: i.productId.stock  
         }))
       : [];
 
-    // GET ADDRESSES also
+
     const addresses = await Address.find({ userId });
 
     res.render("cart", { cart, addresses });

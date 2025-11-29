@@ -9,6 +9,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
@@ -29,87 +30,6 @@
       <div class="flex flex-col lg:flex-row gap-8">
         <!-- LEFT SECTION -->
         <div class="flex-1">
-          <!-- Address -->
-          <div
-            class="bg-white rounded-lg shadow-sm p-6 mb-6 flex items-center justify-between"
-          >
-            <p class="text-gray-600 font-medium">From Saved Address</p>
-            <div class="relative">
-              <button
-                onclick="toggleAddressDropdown()"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded font-semibold"
-              >
-                Change Address
-              </button>
-
-              <!-- Dropdown -->
-              <div
-                id="addressDropdown"
-                class="hidden absolute mt-2 w-80 bg-white shadow-xl border rounded-lg z-50"
-              >
-                <div class="p-4 border-b">
-                  <h3 class="font-semibold text-gray-800">
-                    Select Delivery Address
-                  </h3>
-                </div>
-
-                <!-- Address List -->
-                <div class="max-h-60 overflow-y-auto px-3">
-                  <% if (addresses.length > 0 && addresses[0].addresses.length >
-                  0) { %> <% addresses[0].addresses.forEach((addr, index) => {
-                  %>
-
-                  <label
-                    class="flex gap-3 p-3 border-b cursor-pointer hover:bg-gray-100"
-                  >
-                    <!-- Radio Button -->
-                    <input type="radio" name="selectedAddress" value="<%=
-                    addr._id %>" class="w-4 h-4 mt-1" <%= index === 0 ?
-                    "checked" : "" %> />
-
-                    <!-- Address Content -->
-                    <div>
-                      <p class="font-semibold">
-                        <%= addr.addressLabel %> Address
-                      </p>
-
-                      <p class="text-sm text-gray-700">
-                        <%= addr.houseName %>, <%= addr.phone %>
-                      </p>
-
-                      <p class="text-xs text-gray-500">
-                        <%= addr.houseNumber %>, <%= addr.street %>, <%=
-                        addr.district %> - <%= addr.pincode %>
-                      </p>
-                    </div>
-                  </label>
-
-                  <% }) %> <% } %>
-                </div>
-
-                <!-- Set Address Button -->
-                <div class="p-3 border-t">
-                  <button
-                    onclick="confirmAddressSelection()"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold"
-                  >
-                    Set Address
-                  </button>
-                </div>
-
-                <!-- Add New Address -->
-                <div class="p-4">
-                  <a
-                    href="/add-address"
-                    class="block text-blue-600 font-semibold hover:underline"
-                  >
-                    + Add New Address
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!-- CART BOX -->
           <div class="bg-white rounded-lg shadow-sm p-6 mb-4">
             <h1 class="text-2xl font-bold mb-4">Your Cart</h1>
@@ -174,6 +94,11 @@
                         <%= item.rating || 4.5 %> ★
                       </span>
                     </div>
+                    <input
+                      type="hidden"
+                      id="stock-<%= item._id %>"
+                      value="<%= item.stock %>"
+                    />
 
                     <!-- Offers -->
                     <div class="mb-3">
@@ -265,11 +190,13 @@
               </div>
             </div>
 
-            <button
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold text-lg"
+            <a href="/checkout"
+              ><button
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold text-lg"
+              >
+                Checkout
+              </button></a
             >
-              Place Order
-            </button>
           </div>
         </div>
         <% } %>
@@ -294,8 +221,22 @@
 
       window.updateQuantity = function (productId, change) {
         const qtyField = document.getElementById("quantity-" + productId);
-        let qty = parseInt(qtyField.value);
+        const stock = document.getElementById("stock-" + productId).value;
 
+        let qty = parseInt(qtyField.value);
+        let maxStock = parseInt(stock);
+
+        // BLOCK increment beyond stock
+        if (change === 1 && qty >= maxStock) {
+          Swal.fire({
+            icon: "warning",
+            title: "Stock Limit Reached",
+            text: `Only ${maxStock} item(s) available in stock.`,
+            confirmButtonColor: "#2563eb",
+          });
+          return;
+        }
+        // If decrement below 1 → stop
         qty += change;
         if (qty < 1) return;
 
@@ -335,28 +276,5 @@
 
       updateTotals();
     });
-
-    function toggleAddressDropdown() {
-      const drop = document.getElementById("addressDropdown");
-      drop.classList.toggle("hidden");
-    }
-
-    // When user selects an address
-    function selectAddress(id) {
-      fetch("/set-address", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ addressId: id }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            alert("Address Selected: " + data.message);
-            location.reload();
-          }
-        });
-    }
   </script>
 </html>
