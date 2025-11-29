@@ -217,12 +217,12 @@
                   <!-- Remove Button -->
                   <form
                     action="/remove-from-cart"
-                    method="POST"
+                    method="GET"
                     class="flex items-start"
                   >
                     <input
                       type="hidden"
-                      name="productId"
+                      name="id"
                       value="<%= item._id %>"
                     />
                     <button
