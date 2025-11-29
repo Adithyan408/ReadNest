@@ -220,11 +220,7 @@
                     method="GET"
                     class="flex items-start"
                   >
-                    <input
-                      type="hidden"
-                      name="id"
-                      value="<%= item._id %>"
-                    />
+                    <input type="hidden" name="id" value="<%= item._id %>" />
                     <button
                       class="text-red-600 hover:text-red-800 font-medium ml-4 mt-1"
                     >
@@ -304,6 +300,14 @@
         if (qty < 1) return;
 
         qtyField.value = qty;
+
+        // Save to DB
+        fetch("/update-cart-quantity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId, quantity: qty }),
+        });
+
         updateTotals();
       };
 

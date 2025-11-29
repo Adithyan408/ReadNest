@@ -39,7 +39,7 @@ import {
 import nocache from "nocache";
 import upload from "../middlewares/multer.js";
 import { addAddress, deleteAddress, getAddress, getSingleAddress, updateAddress } from "../controllers/user/addressController.js";
-import { getCart, postCart, removeCart } from "../controllers/user/cartController.js";
+import { cartUpdate, getCart, postCart, removeCart } from "../controllers/user/cartController.js";
 
 export const router = express.Router();
 
@@ -77,6 +77,8 @@ router.get("/account/address/delete/:id", deleteAddress);
 router.get("/cart", getCart)
 router.post("/addcart", postCart)
 router.get("/remove-from-cart", removeCart)
+router.post("/update-cart-quantity", cartUpdate);
+
 
 
 router.get("/forgot-password", getForgotPassword);
