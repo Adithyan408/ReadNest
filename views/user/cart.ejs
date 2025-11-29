@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - ReadNest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+        * {
+            font-family: "Poppins", sans-serif;
+        }
+
+        .quantity-btn {
+            transition: all 0.2s ease;
+        }
+
+        .quantity-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .cart-item {
+            transition: all 0.3s ease;
+        }
+
+        .cart-item:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    
+    <%- include("../../views/partials/user/header") %>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+      <%- include('../../views/partials/breadcrumb') %>
+        <div class="flex gap-8">
+            <!-- Left Section: Cart Items -->
+            <div class="flex-1">
+                <!-- Address Section -->
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6 flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 font-medium">From Saved Address</p>
+                    </div>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded font-semibold">
+                        Change Address
+                    </button>
+                </div>
+
+                <!-- Cart Item 1 -->
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-4 cart-item">
+                    <div class="flex gap-6">
+                        <!-- Book Image -->
+                        <div class="w-32 h-48 flex-shrink-0">
+                            <img 
+                                src="https://images-na.ssl-images-amazon.com/images/I/71aFt4+OTOL.jpg" 
+                                alt="The Alchemist" 
+                                class="w-full h-full object-contain"
+                            >
+                        </div>
+
+                        <!-- Book Details -->
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-800 mb-2">
+                                ALCHEMIST - Paulo Coelho's The Alchemist(English Paperback): A Journey to Inspire Your Soul (English, Paperback, Paulo Coelho)
+                            </h3>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-2xl font-bold text-gray-800">₹ 150</span>
+                                <span class="bg-green-600 text-white px-2 py-0.5 rounded text-xs font-semibold">4.5 ★</span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <p class="text-sm font-semibold text-gray-700">Available offers</p>
+                                <p class="text-xs text-gray-600">Bank Offer5% cashback on Axis Bank Debit Card up to ₹750</p>
+                            </div>
+
+                            <!-- Quantity Controls -->
+                            <div class="flex items-center gap-0 border-2 border-gray-300 rounded w-fit">
+                                <button class="quantity-btn px-4 py-2 text-xl font-bold text-gray-700 hover:bg-gray-100" onclick="updateQuantity(1, -1)">-</button>
+                                <input 
+                                    type="text" 
+                                    id="quantity-1" 
+                                    value="1" 
+                                    readonly 
+                                    class="w-12 text-center border-x-2 border-gray-300 py-2 font-semibold"
+                                >
+                                <button class="quantity-btn px-4 py-2 text-xl font-bold text-gray-700 hover:bg-gray-100" onclick="updateQuantity(1, 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cart Item 2 -->
+                <div class="bg-white rounded-lg shadow-sm p-6 cart-item">
+                    <div class="flex gap-6">
+                        <!-- Book Image -->
+                        <div class="w-32 h-48 flex-shrink-0">
+                            <img 
+                                src="https://images-na.ssl-images-amazon.com/images/I/81YkqyaFVEL.jpg" 
+                                alt="Atomic Habbits" 
+                                class="w-full h-full object-contain"
+                            >
+                        </div>
+
+                        <!-- Book Details -->
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-800 mb-2">
+                                Atomic Habbits - (Paperback, James Clear)
+                            </h3>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-2xl font-bold text-gray-800">₹ 400</span>
+                                <span class="bg-green-600 text-white px-2 py-0.5 rounded text-xs font-semibold">4.8 ★</span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <p class="text-sm font-semibold text-gray-700">Available offers</p>
+                                <p class="text-xs text-gray-600">Bank Offer5% cashback on Axis Bank Debit Card up to ₹750</p>
+                                <p class="text-xs text-blue-600 font-medium cursor-pointer">Buy 3 books Earn More</p>
+                            </div>
+
+                            <!-- Quantity Controls -->
+                            <div class="flex items-center gap-0 border-2 border-gray-300 rounded w-fit">
+                                <button class="quantity-btn px-4 py-2 text-xl font-bold text-gray-700 hover:bg-gray-100" onclick="updateQuantity(2, -1)">-</button>
+                                <input 
+                                    type="text" 
+                                    id="quantity-2" 
+                                    value="1" 
+                                    readonly 
+                                    class="w-12 text-center border-x-2 border-gray-300 py-2 font-semibold"
+                                >
+                                <button class="quantity-btn px-4 py-2 text-xl font-bold text-gray-700 hover:bg-gray-100" onclick="updateQuantity(2, 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Section: Price Details -->
+            <div class="w-96">
+                <div class="bg-white rounded-lg shadow-sm p-6 sticky top-24">
+                    <h2 class="text-xl font-bold text-gray-700 mb-6">Price Details</h2>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="flex justify-between text-gray-700">
+                            <span>Price( <span id="total-items">2</span> Items )</span>
+                            <span>₹ <span id="subtotal">550</span> /-</span>
+                        </div>
+                        <div class="flex justify-between text-gray-700">
+                            <span>Discount</span>
+                            <span>₹ <span id="discount">30</span> /-</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-4 mb-6">
+                        <div class="flex justify-between text-lg font-bold text-gray-800">
+                            <span>Total</span>
+                            <span>₹ <span id="total">530</span> /-</span>
+                        </div>
+                    </div>
+
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold text-lg">
+                        Place Order
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <%- include("../../views/partials/user/footer") %>
+
+    <script>
+        // Price per item
+        const prices = {
+            1: 150,
+            2: 400
+        };
+
+        function updateQuantity(itemId, change) {
+            const input = document.getElementById(`quantity-${itemId}`);
+            let currentValue = parseInt(input.value);
+            let newValue = currentValue + change;
+
+            // Don't allow quantity less than 1
+            if (newValue < 1) return;
+
+            input.value = newValue;
+            updateTotals();
+        }
+
+        function updateTotals() {
+            const qty1 = parseInt(document.getElementById('quantity-1').value);
+            const qty2 = parseInt(document.getElementById('quantity-2').value);
+
+            const totalItems = qty1 + qty2;
+            const subtotal = (qty1 * prices[1]) + (qty2 * prices[2]);
+            const discount = Math.floor(subtotal * 0.05); // 5% discount
+            const total = subtotal - discount;
+
+            document.getElementById('total-items').textContent = totalItems;
+            document.getElementById('subtotal').textContent = subtotal;
+            document.getElementById('discount').textContent = discount;
+            document.getElementById('total').textContent = total;
+        }
+    </script>
+</body>
+</html>
