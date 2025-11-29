@@ -116,16 +116,25 @@
               </div>
             </div>
           </div>
-        
 
           <!-- BUTTONS BLOCK -->
           <div class="flex gap-4 mt-6">
             <!-- Add margin-top -->
-            <button
-              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold"
-            >
-              Add to Cart
-            </button>
+            <form action="/addcart" method="POST">
+              <input
+                type="hidden"
+                name="productId"
+                value="<%= product._id %>"
+              />
+
+              <button
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold"
+                type="submit"
+              >
+                Add to Cart
+              </button>
+            </form>
+
             <button
               class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold"
             >
