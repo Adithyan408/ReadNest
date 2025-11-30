@@ -119,8 +119,8 @@
 
           <!-- BUTTONS BLOCK -->
           <div class="flex gap-4 mt-6">
-            <!-- Add margin-top -->
-            <form action="/addcart" method="POST">
+            <!-- ADD TO CART -->
+            <form action="/addcart" method="POST" class="flex-1">
               <input
                 type="hidden"
                 name="productId"
@@ -128,18 +128,22 @@
               />
 
               <button
-                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold"
                 type="submit"
               >
                 Add to Cart
               </button>
             </form>
 
-            <button
-              class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold"
-            >
-              Buy Now
-            </button>
+            <!-- BUY NOW -->
+            <form action="/checkout" method="GET" class="flex-1">
+              <input type="hidden" name="buyNow" value="<%= product._id %>" />
+              <button
+                class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold"
+              >
+                Buy Now
+              </button>
+            </form>
           </div>
         </div>
 

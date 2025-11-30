@@ -6,6 +6,7 @@
     <title>Checkout - ReadNest</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -28,7 +29,7 @@
       <%- include('../../views/partials/breadcrumb') %>
 
       <div class="flex flex-col lg:flex-row gap-8">
-        <!-- LEFT SIDE – MAIN CHECKOUT CONTENT -->
+        <!-- LEFT SIDE CONTENT -->
         <div class="flex-1 space-y-6">
           <!-- USER DETAILS -->
           <div class="bg-white p-6 rounded-lg shadow">
@@ -37,11 +38,9 @@
             <p class="text-gray-700">
               <span class="font-semibold">Name:</span> <%= user.name %>
             </p>
-
             <p class="text-gray-700">
               <span class="font-semibold">Email:</span> <%= user.email %>
             </p>
-
             <p class="text-gray-700">
               <span class="font-semibold">Phone:</span> <%= user.phone %>
             </p>
@@ -61,12 +60,18 @@
             </div>
 
             <% if (addresses.length === 0) { %>
-
             <p class="text-gray-600 mt-3">No address saved</p>
-
             <% } else { %>
 
-            <div class="mt-4 border p-4 rounded-lg bg-gray-50">
+            <div class="mt-4 border p-4 rounded-lg bg-gray-50 relative">
+              <!-- EDIT BUTTON -->
+              <button
+                onclick="openEditAddressModal('<%= selectedAddress._id %>')"
+                class="absolute right-4 top-4 text-blue-600 hover:text-blue-800 text-sm font-semibold"
+              >
+                Edit
+              </button>
+
               <p class="font-semibold">
                 <%= selectedAddress.addressLabel %> Address
               </p>
@@ -74,38 +79,36 @@
               <p class="text-gray-700 text-sm">
                 <%= selectedAddress.houseName %>, <%= selectedAddress.street %>
               </p>
+
               <p class="text-gray-600 text-sm">
                 <%= selectedAddress.district %> - <%= selectedAddress.pincode %>
               </p>
+
               <p class="text-gray-600 text-sm">
                 Phone: <%= selectedAddress.phone %>
               </p>
             </div>
-
             <% } %>
 
-            <!-- ADDRESS MODAL -->
+            <!-- ADDRESS SELECT MODAL -->
             <div
               id="addressModal"
               class="hidden absolute top-0 left-0 w-full bg-white shadow-2xl border rounded-lg z-50 p-4"
             >
-              <!-- BACK BUTTON -->
               <button
                 onclick="toggleAddressModal()"
                 class="flex items-center gap-2 text-blue-600 font-semibold mb-4 hover:text-blue-700"
               >
-                <i class="fa-solid fa-arrow-left text-lg"></i>
+                <i class="fa-solid fa-arrow-left"></i>
                 Back
               </button>
 
               <h3 class="font-bold text-gray-800 mb-3">Select Address</h3>
 
               <div class="max-h-60 overflow-y-auto space-y-3">
-                <% if (addresses && addresses.length > 0) { %> <%
-                addresses.forEach(a => { %>
-
+                <% if (addresses.length > 0) { %> <% addresses.forEach(a => { %>
                 <label
-                  class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-100"
+                  class="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"
                 >
                   <input
                     type="radio"
@@ -125,26 +128,25 @@
                     <p class="text-xs text-gray-600">Phone: <%= a.phone %></p>
                   </div>
                 </label>
-
                 <% }) %> <% } else { %>
                 <p class="text-sm text-gray-500">No saved addresses found.</p>
                 <% } %>
               </div>
 
-              <div class="mt-4">
+              <div class="mt-4 space-y-3">
                 <button
                   onclick="setSelectedAddress()"
-                  class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold"
+                  class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold"
                 >
                   Set Address
                 </button>
 
-                <a
-                  href="/address"
-                  class="block mt-2 text-blue-600 hover:underline text-center"
+                <button
+                  onclick="openAddAddressModal()"
+                  class="w-full py-2 text-blue-600 font-medium hover:text-blue-700 flex items-center justify-center gap-2"
                 >
-                  + Add New Address
-                </a>
+                  <i class="fa-solid fa-plus"></i> Add New Address
+                </button>
               </div>
             </div>
           </div>
@@ -157,52 +159,92 @@
               <% cart.forEach(item => { %>
 
               <div class="flex items-center gap-4 border-b pb-4">
+                <!-- IMAGE -->
                 <img
                   src="<%= item.image %>"
                   class="w-20 h-28 object-contain rounded"
                 />
 
+                <!-- NAME + QTY -->
                 <div class="flex-1">
                   <h3 class="font-semibold text-gray-800"><%= item.name %></h3>
-                  <p class="text-gray-600 text-sm">Qty: <%= item.quantity %></p>
+
+                  <!-- Quantity Counter -->
+                  <div
+                    class="flex items-center gap-0 border-2 border-gray-300 rounded w-fit mt-2"
+                  >
+                    <button
+                      class="px-3 py-1 text-lg font-bold"
+                      onclick="updateCheckoutQty('<%= item._id %>', -1)"
+                    >
+                      -
+                    </button>
+
+                    <input
+                      type="text"
+                      id="qty-<%= item._id %>"
+                      value="<%= item.quantity %>"
+                      readonly
+                      class="w-12 text-center border-x-2 border-gray-300 py-1 font-semibold"
+                    />
+
+                    <button
+                      class="px-3 py-1 text-lg font-bold"
+                      onclick="updateCheckoutQty('<%= item._id %>', 1)"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
 
-                <p class="font-semibold text-gray-800">
+                <!-- PRICE -->
+                <p
+                  class="font-semibold text-gray-800"
+                  id="price-<%= item._id %>"
+                >
                   ₹ <%= item.price * item.quantity %>
                 </p>
-              </div>
 
+                <!-- Hidden stock & price -->
+                <input
+                  type="hidden"
+                  id="stock-<%= item._id %>"
+                  value="<%= item.stock %>"
+                />
+                <input
+                  type="hidden"
+                  id="unitPrice-<%= item._id %>"
+                  value="<%= item.price %>"
+                />
+              </div>
               <% }) %>
             </div>
           </div>
         </div>
 
-        <!-- RIGHT SIDE – PRICE SUMMARY -->
+        <!-- RIGHT SIDE PRICE SUMMARY -->
         <div class="w-full lg:w-96">
           <div class="bg-white p-6 rounded-lg shadow sticky top-20">
             <h2 class="text-xl font-bold text-gray-800 mb-6">Price Details</h2>
 
-            <% let subtotal = 0; cart.forEach(i => subtotal += i.price *
-            i.quantity); let discount = Math.floor(subtotal * 0.05); let total =
-            subtotal - discount; %>
-
             <div class="flex justify-between mb-3">
               <span class="text-gray-700">Items Total</span>
-              <span class="font-semibold text-gray-800">₹ <%= subtotal %></span>
+              <span class="font-semibold text-gray-800" id="rs-subtotal"></span>
             </div>
 
             <div class="flex justify-between mb-3">
               <span class="text-gray-700">Discount</span>
-              <span class="text-green-700 font-semibold"
-                >- ₹ <%= discount %></span
-              >
+              <span
+                class="text-green-700 font-semibold"
+                id="rs-discount"
+              ></span>
             </div>
 
             <div
               class="border-t pt-4 mt-4 flex justify-between text-lg font-bold"
             >
               <span>Total Amount</span>
-              <span>₹ <%= total %></span>
+              <span id="rs-total"></span>
             </div>
 
             <button
@@ -215,31 +257,542 @@
       </div>
     </main>
 
-    <!-- Footer -->
     <%- include("../../views/partials/user/footer") %>
-  </body>
 
-  <script>
-    function toggleAddressModal() {
-      document.getElementById("addressModal").classList.toggle("hidden");
-    }
+    <!-- ADD NEW ADDRESS MODAL -->
+    <div
+      id="addAddressModal"
+      class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center hidden z-50"
+    >
+      <div class="bg-white w-[650px] p-8 rounded-xl shadow-lg relative">
+        <!-- CLOSE / BACK BUTTON -->
+        <button
+          onclick="closeAddAddressModal()"
+          class="absolute left-4 top-4 text-gray-700 hover:text-black text-xl"
+        >
+          <i class="fas fa-arrow-left"></i>
+        </button>
 
-    function setSelectedAddress() {
-      const selected = document.querySelector(
-        "input[name='chooseAddress']:checked"
+        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">
+          Add New Address
+        </h2>
+
+        <!-- FORM GRID -->
+        <div class="grid grid-cols-2 gap-6">
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >Address Type</label
+            >
+            <select
+              id="add_addrLabel"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            >
+              <option value="Home">Home</option>
+              <option value="Office">Office</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >House Name</label
+            >
+            <input
+              id="add_addrHouseName"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >House Number</label
+            >
+            <input
+              id="add_addrHouseNumber"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Street</label>
+            <input
+              id="add_addrStreet"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Post</label>
+            <input
+              id="add_addrPost"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">District</label>
+            <input
+              id="add_addrDistrict"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">State</label>
+            <input
+              id="add_addrState"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">PIN Code</label>
+            <input
+              id="add_addrPincode"
+              type="number"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Phone</label>
+            <input
+              id="add_addrPhone"
+              type="number"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >Alternate Phone</label
+            >
+            <input
+              id="add_addrAltPhone"
+              type="number"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="mt-8 flex justify-center gap-5">
+          <button
+            onclick="saveNewAddress()"
+            class="px-8 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+          >
+            SAVE ADDRESS
+          </button>
+
+          <button
+            onclick="resetAddAddressFields()"
+            class="px-8 py-3 rounded-lg bg-gray-300 text-gray-800 font-semibold hover:bg-gray-400"
+          >
+            RESET
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDIT ADDRESS MODAL -->
+    <div
+      id="editAddressModal"
+      class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center hidden z-50"
+    >
+      <div class="bg-white w-[650px] p-8 rounded-xl shadow-lg relative">
+        <button
+          onclick="closeEditAddressModal()"
+          class="absolute left-4 top-4 text-gray-700 hover:text-black text-xl"
+        >
+          <i class="fas fa-arrow-left"></i>
+        </button>
+
+        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">
+          Edit Address
+        </h2>
+
+        <input type="hidden" id="edit_addressId" />
+
+        <div class="grid grid-cols-2 gap-6">
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >Address Type</label
+            >
+            <select
+              id="edit_addrLabel"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            >
+              <option value="Home">Home</option>
+              <option value="Office">Office</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >House Name</label
+            >
+            <input
+              id="edit_addrHouseName"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >House Number</label
+            >
+            <input
+              id="edit_addrHouseNumber"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Street</label>
+            <input
+              id="edit_addrStreet"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Post</label>
+            <input
+              id="edit_addrPost"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">District</label>
+            <input
+              id="edit_addrDistrict"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">State</label>
+            <input
+              id="edit_addrState"
+              type="text"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">PIN Code</label>
+            <input
+              id="edit_addrPincode"
+              type="number"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Phone</label>
+            <input
+              id="edit_addrPhone"
+              type="number"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-1"
+              >Alternate Phone</label
+            >
+            <input
+              id="edit_addrAltPhone"
+              type="number"
+              class="w-full bg-gray-100 p-3 rounded-lg"
+            />
+          </div>
+        </div>
+
+        <div class="mt-8 flex justify-center gap-5">
+          <button
+            onclick="saveEditedAddress()"
+            class="px-8 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+          >
+            UPDATE ADDRESS
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATA FOR JS -->
+    <script id="checkout-cart" type="application/json">
+      <%- JSON.stringify(cart) %>
+    </script>
+
+    <script id="addresses-data" type="application/json">
+      <%- JSON.stringify(addresses) %>
+    </script>
+
+    <script>
+      const CHECKOUT_ITEMS = JSON.parse(
+        document.getElementById("checkout-cart").textContent
+      );
+      const ALL_ADDRESSES = JSON.parse(
+        document.getElementById("addresses-data").textContent || "[]"
       );
 
-      if (!selected) return alert("Please select an address");
+      // ================
+      // ADDRESS MODAL TOGGLE
+      // ================
+      function toggleAddressModal() {
+        document.getElementById("addressModal").classList.toggle("hidden");
+      }
 
-      fetch("/set-address", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ addressId: selected.value }),
-      })
-        .then((res) => res.json())
-        .then((d) => {
-          if (d.success) location.reload();
+      // ================
+      // SELECT ADDRESS
+      // ================
+      function setSelectedAddress() {
+        const selected = document.querySelector(
+          "input[name='chooseAddress']:checked"
+        );
+        if (!selected) {
+          Swal.fire("Select Address", "Please choose an address", "warning");
+          return;
+        }
+
+        fetch("/set-address", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ addressId: selected.value }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) location.reload();
+          });
+      }
+
+      // ================
+      // CHECKOUT QTY + TOTALS
+      // ================
+      function updateCheckoutQty(productId, change) {
+        const qtyField = document.getElementById("qty-" + productId);
+        const stock = parseInt(
+          document.getElementById("stock-" + productId).value
+        );
+        const unit = parseInt(
+          document.getElementById("unitPrice-" + productId).value
+        );
+        const priceField = document.getElementById("price-" + productId);
+
+        let qty = parseInt(qtyField.value);
+
+        if (change === -1 && qty <= 1) return;
+
+        if (change === 1 && qty >= stock) {
+          Swal.fire({
+            icon: "warning",
+            title: "Stock Limit Reached",
+            text: `Only ${stock} item(s) available`,
+          });
+          return;
+        }
+
+        qty += change;
+        qtyField.value = qty;
+
+        priceField.textContent = "₹ " + qty * unit;
+
+        // Save to DB
+        fetch("/update-cart-quantity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId, quantity: qty }),
         });
-    }
-  </script>
+
+        updateTotalsRight();
+      }
+
+      function updateTotalsRight() {
+        let subtotal = 0;
+
+        CHECKOUT_ITEMS.forEach((item) => {
+          const qty = parseInt(
+            document.getElementById("qty-" + item._id)?.value || item.quantity
+          );
+          subtotal += qty * item.price;
+        });
+
+        const discount = Math.floor(subtotal * 0.05);
+        const total = subtotal - discount;
+
+        document.getElementById("rs-subtotal").textContent = "₹ " + subtotal;
+        document.getElementById("rs-discount").textContent = "- ₹ " + discount;
+        document.getElementById("rs-total").textContent = "₹ " + total;
+      }
+
+      updateTotalsRight();
+
+      // ================
+      // ADD ADDRESS
+      // ================
+
+      function homeAddressExists() {
+        return ALL_ADDRESSES.some((addr) => addr.addressLabel === "Home");
+      }
+
+      function openAddAddressModal() {
+        resetAddAddressFields();
+
+        const homeExists = homeAddressExists();
+
+        const labelSelect = document.getElementById("add_addrLabel");
+
+        if (homeExists) {
+          // Disable HOME option
+          labelSelect.innerHTML = `
+      <option value="Office">Office</option>
+      <option value="Other">Other</option>
+    `;
+        } else {
+          // Allow HOME if no Home exists
+          labelSelect.innerHTML = `
+      <option value="Home">Home</option>
+      <option value="Office">Office</option>
+      <option value="Other">Other</option>
+    `;
+        }
+
+        document.getElementById("addAddressModal").classList.remove("hidden");
+      }
+
+      function closeAddAddressModal() {
+        document.getElementById("addAddressModal").classList.add("hidden");
+      }
+
+      function resetAddAddressFields() {
+        document
+          .querySelectorAll("#addAddressModal input")
+          .forEach((i) => (i.value = ""));
+        document.getElementById("add_addrLabel").value = "Home";
+      }
+
+      function saveNewAddress() {
+        const data = {
+          addressLabel: document.getElementById("add_addrLabel").value,
+          houseName: document.getElementById("add_addrHouseName").value,
+          houseNumber: document.getElementById("add_addrHouseNumber").value,
+          street: document.getElementById("add_addrStreet").value,
+          post: document.getElementById("add_addrPost").value,
+          district: document.getElementById("add_addrDistrict").value,
+          state: document.getElementById("add_addrState").value,
+          pincode: document.getElementById("add_addrPincode").value,
+          phone: document.getElementById("add_addrPhone").value,
+          altPhone: document.getElementById("add_addrAltPhone").value,
+        };
+
+        const homeExists = homeAddressExists();
+        if (homeExists && data.addressLabel === "Home") {
+          Swal.fire(
+            "Not Allowed",
+            "You already have a Home address.",
+            "warning"
+          );
+          return;
+        }
+
+        fetch("/add-address", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+          .then((res) => res.json())
+          .then((d) => {
+            if (d.success) {
+              closeAddAddressModal();
+              location.reload();
+            } else {
+              Swal.fire("Error", "Could not add address", "error");
+            }
+          });
+      }
+
+      // ================
+      // EDIT ADDRESS
+      // ================
+      function openEditAddressModal(addressId) {
+        const addr = ALL_ADDRESSES.find((a) => a._id === addressId);
+        if (!addr) return;
+
+        document.getElementById("edit_addressId").value = addr._id;
+
+        document.getElementById("edit_addrLabel").value = addr.addressLabel;
+        document.getElementById("edit_addrHouseName").value = addr.houseName;
+        document.getElementById("edit_addrHouseNumber").value =
+          addr.houseNumber;
+        document.getElementById("edit_addrStreet").value = addr.street;
+        document.getElementById("edit_addrPost").value = addr.post;
+        document.getElementById("edit_addrDistrict").value = addr.district;
+        document.getElementById("edit_addrState").value = addr.state;
+        document.getElementById("edit_addrPincode").value = addr.pincode;
+        document.getElementById("edit_addrPhone").value = addr.phone;
+        document.getElementById("edit_addrAltPhone").value = addr.altPhone;
+
+        document.getElementById("editAddressModal").classList.remove("hidden");
+      }
+
+      function closeEditAddressModal() {
+        document.getElementById("editAddressModal").classList.add("hidden");
+      }
+
+      function saveEditedAddress() {
+        const data = {
+          addressId: document.getElementById("edit_addressId").value,
+          addressLabel: document.getElementById("edit_addrLabel").value,
+          houseName: document.getElementById("edit_addrHouseName").value,
+          houseNumber: document.getElementById("edit_addrHouseNumber").value,
+          street: document.getElementById("edit_addrStreet").value,
+          post: document.getElementById("edit_addrPost").value,
+          district: document.getElementById("edit_addrDistrict").value,
+          state: document.getElementById("edit_addrState").value,
+          pincode: document.getElementById("edit_addrPincode").value,
+          phone: document.getElementById("edit_addrPhone").value,
+          altPhone: document.getElementById("edit_addrAltPhone").value,
+        };
+
+        const homeExists = homeAddressExists();
+        if (homeExists && data.addressLabel === "Home") {
+          Swal.fire(
+            "Not Allowed",
+            "You already have a Home address.",
+            "warning"
+          );
+          return;
+        }
+
+        fetch("/save-address", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+          .then((res) => res.json())
+          .then((d) => {
+            if (d.success) {
+              closeEditAddressModal();
+              location.reload();
+            } else {
+              Swal.fire("Error", "Could not update address", "error");
+            }
+          });
+      }
+    </script>
+  </body>
 </html>
