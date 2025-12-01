@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout - ReadNest</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+      * {
+        font-family: "Poppins", sans-serif;
+      }
+    </style>
+  </head>
+
+  <body class="bg-gray-100">
+    <!-- Header -->
+    <%- include("../../views/partials/user/header") %>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+      <%- include('../../views/partials/breadcrumb') %>
+
+      <div class="flex flex-col lg:flex-row gap-8 px-4 lg:px-20">
+        <!-- LEFT SIDE CONTENT -->
+        <div class="flex-1 space-y-6">
+          <!-- USER DETAILS -->
+          <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">User Details</h2>
+
+            <p class="text-gray-700">
+              <span class="font-semibold">Name:</span> <%= user.name %>
+            </p>
+            <p class="text-gray-700">
+              <span class="font-semibold">Email:</span> <%= user.email %>
+            </p>
+            <p class="text-gray-700">
+              <span class="font-semibold">Phone:</span> <%= user.phone %>
+            </p>
+          </div>
+
+          <!-- DELIVERY ADDRESS -->
+          <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-bold text-gray-800">Delivery Address</h2>
+
+            <% if (!selectedAddress) { %>
+            <p class="text-gray-600 mt-3">No address selected</p>
+            <% } else { %>
+
+            <div class="mt-4 border p-4 rounded-lg bg-gray-50 relative">
+              <p class="font-semibold">
+                <%= selectedAddress.addressLabel %> Address
+              </p>
+              <p class="text-gray-700 text-sm">
+                <%= selectedAddress.houseName %>, <%= selectedAddress.street %>
+              </p>
+              <p class="text-gray-600 text-sm">
+                <%= selectedAddress.district %> - <%= selectedAddress.pincode %>
+              </p>
+              <p class="text-gray-600 text-sm">
+                Phone: <%= selectedAddress.phone %>
+              </p>
+            </div>
+
+            <% } %>
+          </div>
+
+          <!-- ORDER SUMMARY -->
+          <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Order Summary</h2>
+
+            <% if (isBuyNow && cart.length === 1) { %>
+
+            <!-- BUY NOW -->
+            <p class="text-gray-700 font-medium">
+              Product:
+              <span class="font-bold"><%= cart[0].name %></span>
+            </p>
+
+            <p class="text-gray-700 font-medium mt-2">
+              Quantity: <span class="font-bold">1</span>
+            </p>
+
+            <p class="text-gray-700 font-medium mt-2">
+              Price:
+              <span class="font-bold" id="singlePrice"
+                >₹ <%= cart[0].price %></span
+              >
+            </p>
+
+            <p class="text-gray-700 font-medium mt-2">
+              Total Amount:
+              <span class="font-bold">₹ <%= totalAmount %></span>
+            </p>
+
+            <% } else { %>
+
+            <!-- NORMAL CART -->
+            <p class="text-gray-700 font-medium">
+              Total Products:
+              <span class="font-bold"><%= cart.length %></span>
+            </p>
+
+            <p class="text-gray-700 font-medium mt-2">
+              Total Amount:
+              <span class="font-bold" id="singleTotal"
+                >₹ <%= totalAmount %></span
+              >
+            </p>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- RIGHT SIDE: PAYMENT + COUPON SECTION -->
+        <div class="w-full lg:w-96">
+          <div class="bg-white p-6 rounded-lg shadow sticky top-20">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">
+              Payment Options
+            </h2>
+
+            <!-- PAYMENT METHOD -->
+            <label class="text-gray-700 font-medium"
+              >Select Payment Method</label
+            >
+            <select
+              id="paymentMethod"
+              class="w-full p-3 border mt-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Choose payment method</option>
+              <option value="COD">Cash On Delivery</option>
+              <option value="Razorpay">Razorpay</option>
+              <option value="Wallet">Wallet</option>
+            </select>
+
+            <!-- COUPON SECTION -->
+            <div class="mt-6">
+              <label class="text-gray-700 font-medium">Apply Coupon</label>
+
+              <div class="flex gap-2 mt-2">
+                <input
+                  type="text"
+                  id="couponCode"
+                  class="w-full p-3 border rounded-lg"
+                  placeholder="Enter coupon code"
+                />
+
+                <button
+                  onclick="applyCoupon()"
+                  class="bg-green-600 hover:bg-green-700 text-white px-4 rounded-lg font-semibold"
+                >
+                  Apply
+                </button>
+              </div>
+
+              <p
+                id="couponMessage"
+                class="text-sm text-green-700 mt-2 hidden"
+              ></p>
+            </div>
+
+            <!-- PRICE DETAILS -->
+            <div class="mt-6 border-t pt-4">
+              <div class="flex justify-between mb-3">
+                <span class="text-gray-700">Items Total</span>
+                <span class="font-semibold text-gray-800"
+                  >₹ <%= subtotal %></span
+                >
+              </div>
+
+              <div class="flex justify-between mb-3">
+                <span class="text-gray-700">Discount</span>
+                <span class="font-semibold text-green-700" id="discountAmount"
+                  >₹ <%= discount %></span
+                >
+              </div>
+
+              <div class="flex justify-between text-lg font-bold border-t pt-4">
+                <span>Total Amount</span>
+                <span id="totalAmount">₹ <%= totalAmount %></span>
+              </div>
+            </div>
+
+            <!-- BUTTON -->
+            <button
+              onclick="processPayment()"
+              class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-lg font-bold"
+            >
+              Proceed to Pay
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <%- include("../../views/partials/user/footer") %>
+
+    <script>
+      
+      let originalTotal = Number("<%- totalAmount %>");
+
+      function processPayment() {
+        const method = document.getElementById("paymentMethod").value;
+        if (!method) {
+          alert("Please select a payment method");
+          return;
+        }
+        window.location.href = `/place-order?payment=${method}`;
+      }
+
+      function applyCoupon() {
+        const coupon = document.getElementById("couponCode").value.trim();
+        if (!coupon) {
+          alert("Enter a coupon code!");
+          return;
+        }
+
+        fetch("/apply-coupon", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            coupon,
+            totalAmount: originalTotal,
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            console.log(data);
+            const message = document.getElementById("couponMessage");
+            const discountElement = document.getElementById("discountAmount");
+            const totalElement = document.getElementById("totalAmount");
+            const singleTotalEl = document.getElementById("singleTotal");
+
+            if (!data.success) {
+              message.innerHTML = data.message;
+              message.classList.remove("hidden");
+              message.classList.add("text-red-600");
+              return;
+            }
+
+            // SUCCESS — update UI
+            message.innerHTML = data.message;
+            message.classList.remove("text-red-600");
+            message.classList.remove("hidden");
+
+            discountElement.innerText = "₹ " + data.discount;
+            totalElement.innerText = "₹ " + data.finalAmount;
+
+            // BUY NOW update
+            if (singleTotalEl) {
+              singleTotalEl.innerText = "₹ " + data.finalAmount;
+            }
+
+            // update global new total
+            originalTotal = data.finalAmount;
+          });
+      }
+    </script>
+  </body>
+</html>
