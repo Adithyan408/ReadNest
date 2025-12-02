@@ -70,7 +70,7 @@ export const loadPayment = async (req, res) => {
 
     const discount = Math.floor(subtotal * 0.05);
     let totalAmount = subtotal - discount;
-
+    req.session.total = totalAmount;
     res.render("payment", {
       user: userData,
       addresses,
@@ -146,6 +146,7 @@ export const postCoupon = async (req, res) => {
 export const orderPlaced = async (req, res) => {
   try {
     const userId = req.session.user?._id;
+    const totalAmount = req.session.total;
     if (!userId) return res.redirect("/login");
 
     const userData = await User.findById(userId).lean();
@@ -167,58 +168,13 @@ export const orderPlaced = async (req, res) => {
           addresses.find((a) => a.addressLabel === "Home") || addresses[0];
       }
     }
-    let cart = [];
-
-    const buyNowId = req.query.buyNow;
-
-    if (buyNowId) {
-      const product = await Product.findById(buyNowId).lean();
-      if (!product) return res.redirect("/notfound");
-
-      cart = [
-        {
-          _id: product._id,
-          name: product.productName,
-          price: product.salePrice || product.regularPrice,
-          image: product.productImage[0],
-          quantity: 1,
-          stock: product.stock,
-        },
-      ];
-    } else {
-      const cartData = await Cart.findOne({ userId })
-        .populate("items.productId")
-        .lean();
-
-      cart =
-        cartData?.items.map((i) => ({
-          _id: i.productId._id,
-          name: i.productId.productName,
-          price: i.productId.salePrice || i.productId.regularPrice,
-          image: i.productId.productImage[0],
-          quantity: i.quantity,
-          stock: i.productId.stock,
-        })) || [];
-    }
-
-    let subtotal = 0;
-
-    cart.forEach((item) => {
-      subtotal += item.price * item.quantity;
-    });
-
-    const discount = Math.floor(subtotal * 0.05);
-    let totalAmount = subtotal - discount;
-
     res.render("placed", {
       user: userData,
       addresses,
       selectedAddress,
-      cart,
-      subtotal,
-      discount,
-      totalAmount,
-      isBuyNow: Boolean(buyNowId),
+      totalAmount : totalAmount,
     });
-  } catch (error) {}
+  } catch (error) {
+    console.log(error)
+  }
 };
