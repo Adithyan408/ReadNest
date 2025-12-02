@@ -2,6 +2,7 @@ import User from "../../models/userSchema.js";
 import Address from "../../models/addressSchema.js";
 import Product from "../../models/productsSchema.js";
 import Cart from "../../models/cartSchema.js";
+import Order from "../../models/orderSchema.js";
 
 export const loadPayment = async (req, res) => {
   try {
@@ -147,34 +148,89 @@ export const orderPlaced = async (req, res) => {
   try {
     const userId = req.session.user?._id;
     const totalAmount = req.session.total;
+
     if (!userId) return res.redirect("/login");
 
     const userData = await User.findById(userId).lean();
-
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
 
-    let selectedAddress = null;
+    let selectedAddress =
+      addresses.find(
+        (a) => a._id.toString() === req.session.selectedAddressId
+      ) ||
+      addresses.find((a) => a.addressLabel === "Home") ||
+      addresses[0] ||
+      null;
 
-    if (addresses.length > 0) {
-      if (req.session.selectedAddressId) {
-        selectedAddress = addresses.find(
-          (a) => a._id.toString() === req.session.selectedAddressId
-        );
-      }
+    let cartItems = [];
 
-      if (!selectedAddress) {
-        selectedAddress =
-          addresses.find((a) => a.addressLabel === "Home") || addresses[0];
-      }
+    if (req.query.buyNow) {
+      const product = await Product.findById(req.query.buyNow);
+      if (!product) return res.redirect("/notfound");
+
+      cartItems = [
+        {
+          product: product._id, 
+          productName: product.productName,
+          regularPrice: product.salePrice || product.regularPrice,
+          stock: product.stock, 
+          subtotal: product.salePrice || product.regularPrice,
+          quantity: 1,
+        },
+      ];
+    } else {
+      const cartData = await Cart.findOne({ userId }).populate(
+        "items.productId"
+      );
+
+      cartItems =
+        cartData?.items.map((i) => ({
+          product: i.productId._id,
+          productName: i.productId.productName,
+          regularPrice: i.productId.salePrice || i.productId.regularPrice,
+          stock: i.productId.stock, 
+          subtotal:
+            (i.productId.salePrice || i.productId.regularPrice) * i.quantity,
+          quantity: i.quantity,
+        })) || [];
     }
+
+    if (cartItems.length === 0) return res.redirect("/cart");
+
+
+    const newOrder = new Order({
+      user: userId, 
+      items: cartItems, 
+      total: totalAmount, 
+      paymentId: null,
+      status: "processing",
+    });
+
+    await newOrder.save();
+
+    for (let item of cartItems) {
+      await Product.updateOne(
+        { _id: item.product, stock: { $gte: item.quantity } },
+        { $inc: { stock: -item.quantity } }
+      );
+    }
+
+    if (!req.query.buyNow) {
+      await Cart.updateOne({ userId }, { items: [] });
+    }
+
+    req.session.appliedCoupon = null;
+
     res.render("placed", {
       user: userData,
       addresses,
       selectedAddress,
-      totalAmount : totalAmount,
+      totalAmount,
+      orderId: newOrder._id,
     });
   } catch (error) {
-    console.log(error)
+    console.log("Order placing error:", error);
+    res.render("notFound");
   }
 };
