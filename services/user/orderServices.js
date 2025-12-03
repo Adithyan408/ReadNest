@@ -25,8 +25,9 @@ export const getOrderDetailsPage = async (req, res) => {
       .lean();
 
     if (!order) return res.render("notFound");
-
-    res.render("orderDetails", { order });
+    
+    console.log(order.address)
+    res.render("orderDetails", { order, selectedAddress: order.address });
   } catch (err) {
     console.log("Order Details Error:", err);
     res.render("notFound");

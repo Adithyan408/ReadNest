@@ -213,6 +213,7 @@ export const orderPlaced = async (req, res) => {
       total: totalAmount,
       paymentId: null,
       status: "processing",
+     address: selectedAddress ? { ...selectedAddress } : null
     });
 
     await newOrder.save();
@@ -231,7 +232,7 @@ export const orderPlaced = async (req, res) => {
     req.session.appliedCoupon = null;
     req.session.buyNowQuantity = null;
     req.session.buyNowProductId = null;
-
+    
     res.render("placed", {
       user: userData,
       addresses,
