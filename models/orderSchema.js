@@ -10,6 +10,10 @@ const orderItemSchema = new mongoose.Schema({
   regularPrice: Number,
   stock: { type: Number, required: true },
   subtotal: Number,
+   productImage: {
+      type: [String],
+      required: true,
+    },
   quantity: { type: Number},
   status: {
     type: String,
@@ -27,6 +31,7 @@ const orderSchema = new mongoose.Schema(
     total: Number,
     paymentId: String, 
     quantity: { type: Number},
+     
     status: {
       type: String,
       enum: ["processing", "partially_cancelled", "cancelled", "completed"],

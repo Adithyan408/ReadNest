@@ -20,7 +20,10 @@ export const getOrderDetailsPage = async (req, res) => {
   try {
     const orderId = req.params.orderId;
 
-    const order = await Order.findById(orderId).lean();
+    const order = await Order.findById(orderId)
+      .populate("items.product", "productImage") // populate product images
+      .lean();
+
     if (!order) return res.render("notFound");
 
     res.render("orderDetails", { order });

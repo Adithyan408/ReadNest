@@ -77,9 +77,6 @@ export const loadPayment = async (req, res) => {
     let totalAmount = subtotal - discount;
     req.session.total = totalAmount;
 
-    // console.log("BuyNowQty:", req.session.buyNowQuantity);
-    // console.log("UnitPrice:", req.session.buyNowUnitPrice);
-    // console.log("BuyNowProduct:", req.session.buyNowProductId);
 
     res.render("payment", {
       user: userData,
@@ -187,6 +184,7 @@ export const orderPlaced = async (req, res) => {
           stock: product.stock,
           quantity: qty,
           subtotal: req.session.buyNowUnitPrice * qty,
+          productImage : product.productImage
         },
       ];
     } else {
@@ -200,13 +198,13 @@ export const orderPlaced = async (req, res) => {
           productName: i.productId.productName,
           regularPrice: i.productId.salePrice || i.productId.regularPrice,
           stock: i.productId.stock,
+          productImage : i.productId.productImage,
           subtotal:
             (i.productId.salePrice || i.productId.regularPrice) * i.quantity,
           quantity: i.quantity,
         })) || [];
     }
 
-    // if (cartItems.length === 0) return res.redirect("/cart");
 
     const newOrder = new Order({
       user: userId,

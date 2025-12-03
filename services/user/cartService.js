@@ -122,15 +122,11 @@ export const updateBuyNowQty = async (req, res) => {
       return res.json({ success: false, message: "Login required" });
     }
 
-    // Ensure BuyNow session product matches UI product
     if (String(req.session.buyNowProductId) !== String(productId)) {
       return res.json({ success: false, message: "Buy Now product mismatch" });
     }
 
-    // Save new quantity in session
     req.session.buyNowQuantity = Number(quantity);
-    console.log("REQ BODY:", req.body);
-    console.log("SESSION BUY NOW ID:", req.session.buyNowProductId);
 
     return res.json({ success: true });
   } catch (error) {
