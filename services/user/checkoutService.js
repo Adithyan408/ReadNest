@@ -19,21 +19,23 @@ export const getCheckout = async (req, res) => {
 
     if (buyNowId) {
       const product = await Product.findById(buyNowId).lean();
-
       if (!product) return res.redirect("/notfound");
+      const qty = req.session.buyNowQuantity || 1;
+
+      req.session.buyNowProductId = buyNowId;
+      req.session.buyNowPrice = product.salePrice || product.regularPrice;
 
       cart = [
         {
           _id: product._id,
           name: product.productName,
-          price: product.salePrice || product.regularPrice,
           image: product.productImage[0],
-          quantity: 1,
-          stock: product.stock
+          quantity: qty,
+          price: product.salePrice || product.regularPrice,
+          stock: product.stock,
         },
       ];
     } else {
-
       const cartData = await Cart.findOne({ userId })
         .populate("items.productId")
         .lean();
@@ -45,10 +47,9 @@ export const getCheckout = async (req, res) => {
           price: i.productId.salePrice || i.productId.regularPrice,
           image: i.productId.productImage[0],
           quantity: i.quantity,
-          stock: i.productId.stock
+          stock: i.productId.stock,
         })) || [];
     }
-
 
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
@@ -138,7 +139,7 @@ export const saveAddress = async (req, res) => {
       state,
       pincode,
       phone,
-      altPhone
+      altPhone,
     } = req.body;
 
     let addressDoc = await Address.findOne({ userId });
@@ -146,10 +147,20 @@ export const saveAddress = async (req, res) => {
     if (!addressDoc) {
       addressDoc = new Address({
         userId,
-        addresses: [{
-          addressLabel, houseName, houseNumber,
-          street, post, district, state, pincode, phone, altPhone
-        }],
+        addresses: [
+          {
+            addressLabel,
+            houseName,
+            houseNumber,
+            street,
+            post,
+            district,
+            state,
+            pincode,
+            phone,
+            altPhone,
+          },
+        ],
       });
     } else {
       if (addressId) {
@@ -164,18 +175,24 @@ export const saveAddress = async (req, res) => {
         addr.pincode = pincode;
         addr.phone = phone;
         addr.altPhone = altPhone;
-
       } else {
         addressDoc.addresses.push({
-          addressLabel, houseName, houseNumber,
-          street, post, district, state, pincode, phone, altPhone
+          addressLabel,
+          houseName,
+          houseNumber,
+          street,
+          post,
+          district,
+          state,
+          pincode,
+          phone,
+          altPhone,
         });
       }
     }
 
     await addressDoc.save();
     return res.json({ success: true });
-
   } catch (err) {
     console.log("Save address error:", err);
     return res.json({ success: false });

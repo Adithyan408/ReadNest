@@ -37,13 +37,17 @@ export const loadPayment = async (req, res) => {
       const product = await Product.findById(buyNowId).lean();
       if (!product) return res.redirect("/notfound");
 
+      const qty = req.session.buyNowQuantity || 1;
+      req.session.buyNowProductId = buyNowId;
+      req.session.buyNowUnitPrice = product.salePrice || product.regularPrice;
+
       cart = [
         {
           _id: product._id,
           name: product.productName,
-          price: product.salePrice || product.regularPrice,
+          quantity: qty,
+          price: req.session.buyNowUnitPrice,
           image: product.productImage[0],
-          quantity: 1,
           stock: product.stock,
         },
       ];
@@ -72,6 +76,11 @@ export const loadPayment = async (req, res) => {
     const discount = Math.floor(subtotal * 0.05);
     let totalAmount = subtotal - discount;
     req.session.total = totalAmount;
+
+    // console.log("BuyNowQty:", req.session.buyNowQuantity);
+    // console.log("UnitPrice:", req.session.buyNowUnitPrice);
+    // console.log("BuyNowProduct:", req.session.buyNowProductId);
+
     res.render("payment", {
       user: userData,
       addresses,
@@ -167,16 +176,17 @@ export const orderPlaced = async (req, res) => {
 
     if (req.query.buyNow) {
       const product = await Product.findById(req.query.buyNow);
+      const qty = req.session.buyNowQuantity || 1;
       if (!product) return res.redirect("/notfound");
 
       cartItems = [
         {
-          product: product._id, 
+          product: product._id,
           productName: product.productName,
           regularPrice: product.salePrice || product.regularPrice,
-          stock: product.stock, 
-          subtotal: product.salePrice || product.regularPrice,
-          quantity: 1,
+          stock: product.stock,
+          quantity: qty,
+          subtotal: req.session.buyNowUnitPrice * qty,
         },
       ];
     } else {
@@ -189,20 +199,19 @@ export const orderPlaced = async (req, res) => {
           product: i.productId._id,
           productName: i.productId.productName,
           regularPrice: i.productId.salePrice || i.productId.regularPrice,
-          stock: i.productId.stock, 
+          stock: i.productId.stock,
           subtotal:
             (i.productId.salePrice || i.productId.regularPrice) * i.quantity,
           quantity: i.quantity,
         })) || [];
     }
 
-    if (cartItems.length === 0) return res.redirect("/cart");
-
+    // if (cartItems.length === 0) return res.redirect("/cart");
 
     const newOrder = new Order({
-      user: userId, 
-      items: cartItems, 
-      total: totalAmount, 
+      user: userId,
+      items: cartItems,
+      total: totalAmount,
       paymentId: null,
       status: "processing",
     });
@@ -221,6 +230,8 @@ export const orderPlaced = async (req, res) => {
     }
 
     req.session.appliedCoupon = null;
+    req.session.buyNowQuantity = null;
+    req.session.buyNowProductId = null;
 
     res.render("placed", {
       user: userData,

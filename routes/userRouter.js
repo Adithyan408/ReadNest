@@ -39,9 +39,10 @@ import {
 import nocache from "nocache";
 import upload from "../middlewares/multer.js";
 import { addAddress, deleteAddress, getAddress, getSingleAddress, updateAddress } from "../controllers/user/addressController.js";
-import { cartUpdate, getCart, postCart, removeCart } from "../controllers/user/cartController.js";
+import { buyNowUpdate, cartUpdate, getCart, postCart, removeCart } from "../controllers/user/cartController.js";
 import { addAddressNew, addresChoose, loadCheckout, postAddress } from "../controllers/user/checkout.js";
 import { applyCoupon, getPayment, loadPlace } from "../controllers/user/payment.js";
+import { cancelOrder, loadOrderDetails, loadOrderList, returnOrder } from "../controllers/user/orderController.js";
 
 export const router = express.Router();
 
@@ -80,6 +81,7 @@ router.get("/cart", getCart)
 router.post("/addcart", postCart)
 router.get("/remove-from-cart", removeCart)
 router.post("/update-cart-quantity", cartUpdate);
+router.post("/update-buyNow-qty", buyNowUpdate);
 
 
 router.get("/checkout", loadCheckout)
@@ -91,6 +93,12 @@ router.get("/checkout/payment", getPayment)
 router.post("/apply-coupon", applyCoupon);
 router.get("/place-order", loadPlace)
 
+
+router.get("/orders", loadOrderList);
+router.get("/orders/:orderId", loadOrderDetails);
+
+router.post("/orders/:orderId/items/:itemId/cancel", cancelOrder);
+router.post("/orders/:orderId/items/:itemId/return",returnOrder);
 
 router.get("/forgot-password", getForgotPassword);
 router.post("/forgot-password", forgotEmailValid);

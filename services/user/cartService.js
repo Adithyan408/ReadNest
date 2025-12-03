@@ -15,10 +15,9 @@ export const loadCart = async (req, res) => {
           price: i.productId.salePrice || i.productId.regularPrice,
           image: i.productId.productImage[0],
           quantity: i.quantity,
-          stock: i.productId.stock  
+          stock: i.productId.stock,
         }))
       : [];
-
 
     const addresses = await Address.find({ userId });
 
@@ -93,7 +92,6 @@ export const cartRemove = async (req, res) => {
   }
 };
 
-
 export const updateCartQuantity = async (req, res) => {
   try {
     const userId = req.session.user?._id;
@@ -109,9 +107,34 @@ export const updateCartQuantity = async (req, res) => {
     );
 
     return res.json({ success: true });
-
   } catch (error) {
     console.log("Quantity update error:", error);
+    return res.json({ success: false });
+  }
+};
+
+export const updateBuyNowQty = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+    const { productId, quantity } = req.body;
+
+    if (!userId) {
+      return res.json({ success: false, message: "Login required" });
+    }
+
+    // Ensure BuyNow session product matches UI product
+    if (String(req.session.buyNowProductId) !== String(productId)) {
+      return res.json({ success: false, message: "Buy Now product mismatch" });
+    }
+
+    // Save new quantity in session
+    req.session.buyNowQuantity = Number(quantity);
+    console.log("REQ BODY:", req.body);
+    console.log("SESSION BUY NOW ID:", req.session.buyNowProductId);
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.log("BuyNow Quantity update error:", error);
     return res.json({ success: false });
   }
 };

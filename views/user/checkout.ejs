@@ -217,8 +217,15 @@
                   value="<%= item.price %>"
                 />
               </div>
+
               <% }) %>
             </div>
+            <input type="hidden" id="isBuyNow" value="<%= isBuyNow %>" />
+            <input
+              type="hidden"
+              id="buyNowProductId"
+              value="<%= (isBuyNow && cart.length === 1) ? cart[0]._id : '' %>"
+            />
           </div>
         </div>
 
@@ -249,14 +256,14 @@
 
             <% if (isBuyNow && cart.length === 1) { %>
             <button
-              onclick="window.location.href='checkout/payment?buyNow=<%= cart[0]._id %>'"
+              onclick="window.location.href='/checkout/payment?buyNow=<%= cart[0]._id %>'"
               class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-lg font-bold"
             >
               Proceed to Payment
             </button>
             <% } else { %>
             <button
-              onclick="window.location.href='checkout/payment'"
+              onclick="window.location.href='/checkout/payment'"
               class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-lg font-bold"
             >
               Proceed to Payment
@@ -620,13 +627,25 @@
         qtyField.value = qty;
 
         priceField.textContent = "₹ " + qty * unit;
+        
+        const isBuyNow = document.getElementById("isBuyNow").value === "true";
+        const buyNowProduct = document.getElementById("buyNowProductId")?.value;
 
-        // Save to DB
-        fetch("/update-cart-quantity", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productId, quantity: qty }),
-        });
+        if (isBuyNow) {
+          // Update Buy Now Quantity through session
+          fetch("/update-buyNow-qty", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId: productId, quantity: qty }),
+          });
+        } else {
+          // Update Cart quantity
+          fetch("/update-cart-quantity", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId, quantity: qty }),
+          });
+        }
 
         updateTotalsRight();
       }
@@ -638,7 +657,7 @@
           const qty = parseInt(
             document.getElementById("qty-" + item._id)?.value || item.quantity
           );
-          subtotal += qty * item.price;
+          subtotal += qty * Number(item.price);
         });
 
         const discount = Math.floor(subtotal * 0.05);

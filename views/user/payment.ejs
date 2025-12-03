@@ -85,13 +85,13 @@
             </p>
 
             <p class="text-gray-700 font-medium mt-2">
-              Quantity: <span class="font-bold">1</span>
+              Quantity: <span class="font-bold"><%= cart[0].quantity %></span>
             </p>
 
             <p class="text-gray-700 font-medium mt-2">
               Price:
               <span class="font-bold" id="singlePrice"
-                >₹ <%= cart[0].price %></span
+                >₹ <%= cart[0].price * cart[0].quantity %></span
               >
             </p>
 
