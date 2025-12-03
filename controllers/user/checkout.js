@@ -1,4 +1,4 @@
-import { addNewAddress, getCheckout, saveAddress, setSelectedAddress } from "../../services/user/checkoutService.js"
+import { addNewAddress, getBuyNow, getCheckout, saveAddress, setSelectedAddress } from "../../services/user/checkoutService.js"
 
 
 export const loadCheckout = async(req, res) => {
@@ -15,4 +15,8 @@ export const addAddressNew = async(req, res) => {
 
 export const postAddress = async(req, res) => {
     await saveAddress(req, res);
+}
+
+export const loadBuyNow = async(req, res) => {
+    await getBuyNow(req, res) ;
 }

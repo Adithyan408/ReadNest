@@ -20,6 +20,5 @@ export const cartUpdate = async(req, res) => {
 }
 
 export const buyNowUpdate = async(req, res) =>{
-  console.log("Router hitt")
   await updateBuyNowQty(req, res);
 }

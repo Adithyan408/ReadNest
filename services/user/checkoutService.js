@@ -198,3 +198,16 @@ export const saveAddress = async (req, res) => {
     return res.json({ success: false });
   }
 };
+
+
+export const getBuyNow =  async (req, res) => {
+  const product = await Product.findById(req.params.id);
+
+  if (!product) return res.redirect("/notfound");
+
+  req.session.buyNowProductId = product._id;
+  req.session.buyNowQuantity = 1;
+  req.session.buyNowUnitPrice = product.salePrice || product.regularPrice;
+
+  return res.redirect(`/checkout?buyNow=${product._id}`);
+}

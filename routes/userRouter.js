@@ -40,7 +40,7 @@ import nocache from "nocache";
 import upload from "../middlewares/multer.js";
 import { addAddress, deleteAddress, getAddress, getSingleAddress, updateAddress } from "../controllers/user/addressController.js";
 import { buyNowUpdate, cartUpdate, getCart, postCart, removeCart } from "../controllers/user/cartController.js";
-import { addAddressNew, addresChoose, loadCheckout, postAddress } from "../controllers/user/checkout.js";
+import { addAddressNew, addresChoose, loadBuyNow, loadCheckout, postAddress } from "../controllers/user/checkout.js";
 import { applyCoupon, getPayment, loadPlace } from "../controllers/user/payment.js";
 import { cancelOrder, loadOrderDetails, loadOrderList, returnOrder } from "../controllers/user/orderController.js";
 
@@ -92,6 +92,7 @@ router.post("/save-address", postAddress);
 router.get("/checkout/payment", getPayment)
 router.post("/apply-coupon", applyCoupon);
 router.get("/place-order", loadPlace)
+router.get("/buy-now/:id",loadBuyNow)
 
 
 router.get("/orders", loadOrderList);

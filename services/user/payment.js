@@ -77,7 +77,6 @@ export const loadPayment = async (req, res) => {
     let totalAmount = subtotal - discount;
     req.session.total = totalAmount;
 
-
     res.render("payment", {
       user: userData,
       addresses,
@@ -171,8 +170,8 @@ export const orderPlaced = async (req, res) => {
 
     let cartItems = [];
 
-    if (req.query.buyNow) {
-      const product = await Product.findById(req.query.buyNow);
+    if (req.session.buyNowProductId) {
+      const product = await Product.findById(req.session.buyNowProductId);
       const qty = req.session.buyNowQuantity || 1;
       if (!product) return res.redirect("/notfound");
 
@@ -183,8 +182,11 @@ export const orderPlaced = async (req, res) => {
           regularPrice: product.salePrice || product.regularPrice,
           stock: product.stock,
           quantity: qty,
-          subtotal: req.session.buyNowUnitPrice * qty,
-          productImage : product.productImage
+          subtotal:
+            (req.session.buyNowUnitPrice ||
+              product.salePrice ||
+              product.regularPrice) * qty,
+          productImage: product.productImage,
         },
       ];
     } else {
@@ -198,13 +200,12 @@ export const orderPlaced = async (req, res) => {
           productName: i.productId.productName,
           regularPrice: i.productId.salePrice || i.productId.regularPrice,
           stock: i.productId.stock,
-          productImage : i.productId.productImage,
+          productImage: i.productId.productImage,
           subtotal:
             (i.productId.salePrice || i.productId.regularPrice) * i.quantity,
           quantity: i.quantity,
         })) || [];
     }
-
 
     const newOrder = new Order({
       user: userId,
