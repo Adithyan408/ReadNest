@@ -20,6 +20,7 @@ const orderItemSchema = new mongoose.Schema({
     enum: ["ordered", "shipped", "delivered", "cancelled", "returned"],
     default: "ordered",
   },
+  returnReason: { type: String },
   cancelledAt: Date,
   returnedAt: Date,
 });

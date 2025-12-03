@@ -131,7 +131,7 @@
             <div class="flex justify-between items-center">
               <div class="flex items-center gap-4">
                 <% 
-                  // Safe image fallback logic
+                  
                   let imgSrc = "/images/placeholder.png";
 
                   if (item.productImage && item.productImage.length > 0) {
@@ -157,7 +157,7 @@
               </div>
 
               <% 
-                // Item status classes
+                
                 let itemStatusClasses = "";
                 if (item.status === "ordered") {
                   itemStatusClasses = "bg-yellow-100 text-yellow-700";
@@ -194,33 +194,30 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="mt-5 flex gap-4">
-              <% if (item.status === "ordered") { %>
-                <form
-                  action="/orders/<%= order._id %>/items/<%= item._id %>/cancel"
-                  method="POST"
-                >
-                  <button
-                    class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition"
-                  >
-                    Cancel Item
-                  </button>
-                </form>
-              <% } %>
+            <d<div class="mt-5 flex gap-4">
 
-              <% if (item.status === "delivered") { %>
-                <form
-                  action="/orders/<%= order._id %>/items/<%= item._id %>/return"
-                  method="POST"
-                >
-                  <button
-                    class="bg-orange-500 text-white px-5 py-2 rounded-lg hover:bg-orange-600 transition"
-                  >
-                    Return Item
-                  </button>
-                </form>
-              <% } %>
-            </div>
+  <% if (item.status === "ordered") { %>
+    <button
+      type="button"
+      onclick="confirmCancel('<%= order._id %>', '<%= item._id %>')"
+      class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition"
+    >
+      Cancel Item
+    </button>
+  <% } %>
+
+  <% if (item.status === 'delivered') { %>
+    <button
+      type="button"
+      onclick="confirmReturn('<%= order._id %>', '<%= item._id %>')"
+      class="bg-orange-500 text-white px-5 py-2 rounded-lg hover:bg-orange-600 transition"
+    >
+      Return Item
+    </button>
+  <% } %>
+
+</div>
+
           </div>
         <% }) %>
       </div>
@@ -238,4 +235,62 @@
 
     <%- include("../../views/partials/user/footer") %>
   </body>
+  <script>
+  // CANCEL ITEM
+  function confirmCancel(orderId, itemId) {
+    Swal.fire({
+      title: "Cancel this item?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, cancel it"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = `/orders/${orderId}/items/${itemId}/cancel`;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    });
+  }
+
+
+  // RETURN ITEM WITH REASON
+  function confirmReturn(orderId, itemId) {
+    Swal.fire({
+      title: "Return this item?",
+      text: "Please provide a return reason.",
+      icon: "question",
+      input: "textarea",
+      inputLabel: "Return Reason",
+      inputPlaceholder: "Type your reason here...",
+      inputAttributes: { "aria-label": "Return reason" },
+      showCancelButton: true,
+      confirmButtonText: "Submit Return",
+      cancelButtonText: "Cancel",
+      inputValidator: (value) => {
+        if (!value) return "Please enter a reason!";
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = `/orders/${orderId}/items/${itemId}/return`;
+
+        const inputReason = document.createElement("input");
+        inputReason.type = "hidden";
+        inputReason.name = "returnReason";
+        inputReason.value = result.value;
+
+        form.appendChild(inputReason);
+        document.body.appendChild(form);
+        form.submit();
+      }
+    });
+  }
+</script>
+
 </html>

@@ -21,12 +21,12 @@ export const getOrderDetailsPage = async (req, res) => {
     const orderId = req.params.orderId;
 
     const order = await Order.findById(orderId)
-      .populate("items.product", "productImage") 
+      .populate("items.product", "productImage")
       .lean();
 
     if (!order) return res.render("notFound");
-    
-    console.log(order.address)
+
+    console.log(order.address);
     res.render("orderDetails", { order, selectedAddress: order.address });
   } catch (err) {
     console.log("Order Details Error:", err);
@@ -39,48 +39,60 @@ export const cancelOrderItem = async (req, res) => {
     const { orderId, itemId } = req.params;
 
     const order = await Order.findById(orderId);
-    if (!order) return res.json({ success: false, message: "Order not found" });
+    if (!order) return res.render("notFound");
 
     const item = order.items.id(itemId);
-    if (!item) return res.json({ success: false, message: "Item not found" });
+    if (!item) return res.render("notFound");
 
     if (item.status !== "ordered") {
-      return res.json({ success: false, message: "Cannot cancel this item" });
+      return res.render("notFound");
     }
 
+    // Update item status
     item.status = "cancelled";
     item.cancelledAt = new Date();
 
     await order.save();
 
+    // Return stock
     await Product.updateOne(
       { _id: item.product },
       { $inc: { stock: item.quantity } }
     );
 
-    return res.json({ success: true });
+    // 🔥 Reload the updated order details
+    const updatedOrder = await Order.findById(orderId)
+      .populate("items.product", "productImage")
+      .lean();
+
+    return res.render("orderDetails", {
+      order: updatedOrder,
+      selectedAddress: updatedOrder.address,
+    });
   } catch (err) {
     console.log("Cancel Item Error:", err);
-    return res.json({ success: false, message: "Error cancelling item" });
+    return res.render("notFound");
   }
 };
 
 export const returnOrderItem = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
+    const { returnReason } = req.body;
 
     const order = await Order.findById(orderId);
-    if (!order) return res.json({ success: false, message: "Order not found" });
+    if (!order) return res.render("notFound");
 
     const item = order.items.id(itemId);
-    if (!item) return res.json({ success: false, message: "Item not found" });
+    if (!item) return res.render("notFound");
 
     if (item.status !== "delivered") {
-      return res.json({ success: false, message: "Item not returnable" });
+      return res.render("notFound");
     }
 
     item.status = "returned";
     item.returnedAt = new Date();
+    item.returnReason = returnReason;
 
     await order.save();
 
@@ -89,9 +101,18 @@ export const returnOrderItem = async (req, res) => {
       { $inc: { stock: item.quantity } }
     );
 
-    return res.json({ success: true });
+  
+    const updatedOrder = await Order.findById(orderId)
+      .populate("items.product", "productImage")
+      .lean();
+
+    return res.render("orderDetails", {
+      order: updatedOrder,
+      selectedAddress: updatedOrder.address,
+    });
+
   } catch (err) {
     console.log("Return Item Error:", err);
-    return res.json({ success: false, message: "Error returning item" });
+    return res.render("notFound");
   }
 };
