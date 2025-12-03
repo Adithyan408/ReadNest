@@ -42,7 +42,7 @@ import { addAddress, deleteAddress, getAddress, getSingleAddress, updateAddress 
 import { buyNowUpdate, cartUpdate, getCart, postCart, removeCart } from "../controllers/user/cartController.js";
 import { addAddressNew, addresChoose, loadBuyNow, loadCheckout, postAddress } from "../controllers/user/checkout.js";
 import { applyCoupon, getPayment, loadPlace } from "../controllers/user/payment.js";
-import { cancelOrder, loadOrderDetails, loadOrderList, returnOrder } from "../controllers/user/orderController.js";
+import { cancelOrder, invoicedownload, loadOrderDetails, loadOrderList, returnOrder } from "../controllers/user/orderController.js";
 
 export const router = express.Router();
 
@@ -97,6 +97,8 @@ router.get("/buy-now/:id",loadBuyNow)
 
 router.get("/orders", loadOrderList);
 router.get("/orders/:orderId", loadOrderDetails);
+router.get("/orders/:orderId/invoice", invoicedownload);
+
 
 router.post("/orders/:orderId/items/:itemId/cancel", cancelOrder);
 router.post("/orders/:orderId/items/:itemId/return",returnOrder);

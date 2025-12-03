@@ -1,4 +1,4 @@
-import { cancelOrderItem, getOrderDetailsPage, getOrdersPage, returnOrderItem } from "../../services/user/orderServices.js"
+import { cancelOrderItem, downloadInvoice, getOrderDetailsPage, getOrdersPage, returnOrderItem } from "../../services/user/orderServices.js"
 
 
 export const loadOrderList = async(req, res) => {
@@ -15,4 +15,8 @@ export const cancelOrder = async(req, res) => {
 
 export const returnOrder = async(req, res) => {
     await returnOrderItem(req, res);
+}
+
+export const invoicedownload = async(req, res) => {
+    await downloadInvoice(req, res);
 }
