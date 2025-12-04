@@ -37,19 +37,16 @@ export const cancelOrderItem = async (req, res) => {
       return res.render("notFound");
     }
 
-    // Update item status
     item.status = "cancelled";
     item.cancelledAt = new Date();
 
     await order.save();
 
-    // Return stock
     await Product.updateOne(
       { _id: item.product },
       { $inc: { stock: item.quantity } }
     );
 
-    // 🔥 Reload the updated order details
     const updatedOrder = await Order.findById(orderId)
       .populate("items.product", "productImage")
       .lean();
