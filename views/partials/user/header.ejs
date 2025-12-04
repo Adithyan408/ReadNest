@@ -1,147 +1,107 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ReadNest - Online Book Store</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+<header class="bg-gray-300 shadow-sm sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 py-3">
+    <div class="flex items-center justify-between">
+      
+      <!-- Logo -->
+      <div class="flex items-center space-x-2">
+        <div class="w-14 h-14 rounded-full overflow-hidden">
+          <a href="/">
+            <img src="/images/logo2.png" class="w-full h-full object-cover" />
+          </a>
+        </div>
+        <a href="/" class="text-xl font-bold text-gray-800">ReadNest</a>
+      </div>
 
-      * {
-        font-family: "Poppins", sans-serif;
-      }
-    </style>
-  </head>
-  <!-- Header -->
-  <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 py-3">
-      <div class="flex items-center justify-between">
-        <!-- Logo -->
-        <div class="flex items-center space-x-2">
+      <!-- Search Bar -->
+      <div class="flex-1 max-w-md mx-8">
+        <div class="relative w-full">
+          <input
+            type="text"
+            id="globalSearchInput"
+            placeholder="Search books, authors..."
+            class="w-full pl-10 pr-10 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-orange-500"
+            autocomplete="off"
+          />
           
-          <div class="w-14 h-14 rounded-full overflow-hidden">
-           <a href="/"> <img
-              src="/images/logo2.png"
-              alt="ReadNest Logo"
-              class="w-full h-full object-cover"
-            /></a>
-          </div>
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
 
-         <a href="/"> <span class="text-xl font-bold text-gray-800">ReadNest</span></a>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="flex-1 max-w-md mx-8">
-          <div class="relative w-full">
-            <!-- Search Input -->
-            <input
-              type="text"
-              id="searchInput"
-              placeholder="Search books, authors..."
-              class="w-full pl-10 pr-10 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-orange-500"
-              autocomplete="off"
-            />
-
-            <!-- Search Icon -->
-            <i
-              class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            ></i>
-
-            <!-- Clear Button -->
-            <button
-              id="clearSearch"
-              class="hidden absolute right-3 top-2.5 text-gray-500 hover:text-black"
-            >
-              ✕
-            </button>
-
-            <!-- LIVE SEARCH RESULTS DROPDOWN -->
-            <div
-              id="searchResults"
-              class="absolute w-full bg-white border border-gray-200 rounded-lg mt-1 shadow hidden z-50 max-h-60 overflow-y-auto"
-            ></div>
-          </div>
-        </div>
-
-        <!-- Right Menu -->
-        <div class="flex items-center space-x-6">
           <button
-            class="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-300 hover:bg-gray-50"
-          >
-            <i class="fas fa-bars text-gray-700"></i>
-            <span class="text-sm font-medium text-gray-700">BLOG</span>
-          </button>
+            id="globalClearSearch"
+            class="hidden absolute right-3 top-2.5 text-gray-500 hover:text-black"
+            type="button"
+          >✕</button>
 
-          <a href="/cart"><button class="relative">
-            <i class="fas fa-shopping-cart text-2xl text-gray-700"></i>
-            <span
-              class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center"
-              >2</span
-            >
-            <span class="text-sm font-medium text-gray-700 ml-1">Cart</span>
-          </button></a>
-          <% if (user) { %>
-          <!-- Logged In User -->
-          <a
-            href="/account"
-            class="flex items-center space-x-2 hover:bg-gray-200 rounded-lg px-3 py-2 transition"
-          >
+          <div
+            id="globalSearchResults"
+            class="absolute w-full bg-white border border-gray-200 rounded-lg mt-1 shadow hidden z-50 max-h-60 overflow-y-auto"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Right Menu -->
+      <div class="flex items-center space-x-6">
+        <button class="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-300 hover:bg-gray-50">
+          <i class="fas fa-bars text-gray-700"></i>
+          <span class="text-sm font-medium text-gray-700">BLOG</span>
+        </button>
+
+        <a href="/cart" class="relative flex items-center">
+          <i class="fas fa-shopping-cart text-2xl text-gray-700"></i>
+          <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">2</span>
+          <span class="text-sm font-medium text-gray-700 ml-1">Cart</span>
+        </a>
+
+        <% if (user) { %>
+          <a href="/account" class="flex items-center space-x-2 hover:bg-gray-200 rounded-lg px-3 py-2 transition">
             <i class="fas fa-user-circle text-2xl text-gray-700"></i>
-            <span class="text-sm font-medium text-gray-700"
-              ><%= user.name %></span
-            >
+            <span class="text-sm font-medium text-gray-700"><%= user.name %></span>
             <i class="fas fa-chevron-down text-gray-700 text-xs"></i>
           </a>
-          <% } else { %>
-          <!-- Not Logged In -->
+        <% } else { %>
           <a href="/login" class="flex items-center space-x-2">
             <i class="fas fa-user-circle text-2xl text-gray-700"></i>
             <span class="text-sm font-medium text-gray-700">Login</span>
           </a>
-          <% } %>
-        </div>
+        <% } %>
+
       </div>
     </div>
-  </header>
-</html>
+  </div>
+</header>
+
 <script>
-  const searchInput = document.getElementById("searchInput");
-  const searchResults = document.getElementById("searchResults");
-  const clearBtn = document.getElementById("clearSearch");
+  const globalInput = document.getElementById("globalSearchInput");
+  const globalClear = document.getElementById("globalClearSearch");
+  const globalResults = document.getElementById("globalSearchResults");
 
-  let debounceTimer;
+  let timer;
 
-  // Auto Search (debounced)
-  searchInput.addEventListener("input", () => {
-    const query = searchInput.value.trim();
+  globalInput.addEventListener("input", () => {
 
-    clearBtn.classList.toggle("hidden", query === "");
+    if (document.activeElement !== globalInput) return;
 
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      if (query === "") {
-        searchResults.innerHTML = "";
-        searchResults.classList.add("hidden");
+    const q = globalInput.value.trim();
+    globalClear.classList.toggle("hidden", q === "");
+
+    clearTimeout(timer);
+
+    timer = setTimeout(() => {
+      if (!q) {
+        globalResults.innerHTML = "";
+        globalResults.classList.add("hidden");
         return;
       }
 
-      fetch(`/live-search?q=${encodeURIComponent(query)}`)
-        .then((res) => res.json())
-        .then((products) => {
-          if (!products.length) {
-            searchResults.innerHTML = `<p class="p-3 text-gray-500">No results found</p>`;
-            searchResults.classList.remove("hidden");
+      fetch(`/live-search?q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(items => {
+          if (!items.length) {
+            globalResults.innerHTML = `<p class="p-3 text-gray-500">No results found</p>`;
+            globalResults.classList.remove("hidden");
             return;
           }
 
-          searchResults.innerHTML = products
-            .map(
-              (p) => `
+          globalResults.innerHTML = items.map(p => `
             <a href="/product?id=${p._id}" class="block p-3 hover:bg-gray-100 border-b last:border-none">
               <div class="flex items-center gap-3">
                 <img src="${p.productImage[0]}" class="w-12 h-16 object-cover rounded">
@@ -151,31 +111,24 @@
                 </div>
               </div>
             </a>
-          `
-            )
-            .join("");
+          `).join("");
 
-          searchResults.classList.remove("hidden");
+          globalResults.classList.remove("hidden");
         });
     }, 300);
   });
 
-  // Clear Search
-  clearBtn.addEventListener("click", () => {
-    searchInput.value = "";
-    searchResults.innerHTML = "";
-    searchResults.classList.add("hidden");
-    clearBtn.classList.add("hidden");
-    searchInput.focus();
+  globalClear.addEventListener("click", () => {
+    globalInput.value = "";
+    globalResults.innerHTML = "";
+    globalResults.classList.add("hidden");
+    globalClear.classList.add("hidden");
   });
 
-  // Hide dropdown on outside click
   document.addEventListener("click", (e) => {
-    if (
-      !e.target.closest("#searchResults") &&
-      !e.target.closest("#searchInput")
-    ) {
-      searchResults.classList.add("hidden");
+    if (!e.target.closest("#globalSearchResults") &&
+        !e.target.closest("#globalSearchInput")) {
+      globalResults.classList.add("hidden");
     }
   });
 </script>

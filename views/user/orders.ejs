@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Checkout - ReadNest</title>
+    <title>My Orders - ReadNest</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -14,62 +14,83 @@
 
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
-
-      * {
-        font-family: "Poppins", sans-serif;
-      }
+      * { font-family: "Poppins", sans-serif; }
     </style>
   </head>
 
   <body class="bg-gray-100">
-    <!-- Header -->
+
     <%- include("../../views/partials/user/header") %>
 
     <main class="max-w-5xl mx-auto px-6 py-16">
-      <h1 class="text-3xl font-bold text-gray-800 mb-10 text-center">
-        My Orders
-      </h1>
 
-      <% if (orders.length === 0) { %>
+      <!-- SAFE VARIABLES -->
+      <% 
+        const searchValue = (typeof search !== 'undefined' && search) ? search : "";
+        const noResultsMessageSafe =
+          (typeof noResultsMessage !== 'undefined' && noResultsMessage) ? noResultsMessage : "";
+      %>
+
+      <h1 class="text-3xl font-bold text-gray-800 mb-10 text-center">My Orders</h1>
+
+      <!-- SEARCH BAR -->
+      <form id="orderSearchForm" class="max-w-lg mx-auto mb-10 relative" onsubmit="return false">
+        <input
+          type="text"
+          id="orderSearch"
+          placeholder="Search by Order ID..."
+          value="<%= searchValue %>"
+          class="w-full px-4 py-3 bg-white shadow rounded-lg focus:outline-none"
+        />
+
+        <button
+          id="orderClearBtn"
+          class="absolute right-3 top-3 text-gray-500 hover:text-black hidden"
+          type="button">✕</button>
+      </form>
+
+      <!-- SEARCH NO RESULT -->
+      <% if (noResultsMessageSafe) { %>
+      <div class="text-center py-10 bg-white rounded-xl shadow mb-6">
+        <i class="fa-solid fa-search text-gray-400 text-5xl mb-4"></i>
+        <p class="text-xl text-gray-700 font-semibold"><%= noResultsMessageSafe %></p>
+      </div>
+      <% } %>
+
+      <!-- NO ORDERS -->
+      <% if (!noResultsMessageSafe && orders.length === 0) { %>
       <div class="text-center py-20 bg-white rounded-xl shadow">
         <i class="fa-solid fa-box-open text-gray-400 text-6xl mb-4"></i>
         <p class="text-xl text-gray-600">You have no orders yet.</p>
-
-        <a
-          href="/"
-          class="mt-6 inline-block bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition"
-        >
+        <a href="/" class="mt-6 inline-block bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition">
           Start Shopping
         </a>
       </div>
       <% } %>
 
+      <!-- ORDER LIST -->
       <div class="space-y-6">
         <% orders.forEach(order => { %>
         <div class="bg-white shadow-md rounded-xl p-6 border border-gray-100">
-          <!-- Order Header -->
+
           <div class="flex justify-between items-center">
             <h2 class="text-xl font-bold text-gray-800">
               Order ID: <span class="text-blue-600"><%= order._id %></span>
             </h2>
 
-            <span
-              class="px-4 py-2 rounded-lg text-sm font-semibold <% if(order.status === 'processing'){ %> bg-yellow-100 text-yellow-700 <% } else if(order.status === 'cancelled'){ %> bg-red-100 text-red-700 <% } else if(order.status === 'partially_cancelled'){ %> bg-orange-100 text-orange-700 <% } else { %> bg-green-100 text-green-700 <% } %>"
-            >
+            <span class="px-4 py-2 rounded-lg text-sm font-semibold 
+              <% if(order.status === 'processing'){ %> bg-yellow-100 text-yellow-700 
+              <% } else if(order.status === 'cancelled'){ %> bg-red-100 text-red-700 
+              <% } else if(order.status === 'partially_cancelled'){ %> bg-orange-100 text-orange-700 
+              <% } else { %> bg-green-100 text-green-700 <% } %>">
               <%= order.status %>
             </span>
           </div>
 
-          <!-- Order Info -->
           <div class="mt-4 grid md:grid-cols-3 gap-6">
             <div>
-              <p class="text-gray-700">
-                <span class="font-semibold">Total:</span> ₹ <%= order.total %>
-              </p>
-              <p class="text-gray-700">
-                <span class="font-semibold">Items:</span> <%= order.items.length
-                %>
-              </p>
+              <p class="text-gray-700"><span class="font-semibold">Total:</span> ₹ <%= order.total %></p>
+              <p class="text-gray-700"><span class="font-semibold">Items:</span> <%= order.items.length %></p>
             </div>
 
             <div>
@@ -80,19 +101,61 @@
             </div>
 
             <div class="flex items-center md:justify-end">
-              <a
-                href="/orders/<%= order._id %>"
-                class="bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition"
-              >
+              <a href="/orders/<%= order._id %>" class="bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition">
                 View Details
               </a>
             </div>
           </div>
+
         </div>
         <% }) %>
       </div>
+
     </main>
 
     <%- include("../../views/partials/user/footer") %>
+
+    <!-- SEARCH SCRIPT -->
+    <script>
+      const orderInput = document.getElementById("orderSearch");
+      const orderClear = document.getElementById("orderClearBtn");
+
+      if (orderInput.value.trim() !== "") {
+        orderClear.classList.remove("hidden");
+      }
+
+      function applyOrderSearch() {
+        const search = orderInput.value.trim();
+        const params = new URLSearchParams();
+        if (search) params.append("search", search);
+        window.location.href = `/orders?${params.toString()}`;
+      }
+
+      let typingTimer;
+      const debounceDelay = 600;
+
+      orderInput.addEventListener("input", () => {
+        clearTimeout(typingTimer);
+        orderClear.classList.toggle("hidden", orderInput.value.trim() === "");
+        typingTimer = setTimeout(applyOrderSearch, debounceDelay);
+      });
+
+      orderInput.addEventListener("keypress", e => {
+        if (e.key === "Enter") applyOrderSearch();
+      });
+
+      orderClear.addEventListener("click", () => {
+        window.location.href = "/orders";
+      });
+
+      /** 🔥 CLEAR URL WHEN PAGE IS REFRESHED */
+      const nav = performance.getEntriesByType("navigation")[0];
+      if (nav && nav.type === "reload") {
+        if (window.location.search.includes("search")) {
+          window.location.replace("/orders");
+        }
+      }
+    </script>
+
   </body>
 </html>

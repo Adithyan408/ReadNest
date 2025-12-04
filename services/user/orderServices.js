@@ -4,20 +4,6 @@ import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
 
-export const getOrdersPage = async (req, res) => {
-  try {
-    const userId = req.session.user?._id;
-
-    const orders = await Order.find({ user: userId })
-      .sort({ createdAt: -1 })
-      .lean();
-
-    res.render("orders", { orders });
-  } catch (err) {
-    console.log("Orders Page Error:", err);
-    res.render("notFound");
-  }
-};
 
 export const getOrderDetailsPage = async (req, res) => {
   try {
@@ -278,6 +264,43 @@ export const downloadInvoice = async (req, res) => {
     doc.end();
   } catch (err) {
     console.log("Invoice Error:", err);
+    res.render("notFound");
+  }
+};
+
+export const getListOrders = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+
+    const search = req.query.search?.trim() || "";
+
+    let query = { user: userId }; 
+
+    if (search) {
+      query.$expr = {
+        $regexMatch: {
+          input: { $toString: "$_id" },
+          regex: search,
+          options: "i",
+        },
+      };
+    }
+
+    const orders = await Order.find(query).sort({ createdAt: -1 }).lean();
+
+    let noResultsMessage = null;
+
+    if (search && orders.length === 0) {
+      noResultsMessage = `No orders found with Order ID "${search}"`;
+    }
+
+    res.render("orders", {
+      orders,
+      search,
+      noResultsMessage,
+    });
+  } catch (err) {
+    console.log("Orders Page Error:", err);
     res.render("notFound");
   }
 };
