@@ -822,26 +822,20 @@
             }
           });
       }
-
       function proceedToPayment(isBuyNow, productId = null) {
-        const selected = document.querySelector(
-          'input[name="selectedAddress"]:checked'
-        );
-
-        if (!selected) {
+        if (ALL_ADDRESSES.length === 0) {
           Swal.fire({
             icon: "warning",
-            title: "No Address Selected",
-            text: "Please select a delivery address before proceeding.",
+            title: "No Address Found",
+            text: "Please add a delivery address before proceeding to payment.",
           });
           return;
         }
 
-        // If address is selected → redirect properly
-        if (isBuyNow) {
+        if (isBuyNow && productId) {
           window.location.href = `/checkout/payment?buyNow=${productId}`;
         } else {
-          window.location.href = `/checkout/payment`;
+          window.location.href = "/checkout/payment";
         }
       }
     </script>
