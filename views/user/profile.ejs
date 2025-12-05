@@ -32,31 +32,36 @@
 
           <!-- If image exists -->
           <% if (user.profileImage) { %>
-          <div class="relative">
+          <div class="relative group">
             <!-- Profile Image -->
             <img
               id="profileImagePreview"
               src="<%= user.profileImage %>"
-              class="w-40 h-40 object-cover rounded-full border shadow"
+              class="w-40 h-40 object-cover rounded-full border shadow transition-all duration-200 group-hover:opacity-80"
             />
 
-            <!-- Replace Button -->
-            <button
-              onclick="document.getElementById('profileImageInput').click()"
-              class="absolute -right-2 top-2 bg-blue-600 text-white p-2 rounded-full shadow hover:bg-blue-700"
-              title="Change photo"
+            <!-- Hover overlay -->
+            <div
+              class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black bg-opacity-40 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
             >
-              <i class="fas fa-pen"></i>
-            </button>
+              <!-- Edit -->
+              <button
+                onclick="document.getElementById('profileImageInput').click()"
+                class="p-3 bg-white text-blue-600 rounded-full shadow hover:bg-blue-600 hover:text-white transition"
+                title="Change photo"
+              >
+                <i class="fas fa-pen"></i>
+              </button>
 
-            <!-- Delete Button -->
-            <button
-              onclick="deleteProfileImage()"
-              class="absolute -right-2 bottom-2 bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700"
-              title="Delete photo"
-            >
-              <i class="fas fa-trash"></i>
-            </button>
+              <!-- Delete -->
+              <button
+                onclick="deleteProfileImage()"
+                class="p-3 bg-white text-red-600 rounded-full shadow hover:bg-red-600 hover:text-white transition"
+                title="Delete photo"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
           </div>
 
           <% } else { %>
@@ -349,25 +354,27 @@
           id="changePassModal"
           class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center hidden z-50"
         >
-          <div class="bg-white w-[450px] p-6 rounded-xl shadow-lg">
-            <!-- HEADER + BACK BUTTON -->
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-bold">Change Password</h2>
-
+          <div class="bg-white w-[450px] p-6 rounded-xl shadow-lg relative">
+            <!-- HEADER -->
+            <div class="flex items-center justify-center mb-6 relative">
+              <!-- Back Button (Left Aligned) -->
               <button
                 onclick="closeChangePasswordModal()"
-                class="text-gray-600 hover:text-gray-900 transition"
+                class="absolute left-0 text-gray-600 hover:text-gray-900 transition"
                 title="Back"
               >
                 <i class="fas fa-arrow-left text-xl"></i>
               </button>
+
+              <!-- TITLE CENTERED -->
+              <h2 class="text-xl font-bold">Change Password</h2>
             </div>
 
             <!-- CURRENT PASSWORD -->
             <label class="block font-medium text-gray-700"
               >Current Password</label
             >
-            <div class="relative mb-3">
+            <div class="relative mb-2">
               <input
                 id="currentPass"
                 type="password"
@@ -380,6 +387,16 @@
               >
                 <i id="eyeCurrentPass" class="fas fa-eye"></i>
               </button>
+            </div>
+
+            <!-- FORGOT PASSWORD LINK -->
+            <div class="mb-4">
+              <a
+                href="/forgot-password"
+                class="text-blue-600 text-sm hover:underline"
+              >
+                Forgot password?
+              </a>
             </div>
 
             <!-- NEW PASSWORD -->
@@ -418,6 +435,7 @@
               </button>
             </div>
 
+            <!-- SUBMIT BUTTON -->
             <button
               id="updatePassBtn"
               onclick="submitChangePassword()"
@@ -427,6 +445,7 @@
             </button>
           </div>
         </div>
+
         <form
           id="profileImageForm"
           action="/account/profile-image"
@@ -513,6 +532,7 @@
         const last = document.getElementById("lastName");
         const btn = document.getElementById("nameEditBtn");
 
+        // If entering edit mode
         if (first.disabled) {
           first.disabled = false;
           last.disabled = false;
@@ -523,6 +543,17 @@
           return;
         }
 
+        // ✅ Validation before confirmation
+        if (!first.value.trim()) {
+          Swal.fire({
+            icon: "error",
+            title: "First Name Required",
+            text: "First name cannot be empty.",
+          });
+          return; // ❌ Stop immediately
+        }
+
+        // Confirmation popup
         Swal.fire({
           title: "Confirm Changes?",
           text: "Are you sure you want to update your name?",
@@ -567,6 +598,7 @@
         const phoneInput = document.getElementById("phoneInput");
         const phoneBtn = document.getElementById("phoneEditBtn");
 
+        // ENTER EDIT MODE
         if (phoneInput.disabled) {
           phoneInput.disabled = false;
           phoneBtn.textContent = "Save";
@@ -575,6 +607,28 @@
           phoneBtn.classList.add("text-green-600");
           return;
         }
+
+        // ============================
+        // ✅ VALIDATION BEFORE CONFIRM
+        // ============================
+
+        const phone = phoneInput.value.trim();
+
+        // Only digits allowed → no spaces, no +91, no symbols
+        const phoneRegex = /^[0-9]{10}$/;
+
+        if (!phoneRegex.test(phone)) {
+          Swal.fire({
+            icon: "error",
+            title: "Invalid Phone Number",
+            text: "Please enter a valid 10-digit mobile number without spaces or special characters.",
+          });
+          return;
+        }
+
+        // ============================
+        // CONFIRMATION POPUP
+        // ============================
 
         Swal.fire({
           title: "Confirm Changes?",
@@ -591,7 +645,7 @@
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone: phoneInput.value }),
+            body: JSON.stringify({ phone }),
           })
             .then((res) => res.json())
             .then((data) => {
@@ -860,12 +914,29 @@
         selectedProfileFile = event.target.files[0];
         if (!selectedProfileFile) return;
 
+        const allowedTypes = [
+          "image/jpeg",
+          "image/jpg",
+          "image/png",
+          "image/webp",
+        ];
+
+        // ❌ If file is not an image → show alert + do NOT open cropper
+        if (!allowedTypes.includes(selectedProfileFile.type)) {
+          Swal.fire({
+            icon: "error",
+            title: "Invalid File Type",
+            text: "Only JPG, JPEG, PNG, and WEBP images are allowed as profile photos.",
+          });
+          profileInput.value = ""; // clear invalid file
+          return; // stop here → do NOT open cropper
+        }
+
+        // ✔ If valid image → open cropper
         cropImg.src = URL.createObjectURL(selectedProfileFile);
         cropModal.classList.remove("hidden");
 
         cropImg.onload = function () {
-          console.log(typeof Cropper);
-
           if (cropperProfile) cropperProfile.destroy();
 
           cropperProfile = new Cropper(cropImg, {

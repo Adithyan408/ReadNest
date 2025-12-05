@@ -320,14 +320,12 @@ export const profileImage = async (req, res) => {
 
     const user = await User.findById(userId);
 
-    // NO FILE UPLOADED
     if (!req.file) {
       req.session.status = "error";
       req.session.message = "Please upload a valid image.";
       return res.redirect("/account");
     }
 
-    // DELETE OLD IMAGE
     if (user.profileImage) {
       try {
         const oldUrl = user.profileImage;
@@ -341,15 +339,12 @@ export const profileImage = async (req, res) => {
       }
     }
 
-    // SAVE NEW IMAGE
     const newImageUrl = req.file.path;
     user.profileImage = newImageUrl;
     await user.save();
 
-    // UPDATE SESSION
     req.session.user.profileImage = newImageUrl;
 
-    // SUCCESS MESSAGE
     req.session.status = "success";
     req.session.message = "Profile photo updated successfully!";
 
