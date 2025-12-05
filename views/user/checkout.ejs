@@ -256,14 +256,14 @@
 
             <% if (isBuyNow && cart.length === 1) { %>
             <button
-              onclick="window.location.href='/checkout/payment?buyNow=<%= cart[0]._id %>'"
+              onclick="proceedToPayment(true, '<%= cart[0]._id %>')"
               class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-lg font-bold"
             >
               Proceed to Payment
             </button>
             <% } else { %>
             <button
-              onclick="window.location.href='/checkout/payment'"
+              onclick="proceedToPayment(false)"
               class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-lg font-bold"
             >
               Proceed to Payment
@@ -627,7 +627,7 @@
         qtyField.value = qty;
 
         priceField.textContent = "₹ " + qty * unit;
-        
+
         const isBuyNow = document.getElementById("isBuyNow").value === "true";
         const buyNowProduct = document.getElementById("buyNowProductId")?.value;
 
@@ -821,6 +821,28 @@
               Swal.fire("Error", "Could not update address", "error");
             }
           });
+      }
+
+      function proceedToPayment(isBuyNow, productId = null) {
+        const selected = document.querySelector(
+          'input[name="selectedAddress"]:checked'
+        );
+
+        if (!selected) {
+          Swal.fire({
+            icon: "warning",
+            title: "No Address Selected",
+            text: "Please select a delivery address before proceeding.",
+          });
+          return;
+        }
+
+        // If address is selected → redirect properly
+        if (isBuyNow) {
+          window.location.href = `/checkout/payment?buyNow=${productId}`;
+        } else {
+          window.location.href = `/checkout/payment`;
+        }
       }
     </script>
   </body>
