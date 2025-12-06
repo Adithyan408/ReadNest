@@ -6,7 +6,6 @@ export const getPayment = async(req, res) => {
 }
 
 export const applyCoupon = async(req, res) => {
-    console.log("Router Hit")
     await postCoupon(req, res);
 }
 

@@ -230,3 +230,13 @@ export const addressDelete = async (req, res) => {
     });
   }
 };
+
+
+export const saveSelectedAddress = async (req, res) => {
+  try {
+    req.session.selectedAddressId = req.body.addressId;
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false });
+  }
+};
