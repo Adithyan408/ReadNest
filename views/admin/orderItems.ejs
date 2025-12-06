@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Products - ReadNest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+
+      * {
+        font-family: "Poppins", sans-serif;
+      }
+
+      .sidebar-item {
+        transition: all 0.3s ease;
+      }
+
+      .sidebar-item:hover {
+        background-color: #d1d5db;
+      }
+
+      .sidebar-item.active {
+        background-color: #d1d5db;
+      }
+      #statusMessage {
+        opacity: 1;
+        transition: opacity 0.5s ease-in-out;
+      }
+      #statusMessage.hidden {
+        opacity: 0;
+      }
+      .badge {
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-block;
+        text-transform: capitalize;
+      }
+      .main-scroll-area {
+  height: calc(100vh - 80px);
+  overflow-y: auto;
+}
+
+      .badge.processing {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .badge.partially_cancelled {
+        background: #fde68a;
+        color: #b45309;
+      }
+
+      .badge.cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .badge.completed {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      html,
+      body {
+        height: 100%;
+        overflow: hidden; /* disable full page scroll */
+      }
+
+      .main-scroll-area {
+        height: calc(100vh - 80px); /* header height is ~80px */
+        overflow-y: auto; /* enable vertical scroll only on the right */
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <!-- Header -->
+    <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
+      <div class="flex items-center justify-between px-6 py-4">
+        <!-- Logo -->
+        <a href="/admin">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-14 h-14 bg-orange-900 rounded-full flex items-center justify-center"
+            >
+              <i class="fas fa-book-open text-white text-2xl"></i>
+            </div>
+            <span class="text-2xl font-bold text-gray-800">ReadNest</span>
+          </div>
+        </a>
+
+        <!-- Right Side -->
+        <div class="flex items-center space-x-6">
+          <button
+            class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
+          >
+            <i class="fas fa-blog text-gray-700"></i>
+            <span class="text-base font-semibold text-gray-900">Blog</span>
+          </button>
+
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-user-circle text-4xl text-gray-600"></i>
+            <span class="text-base font-semibold text-gray-600">ADMIN</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside
+        class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col"
+      >
+        <nav class="flex-1 overflow-y-auto py-4">
+          <a
+            href="/admin"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-th-large text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">DashBoard</span>
+          </a>
+
+          <a
+            href="/admin/products"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-box text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Products</span>
+          </a>
+
+          <a
+            href="/admin/orders"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-shopping-bag text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Orders List</span>
+          </a>
+
+          <a
+            href="/admin/users"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-users text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Customers</span>
+          </a>
+
+          <a
+            href="/admin/sales"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-chart-line text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Sales</span>
+          </a>
+
+          <a
+            href="/admin/category"
+            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-th text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Category</span>
+          </a>
+
+          <a
+            href="/admin/voucher"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-ticket-alt text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Voucher</span>
+          </a>
+
+          <a
+            href="/admin/banner"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-image text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Banner</span>
+          </a>
+        </nav>
+
+        <!-- Logout Button at Bottom -->
+        <div class="border-t-2 border-gray-400 bg-gray-300">
+          <a href="/admin/logout">
+            <button
+              class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
+            >
+              <i
+                class="fas fa-sign-out-alt text-xl mr-4 text-gray-700 group-hover:text-red-600"
+              ></i>
+              <span
+                class="text-lg font-semibold text-gray-900 group-hover:text-red-600"
+                >LOG OUT</span
+              >
+            </button>
+          </a>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+<main class="main-scroll-area flex-1 p-10 bg-gray-200">
+  <div class="max-w-5xl mx-auto px-6 py-10">
+
+  <h1 class="text-3xl font-bold text-gray-800 mb-10 text-center">
+    Admin — Order Details
+  </h1>
+<%- include('../../views/partials/breadcrumb') %>
+  <!-- ORDER SUMMARY -->
+  <div class="bg-white shadow-xl rounded-2xl p-8 mb-10">
+    
+    <!-- Top Row: Order ID + Status -->
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-bold text-gray-800">
+        Order ID:
+        <span class="text-blue-600"><%= order._id %></span>
+      </h2>
+
+      <% 
+        let statusClass = "";
+        if (order.status === "processing") statusClass = "bg-yellow-100 text-yellow-700";
+        else if (order.status === "cancelled") statusClass = "bg-red-100 text-red-700";
+        else if (order.status === "partially_cancelled") statusClass = "bg-orange-100 text-orange-700";
+        else if (order.status === "completed") statusClass = "bg-green-100 text-green-700";
+      %>
+
+      <span class="px-4 py-2 rounded-lg text-sm font-semibold <%= statusClass %>">
+        <%= order.status %>
+      </span>
+    </div>
+
+    <!-- GRID: USER + ADDRESS + TOTAL + PAYMENT -->
+    <div class="grid md:grid-cols-3 gap-6">
+
+      <!-- USER & ORDER INFO -->
+      <div>
+        <p class="text-gray-700"><span class="font-semibold">Customer:</span><br>
+          <%= order.user?.name %> <br>
+          <%= order.user?.email %>
+        </p>
+
+        <p class="text-gray-700 mt-3">
+          <span class="font-semibold">Placed On:</span><br>
+          <%= new Date(order.createdAt).toLocaleString() %>
+        </p>
+
+        <% let d = new Date(order.createdAt); d.setDate(d.getDate() + 5); %>
+        <p class="text-gray-700 mt-3">
+          <span class="font-semibold">Expected Delivery:</span><br>
+          <%= d.toDateString() %>
+        </p>
+      </div>
+
+      <!-- DELIVERY ADDRESS -->
+      <div>
+        <p class="text-gray-700 font-semibold mb-1">Delivery Address:</p>
+        <p class="text-gray-700">
+          <%= order.address.addressLabel %> Address <br>
+          <%= order.address.houseName %>,
+          <% if(order.address.houseNumber){ %>
+            <%= order.address.houseNumber %>,
+          <% } %>
+          <%= order.address.street %><br>
+          <%= order.address.post %>, <%= order.address.district %><br>
+          <%= order.address.state %> - <%= order.address.pincode %><br>
+          Phone: <%= order.address.phone %><br>
+          Alternate: <%= order.address.altPhone %>
+        </p>
+      </div>
+
+      <!-- PAYMENTS & TOTAL -->
+      <div>
+        <p class="text-gray-700">
+          <span class="font-semibold">Payment Type:</span>
+          <%= order.paymentId ? "Online Payment" : "Cash on Delivery" %>
+        </p>
+
+        <p class="text-gray-700 mt-3">
+          <span class="font-semibold">Total Amount:</span>
+          ₹ <%= order.total %>
+        </p>
+
+        <p class="text-gray-700 mt-3">
+          <span class="font-semibold">Total Items:</span>
+          <%= order.items.length %>
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ORDER ITEMS -->
+  <h2 class="text-2xl font-bold text-gray-800 mb-6">Order Items</h2>
+
+<div class="space-y-6">
+  <% order.items.forEach(item => { %>
+
+    <% 
+      // Compute badge class for item status
+      let itemBadge = "";
+      if (item.status === "ordered") {
+        itemBadge = "bg-yellow-100 text-yellow-700";
+      } else if (item.status === "cancelled") {
+        itemBadge = "bg-red-100 text-red-700";
+      } else if (item.status === "delivered") {
+        itemBadge = "bg-green-100 text-green-700";
+      } else if (item.status === "returned") {
+        itemBadge = "bg-orange-100 text-orange-700";
+      }
+
+      // Compute product image
+      let imgSrc = "/images/placeholder.png";
+      if (item.productImage?.length) imgSrc = item.productImage[0];
+      else if (item.product?.productImage?.length) imgSrc = item.product.productImage[0];
+    %>
+
+    <div class="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+
+      <!-- ITEM HEADER -->
+      <div class="flex justify-between items-center">
+
+        <!-- IMAGE + NAME -->
+        <div class="flex items-center gap-4">
+          <img src="<%= imgSrc %>" class="w-20 h-20 object-cover rounded-lg border" />
+          <h3 class="text-lg font-bold text-gray-800"><%= item.productName %></h3>
+        </div>
+
+        <!-- STATUS BADGE + DROPDOWN -->
+        <div class="relative">
+
+          <!-- BADGE -->
+          <span
+            id="item-badge-<%= item._id %>"
+            class="px-3 py-1 rounded-md text-xs font-semibold cursor-pointer <%= itemBadge %>"
+            onclick="toggleItemStatusMenu('<%= item._id %>')"
+          >
+            <%= item.status %>
+          </span>
+
+          <!-- DROPDOWN MENU -->
+          <div
+            id="item-menu-<%= item._id %>"
+            class="hidden absolute right-0 bg-white shadow-lg border rounded-lg w-40 mt-2 z-50"
+          >
+            <div
+              onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'ordered')"
+              class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+            >
+              Ordered
+            </div>
+
+            <div
+              onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'delivered')"
+              class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+            >
+              Delivered
+            </div>
+
+            <div
+              onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'returned')"
+              class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-orange-700"
+            >
+              Returned
+            </div>
+
+            <div
+              onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'cancelled')"
+              class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-700"
+            >
+              Cancelled
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+        <!-- ITEM DETAILS -->
+        <div class="mt-4 text-gray-700">
+          <p><span class="font-semibold">Price:</span> ₹ <%= item.regularPrice %></p>
+          <p><span class="font-semibold">Quantity:</span> <%= item.quantity %></p>
+          <p><span class="font-semibold">Subtotal:</span> ₹ <%= item.subtotal %></p>
+        </div>
+
+        <!-- RETURN REASON IF RETURNED -->
+        <% if (item.status === "returned" && item.returnReason) { %>
+          <p class="mt-4 bg-orange-100 text-orange-800 px-4 py-2 rounded-lg">
+            <span class="font-semibold">Return Reason:</span><br>
+            <%= item.returnReason %>
+          </p>
+        <% } %>
+</div>
+      </div>
+    <% }) %>
+  </div>
+
+  <!-- BACK -->
+  <div class="text-center mt-12">
+    <a
+      href="/admin/orders"
+      class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-gray-300 transition">
+      Back to Orders
+    </a>
+  </div>
+  </div>
+</main>
+
+
+
+<!-- UPDATE ITEM STATUS JS -->
+<script>
+  function toggleItemStatusMenu(itemId) {
+  document.querySelectorAll("[id^='item-menu-']").forEach(menu => menu.classList.add("hidden"));
+  document.getElementById(`item-menu-${itemId}`).classList.toggle("hidden");
+}
+
+function updateItemStatus(orderId, itemId, newStatus) {
+  Swal.fire({
+    title: "Confirm Status Change",
+    text: `Update item status to "${newStatus}"?`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#2563eb",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Yes, Update"
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+
+    fetch(`/admin/orders/${orderId}/items/${itemId}/status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+
+        // Update badge color
+        const badge = document.getElementById(`item-badge-${itemId}`);
+        badge.textContent = newStatus;
+
+        badge.className = "px-3 py-1 rounded-md text-xs font-semibold"; // reset
+
+        if (newStatus === "ordered") {
+          badge.classList.add("bg-yellow-100", "text-yellow-700");
+        } else if (newStatus === "cancelled") {
+          badge.classList.add("bg-red-100", "text-red-700");
+        } else if (newStatus === "delivered") {
+          badge.classList.add("bg-green-100", "text-green-700");
+        } else if (newStatus === "returned") {
+          badge.classList.add("bg-orange-100", "text-orange-700");
+        }
+
+        document.getElementById(`item-menu-${itemId}`).classList.add("hidden");
+
+        Swal.fire("Updated!", "Item status updated.", "success");
+
+      } else {
+        Swal.fire("Error", data.message, "error");
+      }
+    });
+  });
+}
+  
+</script>
+  </body>
+</html>

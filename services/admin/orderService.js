@@ -1,6 +1,7 @@
 import Order from "../../models/orderSchema.js";
 import Product from "../../models/productsSchema.js";
 
+
 export const loadOrders = async (req, res) => {
   try {
     const search = req.query.search || "";
@@ -31,20 +32,12 @@ export const loadOrders = async (req, res) => {
       .lean()
       .sort({ createdAt: -1 });
 
-    // 1️⃣ Add overallStatus
-    const ordersWithStatus = allOrders.map((order) => {
-      const statuses = (order.items || []).map((i) => i.status);
-      const unique = [...new Set(statuses)];
+    // ❗ FIX: USE ONLY THE SAVED STATUS
+    const ordersWithStatus = allOrders.map((order) => ({
+      ...order,
+      overallStatus: order.status, 
+    }));
 
-      let overallStatus;
-      if (unique.length === 0) overallStatus = "N/A";
-      else if (unique.length > 1) overallStatus = "Multiple";
-      else overallStatus = unique[0];
-
-      return { ...order, overallStatus };
-    });
-
-    // 2️⃣ FILTER BY STATUS (IF SELECTED)
     let filteredOrders = ordersWithStatus;
 
     if (statusFilter) {
@@ -53,7 +46,6 @@ export const loadOrders = async (req, res) => {
       );
     }
 
-    // 3️⃣ PAGINATION (AFTER FILTER)
     const totalOrders = filteredOrders.length;
     const totalPages = Math.ceil(totalOrders / limit);
 
@@ -62,7 +54,6 @@ export const loadOrders = async (req, res) => {
       page * limit
     );
 
-    // 4️⃣ RENDER
     res.render("orderList", {
       orders: paginatedOrders,
       currentPage: page,
@@ -76,9 +67,10 @@ export const loadOrders = async (req, res) => {
   }
 };
 
+
 export const orderDetails = async (req, res) => {
   try {
-    const orderId = req.params.orderId;
+    const orderId = req.params.ordersId;
 
     const order = await Order.findById(orderId)
       .populate("user", "name email phone")
@@ -89,7 +81,7 @@ export const orderDetails = async (req, res) => {
       return res.render("notFound");
     }
 
-    res.render("orderDetails", { order });
+    res.render("orderItems", { order });
   } catch (error) {
     console.log("Order Details Error:", error);
     res.render("admin-error");
@@ -123,36 +115,36 @@ export const updateOrderStatus = async (req, res) => {
 
 export const updateItemStatus = async (req, res) => {
   try {
-    const { orderId, itemId } = req.params;
+    const { ordersId, itemId } = req.params;
     const { status } = req.body;
 
-    const order = await Order.findOne({ _id: orderId, "items._id": itemId });
-
-    if (!order) return res.json({ success: false, message: "Order not found" });
-
-    const item = order.items.id(itemId);
-    if (!item) return res.json({ success: false, message: "Item not found" });
-
-    const previousStatus = item.status;
-    const quantity = item.quantity;
-    const productId = item.product;
-
-    item.status = status;
-    await order.save();
-
-    // restore stock if cancelled
-    if (status === "cancelled" && previousStatus !== "cancelled") {
-      await Product.findByIdAndUpdate(productId, { $inc: { stock: quantity } });
+    const order = await Order.findById(ordersId);
+    if (!order) {
+      return res.json({ success: false, message: "Order not found" });
     }
 
-    // AUTO UPDATE ORDER STATUS
+    const item = order.items.id(itemId);
+    if (!item) {
+      return res.json({ success: false, message: "Item not found" });
+    }
+
+    const previousStatus = item.status;
+
+    item.status = status;
+
+    if (status === "cancelled" && previousStatus !== "cancelled") {
+      await Product.findByIdAndUpdate(item.product, {
+        $inc: { stock: item.quantity },
+      });
+    }
+
     const allStatuses = order.items.map((i) => i.status);
 
     if (allStatuses.every((s) => s === "delivered")) {
       order.status = "completed";
     } else if (allStatuses.every((s) => s === "cancelled")) {
       order.status = "cancelled";
-    } else if (allStatuses.some((s) => s === "cancelled")) {
+    } else if (allStatuses.includes("cancelled")) {
       order.status = "partially_cancelled";
     } else {
       order.status = "processing";
@@ -162,7 +154,7 @@ export const updateItemStatus = async (req, res) => {
 
     return res.json({ success: true });
   } catch (err) {
-    console.log("Update Item Status Error:", err);
-    return res.json({ success: false });
+    console.log("Update item status error:", err);
+    return res.json({ success: false, message: "Server error" });
   }
 };

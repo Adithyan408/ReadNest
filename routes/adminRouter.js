@@ -10,7 +10,7 @@ import { editProduct, geteditProduct, getProductsAdd, productsAdd, listProduct, 
 import upload from "../middlewares/multer.js";
 import nocache from "nocache";
 import { getBanner, getBannerAdd, bannerAdd, geteditBanner, editBanner, deleteBanner } from "../controllers/admin/bannerController.js";
-import { getOrderList, postOrderUpdate } from "../controllers/admin/orderController.js";
+import { getOrderList, loadOrderDetails, postOrderUpdate, updateSingleItemStatus } from "../controllers/admin/orderController.js";
 
 
 
@@ -61,3 +61,7 @@ adminRouter.get("/deleteBanner", nocache(), adminAuth, deleteBanner);
 //Order Managment
 adminRouter.get("/orders", adminAuth, getOrderList);
 adminRouter.post("/orders/:orderId/status", adminAuth, postOrderUpdate );
+adminRouter.get("/orders/:ordersId", adminAuth, loadOrderDetails);
+
+adminRouter.post("/orders/:ordersId/items/:itemId/status", adminAuth, updateSingleItemStatus);
+

@@ -3,15 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Products - ReadNest</title>
+    <title>Orders - ReadNest</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
       * {
         font-family: "Poppins", sans-serif;
@@ -28,13 +30,7 @@
       .sidebar-item.active {
         background-color: #d1d5db;
       }
-      #statusMessage {
-        opacity: 1;
-        transition: opacity 0.5s ease-in-out;
-      }
-      #statusMessage.hidden {
-        opacity: 0;
-      }
+
       .badge {
         padding: 6px 12px;
         border-radius: 12px;
@@ -64,21 +60,27 @@
         color: #065f46;
       }
 
+      .badge.Multiple {
+        background: #e0e7ff;
+        color: #4338ca;
+      }
+
       html,
       body {
         height: 100%;
-        overflow: hidden; /* disable full page scroll */
+        overflow: hidden;
       }
 
       .main-scroll-area {
-        height: calc(100vh - 80px); /* header height is ~80px */
-        overflow-y: auto; /* enable vertical scroll only on the right */
+        height: calc(100vh - 80px);
+        overflow-y: auto;
         overflow-x: hidden;
       }
     </style>
   </head>
+
   <body class="bg-gray-100">
-    <!-- Header -->
+    <!-- HEADER -->
     <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
       <div class="flex items-center justify-between px-6 py-4">
         <!-- Logo -->
@@ -110,9 +112,9 @@
       </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- LAYOUT -->
     <div class="flex">
-      <!-- Sidebar -->
+      <!-- SIDEBAR -->
       <aside
         class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col"
       >
@@ -135,7 +137,7 @@
 
           <a
             href="/admin/orders"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
           >
             <i class="fas fa-shopping-bag text-xl mr-4"></i>
             <span class="text-lg font-semibold text-gray-900">Orders List</span>
@@ -159,7 +161,7 @@
 
           <a
             href="/admin/category"
-            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
           >
             <i class="fas fa-th text-xl mr-4"></i>
             <span class="text-lg font-semibold text-gray-900">Category</span>
@@ -182,7 +184,7 @@
           </a>
         </nav>
 
-        <!-- Logout Button at Bottom -->
+        <!-- Logout -->
         <div class="border-t-2 border-gray-400 bg-gray-300">
           <a href="/admin/logout">
             <button
@@ -203,12 +205,12 @@
       <!-- MAIN CONTENT -->
       <main class="main-scroll-area flex-1 p-8 bg-gray-200">
         <div class="bg-white rounded-2xl shadow-md border">
-          <!-- SEARCH -->
+          <!-- SEARCH & FILTER -->
           <div class="p-6 border-b">
             <h2 class="text-2xl font-bold mb-4">Orders List</h2>
-
+            <%- include('../../views/partials/breadcrumb') %>
             <div class="flex gap-3 items-center justify-between">
-              <!-- SEARCH + BUTTONS -->
+              <!-- SEARCH -->
               <div class="flex gap-3 flex-1">
                 <div class="relative flex-1 max-w-md">
                   <input
@@ -241,7 +243,7 @@
               </div>
 
               <!-- FILTER DROPDOWN -->
-              <div class="relative">
+              <div class="relative filter-wrapper">
                 <button
                   onclick="toggleFilterMenu()"
                   class="px-4 py-3 bg-white border rounded-lg shadow-sm hover:bg-gray-100 flex items-center gap-2"
@@ -285,7 +287,6 @@
           </div>
 
           <!-- TABLE -->
-          <!-- TABLE -->
           <div class="overflow-x-auto">
             <table class="w-full border-collapse">
               <thead>
@@ -300,13 +301,14 @@
               </thead>
 
               <tbody>
-                <% if (orders.length === 0) { %>
+                <% if (!orders || orders.length === 0) { %>
                 <tr>
                   <td colspan="6" class="py-6 text-center text-gray-500">
                     No Orders Found
                   </td>
                 </tr>
-                <% } %> <% orders.forEach(function(order) { %>
+                <% } else { %>
+                <% orders.forEach(function(order) { %>
                 <tr class="border-b hover:bg-gray-50">
                   <!-- ORDER ID -->
                   <td class="px-6 py-4 border text-indigo-600 font-semibold">
@@ -316,10 +318,10 @@
                   <!-- CUSTOMER -->
                   <td class="px-6 py-4 border">
                     <p class="font-semibold">
-                      <%= order.user && order.user.name %>
+                      <%= order.user ? order.user.name : '' %>
                     </p>
                     <p class="text-sm text-gray-500">
-                      <%= order.user && order.user.email %>
+                      <%= order.user ? order.user.email : '' %>
                     </p>
                   </td>
 
@@ -333,20 +335,20 @@
                     <%= order.items ? order.items.length : 0 %>
                   </td>
 
-                  <!-- OVERALL STATUS -->
-                  <td class="px-6 py-4 border relative">
+                  <!-- OVERALL STATUS + DROPDOWN -->
+                  <td class="px-6 py-4 border relative order-status-wrapper">
                     <div
-                      class="badge cursor-pointer <%= order.overallStatus %>"
+                      class="badge cursor-pointer <%= order.overallStatus %> status-badge"
                       onclick="toggleOrderStatusMenu('<%= order._id %>')"
                       id="order-status-<%= order._id %>"
                     >
                       <%= order.overallStatus %>
                     </div>
 
-                    <!-- DROPDOWN -->
+                    <!-- ORDER STATUS CHANGE MENU -->
                     <div
                       id="order-menu-<%= order._id %>"
-                      class="hidden absolute bg-white shadow-lg border rounded-lg w-40 mt-2 z-50"
+                      class="order-menu hidden absolute right-0 mt-2 bg-white shadow-lg border rounded-lg w-40 z-50"
                     >
                       <div
                         onclick="changeOrderStatus('<%= order._id %>', 'processing')"
@@ -390,6 +392,7 @@
                   </td>
                 </tr>
                 <% }); %>
+                <% } %>
               </tbody>
             </table>
           </div>
@@ -414,26 +417,67 @@
     </div>
 
     <script>
+      // ------- SEARCH -------
       function searchOrders() {
-        const q = document.getElementById("searchInput").value.trim();
-        window.location.href = `/admin/orders?search=${encodeURIComponent(q)}`;
+        var q = document.getElementById("searchInput").value.trim();
+        window.location.href = "/admin/orders?search=" + encodeURIComponent(q);
       }
 
       function clearSearch() {
         window.location.href = "/admin/orders";
       }
 
-      function toggleOrderStatusMenu(orderId) {
-        document
-          .querySelectorAll("[id^='order-menu-']")
-          .forEach((menu) => menu.classList.add("hidden"));
-
-        document
-          .getElementById(`order-menu-${orderId}`)
-          .classList.toggle("hidden");
+      // ------- FILTER MENU -------
+      function toggleFilterMenu() {
+        var menu = document.getElementById("filterMenu");
+        menu.classList.toggle("hidden");
       }
 
+      // Close filter menu on outside click
+      document.addEventListener("click", function (event) {
+        var menu = document.getElementById("filterMenu");
+        var wrapper = document.querySelector(".filter-wrapper");
+
+        if (!menu) return;
+
+        if (
+          !wrapper.contains(event.target) && // click outside filter area
+          !menu.classList.contains("hidden")
+        ) {
+          menu.classList.add("hidden");
+        }
+      });
+
+      // ------- ORDER STATUS MENUS -------
+      function closeAllOrderMenus() {
+        var menus = document.querySelectorAll(".order-menu");
+        menus.forEach(function (m) {
+          m.classList.add("hidden");
+        });
+      }
+
+      function toggleOrderStatusMenu(orderId) {
+        // Close all other menus first
+        closeAllOrderMenus();
+
+        var menu = document.getElementById("order-menu-" + orderId);
+        if (menu) {
+          menu.classList.toggle("hidden");
+        }
+      }
+
+      // Close order status menus on outside click
+      document.addEventListener("click", function (event) {
+        const isStatusCell = event.target.closest(".order-status-wrapper");
+        if (!isStatusCell) {
+          closeAllOrderMenus();
+        }
+      });
+
+      // ------- CHANGE ORDER STATUS -------
       function changeOrderStatus(orderId, newStatus) {
+        const menu = document.getElementById("order-menu-" + orderId);
+
         Swal.fire({
           title: "Confirm Status Update",
           text: `Do you want to change order status to "${newStatus}"?`,
@@ -442,10 +486,13 @@
           confirmButtonColor: "#2563eb",
           cancelButtonColor: "#6b7280",
           confirmButtonText: "Yes, Update",
-        }).then((result) => {
-          if (!result.isConfirmed) return;
+        }).then(function (result) {
+          if (!result.isConfirmed) {
+            if (menu) menu.classList.add("hidden");
+            return;
+          }
 
-          fetch(`/admin/orders/${orderId}/status`, {
+          fetch("/admin/orders/" + orderId + "/status", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status: newStatus }),
@@ -453,42 +500,35 @@
             .then((res) => res.json())
             .then((data) => {
               if (data.success) {
-                document.getElementById(`order-status-${orderId}`).textContent =
-                  newStatus;
-                document.getElementById(
-                  `order-status-${orderId}`
-                ).className = `badge ${newStatus}`;
-                document
-                  .getElementById(`order-menu-${orderId}`)
-                  .classList.add("hidden");
+                // Update status badge instantly
+                const badge = document.getElementById(
+                  "order-status-" + orderId
+                );
+                if (badge) {
+                  badge.textContent = newStatus;
+                  badge.className =
+                    "badge cursor-pointer " + newStatus;
+                }
+
+                if (menu) menu.classList.add("hidden");
 
                 Swal.fire(
                   "Updated!",
                   "Order status updated successfully",
                   "success"
                 );
+                // If you want the filter counts / pagination to reflect
+                // DB changes perfectly, you can uncomment this:
+                // window.location.reload();
               } else {
-                Swal.fire("Error", data.message, "error");
+                Swal.fire("Error", data.message || "Failed to update", "error");
               }
+            })
+            .catch(() => {
+              Swal.fire("Error", "Server error", "error");
             });
         });
       }
-      function toggleFilterMenu() {
-        document.getElementById("filterMenu").classList.toggle("hidden");
-      }
-
-      // Close filter dropdown when clicking outside
-      document.addEventListener("click", function (event) {
-        const menu = document.getElementById("filterMenu");
-        const button = event.target.closest("button");
-
-        if (
-          !menu.contains(event.target) &&
-          (!button || !button.closest(".relative"))
-        ) {
-          menu.classList.add("hidden");
-        }
-      });
     </script>
   </body>
 </html>
