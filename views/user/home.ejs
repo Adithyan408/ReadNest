@@ -333,6 +333,21 @@
                 ></div>
                 <% } %>
 
+                <!-- ❤️ WISHLIST BUTTON (Top Right of Image) -->
+                <button
+                  class="wishlist-btn absolute top-2 right-2 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow hover:bg-white transition"
+                  data-product-id="<%= product._id %>"
+                >
+                  <% if (wishlistProducts &&
+                  wishlistProducts.includes(product._id.toString())) { %>
+                  <!-- ❤️ FILLED HEART (Already in wishlist) -->
+                  <i class="fa-solid fa-heart text-red-500 text-lg"></i>
+                  <% } else { %>
+                  <!-- ♡ OUTLINE HEART -->
+                  <i class="fa-regular fa-heart text-black text-lg"></i>
+                  <% } %>
+                </button>
+
                 <!-- TITLE OVERLAY -->
                 <div
                   class="absolute bottom-0 left-0 right-0 bg-black/60 text-white py-2 px-3"
@@ -413,6 +428,37 @@
     } else {
       // If no language selected → remove hiddenInput so URL stays clean
       hiddenInput.remove();
+    }
+  });
+
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".wishlist-btn");
+    if (!btn) return;
+
+    e.stopPropagation();
+    e.preventDefault();
+
+    const productId = btn.dataset.productId;
+    const icon = btn.querySelector("i");
+
+    const res = await fetch("/wishlist/toggle", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId }),
+    });
+
+    if (res.status === 401) {
+      return (window.location.href = "/login");
+    }
+
+    const data = await res.json();
+
+    if (data.inWishlist) {
+      icon.classList.remove("fa-regular", "text-black");
+      icon.classList.add("fa-solid", "text-red-500");
+    } else {
+      icon.classList.add("fa-regular", "text-black");
+      icon.classList.remove("fa-solid", "text-red-500");
     }
   });
 </script>

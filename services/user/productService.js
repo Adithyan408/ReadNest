@@ -2,6 +2,7 @@ import User from "../../models/userSchema.js";
 import Product from "../../models/productsSchema.js";
 import Category from "../../models/categorySchema.js";
 import Banner from "../../models/bannerSchema.js";
+import Wishlist from "../../models/wishlistSchema.js";
 
 export const homeLoad = async (req, res) => {
   try {
@@ -85,10 +86,22 @@ export const homeLoad = async (req, res) => {
     const totalProducts = await Product.countDocuments(filter);
     const totalPages = Math.ceil(totalProducts / limit);
 
+
+    let wishlistProducts = [];
     let userData = null;
     if (user) {
       userData = await User.findById(user._id);
+
+      const wishlist = await Wishlist.findOne({
+        userId: user._id,
+      }).lean();
+
+      wishlistProducts = wishlist
+        ? wishlist.products.map((id) => id.toString())
+        : [];
     }
+
+    
 
     const categories = await Category.find({ isListed: true });
     let languages = await Product.distinct("language", { isListed: true });
@@ -124,6 +137,7 @@ export const homeLoad = async (req, res) => {
       sort,
       homeBanner: homeBanner ? homeBanner.bannerImage : null,
       isHome: isHome,
+      wishlistProducts,
     });
   } catch (error) {
     res.redirect("/notfound");
@@ -147,11 +161,23 @@ export const productDetails = async (req, res) => {
       categoryName: product.category,
     });
 
-    if(!product || !product.isListed){
+    if (!product || !product.isListed) {
       return res.redirect("/");
     }
     if (!categoryDoc || !categoryDoc.isListed) {
       return res.redirect("/");
+    }
+
+
+     let wishlistProducts = [];
+    if (req.session.user?._id) {
+      const wishlist = await Wishlist.findOne({
+        userId: req.session.user._id,
+      }).lean();
+
+      wishlistProducts = wishlist
+        ? wishlist.products.map((id) => id.toString())
+        : [];
     }
 
     let similarProducts = await Product.find({
@@ -160,12 +186,13 @@ export const productDetails = async (req, res) => {
       isListed: true,
     }).limit(4);
 
-
     return res.render("productsDetails", {
       product,
       similarProducts,
       currentPage: page,
       baseQuery,
+      wishlistProducts,
+      user: req.session.user
     });
   } catch (error) {
     console.log(error);

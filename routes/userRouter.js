@@ -43,6 +43,7 @@ import { buyNowUpdate, cartUpdate, getCart, postCart, removeCart } from "../cont
 import { addAddressNew, addresChoose, loadBuyNow, loadCheckout, postAddress } from "../controllers/user/checkout.js";
 import { applyCoupon, getPayment, loadPlace } from "../controllers/user/payment.js";
 import { cancelOrder, invoicedownload, listOrders, loadOrderDetails,  returnOrder } from "../controllers/user/orderController.js";
+import { getWishlist, moveAllCart, moveToCart, removeAll, removeItem, toggleWishlist } from "../controllers/user/wishlistController.js";
 
 export const router = express.Router();
 
@@ -75,6 +76,12 @@ router.post("/account/add-address", addAddress);
 router.get("/account/address/:id", getSingleAddress);
 router.put("/account/address/update/:id", updateAddress);
 router.get("/account/address/delete/:id", deleteAddress);
+router.get("/wishlist", getWishlist)
+router.post("/wishlist/toggle", toggleWishlist);
+router.post("/wishlist/move-to-cart",  moveToCart);
+router.post("/wishlist/move-all-to-cart",  moveAllCart);
+router.post("/wishlist/remove", removeItem);
+router.post("/wishlist/remove-all", removeAll);
 
 
 router.get("/cart", getCart)
