@@ -7,32 +7,17 @@ const productsSchema = new Schema(
       type: String,
       required: true,
     },
+
     description: {
       type: String,
       default: "",
-      validate: {
-        validator: function (v) {
-          if (this.specialOfferType === "none") {
-            return v && v.trim().length > 0;
-          }
-          return true;
-        },
-        message: "Description is required for normal products.",
-      },
+      required: true,
     },
 
     author: {
       type: String,
       default: "",
-      validate: {
-        validator: function (v) {
-          if (this.specialOfferType === "none") {
-            return v && v.trim().length > 0;
-          }
-          return true;
-        },
-        message: "Author is required for normal products.",
-      },
+      required: true,
     },
 
     authorDescription: {
@@ -40,32 +25,16 @@ const productsSchema = new Schema(
       default: "",
     },
 
-      category: {
+    category: {
       type: String,
       default: "",
-      validate: {
-        validator: function (v) {
-          if (this.specialOfferType === "none") {
-            return v && v.trim().length > 0;
-          }
-          return true;
-        },
-        message: "Category is required for normal products.",
-      },
+      required: true,
     },
 
     language: {
       type: String,
       default: "",
-      validate: {
-        validator: function (v) {
-          if (this.specialOfferType === "none") {
-            return v && v.trim().length > 0;
-          }
-          return true;
-        },
-        message: "Language is required for normal products.",
-      },
+      required: true,
     },
 
     stock: {
@@ -73,27 +42,9 @@ const productsSchema = new Schema(
       required: true,
     },
 
-    specialOfferType: {
-      type: String,
-      enum: ["none", "combo", "rush-hour"],
-      default: "none",
-    },
-
     regularPrice: {
       type: Number,
       required: true,
-    },
-
-    salePrice: {
-      type: Number,
-      default: null,
-      validate: {
-        validator: function (v) {
-          if (this.specialOfferType === "none") return true;
-          return v !== null && v !== undefined && v > 0;
-        },
-        message: "Sale price is required for combo or rush-hour.",
-      },
     },
 
     productImage: {
@@ -106,15 +57,36 @@ const productsSchema = new Schema(
       default: true,
     },
 
-    publisher: { type: String, default: "" },
-    yearOfPublishing: { type: String, default: "" },
-    pages: { type: Number, default: null },
-    isbnNumber: { type: String, default: "" },
+    publisher: {
+      type: String,
+      default: "",
+    },
+
+    yearOfPublishing: {
+      type: String,
+      default: "",
+    },
+
+    pages: {
+      type: Number,
+      default: null,
+    },
+
+    isbnNumber: {
+      type: String,
+      default: "",
+    },
 
     status: {
       type: String,
       enum: ["Available", "Out of Stock", "Discontinued"],
       default: "Available",
+    },
+    offer: {
+      isOffer: { type: Boolean, default: false },
+      discountValue: { type: Number, default: 0 }, 
+      startDate: { type: Date, default: null },
+      endDate: { type: Date, default: null },
     },
   },
   { timestamps: true }

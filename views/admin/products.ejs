@@ -230,15 +230,6 @@
       <% }) %>
     </select>
 
-    <!-- Offer Filter -->
-    <select
-      id="offerFilter"
-      class="px-4 py-3 bg-gray-100 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-    >
-      <option value="" <%= !offer ? "selected" : "" %>>No Offer</option>
-      <option value="rushHour" <%= offer === "rushHour" ? "selected" : "" %>>Rush Hour</option>
-      <option value="combo" <%= offer === "combo" ? "selected" : "" %>>Combo</option>
-    </select>
 
     <!-- Sort Filter -->
     <select
@@ -470,27 +461,26 @@
   const categorySelect = document.getElementById("categoryFilter");
   const clearBtn = document.getElementById("clearSearchBtn");
 
+function applyFilters() {
+  const search = document.getElementById("productSearch").value.trim();
+  const category = document.getElementById("categoryFilter").value;
+  const sort = document.getElementById("sortFilter").value;
+
+  const queryParams = new URLSearchParams();
+
+  if (search) queryParams.set("search", search);
+  if (category) queryParams.set("category", category);
+  if (sort) queryParams.set("sort", sort);
+
+  queryParams.set("page", 1); 
+
+  window.location.href = `/admin/products?${queryParams.toString()}`;
+}
+
+
   if (searchInput.value.trim() !== "") {
   clearBtn.classList.remove("hidden");
 }
-
-const offerSelect = document.getElementById("offerFilter");
-  function applyFilters() {
-  const search = searchInput.value.trim();
-  const category = categorySelect.value;
-  const offer = offerSelect.value;
-   const sort = document.getElementById("sortFilter").value;
-
-  const params = new URLSearchParams();
-
-  if (search) params.append("search", search);
-  if (category) params.append("category", category);
-  if (offer) params.append("offer", offer);  
-  if (sort) params.append("sort", sort);  
-
-  window.location.href = `/admin/products?${params.toString()}`;
-}
-
 
   let typingTimer;
   const debounceDelay = 500;
@@ -512,12 +502,8 @@ const offerSelect = document.getElementById("offerFilter");
   });
 
   categorySelect.addEventListener("change", applyFilters);
-  
-  offerSelect.addEventListener("change", applyFilters);
 
   document.getElementById("sortFilter").addEventListener("change", applyFilters);
-
-
 
   clearBtn.addEventListener("click", () => {
     searchInput.value = "";
