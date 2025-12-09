@@ -15,10 +15,8 @@ export const getOrderDetailsPage = async (req, res) => {
 
     if (!order) return res.render("notFound");
 
-    console.log(order.address);
     res.render("orderDetails", { order, selectedAddress: order.address });
   } catch (err) {
-    console.log("Order Details Error:", err);
     res.render("notFound");
   }
 };
@@ -56,7 +54,6 @@ export const cancelOrderItem = async (req, res) => {
       selectedAddress: updatedOrder.address,
     });
   } catch (err) {
-    console.log("Cancel Item Error:", err);
     return res.render("notFound");
   }
 };

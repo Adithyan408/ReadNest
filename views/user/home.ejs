@@ -348,9 +348,22 @@
                 >
               </div>
 
-              <p class="text-lg font-bold text-gray-800">
-                ₹<%= product.regularPrice %>
-              </p>
+              <div class="mt-1">
+                <% if (product.offerPrice !== null && product.offerPrice <
+                product.regularPrice) { %>
+                <span class="text-gray-500 line-through text-sm">
+                  ₹<%= product.regularPrice %>
+                </span>
+
+                <span class="text-lg font-bold text-red-600 ml-2">
+                  ₹<%= product.offerPrice %>
+                </span>
+                <% } else { %>
+                <span class="text-lg font-bold text-gray-800">
+                  ₹<%= product.regularPrice %>
+                </span>
+                <% } %>
+              </div>
             </a>
 
             <% }) %>

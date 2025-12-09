@@ -32,8 +32,6 @@ import {
 import {
   getProductsDetails,
   loadHome,
-  getComboOffers,
-  getRushHourOffers,
   liveSearch,
 } from "../controllers/user/productController.js";
 import nocache from "nocache";
@@ -123,5 +121,3 @@ router.post("/forgot-verify-otp", forgotVerifyOtp);
 router.get("/product", getProductsDetails);
 router.get("/live-search", liveSearch);
 
-router.get("/combo", getComboOffers);
-router.get("/rush-hour", getRushHourOffers);

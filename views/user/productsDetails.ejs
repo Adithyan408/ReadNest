@@ -173,13 +173,15 @@
             </h1>
 
             <div class="flex items-center gap-3 mb-6">
-              <% if (product.stock <= 0) { %>
-              <!-- Price in gray when out of stock -->
+              <% const hasOffer = product.offerPrice !== null &&
+              product.offerPrice < product.regularPrice; %> <% if (product.stock
+              <= 0) { %>
+
+              <!-- OUT OF STOCK: Show regular price struck & label -->
               <span class="text-3xl font-bold text-gray-500 line-through">
                 ₹<%= product.regularPrice %>
               </span>
 
-              <!-- OUT OF STOCK Label -->
               <span
                 class="bg-red-600 text-white px-3 py-1 rounded text-sm font-semibold"
               >
@@ -187,6 +189,7 @@
               </span>
 
               <% } else if (product.stock < 10) { %>
+
               <!-- Low Stock Warning -->
               <span
                 class="bg-orange-500 text-white px-3 py-1 rounded text-sm font-semibold"
@@ -194,30 +197,77 @@
                 Only <%= product.stock %> left — order fast!
               </span>
 
-              <!-- Price -->
-              <span class="text-3xl font-bold text-green-600">
+              <% if (hasOffer) { %>
+
+              <!-- Regular Price (Strikethrough) -->
+              <span class="text-2xl font-bold text-gray-500 line-through">
                 ₹<%= product.regularPrice %>
               </span>
 
-              <!-- Rating -->
+              <!-- Offer Price -->
+              <span class="text-3xl font-bold text-red-600">
+                ₹<%= product.offerPrice %>
+              </span>
+
+              <!-- Savings -->
               <span
                 class="bg-green-600 text-white px-2 py-1 rounded text-sm font-semibold"
               >
-                <%= product.rating || "4.5" %>★
+                <%= product.bestDiscount %>% OFF
               </span>
 
               <% } else { %>
+
               <!-- Normal Price -->
               <span class="text-3xl font-bold text-green-600">
                 ₹<%= product.regularPrice %>
               </span>
 
+              <% } %>
+
               <!-- Rating -->
               <span
                 class="bg-green-600 text-white px-2 py-1 rounded text-sm font-semibold"
               >
                 <%= product.rating || "4.5" %>★
               </span>
+
+              <% } else { %> <% if (hasOffer) { %>
+
+              <!-- Regular Price (Strikethrough) -->
+              <span class="text-3xl font-bold text-gray-500 line-through">
+                ₹<%= product.regularPrice %>
+              </span>
+
+              <!-- Offer Price -->
+              <span class="text-3xl font-bold text-red-600">
+                ₹<%= product.offerPrice %>
+              </span>
+
+              <!-- Discount Badge -->
+              <span
+                class="bg-green-600 text-white px-2 py-1 rounded text-sm font-semibold"
+              >
+                <%= product.bestDiscount %>% OFF
+              </span>
+
+              <% } else { %>
+
+              <!-- Normal Price -->
+              <span class="text-3xl font-bold text-green-600">
+                ₹<%= product.regularPrice %>
+              </span>
+
+              <% } %>
+
+              <!-- Rating -->
+         
+              <span
+                class="bg-green-600 text-white px-2 py-1 rounded text-sm font-semibold"
+              >
+                <%= product.rating || "4.5" %>★
+              </span>
+              
               <% } %>
             </div>
 
@@ -454,10 +504,28 @@
               </div>
 
               <!-- Price at bottom -->
-              <div>
-                <p class="text-lg font-bold text-gray-800">
+              <div class="mt-1">
+                <% if (similar.offerPrice !== null && similar.offerPrice <
+                similar.regularPrice) { %>
+
+                <!-- Regular Price (Strikethrough) -->
+                <span class="text-gray-500 line-through text-sm">
                   ₹<%= similar.regularPrice %>
-                </p>
+                </span>
+
+                <!-- Offer Price (Highlighted) -->
+                <span class="text-lg font-bold text-red-600 ml-2">
+                  ₹<%= similar.offerPrice %>
+                </span>
+
+                <% } else { %>
+
+                <!-- No Offer → Show Regular Price -->
+                <span class="text-lg font-bold text-gray-800">
+                  ₹<%= similar.regularPrice %>
+                </span>
+
+                <% } %>
               </div>
             </div>
           </div>

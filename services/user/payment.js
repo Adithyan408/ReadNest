@@ -2,10 +2,56 @@ import User from "../../models/userSchema.js";
 import Address from "../../models/addressSchema.js";
 import Product from "../../models/productsSchema.js";
 import Cart from "../../models/cartSchema.js";
+import Category from "../../models/categorySchema.js";
 import Order from "../../models/orderSchema.js";
 
 export const loadPayment = async (req, res) => {
   try {
+    const calculateOffer = async (product) => {
+      const now = new Date();
+      const regularPrice = product.regularPrice;
+
+      let productDiscount = 0;
+      if (product.offer?.isOffer) {
+        const start = product.offer.startDate;
+        const end = product.offer.endDate;
+
+        const valid =
+          (!start || now >= new Date(start)) && (!end || now <= new Date(end));
+
+        if (valid) productDiscount = product.offer.discountValue;
+      }
+
+      let categoryDiscount = 0;
+      const categoryDoc = await Category.findOne({
+        categoryName: product.category,
+      });
+
+      if (categoryDoc?.offer?.isOffer) {
+        const start = categoryDoc.offer.startDate;
+        const end = categoryDoc.offer.endDate;
+
+        const valid =
+          (!start || now >= new Date(start)) && (!end || now <= new Date(end));
+
+        if (valid) categoryDiscount = categoryDoc.offer.discountValue;
+      }
+
+      const bestDiscount = Math.max(productDiscount, categoryDiscount);
+
+      const offerPrice =
+        bestDiscount > 0
+          ? Math.round(regularPrice - (regularPrice * bestDiscount) / 100)
+          : null;
+
+      return {
+        regularPrice,
+        offerPrice,
+        finalPrice: offerPrice || regularPrice,
+        bestDiscount,
+      };
+    };
+
     const userId = req.session.user?._id;
     if (!userId) return res.redirect("/login");
 
@@ -30,7 +76,6 @@ export const loadPayment = async (req, res) => {
     }
 
     let cart = [];
-
     const buyNowId = req.query.buyNow;
 
     if (buyNowId) {
@@ -38,16 +83,21 @@ export const loadPayment = async (req, res) => {
       if (!product) return res.redirect("/notfound");
 
       const qty = req.session.buyNowQuantity || 1;
+
+      const offer = await calculateOffer(product);
+
       req.session.buyNowProductId = buyNowId;
-      req.session.buyNowUnitPrice = product.salePrice || product.regularPrice;
+      req.session.buyNowUnitPrice = offer.finalPrice;
 
       cart = [
         {
           _id: product._id,
           name: product.productName,
-          quantity: qty,
-          price: req.session.buyNowUnitPrice,
           image: product.productImage[0],
+          quantity: qty,
+          price: offer.finalPrice,
+          offerPrice: offer.offerPrice,
+          regularPrice: product.regularPrice,
           stock: product.stock,
         },
       ];
@@ -56,25 +106,35 @@ export const loadPayment = async (req, res) => {
         .populate("items.productId")
         .lean();
 
-      cart =
-        cartData?.items.map((i) => ({
-          _id: i.productId._id,
-          name: i.productId.productName,
-          price: i.productId.salePrice || i.productId.regularPrice,
-          image: i.productId.productImage[0],
-          quantity: i.quantity,
-          stock: i.productId.stock,
-        })) || [];
+      cart = cartData
+        ? await Promise.all(
+            cartData.items.map(async (i) => {
+              const p = i.productId;
+              const offer = await calculateOffer(p);
+
+              return {
+                _id: p._id,
+                name: p.productName,
+                image: p.productImage[0],
+                quantity: i.quantity,
+                price: offer.finalPrice,
+                offerPrice: offer.offerPrice,
+                regularPrice: p.regularPrice,
+                stock: p.stock,
+              };
+            })
+          )
+        : [];
     }
 
     let subtotal = 0;
-
     cart.forEach((item) => {
       subtotal += item.price * item.quantity;
     });
 
     const discount = Math.floor(subtotal * 0.05);
-    let totalAmount = subtotal - discount;
+    const totalAmount = subtotal - discount;
+
     req.session.total = totalAmount;
 
     res.render("payment", {
@@ -149,6 +209,7 @@ export const postCoupon = async (req, res) => {
   }
 };
 
+
 export const orderPlaced = async (req, res) => {
   try {
     const userId = req.session.user?._id;
@@ -168,45 +229,109 @@ export const orderPlaced = async (req, res) => {
       addresses[0] ||
       null;
 
+    const calculateOffer = async (product) => {
+      const now = new Date();
+      const regularPrice = product.regularPrice;
+
+      
+      let productDiscount = 0;
+      if (product.offer?.isOffer) {
+        const start = product.offer.startDate;
+        const end = product.offer.endDate;
+
+        const valid =
+          (!start || now >= new Date(start)) && (!end || now <= new Date(end));
+
+        if (valid) productDiscount = product.offer.discountValue;
+      }
+
+  
+      let categoryDiscount = 0;
+      const categoryDoc = await Category.findOne({
+        categoryName: product.category,
+      });
+
+      if (categoryDoc?.offer?.isOffer) {
+        const start = categoryDoc.offer.startDate;
+        const end = categoryDoc.offer.endDate;
+
+        const valid =
+          (!start || now >= new Date(start)) && (!end || now <= new Date(end));
+
+        if (valid) categoryDiscount = categoryDoc.offer.discountValue;
+      }
+
+   
+      const bestDiscount = Math.max(productDiscount, categoryDiscount);
+
+      const offerPrice =
+        bestDiscount > 0
+          ? Math.round(regularPrice - (regularPrice * bestDiscount) / 100)
+          : null;
+
+      const finalPrice = offerPrice || regularPrice;
+
+      return {
+        regularPrice,
+        offerPrice,
+        finalPrice,
+        bestDiscount,
+      };
+    };
+
     let cartItems = [];
 
+   
     if (req.session.buyNowProductId) {
       const product = await Product.findById(req.session.buyNowProductId);
       const qty = req.session.buyNowQuantity || 1;
-      if (!product) return res.redirect("/notfound");
+
+      const offer = await calculateOffer(product);
 
       cartItems = [
         {
           product: product._id,
           productName: product.productName,
-          regularPrice: product.salePrice || product.regularPrice,
-          stock: product.stock,
+          regularPrice: offer.regularPrice,
+          offerPrice: offer.offerPrice,
+          finalPrice: offer.finalPrice,
+          bestDiscount: offer.bestDiscount,
           quantity: qty,
-          subtotal:
-            (req.session.buyNowUnitPrice ||
-              product.salePrice ||
-              product.regularPrice) * qty,
+          subtotal: offer.finalPrice * qty,
           productImage: product.productImage,
+          stock: product.stock,
         },
       ];
-    } else {
+    }
+
+   
+    else {
       const cartData = await Cart.findOne({ userId }).populate(
         "items.productId"
       );
 
-      cartItems =
-        cartData?.items.map((i) => ({
-          product: i.productId._id,
-          productName: i.productId.productName,
-          regularPrice: i.productId.salePrice || i.productId.regularPrice,
-          stock: i.productId.stock,
-          productImage: i.productId.productImage,
-          subtotal:
-            (i.productId.salePrice || i.productId.regularPrice) * i.quantity,
-          quantity: i.quantity,
-        })) || [];
+      cartItems = await Promise.all(
+        cartData.items.map(async (i) => {
+          const p = i.productId;
+          const offer = await calculateOffer(p);
+
+          return {
+            product: p._id,
+            productName: p.productName,
+            regularPrice: offer.regularPrice,
+            offerPrice: offer.offerPrice,
+            finalPrice: offer.finalPrice,
+            bestDiscount: offer.bestDiscount,
+            quantity: i.quantity,
+            subtotal: offer.finalPrice * i.quantity,
+            productImage: p.productImage,
+            stock: p.stock,
+          };
+        })
+      );
     }
 
+    
     const newOrder = new Order({
       user: userId,
       items: cartItems,
@@ -218,6 +343,7 @@ export const orderPlaced = async (req, res) => {
 
     await newOrder.save();
 
+   
     for (let item of cartItems) {
       await Product.updateOne(
         { _id: item.product, stock: { $gte: item.quantity } },
@@ -225,10 +351,12 @@ export const orderPlaced = async (req, res) => {
       );
     }
 
-    if (!req.query.buyNow) {
+  
+    if (!req.session.buyNowProductId) {
       await Cart.updateOne({ userId }, { items: [] });
     }
 
+  
     req.session.appliedCoupon = null;
     req.session.buyNowQuantity = null;
     req.session.buyNowProductId = null;

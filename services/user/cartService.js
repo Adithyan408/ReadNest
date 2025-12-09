@@ -1,6 +1,7 @@
 import Product from "../../models/productsSchema.js";
 import Address from "../../models/addressSchema.js";
 import Cart from "../../models/cartSchema.js";
+import Category from "../../models/categorySchema.js";
 
 export const loadCart = async (req, res) => {
   try {
@@ -9,14 +10,66 @@ export const loadCart = async (req, res) => {
     const cartDoc = await Cart.findOne({ userId }).populate("items.productId");
 
     const cart = cartDoc
-      ? cartDoc.items.map((i) => ({
-          _id: i.productId._id,
-          name: i.productId.productName,
-          price: i.productId.salePrice || i.productId.regularPrice,
-          image: i.productId.productImage[0],
-          quantity: i.quantity,
-          stock: i.productId.stock,
-        }))
+      ? await Promise.all(
+          cartDoc.items.map(async (i) => {
+            const product = i.productId;
+            const now = new Date();
+            const regularPrice = product.regularPrice;
+
+            // PRODUCT OFFER
+            let productDiscount = 0;
+            if (product.offer?.isOffer) {
+              const start = product.offer.startDate;
+              const end = product.offer.endDate;
+
+              const valid =
+                (!start || now >= new Date(start)) &&
+                (!end || now <= new Date(end));
+
+              if (valid) productDiscount = product.offer.discountValue;
+            }
+
+            // CATEGORY OFFER
+            let categoryDiscount = 0;
+            const categoryDoc = await Category.findOne({
+              categoryName: product.category,
+            });
+
+            if (categoryDoc?.offer?.isOffer) {
+              const start = categoryDoc.offer.startDate;
+              const end = categoryDoc.offer.endDate;
+
+              const valid =
+                (!start || now >= new Date(start)) &&
+                (!end || now <= new Date(end));
+
+              if (valid) categoryDiscount = categoryDoc.offer.discountValue;
+            }
+
+            // BEST DISCOUNT
+            const bestDiscount = Math.max(productDiscount, categoryDiscount);
+
+            // FINAL OFFER PRICE
+            let offerPrice =
+              bestDiscount > 0
+                ? Math.round(regularPrice - (regularPrice * bestDiscount) / 100)
+                : null;
+
+            const finalPrice = offerPrice || regularPrice;
+
+            return {
+              _id: product._id,
+              name: product.productName,
+              price: finalPrice, 
+              offerPrice: offerPrice,
+              regularPrice: regularPrice,
+              discount: bestDiscount,
+              image: product.productImage[0],
+              quantity: i.quantity,
+              stock: product.stock,
+            };
+          })
+        )
       : [];
 
     const addresses = await Address.find({ userId });
