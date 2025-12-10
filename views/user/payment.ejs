@@ -139,30 +139,60 @@
               <option value="Wallet">Wallet</option>
             </select>
 
-            <!-- COUPON SECTION -->
+            <!-- COUPON DROPDOWN -->
             <div class="mt-6">
-              <label class="text-gray-700 font-medium">Apply Coupon</label>
+              <input type="hidden" id="couponCode" />
+              <label class="text-gray-700 font-medium">Choose Coupon</label>
 
-              <div class="flex gap-2 mt-2">
-                <input
-                  type="text"
-                  id="couponCode"
-                  class="w-full p-3 border rounded-lg"
-                  placeholder="Enter coupon code"
-                />
-
-                <button
-                  onclick="applyCoupon()"
-                  class="bg-green-600 hover:bg-green-700 text-white px-4 rounded-lg font-semibold"
+              <div id="couponWrapper" class="relative mt-2">
+                <!-- Dropdown Button -->
+                <div
+                  onclick="toggleCouponDropdown()"
+                  class="w-full p-3 border rounded-lg bg-white cursor-pointer flex justify-between items-center"
                 >
-                  Apply
-                </button>
-              </div>
+                  <span id="selectedCouponText" class="text-gray-600">
+                    Select a coupon
+                  </span>
+                  <i class="fas fa-chevron-down text-gray-600"></i>
+                </div>
 
-              <p
-                id="couponMessage"
-                class="text-sm text-green-700 mt-2 hidden"
-              ></p>
+                <!-- Dropdown List -->
+                <div
+                  id="couponDropdown"
+                  class="absolute w-full bg-white border rounded-lg mt-1 hidden shadow-lg max-h-56 overflow-y-auto z-20"
+                >
+                  <% if (coupons.length === 0) { %>
+
+                  <p class="text-sm text-gray-500 p-3">No coupons available</p>
+
+                  <% } else { %> <% coupons.forEach(c => { %>
+
+                  <div
+                    class="p-3 border-b cursor-pointer hover:bg-gray-100"
+                    onclick="selectCouponFromList('<%= c.code %>')"
+                  >
+                    <div class="flex justify-between">
+                      <span class="font-semibold text-gray-800"
+                        ><%= c.code %></span
+                      >
+                      <span class="text-green-700 font-semibold"
+                        ><%= c.discount %>% OFF</span
+                      >
+                    </div>
+
+                    <p class="text-xs text-gray-500">
+                      Min purchase: ₹<%= c.minPurchase || 0 %>
+                    </p>
+
+                    <p class="text-xs text-gray-400">
+                      Expires: <%= c.expiry.toDateString() %>
+                    </p>
+                  </div>
+
+                  <% }) %> <% } %>
+                </div>
+                <p id="couponMessage" class="text-sm mt-2 hidden"></p>
+              </div>
             </div>
 
             <!-- PRICE DETAILS -->
@@ -202,7 +232,6 @@
     <%- include("../../views/partials/user/footer") %>
 
     <script>
-      
       let originalTotal = Number("<%- totalAmount %>");
 
       function processPayment() {
@@ -213,6 +242,34 @@
         }
         window.location.href = `/place-order?payment=${method}`;
       }
+
+      function toggleCouponDropdown() {
+        document.getElementById("couponDropdown").classList.toggle("hidden");
+      }
+
+      function selectCouponFromList(code) {
+        // Set text in dropdown
+        document.getElementById("selectedCouponText").textContent = code;
+
+        // Apply coupon in input box
+        document.getElementById("couponCode").value = code;
+
+        // Hide dropdown
+        document.getElementById("couponDropdown").classList.add("hidden");
+
+        // Apply coupon automatically
+        applyCoupon();
+      }
+
+      // Close dropdown if clicked outside
+      document.addEventListener("click", function (event) {
+        const wrapper = document.getElementById("couponWrapper");
+        const dropdown = document.getElementById("couponDropdown");
+
+        if (!wrapper.contains(event.target)) {
+          dropdown.classList.add("hidden");
+        }
+      });
 
       function applyCoupon() {
         const coupon = document.getElementById("couponCode").value.trim();

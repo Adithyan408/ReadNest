@@ -11,6 +11,7 @@ import upload from "../middlewares/multer.js";
 import nocache from "nocache";
 import { getBanner, getBannerAdd, bannerAdd, geteditBanner, editBanner, deleteBanner } from "../controllers/admin/bannerController.js";
 import { getOrderList, loadOrderDetails, postOrderUpdate, updateSingleItemStatus } from "../controllers/admin/orderController.js";
+import { couponDelete, couponUpdate, getAddCoupon, getCoupon, postCouponAdd } from "../controllers/admin/couponController.js";
 
 
 
@@ -64,4 +65,8 @@ adminRouter.post("/orders/:orderId/status", adminAuth, postOrderUpdate );
 adminRouter.get("/orders/:ordersId", adminAuth, loadOrderDetails);
 
 adminRouter.post("/orders/:ordersId/items/:itemId/status", adminAuth, updateSingleItemStatus);
-
+adminRouter.get("/coupon", adminAuth, getCoupon);
+adminRouter.get("/coupon/addCoupon", adminAuth, getAddCoupon)
+adminRouter.post("/coupon/addCoupon", adminAuth, postCouponAdd)
+adminRouter.post("/coupon/updateCoupon", adminAuth, couponUpdate);
+adminRouter.get("/coupon/delete", adminAuth, couponDelete);

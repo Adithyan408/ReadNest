@@ -72,7 +72,7 @@ export const postLogin = async (req, res) => {
 
 export const postSignup = async (req, res) => {
   try {
-    const { name, email, password, confirmPassword } = req.body;
+    const { name, email, password, confirmPassword, referralCode } = req.body;
 
     if (!name || !email || !password || !confirmPassword) {
       req.session.message = "All fields are required";
@@ -87,6 +87,20 @@ export const postSignup = async (req, res) => {
       req.session.message = "User with this email already exits";
       return res.redirect("/signup");
     }
+    let referredUser = null;
+    if (referralCode && referralCode.trim() !== "") {
+      referredUser = await User.findOne({ referralCode: referralCode.trim() });
+
+      if (!referredUser) {
+        req.session.message = "Invalid referral code";
+        return res.redirect("/signup");
+      }
+
+      if (referredUser.email === email) {
+        req.session.message = "You cannot use your own referral code";
+        return res.redirect("/signup");
+      }
+    }
 
     const otp = generateOtp();
 
@@ -96,7 +110,12 @@ export const postSignup = async (req, res) => {
     }
 
     (req.session.userOtp = otp),
-      (req.session.userData = { name, email, password });
+      (req.session.userData = {
+        name,
+        email,
+        password,
+        referredBy: referredUser ? referredUser.referralCode : null,
+      });
 
     res.redirect(`/verify-otp?email=${encodeURIComponent(email)}`);
     console.log("otp sent", otp);
@@ -116,8 +135,30 @@ export const otpVerify = async (req, res) => {
         name: user.name,
         email: user.email,
         password: passwordHash,
+        referredBy: user.referredBy || null,
       });
       await newUser.save();
+
+      if (user.referredBy) {
+        const inviter = await User.findOne({ referralCode: user.referredBy });
+
+        if (inviter) {
+          const couponCode =
+            "CPN" + Math.random().toString(36).substring(2, 10).toUpperCase();
+
+         
+          await Coupon.create({
+            code: couponCode,
+            discount: 10,
+            userId: inviter._id,
+            expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 
+          });
+
+          inviter.referralRewards.push({ couponCode });
+          await inviter.save();
+        }
+      }
+
       req.session.user = { _id: newUser._id };
 
       req.session.userOtp = null;
@@ -190,7 +231,7 @@ export const profileLoad = async (req, res) => {
     const userData = await User.findById(userId).lean();
     req.session.message = null;
     req.session.status = null;
-    res.render("profile", { user: userData , message, status});
+    res.render("profile", { user: userData, message, status });
   } catch (error) {
     res.render("notFound");
   }

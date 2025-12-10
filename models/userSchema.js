@@ -16,7 +16,7 @@ const userSchema = new Schema(
       type: String,
       default: null,
     },
-   
+
     phone: {
       type: String,
       required: false,
@@ -87,9 +87,24 @@ const userSchema = new Schema(
         },
       },
     ],
+    referralCode: { type: String, unique: true },
+    referredBy: { type: String, default: null },
+    referralRewards: [
+      {
+        couponCode: String,
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );
+
+userSchema.pre("save", function (next) {
+  if (!this.referralCode) {
+    this.referralCode = this._id.toString().slice(-6);
+  }
+  next();
+});
 
 const User = mongoose.model("User", userSchema);
 

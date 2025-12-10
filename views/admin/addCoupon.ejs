@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add Category - ReadNest</title>
+    <title>Banners - ReadNest</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
 
@@ -22,12 +23,21 @@
 
       .sidebar-item:hover {
         background-color: #d1d5db;
-        border-left: 4px solid #667eea;
       }
 
       .sidebar-item.active {
         background-color: #d1d5db;
-        border-left: 4px solid #667eea;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden; /* disable full page scroll */
+      }
+
+      .main-scroll-area {
+        height: calc(100vh - 80px); /* header height is ~80px */
+        overflow-y: auto; /* enable vertical scroll only on the right */
+        overflow-x: hidden;
       }
     </style>
   </head>
@@ -68,9 +78,9 @@
     <div class="flex">
       <!-- Sidebar -->
       <aside
-        class="w-80 bg-gray-300 min-h-screen border-r border-gray-400 relative"
+        class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col"
       >
-        <nav class="py-4 pb-24">
+        <nav class="flex-1 overflow-y-auto py-4">
           <a
             href="/admin"
             class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
@@ -113,7 +123,7 @@
 
           <a
             href="/admin/category"
-            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
           >
             <i class="fas fa-th text-xl mr-4"></i>
             <span class="text-lg font-semibold text-gray-900">Category</span>
@@ -129,7 +139,7 @@
 
           <a
             href="/admin/banner"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
           >
             <i class="fas fa-image text-xl mr-4"></i>
             <span class="text-lg font-semibold text-gray-900">Banner</span>
@@ -137,9 +147,8 @@
         </nav>
 
         <!-- Logout Button at Bottom -->
-        <div
-          class="absolute bottom-0 left-0 right-0 bg-gray-300 border-t-2 border-gray-400"
-        >
+
+        <div class="border-t-2 border-gray-400 bg-gray-300">
           <a href="/admin/logout">
             <button
               class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
@@ -149,150 +158,117 @@
               ></i>
               <span
                 class="text-lg font-semibold text-gray-900 group-hover:text-red-600"
-                >Log Out</span
+                >LOG OUT</span
               >
             </button>
           </a>
         </div>
       </aside>
 
-      <!-- Main Content - Add Category Form -->
-      <main class="flex-1 p-8 bg-white">
+      <!-- Main Content - Banners -->
+      <main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
         <%- include('../../views/partials/breadcrumb') %>
-        <div class="max-w-2xl">
-          <!-- Header with Back Button -->
-          <div class="flex items-center mb-8">
-            <a
-              href="/admin/category"
-              class="mr-4 text-gray-800 hover:text-gray-600"
-            >
-              <i class="fas fa-chevron-left text-2xl"></i>
+
+        <div class="max-w-2xl mx-auto">
+          <!-- Page Header -->
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-3xl font-bold text-gray-900">Add New Coupon</h2>
+
+            <a href="/admin/coupon">
+              <button
+                class="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition shadow"
+              >
+                Back
+              </button>
             </a>
-            <h2 class="text-3xl font-bold text-gray-900">Categories</h2>
           </div>
 
-          <!-- Form -->
-          <form
-            id="categoryForm"
-            class="space-y-6"
-            action="/admin/addCategory"
-            method="POST"
+          <!-- Card -->
+          <div
+            class="bg-white rounded-2xl shadow-xl p-8 border border-gray-200"
           >
-            <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
-            <div id="errorMsg" class="text-red-600 font-semibold mb-3">
-              <%= errorMessage %>
-            </div>
-            <% } else { %>
-            <div
-              id="errorMsg"
-              class="text-red-600 font-semibold mb-3 hidden"
-            ></div>
-            <% } %>
-
-            <!-- Category Name Input -->
-            <div>
-              <input
-                type="text"
-                id="categoryName"
-                name="categoryName"
-                placeholder="Category Name"
-                class="w-full px-6 py-4 bg-gray-200 rounded-lg text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 border-none text-lg"
-              />
-            </div>
-            <!-- Offer Section -->
-            <div class="mt-6 p-4 border border-gray-300 rounded-lg bg-gray-50">
-              <h3 class="text-lg font-bold text-gray-900 mb-4">
-                Category Offer Details
-              </h3>
-
-              <!-- Enable Offer -->
-              <div class="mb-4">
-                <label class="block text-lg font-bold text-gray-900 mb-2">
-                  Enable Offer
+            <form
+              action="/admin/coupon/addCoupon"
+              method="POST"
+              class="space-y-6"
+            >
+              <!-- Coupon Code -->
+              <div>
+                <label class="block text-gray-700 font-semibold mb-2">
+                  Coupon Code <span class="text-red-500">*</span>
                 </label>
-                <select
-                  name="isOffer"
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-base"
-                >
-                  <option value="false" selected>No</option>
-                  <option value="true">Yes</option>
-                </select>
+                <input
+                  type="text"
+                  name="code"
+                  placeholder="E.g., SAVE10, FIRST50"
+                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  required
+                />
+                <p class="text-xs text-gray-500 mt-1">
+                  Use uppercase letters or numbers.
+                </p>
               </div>
 
-              <!-- Discount Percentage -->
-              <div class="mb-4">
-                <label class="block text-lg font-bold text-gray-900 mb-2">
-                  Discount (%)
+              <!-- Discount -->
+              <div>
+                <label class="block text-gray-700 font-semibold mb-2">
+                  Discount (%) <span class="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
-                  name="discountValue"
+                  name="discount"
                   placeholder="Enter discount percentage"
-                  step="0.01"
+                  min="1"
+                  max="90"
+                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  required
+                />
+                <p class="text-xs text-gray-500 mt-1">Recommended: 5% - 50%</p>
+              </div>
+
+              <!--  Minimum Purchase (NEW FIELD) -->
+              <div>
+                <label class="block text-gray-700 font-semibold mb-2">
+                  Minimum Purchase (₹)
+                </label>
+                <input
+                  type="number"
+                  name="minPurchase"
+                  placeholder="Enter minimum purchase amount"
                   min="0"
-                  max="100"
-                  value="<%= (category && category.discountValue) ? category.discountValue : '' %>"
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
+                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
+                <p class="text-xs text-gray-500 mt-1">
+                  Leave as 0 if no minimum purchase is required.
+                </p>
               </div>
 
-              <!-- Offer Start Date -->
-              <div class="mb-4">
-                <label class="block text-lg font-bold text-gray-900 mb-2">
-                  Offer Start Date
+              <!-- Expiry Date -->
+              <div>
+                <label class="block text-gray-700 font-semibold mb-2">
+                  Expiry Date <span class="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
-                  name="startDate"
-                  value=""
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-base"
+                  name="expiry"
+                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  required
                 />
               </div>
 
-              <!-- Offer End Date -->
-              <div class="mb-4">
-                <label class="block text-lg font-bold text-gray-900 mb-2">
-                  Offer End Date
-                </label>
-                <input
-                  type="date"
-                  name="endDate"
-                  value=""
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-base"
-                />
+              <!-- Submit Button -->
+              <div class="flex justify-end">
+                <button
+                  type="submit"
+                  class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-lg"
+                >
+                  CREATE COUPON
+                </button>
               </div>
-            </div>
-
-            <!-- List/Unlist Toggle Buttons -->
-            <p id="errorMsg" class="text-red-500 font-semibold mb-3 hidden"></p>
-            <!-- Add Category Button -->
-            <div class="pt-4">
-              <button
-                type="submit"
-                class="px-12 py-3 bg-indigo-600 text-white font-bold text-lg rounded-lg hover:bg-indigo-700 transition shadow-md"
-              >
-                ADD Category
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </main>
     </div>
   </body>
-  <script>
-    document
-      .getElementById("categoryForm")
-      .addEventListener("submit", function (e) {
-        const name = document.getElementById("categoryName").value.trim();
-        const errorMsg = document.getElementById("errorMsg");
-
-        if (!name) {
-          e.preventDefault();
-          errorMsg.textContent = "Fill the field.";
-          errorMsg.classList.remove("hidden");
-        } else {
-          errorMsg.classList.add("hidden");
-        }
-      });
-  </script>
 </html>
