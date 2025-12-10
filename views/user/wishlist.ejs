@@ -80,9 +80,30 @@
                     <%= item.productName %>
                   </h3>
 
-                  <p class="text-xl font-bold text-gray-900 mb-3">
-                    ₹ <%= item.regularPrice %>
-                  </p>
+                  <div class="mt-1">
+                    <% if (item.offerPrice !== null && item.offerPrice <
+                    item.regularPrice) { %>
+
+                    <span class="text-gray-500 line-through text-sm">
+                      ₹<%= item.regularPrice %>
+                    </span>
+
+                    <span class="text-lg font-bold text-red-600 ml-2">
+                      ₹<%= item.offerPrice %>
+                    </span>
+
+                    <span class="text-green-600 text-sm ml-2 font-semibold">
+                      <%= item.discount %>% OFF
+                    </span>
+
+                    <% } else { %>
+
+                    <span class="text-lg font-bold text-gray-800">
+                      ₹<%= item.regularPrice %>
+                    </span>
+
+                    <% } %>
+                  </div>
 
                   <div class="flex items-center gap-4">
                     <!-- BUY NOW BUTTON -->
@@ -208,7 +229,7 @@
       }
 
       function confirmRemoveAll(count) {
-        count = Number(count); 
+        count = Number(count);
         if (count === 0) {
           Swal.fire({
             title: "Wishlist is empty!",
@@ -235,7 +256,7 @@
       }
 
       function confirmMoveAll(count) {
-        count = Number(count); 
+        count = Number(count);
 
         if (count === 0) {
           Swal.fire({
