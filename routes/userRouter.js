@@ -101,13 +101,13 @@ router.get("/place-order", loadPlace)
 router.get("/buy-now/:id",loadBuyNow)
 
 
-router.get("/orders/:orderId", loadOrderDetails);
+router.get("/orders/:orderId",  loadOrderDetails);
 router.get("/orders/:orderId/invoice", invoicedownload);
-router.get("/orders", listOrders);
+router.get("/orders",  listOrders);
 
 
 
-router.post("/orders/:orderId/items/:itemId/cancel", cancelOrder);
+router.post("/orders/:orderId/items/:itemId/cancel", nocache(), cancelOrder);
 router.post("/orders/:orderId/items/:itemId/return",returnOrder);
 
 router.get("/forgot-password", getForgotPassword);

@@ -38,9 +38,9 @@
             <span class="text-blue-600"><%= order._id %></span>
           </h2>
 
-          <% 
-            // Order status classes
+          <%
             let orderStatusClasses = "";
+
             if (order.status === "processing") {
               orderStatusClasses = "bg-yellow-100 text-yellow-700";
             } else if (order.status === "cancelled") {
@@ -52,7 +52,10 @@
             }
           %>
 
-          <span class="px-4 py-2 rounded-lg text-sm font-semibold <%= orderStatusClasses %>">
+
+          <span
+            class="px-4 py-2 rounded-lg text-sm font-semibold <%= orderStatusClasses %>"
+          >
             <%= order.status %>
           </span>
         </div>
@@ -60,23 +63,24 @@
         <div class="grid md:grid-cols-3 gap-6 mt-4">
           <!-- Total + Items -->
           <div class="space-y-3">
-  <p class="text-gray-700">
-    <span class="font-semibold">Total Amount:</span> ₹ <%= order.total %>
-  </p>
+            <p class="text-gray-700">
+              <span class="font-semibold">Total Amount:</span> ₹ <%= order.total
+              %>
+            </p>
 
-  <p class="text-gray-700">
-    <span class="font-semibold">Items:</span> <%= order.items.length %>
-  </p>
+            <p class="text-gray-700">
+              <span class="font-semibold">Items:</span> <%= order.items.length
+              %>
+            </p>
 
-  <a
-    href="/orders/<%= order._id %>/invoice"
-    class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition w-fit"
-  >
-    <i class="fa-solid fa-file-invoice"></i>
-    Download Invoice
-  </a>
-</div>
-
+            <a
+              href="/orders/<%= order._id %>/invoice"
+              class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition w-fit"
+            >
+              <i class="fa-solid fa-file-invoice"></i>
+              Download Invoice
+            </a>
+          </div>
 
           <!-- Placed On + Delivery Date -->
           <div>
@@ -85,15 +89,12 @@
               <%= new Date(order.createdAt).toLocaleString() %>
             </p>
 
-            <% 
-              if (order.createdAt) {
-                let d = new Date(order.createdAt);
-                d.setDate(d.getDate() + 6); // 6 days from order date
-            %>
-              <p class="text-gray-700 mt-2">
-                <span class="font-semibold">Delivery Date:</span><br />
-                <%= d.toDateString() %>
-              </p>
+            <% if (order.createdAt) { let d = new Date(order.createdAt);
+            d.setDate(d.getDate() + 6); // 6 days from order date %>
+            <p class="text-gray-700 mt-2">
+              <span class="font-semibold">Delivery Date:</span><br />
+              <%= d.toDateString() %>
+            </p>
             <% } %>
           </div>
 
@@ -104,25 +105,23 @@
               <%= order.paymentId ? "Paid" : "COD" %>
             </p>
 
-            <% if (typeof selectedAddress !== "undefined" && selectedAddress) { %>
-              <p class="text-gray-700 mt-2">
-                <span class="font-semibold">Delivery Address:</span><br />
-  
-                <%= selectedAddress.addressLabel %> Address <br>
+            <% if (typeof selectedAddress !== "undefined" && selectedAddress) {
+            %>
+            <p class="text-gray-700 mt-2">
+              <span class="font-semibold">Delivery Address:</span><br />
 
-                <%= selectedAddress.houseName %>, 
-            <% if (selectedAddress.houseNumber) { %>
-             <%= selectedAddress.houseNumber %>,
-                 <% } %>
+              <%= selectedAddress.addressLabel %> Address <br />
 
-                <%= selectedAddress.street %><br />
+              <%= selectedAddress.houseName %>, <% if
+              (selectedAddress.houseNumber) { %> <%= selectedAddress.houseNumber
+              %>, <% } %> <%= selectedAddress.street %><br />
 
-                <%= selectedAddress.post %>, <%= selectedAddress.district %><br />
-                <%= selectedAddress.state %> - <%= selectedAddress.pincode %><br />
+              <%= selectedAddress.post %>, <%= selectedAddress.district %><br />
+              <%= selectedAddress.state %> - <%= selectedAddress.pincode %><br />
 
-                    Phone: <%= selectedAddress.phone %><br />
-                    Alternate: <%= selectedAddress.altPhone %>
-                    </p>
+              Phone: <%= selectedAddress.phone %><br />
+              Alternate: <%= selectedAddress.altPhone %>
+            </p>
 
             <% } %>
           </div>
@@ -134,99 +133,83 @@
 
       <div class="space-y-6">
         <% order.items.forEach(item => { %>
-          <div class="bg-white shadow-md rounded-xl p-6 border border-gray-100">
-            <!-- Product Image + Title + Status -->
-            <div class="flex justify-between items-center">
-              <div class="flex items-center gap-4">
-                <% 
-                  
-                  let imgSrc = "/images/placeholder.png";
+        <div class="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+          <!-- Product Image + Title + Status -->
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-4">
+              <% let imgSrc = "/images/placeholder.png"; if (item.productImage
+              && item.productImage.length > 0) { imgSrc = item.productImage[0];
+              } else if ( item.product && item.product.productImage &&
+              item.product.productImage.length > 0 ) { imgSrc =
+              item.product.productImage[0]; } %>
 
-                  if (item.productImage && item.productImage.length > 0) {
-                    imgSrc = item.productImage[0];
-                  } else if (
-                    item.product &&
-                    item.product.productImage &&
-                    item.product.productImage.length > 0
-                  ) {
-                    imgSrc = item.product.productImage[0];
-                  }
-                %>
+              <img
+                src="<%= imgSrc %>"
+                alt="<%= item.productName %>"
+                class="w-20 h-20 object-cover rounded-lg border"
+              />
 
-                <img
-                  src="<%= imgSrc %>"
-                  alt="<%= item.productName %>"
-                  class="w-20 h-20 object-cover rounded-lg border"
-                />
-
-                <h3 class="text-lg font-bold text-gray-800">
-                  <%= item.productName %>
-                </h3>
-              </div>
-
-              <% 
-                
-                let itemStatusClasses = "";
-                if (item.status === "ordered") {
-                  itemStatusClasses = "bg-yellow-100 text-yellow-700";
-                } else if (item.status === "cancelled") {
-                  itemStatusClasses = "bg-red-100 text-red-700";
-                } else if (item.status === "returned") {
-                  itemStatusClasses = "bg-orange-100 text-orange-700";
-                } else if (item.status === "delivered") {
-                  itemStatusClasses = "bg-green-100 text-green-700";
-                }
-              %>
-
-              <span
-                class="px-3 py-1 rounded-md text-xs font-semibold <%= itemStatusClasses %>"
-              >
-                <%= item.status %>
-              </span>
+              <h3 class="text-lg font-bold text-gray-800">
+                <%= item.productName %>
+              </h3>
             </div>
 
-            <!-- Price & Quantity -->
-            <div class="mt-3 text-gray-700">
-              <p>
-                <span class="font-semibold">Price:</span>
-                ₹ <%= item.regularPrice %>
-              </p>
-              <p>
-                <span class="font-semibold">Quantity:</span>
-                <%= item.quantity %>
-              </p>
-              <p>
-                <span class="font-semibold">Subtotal:</span>
-                ₹ <%= item.subtotal %>
-              </p>
-            </div>
+            <% let itemStatusClasses = ""; 
+            if (item.status === "ordered") {
+              itemStatusClasses = "bg-yellow-100 text-yellow-700"; 
+            } else if (item.status === "cancelled") { 
+              itemStatusClasses = "bg-red-100 text-red-700"; 
+            } else if (item.status === "returned") {
+              itemStatusClasses = "bg-orange-100 text-orange-700"; 
+            } else if (item.status === "delivered") { 
+              itemStatusClasses = "bg-green-100 text-green-700"; 
+            } 
+            %>
 
-            <!-- Action Buttons -->
-            <d<div class="mt-5 flex gap-4">
-
-  <% if (item.status === "ordered") { %>
-    <button
-      type="button"
-      onclick="confirmCancel('<%= order._id %>', '<%= item._id %>')"
-      class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition"
-    >
-      Cancel Item
-    </button>
-  <% } %>
-
-  <% if (item.status === 'delivered') { %>
-    <button
-      type="button"
-      onclick="confirmReturn('<%= order._id %>', '<%= item._id %>')"
-      class="bg-orange-500 text-white px-5 py-2 rounded-lg hover:bg-orange-600 transition"
-    >
-      Return Item
-    </button>
-  <% } %>
-
-</div>
-
+            <span
+              class="px-3 py-1 rounded-md text-xs font-semibold <%= itemStatusClasses %>"
+            >
+              <%= item.status %>
+            </span>
           </div>
+
+          <!-- Price & Quantity -->
+          <div class="mt-3 text-gray-700">
+            <p>
+              <span class="font-semibold">Price:</span>
+              ₹ <%= item.regularPrice %>
+            </p>
+            <p>
+              <span class="font-semibold">Quantity:</span>
+              <%= item.quantity %>
+            </p>
+            <p>
+              <span class="font-semibold">Subtotal:</span>
+              ₹ <%= item.subtotal %>
+            </p>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="mt-5 flex gap-4">
+            <% if (item.canCancel) { %>
+            <button
+              type="button"
+              onclick="confirmCancel('<%= order._id %>', '<%= item._id %>')"
+              class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition"
+            >
+              Cancel Item
+            </button>
+            <% } %> <% if (item.canReturn) { %>
+            <button
+              type="button"
+              onclick="confirmReturn('<%= order._id %>', '<%= item._id %>')"
+              class="bg-orange-500 text-white px-5 py-2 rounded-lg hover:bg-orange-600 transition"
+            >
+              Return Item
+            </button>
+            <% } %>
+          </div>
+        </div>
         <% }) %>
       </div>
 
@@ -244,61 +227,63 @@
     <%- include("../../views/partials/user/footer") %>
   </body>
   <script>
-  // CANCEL ITEM
-  function confirmCancel(orderId, itemId) {
-    Swal.fire({
-      title: "Cancel this item?",
-      text: "This action cannot be undone.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Yes, cancel it"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = `/orders/${orderId}/items/${itemId}/cancel`;
-        document.body.appendChild(form);
-        form.submit();
-      }
-    });
-  }
+    // CANCEL ITEM
+    function confirmCancel(orderId, itemId) {
+      Swal.fire({
+        title: "Cancel this item?",
+        text: "This action cannot be undone.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, cancel it",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const form = document.createElement("form");
+          form.method = "POST";
+          form.action = `/orders/${orderId}/items/${itemId}/cancel`;
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    }
 
+    // RETURN ITEM WITH REASON
+    function confirmReturn(orderId, itemId) {
+      Swal.fire({
+        title: "Return this item?",
+        text: "Please provide a return reason.",
+        icon: "question",
+        input: "textarea",
+        inputLabel: "Return Reason",
+        inputPlaceholder: "Type your reason here...",
+        inputAttributes: { "aria-label": "Return reason" },
+        showCancelButton: true,
+        confirmButtonText: "Submit Return",
+        cancelButtonText: "Cancel",
+        inputValidator: (value) => {
+          if (!value) return "Please enter a reason!";
+        },
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const form = document.createElement("form");
+          form.method = "POST";
+          form.action = `/orders/${orderId}/items/${itemId}/return`;
 
-  // RETURN ITEM WITH REASON
-  function confirmReturn(orderId, itemId) {
-    Swal.fire({
-      title: "Return this item?",
-      text: "Please provide a return reason.",
-      icon: "question",
-      input: "textarea",
-      inputLabel: "Return Reason",
-      inputPlaceholder: "Type your reason here...",
-      inputAttributes: { "aria-label": "Return reason" },
-      showCancelButton: true,
-      confirmButtonText: "Submit Return",
-      cancelButtonText: "Cancel",
-      inputValidator: (value) => {
-        if (!value) return "Please enter a reason!";
-      }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = `/orders/${orderId}/items/${itemId}/return`;
+          const inputReason = document.createElement("input");
+          inputReason.type = "hidden";
+          inputReason.name = "returnReason";
+          inputReason.value = result.value;
 
-        const inputReason = document.createElement("input");
-        inputReason.type = "hidden";
-        inputReason.name = "returnReason";
-        inputReason.value = result.value;
-
-        form.appendChild(inputReason);
-        document.body.appendChild(form);
-        form.submit();
-      }
-    });
-  }
-</script>
-
+          form.appendChild(inputReason);
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    }
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = function () {
+      location.reload();
+    };
+  </script>
 </html>

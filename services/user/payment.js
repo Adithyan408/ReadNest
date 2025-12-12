@@ -58,6 +58,14 @@ export const loadPayment = async (req, res) => {
 
     const userData = await User.findById(userId).lean();
 
+    const cartData = await Cart.findOne({ userId }).lean();
+    const hasCartItems = cartData?.items?.length > 0;
+    const hasBuyNow = req.query.buyNow || req.session.buyNowProductId;
+
+    if (!hasCartItems && !hasBuyNow) {
+      return res.redirect("/cart");
+    }
+    
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
 
@@ -161,7 +169,6 @@ export const loadPayment = async (req, res) => {
   }
 };
 
-
 export const postCoupon = async (req, res) => {
   try {
     const { coupon, totalAmount } = req.body;
@@ -176,7 +183,6 @@ export const postCoupon = async (req, res) => {
       return res.json({ success: false, message: "Invalid cart total" });
     }
 
-   
     if (req.session.appliedCoupon === code) {
       return res.json({
         success: false,
@@ -184,7 +190,6 @@ export const postCoupon = async (req, res) => {
       });
     }
 
-  
     const couponDoc = await Coupon.findOne({ code });
 
     if (!couponDoc) {
@@ -196,7 +201,6 @@ export const postCoupon = async (req, res) => {
 
     const now = new Date();
 
-    
     if (couponDoc.expiry && couponDoc.expiry < now) {
       return res.json({
         success: false,
@@ -204,7 +208,6 @@ export const postCoupon = async (req, res) => {
       });
     }
 
-   
     if (couponDoc.isUsed) {
       return res.json({
         success: false,
@@ -212,7 +215,6 @@ export const postCoupon = async (req, res) => {
       });
     }
 
-    
     const minPurchase = couponDoc.minPurchase || 0;
     if (cartTotal < minPurchase) {
       return res.json({
@@ -221,11 +223,9 @@ export const postCoupon = async (req, res) => {
       });
     }
 
-   
     const discountValue = Math.round((cartTotal * couponDoc.discount) / 100);
     const finalAmount = cartTotal - discountValue;
 
-    
     req.session.appliedCoupon = code;
     req.session.discountValue = discountValue;
     req.session.total = finalAmount;
@@ -234,7 +234,7 @@ export const postCoupon = async (req, res) => {
       success: true,
       message: "Coupon applied successfully!",
       discount: discountValue,
-      finalAmount, 
+      finalAmount,
     });
   } catch (err) {
     console.log("Coupon Error:", err);

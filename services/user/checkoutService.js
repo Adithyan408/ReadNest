@@ -60,7 +60,6 @@ export const getCheckout = async (req, res) => {
       };
     };
 
-    // 🟢 BUY NOW CHECKOUT
     if (buyNowId) {
       const product = await Product.findById(buyNowId).lean();
       if (!product) return res.redirect("/notfound");

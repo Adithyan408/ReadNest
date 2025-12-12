@@ -4,7 +4,6 @@ import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
 
-
 export const getOrderDetailsPage = async (req, res) => {
   try {
     const orderId = req.params.orderId;
@@ -14,6 +13,21 @@ export const getOrderDetailsPage = async (req, res) => {
       .lean();
 
     if (!order) return res.render("notFound");
+
+    order.items = order.items.map((item) => {
+      const canCancel =
+        item.status === "processing" || item.status === "ordered";
+
+      const canReturn = item.status === "delivered";
+
+      return {
+        ...item,
+        canCancel,
+        canReturn,
+      };
+    });
+
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
 
     res.render("orderDetails", { order, selectedAddress: order.address });
   } catch (err) {
@@ -37,7 +51,6 @@ export const cancelOrderItem = async (req, res) => {
 
     item.status = "cancelled";
     item.cancelledAt = new Date();
-
     await order.save();
 
     await Product.updateOne(
@@ -49,10 +62,15 @@ export const cancelOrderItem = async (req, res) => {
       .populate("items.product", "productImage")
       .lean();
 
-    return res.render("orderDetails", {
-      order: updatedOrder,
-      selectedAddress: updatedOrder.address,
-    });
+    updatedOrder.items = updatedOrder.items.map((i) => ({
+      ...i,
+      canCancel: i.status === "ordered",
+      canReturn: i.status === "delivered",
+    }));
+
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+
+    return res.redirect(`/orders/${orderId}`);
   } catch (err) {
     return res.render("notFound");
   }
@@ -87,6 +105,14 @@ export const returnOrderItem = async (req, res) => {
     const updatedOrder = await Order.findById(orderId)
       .populate("items.product", "productImage")
       .lean();
+
+    updatedOrder.items = updatedOrder.items.map((i) => ({
+      ...i,
+      canCancel: i.status === "ordered",
+      canReturn: i.status === "delivered",
+    }));
+
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
 
     return res.render("orderDetails", {
       order: updatedOrder,
@@ -268,7 +294,7 @@ export const getListOrders = async (req, res) => {
 
     const search = req.query.search?.trim() || "";
 
-    let query = { user: userId }; 
+    let query = { user: userId };
 
     if (search) {
       query.$expr = {
