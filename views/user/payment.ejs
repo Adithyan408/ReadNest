@@ -204,16 +204,26 @@
                 >
               </div>
 
-              <div class="flex justify-between mb-3">
+              <div
+                id="discountBox"
+                class="flex justify-between mb-3 <%= discount > 0 ? '' : 'hidden' %>"
+              >
                 <span class="text-gray-700">Discount</span>
-                <span class="font-semibold text-green-700" id="discountAmount"
-                  >₹ <%= discount %></span
+                <span class="font-semibold text-green-700" id="discountAmount">
+                  ₹ <%= discount %>
+                </span>
+              </div>
+
+              <div class="flex justify-between mb-3">
+                <span class="text-gray-700">Shipping Charge</span>
+                <span class="font-semibold text-gray-800"
+                  >₹ <%= shippingCharge %></span
                 >
               </div>
 
               <div class="flex justify-between text-lg font-bold border-t pt-4">
                 <span>Total Amount</span>
-                <span id="totalAmount">₹ <%= totalAmount %></span>
+                <span id="totalAmount">₹ <%= payableAmount %></span>
               </div>
             </div>
 
@@ -230,6 +240,12 @@
     </main>
 
     <%- include("../../views/partials/user/footer") %>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <script>
+      const SHIPPING = Number("<%= shippingCharge %>");
+    </script>
 
     <script>
       let originalTotal = Number("<%- totalAmount %>");
@@ -307,7 +323,16 @@
             message.classList.remove("hidden");
 
             discountElement.innerText = "₹ " + data.discount;
-            totalElement.innerText = "₹ " + data.finalAmount;
+            const newTotal = data.finalAmount + SHIPPING;
+            totalElement.innerText = "₹ " + newTotal;
+
+            // For buy now
+            if (singleTotalEl) {
+              singleTotalEl.innerText = "₹ " + newTotal;
+            }
+
+            originalTotal = newTotal;
+            document.getElementById("discountBox").classList.remove("hidden");
 
             // BUY NOW update
             if (singleTotalEl) {
@@ -317,6 +342,75 @@
             // update global new total
             originalTotal = data.finalAmount;
           });
+      }
+
+      async function processPayment() {
+        const method = document.getElementById("paymentMethod").value;
+
+        if (!method) {
+          Swal.fire("Wait!", "Please select a payment method", "warning");
+          return;
+        }
+
+        if (method === "COD") {
+          window.location.href = `/place-order?payment=COD`;
+          return;
+        }
+
+        if (method === "Razorpay") {
+          try {
+            // 1️⃣ Create Razorpay Order
+            const orderData = await fetch("/create-razorpay-order", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+            });
+
+            const { success, order } = await orderData.json();
+            if (!success) {
+              return Swal.fire(
+                "Error",
+                "Unable to create payment order",
+                "error"
+              );
+            }
+
+            // 2️⃣ Open Razorpay Checkout
+            const options = {
+              key: "<%= process.env.RAZO_API_KEY %>",
+              amount: order.amount,
+              currency: "INR",
+              name: "ReadNest",
+              description: "Order Payment",
+              order_id: order.id,
+
+              handler: async function (response) {
+                const verify = await fetch("/verify-razorpay-payment", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(response),
+                });
+
+                const verifyRes = await verify.json();
+
+                if (verifyRes.success) {
+                  window.location.href = `/place-order?payment=ONLINE`;
+                } else {
+                  Swal.fire(
+                    "Payment Failed",
+                    "Verification error occurred",
+                    "error"
+                  );
+                }
+              },
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+          } catch (e) {
+            console.error(e);
+            Swal.fire("Error", "Something went wrong with payment", "error");
+          }
+        }
       }
     </script>
   </body>

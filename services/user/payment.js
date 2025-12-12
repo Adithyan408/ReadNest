@@ -5,6 +5,13 @@ import Cart from "../../models/cartSchema.js";
 import Category from "../../models/categorySchema.js";
 import Order from "../../models/orderSchema.js";
 import Coupon from "../../models/couponSchema.js";
+import Razorpay from "razorpay";
+import crypto from "crypto";
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZO_API_KEY,
+  key_secret: process.env.RAZO_KEY_SECRET,
+});
 
 export const loadPayment = async (req, res) => {
   try {
@@ -65,7 +72,7 @@ export const loadPayment = async (req, res) => {
     if (!hasCartItems && !hasBuyNow) {
       return res.redirect("/cart");
     }
-    
+
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
 
@@ -147,10 +154,12 @@ export const loadPayment = async (req, res) => {
       expiry: { $gte: now },
     }).lean();
 
-    const discount = Math.floor(subtotal * 0.05);
+    const discount = 0;
     const totalAmount = subtotal - discount;
 
     req.session.total = totalAmount;
+    const shippingCharge = 20;
+    const payableAmount = totalAmount + shippingCharge;
 
     res.render("payment", {
       user: userData,
@@ -160,6 +169,8 @@ export const loadPayment = async (req, res) => {
       subtotal,
       discount,
       totalAmount,
+      shippingCharge,
+      payableAmount,
       isBuyNow: Boolean(buyNowId),
       coupons,
     });
@@ -246,6 +257,13 @@ export const orderPlaced = async (req, res) => {
   try {
     const userId = req.session.user?._id;
     if (!userId) return res.redirect("/login");
+
+    const paymentMode = req.query.payment || req.body.paymentMode;
+    const paymentId = req.session.razorpayPaymentId || null;
+
+    if (paymentMode === "ONLINE" && !req.session.paymentSuccess) {
+      return res.redirect("/payment");
+    }
 
     let totalAmount = req.session.total || 0;
 
@@ -366,6 +384,8 @@ export const orderPlaced = async (req, res) => {
         })
       );
     }
+    const shippingCharge = 20;
+    const payableAmount = totalAmount + shippingCharge;
 
     const newOrder = new Order({
       user: userId,
@@ -373,7 +393,11 @@ export const orderPlaced = async (req, res) => {
       total: totalAmount,
       discount: discountValue,
       couponCode: appliedCode || null,
-      paymentId: null,
+      shippingCharge,
+      payableAmount,
+      paymentId: paymentId,
+      paymentMethod: paymentMode,
+      paymentStatus: paymentMode === "ONLINE" ? "paid" : "pending",
       status: "processing",
       address: selectedAddress ? { ...selectedAddress } : null,
     });
@@ -396,6 +420,8 @@ export const orderPlaced = async (req, res) => {
     req.session.buyNowProductId = null;
     req.session.discountValue = null;
     req.session.total = null;
+    req.session.paymentSuccess = null;
+    req.session.razorpayPaymentId = null;
 
     res.render("placed", {
       user: userData,
@@ -405,7 +431,62 @@ export const orderPlaced = async (req, res) => {
       orderId: newOrder._id,
     });
   } catch (error) {
-    console.log("Order placing error:", error);
     res.render("notFound");
+  }
+};
+
+export const createRazorpayOrder = async (req, res) => {
+  try {
+    const amount = req.session.total;
+    if (!amount)
+      return res
+        .status(400)
+        .json({ success: false, message: "No total amount found." });
+
+    const options = {
+      amount: amount * 100, // Razorpay works in paise
+      currency: "INR",
+      receipt: "order_rcptid_" + Date.now(),
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    req.session.razorOrderId = order.id;
+
+    res.json({ success: true, order });
+  } catch (error) {
+    console.log("Razorpay Order Error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to create Razorpay order." });
+  }
+};
+
+export const verifyRazorpayPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+      req.body;
+
+    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+
+    const expectedSign = crypto
+      .createHmac("sha256", process.env.RAZO_KEY_SECRET)
+      .update(sign)
+      .digest("hex");
+
+    if (expectedSign !== razorpay_signature) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid payment signature" });
+    }
+
+    // Payment Verified → Now create order in DB
+    req.session.paymentSuccess = true;
+    req.session.razorpayPaymentId = razorpay_payment_id;
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.log("Payment Verification Error:", error);
+    return res.status(500).json({ success: false });
   }
 };
