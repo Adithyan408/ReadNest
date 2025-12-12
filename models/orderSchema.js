@@ -20,7 +20,7 @@ const orderItemSchema = new mongoose.Schema({
     enum: ["ordered", "shipped", "delivered", "cancelled", "returned"],
     default: "ordered",
   },
-  returnReason: { type: String },
+  returnReason: String,
   cancelledAt: Date,
   returnedAt: Date,
 });
@@ -28,10 +28,29 @@ const orderItemSchema = new mongoose.Schema({
 const orderSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+
     items: [orderItemSchema],
-    total: Number,
-    paymentId: String,
-    quantity: { type: Number },
+
+    total: Number,                  
+    discount: Number,               
+    couponCode: String,             
+    shippingCharge: Number,         
+    finalPayable: Number,           
+
+    paymentMethod: {
+      type: String,
+      enum: ["COD", "ONLINE"],
+      required: true,
+    },
+
+    paymentId: String,              // Razorpay payment ID (if online)
+
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed"],
+      default: "pending",
+    },
+
     address: {
       addressLabel: String,
       houseName: String,
@@ -44,11 +63,13 @@ const orderSchema = new mongoose.Schema(
       phone: String,
       altPhone: String,
     },
+
     status: {
       type: String,
       enum: ["processing", "partially_cancelled", "cancelled", "completed"],
       default: "processing",
     },
+
     createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }

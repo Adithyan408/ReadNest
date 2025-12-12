@@ -39,7 +39,11 @@ import upload from "../middlewares/multer.js";
 import { addAddress, deleteAddress, getAddress, getSingleAddress, selectedAddressSave, updateAddress } from "../controllers/user/addressController.js";
 import { buyNowUpdate, cartUpdate, getCart, postCart, removeCart } from "../controllers/user/cartController.js";
 import { addAddressNew, addresChoose, loadBuyNow, loadCheckout, postAddress } from "../controllers/user/checkout.js";
+<<<<<<< HEAD
 import { applyCoupon, getPayment, loadPlace, removeCoupon } from "../controllers/user/payment.js";
+=======
+import { applyCoupon, getPayment, loadPlace, razorpay_order, razorpay_verify } from "../controllers/user/payment.js";
+>>>>>>> razorpay
 import { cancelOrder, invoicedownload, listOrders, loadOrderDetails,  returnOrder } from "../controllers/user/orderController.js";
 import { getWishlist, moveAllCart, moveToCart, removeAll, removeItem, toggleWishlist } from "../controllers/user/wishlistController.js";
 
@@ -99,8 +103,13 @@ router.get("/checkout/payment", getPayment)
 router.post("/apply-coupon", applyCoupon);
 router.get("/place-order", loadPlace)
 router.get("/buy-now/:id",loadBuyNow)
+<<<<<<< HEAD
 router.post("/remove-coupon", removeCoupon)
 
+=======
+router.post("/create-razorpay-order", razorpay_order);
+router.post("/verify-razorpay-payment", razorpay_verify);
+>>>>>>> razorpay
 
 router.get("/orders/:orderId",  loadOrderDetails);
 router.get("/orders/:orderId/invoice", invoicedownload);
