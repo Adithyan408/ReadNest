@@ -7,6 +7,7 @@ import Order from "../../models/orderSchema.js";
 import Coupon from "../../models/couponSchema.js";
 import Razorpay from "razorpay";
 import crypto from "crypto";
+import couponUsage from "../../models/couponUsage.js";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZO_API_KEY,
@@ -510,4 +511,13 @@ export const verifyRazorpayPayment = async (req, res) => {
     console.log("Payment Verification Error:", error);
     return res.status(500).json({ success: false });
   }
+};
+
+export const postRemoveCoupon = async (req, res) => {
+  try {
+    req.session.appliedCoupon = null;
+    req.session.discountValue = 0;
+    req.session.total = req.session.baseTotal; // optional
+    res.json({ success: true });
+  } catch (error) {}
 };
