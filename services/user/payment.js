@@ -5,6 +5,7 @@ import Cart from "../../models/cartSchema.js";
 import Category from "../../models/categorySchema.js";
 import Order from "../../models/orderSchema.js";
 import Coupon from "../../models/couponSchema.js";
+import couponUsage from "../../models/couponUsage.js";
 
 export const loadPayment = async (req, res) => {
   try {
@@ -65,7 +66,7 @@ export const loadPayment = async (req, res) => {
     if (!hasCartItems && !hasBuyNow) {
       return res.redirect("/cart");
     }
-    
+
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
 
@@ -192,6 +193,19 @@ export const postCoupon = async (req, res) => {
 
     const couponDoc = await Coupon.findOne({ code });
 
+    const usage = await couponUsage.findOne({
+      userId: req.session.user._id,
+      couponId: couponDoc._id,
+      used: true,
+    });
+
+    if (usage) {
+      return res.json({
+        success: false,
+        message: "You have already used this coupon!",
+      });
+    }
+
     if (!couponDoc) {
       return res.json({
         success: false,
@@ -257,7 +271,15 @@ export const orderPlaced = async (req, res) => {
     }
 
     if (appliedCode) {
-      await Coupon.updateOne({ code: appliedCode }, { isUsed: true });
+      const couponDoc = await Coupon.findOne({ code: appliedCode });
+
+      if (couponDoc) {
+        await couponUsage.findOneAndUpdate(
+          { userId, couponId: couponDoc._id },
+          { used: true, usedAt: new Date() },
+          { upsert: true }
+        );
+      }
     }
 
     const userData = await User.findById(userId).lean();
@@ -408,4 +430,14 @@ export const orderPlaced = async (req, res) => {
     console.log("Order placing error:", error);
     res.render("notFound");
   }
+};
+
+// router.post("/remove-coupon",
+export const postRemoveCoupon = async (req, res) => {
+  try {
+    req.session.appliedCoupon = null;
+    req.session.discountValue = 0;
+    req.session.total = req.session.baseTotal; // optional
+    res.json({ success: true });
+  } catch (error) {}
 };

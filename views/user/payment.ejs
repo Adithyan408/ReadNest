@@ -150,9 +150,21 @@
                   onclick="toggleCouponDropdown()"
                   class="w-full p-3 border rounded-lg bg-white cursor-pointer flex justify-between items-center"
                 >
-                  <span id="selectedCouponText" class="text-gray-600">
-                    Select a coupon
-                  </span>
+                  <div class="flex items-center gap-2">
+                    <span id="selectedCouponText" class="text-gray-600"
+                      >Select a coupon</span
+                    >
+
+                    <!-- Hidden cancel/remove button -->
+                    <button
+                      id="removeCouponBtn"
+                      onclick="removeCoupon(event)"
+                      class="text-red-600 text-sm ml-2 hidden hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
                   <i class="fas fa-chevron-down text-gray-600"></i>
                 </div>
 
@@ -232,7 +244,8 @@
     <%- include("../../views/partials/user/footer") %>
 
     <script>
-      let originalTotal = Number("<%- totalAmount %>");
+      let baseTotal = Number("<%= totalAmount %>"); // original VAT + subtotal + shipping
+      let originalTotal = baseTotal;
 
       function processPayment() {
         const method = document.getElementById("paymentMethod").value;
@@ -270,6 +283,18 @@
           dropdown.classList.add("hidden");
         }
       });
+
+      function selectCouponFromList(code) {
+        document.getElementById("selectedCouponText").textContent = code;
+        document.getElementById("couponCode").value = code;
+
+        // SHOW REMOVE BUTTON
+        document.getElementById("removeCouponBtn").classList.remove("hidden");
+
+        document.getElementById("couponDropdown").classList.add("hidden");
+
+        applyCoupon();
+      }
 
       function applyCoupon() {
         const coupon = document.getElementById("couponCode").value.trim();
@@ -317,6 +342,37 @@
             // update global new total
             originalTotal = data.finalAmount;
           });
+      }
+
+      function removeCoupon(e) {
+        e.stopPropagation();
+
+        // Reset fields
+        document.getElementById("couponCode").value = "";
+        document.getElementById("selectedCouponText").textContent =
+          "Select a coupon";
+
+        // Hide remove button
+        document.getElementById("removeCouponBtn").classList.add("hidden");
+
+        // Reset discount UI
+        document.getElementById("discountAmount").innerText = "₹ 0";
+        document.getElementById("couponMessage").classList.add("hidden");
+
+        // Reset total to baseTotal (NOT originalTotal)
+        document.getElementById("totalAmount").innerText = "₹ " + baseTotal;
+
+        const singleTotalEl = document.getElementById("singleTotal");
+        if (singleTotalEl) singleTotalEl.innerText = "₹ " + baseTotal;
+
+        // Reset JS memory variables
+        originalTotal = baseTotal;
+
+        // Inform backend to clear coupon session
+        fetch("/remove-coupon", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
       }
     </script>
   </body>
