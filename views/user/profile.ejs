@@ -636,6 +636,11 @@
       }
 
       /* ======================== SEND OTP FOR SET PASSWORD ======================== */
+      function isValidPassword(password) {
+        const regex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$/;
+        return regex.test(password);
+      }
+
       function sendOtpForSetPassword() {
         const email = document.getElementById("setPassEmail").value;
         const btn = document.getElementById("sendOtpBtn");
@@ -692,6 +697,20 @@
           return;
         }
 
+        if (!isValidPassword(password)) {
+          Swal.fire(
+            "Weak Password!",
+            "Password must have at least 6 characters, 1 number, 1 uppercase and 1 lowercase letter.",
+            "error"
+          );
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          Swal.fire("Error", "Passwords do not match!", "error");
+          return;
+        }
+
         fetch("/account/verifypassword", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -727,9 +746,20 @@
           return;
         }
 
+        
+
+        if (!isValidPassword(newPassword)) {
+          Swal.fire(
+            "Weak Password!",
+            "Password must have at least 6 characters, 1 number, 1 uppercase and 1 lowercase letter.",
+            "error"
+          );
+          return;
+        }
+
         updateBtn.disabled = true;
         updateBtn.innerText = "Updating...";
-
+        
         fetch("/account/change-password", {
           method: "POST",
           credentials: "include",
