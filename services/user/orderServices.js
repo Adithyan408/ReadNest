@@ -76,6 +76,7 @@ export const cancelOrderItem = async (req, res) => {
   }
 };
 
+
 export const returnOrderItem = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
@@ -91,16 +92,10 @@ export const returnOrderItem = async (req, res) => {
       return res.render("notFound");
     }
 
-    item.status = "returned";
-    item.returnedAt = new Date();
+    item.returnStatus = "requested"; 
     item.returnReason = returnReason;
 
     await order.save();
-
-    await Product.updateOne(
-      { _id: item.product },
-      { $inc: { stock: item.quantity } }
-    );
 
     const updatedOrder = await Order.findById(orderId)
       .populate("items.product", "productImage")
@@ -110,14 +105,13 @@ export const returnOrderItem = async (req, res) => {
       ...i,
       canCancel: i.status === "ordered",
       canReturn: i.status === "delivered",
+      returnPending: i.returnStatus === "requested", 
     }));
 
     res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
 
-    return res.render("orderDetails", {
-      order: updatedOrder,
-      selectedAddress: updatedOrder.address,
-    });
+    res.redirect(`/orders/${orderId}`);
+
   } catch (err) {
     console.log("Return Item Error:", err);
     return res.render("notFound");

@@ -55,12 +55,11 @@ const userSchema = new Schema(
         ref: "Cart",
       },
     ],
-    wallet: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Wishlist",
-      },
-    ],
+    wallet: {
+      type: Number,
+      default: 0,
+    },
+
     walletBalance: {
       type: Number,
       default: 0,

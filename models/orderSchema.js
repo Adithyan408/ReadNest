@@ -23,6 +23,14 @@ const orderItemSchema = new mongoose.Schema({
   returnReason: String,
   cancelledAt: Date,
   returnedAt: Date,
+  returnStatus: {
+    type: String,
+    enum: ["none", "requested", "approved", "rejected"],
+    default: "none",
+  },
+
+  adminReturnNote: { type: String }, 
+  refundAmount: Number, 
 });
 
 const orderSchema = new mongoose.Schema(
@@ -31,11 +39,11 @@ const orderSchema = new mongoose.Schema(
 
     items: [orderItemSchema],
 
-    total: Number,                  
-    discount: Number,               
-    couponCode: String,             
-    shippingCharge: Number,         
-    finalPayable: Number,           
+    total: Number,
+    discount: Number,
+    couponCode: String,
+    shippingCharge: Number,
+    finalPayable: Number,
 
     paymentMethod: {
       type: String,
@@ -43,7 +51,7 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
 
-    paymentId: String,              // Razorpay payment ID (if online)
+    paymentId: String,
 
     paymentStatus: {
       type: String,

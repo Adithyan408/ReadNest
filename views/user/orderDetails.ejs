@@ -26,172 +26,162 @@
     <%- include("../../views/partials/user/header") %>
 
     <main class="max-w-5xl mx-auto px-6 py-16">
-      <h1 class="text-3xl font-bold text-gray-800 mb-10 text-center">
-        Order Details
-      </h1>
+  <h1 class="text-3xl font-bold text-gray-800 mb-10 text-center">
+    Order Details
+  </h1>
 
-      <!-- Order Summary Card -->
-      <div class="bg-white shadow-xl rounded-2xl p-8 mb-10">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-800">
-            Order ID:
-            <span class="text-blue-600"><%= order._id %></span>
-          </h2>
+  <!-- Order Summary Card -->
+  <div class="bg-white shadow-xl rounded-2xl p-8 mb-10">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-bold text-gray-800">
+        Order ID:
+        <span class="text-blue-600"><%= order._id %></span>
+      </h2>
 
+      <%
+        let orderStatusClasses = "";
+        if (order.status === "processing") {
+          orderStatusClasses = "bg-yellow-100 text-yellow-700";
+        } else if (order.status === "cancelled") {
+          orderStatusClasses = "bg-red-100 text-red-700";
+        } else if (order.status === "partially_cancelled") {
+          orderStatusClasses = "bg-orange-100 text-orange-700";
+        } else {
+          orderStatusClasses = "bg-green-100 text-green-700";
+        }
+      %>
+
+      <span class="px-4 py-2 rounded-lg text-sm font-semibold <%= orderStatusClasses %>">
+        <%= order.status %>
+      </span>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6 mt-4">
+
+      <!-- Total + Items -->
+      <div class="space-y-3">
+        <p class="text-gray-700">
+          <span class="font-semibold">Total Amount:</span> ₹ <%= order.total %>
+        </p>
+
+        <p class="text-gray-700">
+          <span class="font-semibold">Items:</span> <%= order.items.length %>
+        </p>
+
+        <a
+          href="/orders/<%= order._id %>/invoice"
+          class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition w-fit"
+        >
+          <i class="fa-solid fa-file-invoice"></i>
+          Download Invoice
+        </a>
+      </div>
+
+      <!-- Placed On + Delivery Date -->
+      <div>
+        <p class="text-gray-700">
+          <span class="font-semibold">Placed On:</span><br />
+          <%= new Date(order.createdAt).toLocaleString() %>
+        </p>
+
+        <% if (order.createdAt) { 
+             let d = new Date(order.createdAt);
+             d.setDate(d.getDate() + 6);
+        %>
+          <p class="text-gray-700 mt-2">
+            <span class="font-semibold">Delivery Date:</span><br />
+            <%= d.toDateString() %>
+          </p>
+        <% } %>
+      </div>
+
+      <!-- Payment + Address -->
+      <div>
+        <p class="text-gray-700">
+          <span class="font-semibold">Payment:</span>
+          <%= order.paymentId ? "Paid" : "COD" %>
+        </p>
+
+        <% if (typeof selectedAddress !== "undefined" && selectedAddress) { %>
+          <p class="text-gray-700 mt-2">
+            <span class="font-semibold">Delivery Address:</span><br />
+
+            <%= selectedAddress.addressLabel %> Address <br />
+            <%= selectedAddress.houseName %>
+            <% if (selectedAddress.houseNumber) { %>
+              , <%= selectedAddress.houseNumber %>
+            <% } %>,
+            <%= selectedAddress.street %><br />
+
+            <%= selectedAddress.post %>, <%= selectedAddress.district %><br />
+            <%= selectedAddress.state %> - <%= selectedAddress.pincode %><br />
+
+            Phone: <%= selectedAddress.phone %><br />
+            Alternate: <%= selectedAddress.altPhone %>
+          </p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Items List -->
+<h2 class="text-2xl font-bold text-gray-800 mb-6">Ordered Items</h2>
+
+<div class="space-y-6">
+
+  <% order.items.forEach(item => { %>
+    <div class="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+
+      <!-- Product Image + Title + Status -->
+      <div class="flex justify-between items-center">
+
+        <div class="flex items-center gap-4">
           <%
-            let orderStatusClasses = "";
-
-            if (order.status === "processing") {
-              orderStatusClasses = "bg-yellow-100 text-yellow-700";
-            } else if (order.status === "cancelled") {
-              orderStatusClasses = "bg-red-100 text-red-700";
-            } else if (order.status === "partially_cancelled") {
-              orderStatusClasses = "bg-orange-100 text-orange-700";
-            } else {
-              orderStatusClasses = "bg-green-100 text-green-700";
+            let imgSrc = "/images/placeholder.png";
+            if (item.productImage && item.productImage.length > 0) {
+              imgSrc = item.productImage[0];
+            } else if (item.product && item.product.productImage && item.product.productImage.length > 0) {
+              imgSrc = item.product.productImage[0];
             }
           %>
 
+          <img src="<%= imgSrc %>" class="w-20 h-20 object-cover rounded-lg border" />
 
-          <span
-            class="px-4 py-2 rounded-lg text-sm font-semibold <%= orderStatusClasses %>"
-          >
-            <%= order.status %>
-          </span>
+          <h3 class="text-lg font-bold text-gray-800"><%= item.productName %></h3>
         </div>
 
-        <div class="grid md:grid-cols-3 gap-6 mt-4">
-          <!-- Total + Items -->
-          <div class="space-y-3">
-            <p class="text-gray-700">
-              <span class="font-semibold">Total Amount:</span> ₹ <%= order.total
-              %>
-            </p>
+        <%
+          let itemStatusClasses = "";
+          if (item.status === "ordered") {
+            itemStatusClasses = "bg-yellow-100 text-yellow-700";
+          } else if (item.status === "cancelled") {
+            itemStatusClasses = "bg-red-100 text-red-700";
+          } else if (item.status === "returned") {
+            itemStatusClasses = "bg-orange-100 text-orange-700";
+          } else if (item.status === "delivered") {
+            itemStatusClasses = "bg-green-100 text-green-700";
+          }
+        %>
 
-            <p class="text-gray-700">
-              <span class="font-semibold">Items:</span> <%= order.items.length
-              %>
-            </p>
-
-            <a
-              href="/orders/<%= order._id %>/invoice"
-              class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition w-fit"
-            >
-              <i class="fa-solid fa-file-invoice"></i>
-              Download Invoice
-            </a>
-          </div>
-
-          <!-- Placed On + Delivery Date -->
-          <div>
-            <p class="text-gray-700">
-              <span class="font-semibold">Placed On:</span><br />
-              <%= new Date(order.createdAt).toLocaleString() %>
-            </p>
-
-            <% if (order.createdAt) { let d = new Date(order.createdAt);
-            d.setDate(d.getDate() + 6); // 6 days from order date %>
-            <p class="text-gray-700 mt-2">
-              <span class="font-semibold">Delivery Date:</span><br />
-              <%= d.toDateString() %>
-            </p>
-            <% } %>
-          </div>
-
-          <!-- Payment + Address -->
-          <div>
-            <p class="text-gray-700">
-              <span class="font-semibold">Payment:</span>
-              <%= order.paymentId ? "Paid" : "COD" %>
-            </p>
-
-            <% if (typeof selectedAddress !== "undefined" && selectedAddress) {
-            %>
-            <p class="text-gray-700 mt-2">
-              <span class="font-semibold">Delivery Address:</span><br />
-
-              <%= selectedAddress.addressLabel %> Address <br />
-
-              <%= selectedAddress.houseName %>, <% if
-              (selectedAddress.houseNumber) { %> <%= selectedAddress.houseNumber
-              %>, <% } %> <%= selectedAddress.street %><br />
-
-              <%= selectedAddress.post %>, <%= selectedAddress.district %><br />
-              <%= selectedAddress.state %> - <%= selectedAddress.pincode %><br />
-
-              Phone: <%= selectedAddress.phone %><br />
-              Alternate: <%= selectedAddress.altPhone %>
-            </p>
-
-            <% } %>
-          </div>
-        </div>
+        <span class="px-3 py-1 rounded-md text-xs font-semibold <%= itemStatusClasses %>">
+          <%= item.status %>
+        </span>
       </div>
 
-      <!-- Items List -->
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">Ordered Items</h2>
+      <!-- Price & Quantity -->
+      <div class="mt-3 text-gray-700">
+        <p><span class="font-semibold">Price:</span> ₹ <%= item.regularPrice %></p>
+        <p><span class="font-semibold">Quantity:</span> <%= item.quantity %></p>
+        <p><span class="font-semibold">Subtotal:</span> ₹ <%= item.subtotal %></p>
+      </div>
 
-      <div class="space-y-6">
-        <% order.items.forEach(item => { %>
-        <div class="bg-white shadow-md rounded-xl p-6 border border-gray-100">
-          <!-- Product Image + Title + Status -->
-          <div class="flex justify-between items-center">
-            <div class="flex items-center gap-4">
-              <% let imgSrc = "/images/placeholder.png"; if (item.productImage
-              && item.productImage.length > 0) { imgSrc = item.productImage[0];
-              } else if ( item.product && item.product.productImage &&
-              item.product.productImage.length > 0 ) { imgSrc =
-              item.product.productImage[0]; } %>
+      <!-- ACTION BUTTONS -->
+      <div class="mt-5 flex gap-4">
 
-              <img
-                src="<%= imgSrc %>"
-                alt="<%= item.productName %>"
-                class="w-20 h-20 object-cover rounded-lg border"
-              />
+        <% if (item.returnStatus === "none") { %>
 
-              <h3 class="text-lg font-bold text-gray-800">
-                <%= item.productName %>
-              </h3>
-            </div>
-
-            <% let itemStatusClasses = ""; 
-            if (item.status === "ordered") {
-              itemStatusClasses = "bg-yellow-100 text-yellow-700"; 
-            } else if (item.status === "cancelled") { 
-              itemStatusClasses = "bg-red-100 text-red-700"; 
-            } else if (item.status === "returned") {
-              itemStatusClasses = "bg-orange-100 text-orange-700"; 
-            } else if (item.status === "delivered") { 
-              itemStatusClasses = "bg-green-100 text-green-700"; 
-            } 
-            %>
-
-            <span
-              class="px-3 py-1 rounded-md text-xs font-semibold <%= itemStatusClasses %>"
-            >
-              <%= item.status %>
-            </span>
-          </div>
-
-          <!-- Price & Quantity -->
-          <div class="mt-3 text-gray-700">
-            <p>
-              <span class="font-semibold">Price:</span>
-              ₹ <%= item.regularPrice %>
-            </p>
-            <p>
-              <span class="font-semibold">Quantity:</span>
-              <%= item.quantity %>
-            </p>
-            <p>
-              <span class="font-semibold">Subtotal:</span>
-              ₹ <%= item.subtotal %>
-            </p>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="mt-5 flex gap-4">
-            <% if (item.canCancel) { %>
+          <% if (item.status === "ordered") { %>
+            <!-- CANCEL -->
             <button
               type="button"
               onclick="confirmCancel('<%= order._id %>', '<%= item._id %>')"
@@ -199,7 +189,10 @@
             >
               Cancel Item
             </button>
-            <% } %> <% if (item.canReturn) { %>
+          <% } %>
+
+          <% if (item.status === "delivered") { %>
+            <!-- RETURN -->
             <button
               type="button"
               onclick="confirmReturn('<%= order._id %>', '<%= item._id %>')"
@@ -207,22 +200,66 @@
             >
               Return Item
             </button>
-            <% } %>
-          </div>
-        </div>
-        <% }) %>
+          <% } %>
+
+        <% } %>
+
       </div>
 
-      <!-- Back Button -->
-      <div class="text-center mt-12">
-        <a
-          href="/orders"
-          class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-gray-300 transition"
-        >
-          Back to Orders
-        </a>
-      </div>
-    </main>
+      <!-- RETURN REQUESTED VIEW -->
+      <% if (item.returnStatus === "requested") { %>
+        <div class="mt-4 bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg">
+          <p class="font-semibold">Return Requested</p>
+
+          <% if (item.returnReason) { %>
+            <p class="text-sm mt-1"><span class="font-semibold">Reason:</span> <%= item.returnReason %></p>
+          <% } %>
+
+          <p class="text-xs mt-1">Waiting for admin approval...</p>
+        </div>
+      <% } %>
+
+      <!-- RETURN APPROVED VIEW -->
+      <% if (item.returnStatus === "approved") { %>
+        <div class="mt-4 bg-green-100 text-green-800 px-4 py-3 rounded-lg">
+          <p class="font-semibold">Return Approved</p>
+
+          <% if (item.refundAmount) { %>
+            <p class="text-sm mt-1">Refund: ₹ <%= item.refundAmount %> credited to wallet.</p>
+          <% } %>
+        </div>
+      <% } %>
+
+      <!-- RETURN REJECTED VIEW -->
+      <% if (item.returnStatus === "rejected") { %>
+        <div class="mt-4 bg-red-100 text-red-800 px-4 py-3 rounded-lg">
+          <p class="font-semibold">Return Request Rejected</p>
+
+          <% if (item.adminReturnNote) { %>
+            <p class="text-sm mt-1"><span class="font-semibold">Reason:</span> <%= item.adminReturnNote %></p>
+          <% } %>
+
+          <% if (item.returnReason) { %>
+            <p class="text-xs mt-1"><span class="font-semibold">Your return reason:</span> <%= item.returnReason %></p>
+          <% } %>
+        </div>
+      <% } %>
+
+    </div>
+  <% }) %>
+</div>
+
+  <!-- Back Button -->
+  <div class="text-center mt-12">
+    <a
+      href="/orders"
+      class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-gray-300 transition"
+    >
+      Back to Orders
+    </a>
+  </div>
+</main>
+
 
     <%- include("../../views/partials/user/footer") %>
   </body>
