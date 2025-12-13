@@ -15,7 +15,6 @@ export const getSingleAddress = async(req, res) => {
 }
 
 export const updateAddress = async(req, res) => {
-     console.log("Update Address");
     await updateEditAddress(req, res);
 }
 

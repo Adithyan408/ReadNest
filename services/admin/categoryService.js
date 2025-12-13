@@ -6,19 +6,29 @@ export const categoryLoad = async (req, res) => {
     const limit = 4;
     const skip = (page - 1) * limit;
 
-    const categoryData = await Category.find({})
-      .sort({ categoryNumber: 1 })
+    const search = req.query.search || "";
+
+    const query = {};
+
+    if (search.trim() !== "") {
+      query.categoryName = { $regex: search, $options: "i" };
+    }
+
+    const categoryData = await Category.find(query)
+      .sort({ categoryName: 1 })
       .skip(skip)
       .limit(limit);
 
-    const totalCategories = await Category.countDocuments();
+    const totalCategories = await Category.countDocuments(query);
     const totalPages = Math.ceil(totalCategories / limit);
+
     res.render("category", {
       data: categoryData,
       currentPage: page,
-      totalPages: totalPages,
-      totalCategories: totalCategories,
-      limit
+      totalPages,
+      totalCategories,
+      limit,
+      search,
     });
   } catch (error) {
     res.redirect("/pageerror");
@@ -26,7 +36,7 @@ export const categoryLoad = async (req, res) => {
 };
 
 export const postCategory = async (req, res) => {
-  const { categoryName } = req.body;
+  const { categoryName, isOffer, discountValue, startDate, endDate } = req.body;
   try {
     if (!categoryName) {
       return res.status(400).render("addCategory", {
@@ -34,7 +44,8 @@ export const postCategory = async (req, res) => {
         category: { categoryName },
       });
     }
-
+    console.log("offer:", isOffer);
+    console.log("offer:", discountValue);
     const existingCategory = await Category.findOne({ categoryName });
     if (existingCategory) {
       return res.status(400).render("addCategory", {
@@ -45,7 +56,14 @@ export const postCategory = async (req, res) => {
 
     const newCategory = new Category({
       categoryName,
+      offer: {
+        isOffer: isOffer === "true",
+        discountValue: isOffer === "true" ? Number(discountValue) : 0,
+        startDate: isOffer === "true" && startDate ? new Date(startDate) : null,
+        endDate: isOffer === "true" && endDate ? new Date(endDate) : null,
+      },
     });
+
     await newCategory.save();
 
     const limit = 4;
@@ -66,42 +84,42 @@ export const postCategory = async (req, res) => {
       totalPages: totalPages,
       totalCategories: totalCategories,
       status: "added",
-      limit
+      limit,
     });
   } catch (error) {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-export const getCategory = async(req, res) => {
-    try {
-        const categoryId = req.query.id;
-        let category = null;
-    
-        if (categoryId) {
-          category = await Category.findById(categoryId);
-        }
-    
-        res.render("addCategory", { category });
-      } catch (error) {
-        res.redirect("/pageerror");
-      }
-}
+export const getCategory = async (req, res) => {
+  try {
+    const categoryId = req.query.id;
+    let category = null;
 
-export const getListCategory = async(req, res) => {
-    try {
-        const page = req.query.page || 1;
-    
-        await Category.findByIdAndUpdate(req.query.id, { isListed: true });
-    
-        res.redirect(`/admin/category?page=${page}`);
-      } catch (err) {
-        res.redirect("/admin/pageerror");
-      }
-}
+    if (categoryId) {
+      category = await Category.findById(categoryId);
+    }
 
-export const getunlistCategory = async(req, res) => {
-    try {
+    res.render("addCategory", { category });
+  } catch (error) {
+    res.redirect("/pageerror");
+  }
+};
+
+export const getListCategory = async (req, res) => {
+  try {
+    const page = req.query.page || 1;
+
+    await Category.findByIdAndUpdate(req.query.id, { isListed: true });
+
+    res.redirect(`/admin/category?page=${page}`);
+  } catch (err) {
+    res.redirect("/admin/pageerror");
+  }
+};
+
+export const getunlistCategory = async (req, res) => {
+  try {
     const page = req.query.page || 1;
 
     await Category.findByIdAndUpdate(req.query.id, { isListed: false });
@@ -110,44 +128,72 @@ export const getunlistCategory = async(req, res) => {
   } catch (err) {
     res.redirect("/admin/pageerror");
   }
-}
+};
 
-export const getEditCategory = async(req, res) => {
-    try {
+export const getEditCategory = async (req, res) => {
+  try {
     const id = req.query.id;
-
     const category = await Category.findOne({ _id: id });
-    res.render("editCategory", { category });
+
+    const formattedCategory = {
+      ...category._doc,
+      startDate: category.startDate
+        ? category.startDate.toISOString().split("T")[0]
+        : "",
+      endDate: category.endDate
+        ? category.endDate.toISOString().split("T")[0]
+        : "",
+    };
+
+    res.render("editCategory", { category: formattedCategory });
   } catch (error) {
+    console.log(error);
     res.redirect("/pageerror");
   }
-}
+};
 
-export const postEditCategory = async(req, res) => {
-    try {
+export const postEditCategory = async (req, res) => {
+  try {
     const id = req.query.id;
-    const { categoryName,  stock, sales } = req.body;
-    const updateCategory = await Category.findByIdAndUpdate(
+    const { categoryName, isOffer, discountValue, startDate, endDate } =
+      req.body;
+
+    const updatedFields = {
+      categoryName,
+      offer: {},
+    };
+
+    if (isOffer === "true") {
+      updatedFields.offer.isOffer = true;
+      updatedFields.offer.discountValue = Number(discountValue);
+      updatedFields.offer.startDate = startDate ? new Date(startDate) : null;
+      updatedFields.offer.endDate = endDate ? new Date(endDate) : null;
+    } else {
+      updatedFields.offer.isOffer = false;
+      updatedFields.offer.discountValue = 0;
+      updatedFields.offer.startDate = null;
+      updatedFields.offer.endDate = null;
+    }
+
+    const updatedCategory = await Category.findByIdAndUpdate(
       id,
-      {
-        categoryName,
-        stock,
-        sales
-      },
+      updatedFields,
       { new: true }
     );
-    if (updateCategory) {
-      res.redirect("/admin/category?status=updated");
+
+    if (updatedCategory) {
+      return res.redirect("/admin/category?status=updated");
     } else {
-        res.json({message:"Something went wrong when editing"})
+      return res.json({ message: "Something went wrong when editing" });
     }
   } catch (error) {
+    console.error(error);
     res.redirect("/pageerror");
   }
-}
+};
 
-export const categoryDelete = async(req, res) => {
-    try {
+export const categoryDelete = async (req, res) => {
+  try {
     const { id } = req.query;
 
     if (!id) {
@@ -163,4 +209,4 @@ export const categoryDelete = async(req, res) => {
   } catch (error) {
     res.redirect("/pageerror");
   }
-}
+};

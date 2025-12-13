@@ -93,5 +93,12 @@
     </main>
 
     <%- include("../../views/partials/user/footer") %>
+    <script>
+      // Prevent loading previous checkout page
+      window.history.pushState(null, "", window.location.href);
+      window.onpopstate = function () {
+        window.location.href = "/cart"; 
+      };
+    </script>
   </body>
 </html>

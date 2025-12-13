@@ -4,7 +4,6 @@ import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
 
-
 export const getOrderDetailsPage = async (req, res) => {
   try {
     const orderId = req.params.orderId;
@@ -15,10 +14,23 @@ export const getOrderDetailsPage = async (req, res) => {
 
     if (!order) return res.render("notFound");
 
-    console.log(order.address);
+    order.items = order.items.map((item) => {
+      const canCancel =
+        item.status === "processing" || item.status === "ordered";
+
+      const canReturn = item.status === "delivered";
+
+      return {
+        ...item,
+        canCancel,
+        canReturn,
+      };
+    });
+
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+
     res.render("orderDetails", { order, selectedAddress: order.address });
   } catch (err) {
-    console.log("Order Details Error:", err);
     res.render("notFound");
   }
 };
@@ -39,7 +51,6 @@ export const cancelOrderItem = async (req, res) => {
 
     item.status = "cancelled";
     item.cancelledAt = new Date();
-
     await order.save();
 
     await Product.updateOne(
@@ -51,15 +62,20 @@ export const cancelOrderItem = async (req, res) => {
       .populate("items.product", "productImage")
       .lean();
 
-    return res.render("orderDetails", {
-      order: updatedOrder,
-      selectedAddress: updatedOrder.address,
-    });
+    updatedOrder.items = updatedOrder.items.map((i) => ({
+      ...i,
+      canCancel: i.status === "ordered",
+      canReturn: i.status === "delivered",
+    }));
+
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+
+    return res.redirect(`/orders/${orderId}`);
   } catch (err) {
-    console.log("Cancel Item Error:", err);
     return res.render("notFound");
   }
 };
+
 
 export const returnOrderItem = async (req, res) => {
   try {
@@ -76,25 +92,26 @@ export const returnOrderItem = async (req, res) => {
       return res.render("notFound");
     }
 
-    item.status = "returned";
-    item.returnedAt = new Date();
+    item.returnStatus = "requested"; 
     item.returnReason = returnReason;
 
     await order.save();
-
-    await Product.updateOne(
-      { _id: item.product },
-      { $inc: { stock: item.quantity } }
-    );
 
     const updatedOrder = await Order.findById(orderId)
       .populate("items.product", "productImage")
       .lean();
 
-    return res.render("orderDetails", {
-      order: updatedOrder,
-      selectedAddress: updatedOrder.address,
-    });
+    updatedOrder.items = updatedOrder.items.map((i) => ({
+      ...i,
+      canCancel: i.status === "ordered",
+      canReturn: i.status === "delivered",
+      returnPending: i.returnStatus === "requested", 
+    }));
+
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+
+    res.redirect(`/orders/${orderId}`);
+
   } catch (err) {
     console.log("Return Item Error:", err);
     return res.render("notFound");
@@ -271,7 +288,7 @@ export const getListOrders = async (req, res) => {
 
     const search = req.query.search?.trim() || "";
 
-    let query = { user: userId }; 
+    let query = { user: userId };
 
     if (search) {
       query.$expr = {

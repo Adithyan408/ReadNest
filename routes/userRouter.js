@@ -32,8 +32,6 @@ import {
 import {
   getProductsDetails,
   loadHome,
-  getComboOffers,
-  getRushHourOffers,
   liveSearch,
 } from "../controllers/user/productController.js";
 import nocache from "nocache";
@@ -41,8 +39,11 @@ import upload from "../middlewares/multer.js";
 import { addAddress, deleteAddress, getAddress, getSingleAddress, selectedAddressSave, updateAddress } from "../controllers/user/addressController.js";
 import { buyNowUpdate, cartUpdate, getCart, postCart, removeCart } from "../controllers/user/cartController.js";
 import { addAddressNew, addresChoose, loadBuyNow, loadCheckout, postAddress } from "../controllers/user/checkout.js";
-import { applyCoupon, getPayment, loadPlace } from "../controllers/user/payment.js";
+
+import { applyCoupon, getPayment, loadPlace, razorpay_order, razorpay_verify, removeCoupon } from "../controllers/user/payment.js";
+
 import { cancelOrder, invoicedownload, listOrders, loadOrderDetails,  returnOrder } from "../controllers/user/orderController.js";
+import { getWishlist, moveAllCart, moveToCart, removeAll, removeItem, toggleWishlist } from "../controllers/user/wishlistController.js";
 
 export const router = express.Router();
 
@@ -75,6 +76,12 @@ router.post("/account/add-address", addAddress);
 router.get("/account/address/:id", getSingleAddress);
 router.put("/account/address/update/:id", updateAddress);
 router.get("/account/address/delete/:id", deleteAddress);
+router.get("/wishlist", getWishlist)
+router.post("/wishlist/toggle", toggleWishlist);
+router.post("/wishlist/move-to-cart",  moveToCart);
+router.post("/wishlist/move-all-to-cart",  moveAllCart);
+router.post("/wishlist/remove", removeItem);
+router.post("/wishlist/remove-all", removeAll);
 
 
 router.get("/cart", getCart)
@@ -94,15 +101,18 @@ router.get("/checkout/payment", getPayment)
 router.post("/apply-coupon", applyCoupon);
 router.get("/place-order", loadPlace)
 router.get("/buy-now/:id",loadBuyNow)
+router.post("/remove-coupon", removeCoupon)
 
+router.post("/create-razorpay-order", razorpay_order);
+router.post("/verify-razorpay-payment", razorpay_verify);
 
-router.get("/orders/:orderId", loadOrderDetails);
+router.get("/orders/:orderId",  loadOrderDetails);
 router.get("/orders/:orderId/invoice", invoicedownload);
-router.get("/orders", listOrders);
+router.get("/orders",  listOrders);
 
 
 
-router.post("/orders/:orderId/items/:itemId/cancel", cancelOrder);
+router.post("/orders/:orderId/items/:itemId/cancel", nocache(), cancelOrder);
 router.post("/orders/:orderId/items/:itemId/return",returnOrder);
 
 router.get("/forgot-password", getForgotPassword);
@@ -116,5 +126,3 @@ router.post("/forgot-verify-otp", forgotVerifyOtp);
 router.get("/product", getProductsDetails);
 router.get("/live-search", liveSearch);
 
-router.get("/combo", getComboOffers);
-router.get("/rush-hour", getRushHourOffers);

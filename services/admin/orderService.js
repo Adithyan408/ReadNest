@@ -1,6 +1,6 @@
 import Order from "../../models/orderSchema.js";
 import Product from "../../models/productsSchema.js";
-
+import User from "../../models/userSchema.js";
 
 export const loadOrders = async (req, res) => {
   try {
@@ -35,7 +35,7 @@ export const loadOrders = async (req, res) => {
     // ❗ FIX: USE ONLY THE SAVED STATUS
     const ordersWithStatus = allOrders.map((order) => ({
       ...order,
-      overallStatus: order.status, 
+      overallStatus: order.status,
     }));
 
     let filteredOrders = ordersWithStatus;
@@ -66,7 +66,6 @@ export const loadOrders = async (req, res) => {
     res.render("admin-error");
   }
 };
-
 
 export const orderDetails = async (req, res) => {
   try {
@@ -156,5 +155,77 @@ export const updateItemStatus = async (req, res) => {
   } catch (err) {
     console.log("Update item status error:", err);
     return res.json({ success: false, message: "Server error" });
+  }
+};
+
+export const approveReturn = async (req, res) => {
+  try {
+    const { orderId, itemId } = req.params;
+    const SHIPPING_FEE = 20;
+
+    const order = await Order.findById(orderId).populate("items.product");
+    if (!order) return res.json({ success: false, message: "Order not found" });
+
+    const item = order.items.id(itemId);
+    if (!item) return res.json({ success: false, message: "Item not found" });
+
+    if (item.returnStatus !== "requested") {
+      return res.json({
+        success: false,
+        message: "No return request to approve",
+      });
+    }
+
+    item.returnStatus = "approved";
+    item.status = "returned";
+    item.returnedAt = new Date();
+
+    await Product.findByIdAndUpdate(item.product._id, {
+      $inc: { stock: item.quantity },
+    });
+
+    const refundAmount = item.subtotal - SHIPPING_FEE;
+    item.refundAmount = refundAmount;
+
+    const user = await User.findById(order.user);
+    user.wallet += refundAmount;
+    await user.save();
+
+    await order.save();
+
+    res.json({ success: true, message: "Return approved" });
+  } catch (err) {
+    console.log("Approve Return Error:", err);
+    res.json({ success: false, message: "Server error" });
+  }
+};
+
+export const rejectReturn = async (req, res) => {
+  try {
+    const { orderId, itemId } = req.params;
+    const { note } = req.body;
+
+    const order = await Order.findById(orderId);
+    if (!order) return res.json({ success: false, message: "Order not found" });
+
+    const item = order.items.id(itemId);
+    if (!item) return res.json({ success: false, message: "Item not found" });
+
+    if (item.returnStatus !== "requested") {
+      return res.json({
+        success: false,
+        message: "No return request to reject",
+      });
+    }
+
+    item.returnStatus = "rejected";
+    item.adminReturnNote = note;
+
+    await order.save();
+
+    res.json({ success: true, message: "Return rejected" });
+  } catch (err) {
+    console.log("Reject Return Error:", err);
+    res.json({ success: false, message: "Server error" });
   }
 };

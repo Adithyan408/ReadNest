@@ -170,7 +170,7 @@
           </a>
 
           <a
-            href="/admin/voucher"
+            href="/admin/coupon"
             class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
           >
             <i class="fas fa-ticket-alt text-xl mr-4"></i>
@@ -389,13 +389,44 @@
           <p><span class="font-semibold">Subtotal:</span> ₹ <%= item.subtotal %></p>
         </div>
 
-        <!-- RETURN REASON IF RETURNED -->
-        <% if (item.status === "returned" && item.returnReason) { %>
-          <p class="mt-4 bg-orange-100 text-orange-800 px-4 py-2 rounded-lg">
-            <span class="font-semibold">Return Reason:</span><br>
-            <%= item.returnReason %>
-          </p>
-        <% } %>
+        <!-- RETURN REQUESTED BY CUSTOMER -->
+<% if (item.returnStatus === "requested") { %>
+  <div class="mt-4 bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg">
+    <p><span class="font-semibold">Return Requested:</span> <%= item.returnReason %></p>
+
+    <div class="flex gap-4 mt-3">
+      <!-- APPROVE BUTTON -->
+      <button 
+        onclick="approveReturn('<%= order._id %>', '<%= item._id %>')" 
+        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+        Approve Return
+      </button>
+
+      <!-- REJECT BUTTON -->
+      <button 
+        onclick="rejectReturn('<%= order._id %>', '<%= item._id %>')" 
+        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+        Reject Return
+      </button>
+    </div>
+  </div>
+<% } %>
+
+<!-- SHOW APPROVED RETURN -->
+<% if (item.returnStatus === "approved") { %>
+  <p class="mt-4 bg-green-100 text-green-800 px-4 py-2 rounded-lg">
+    ✔ Return Approved — Refund: ₹ <%= item.refundAmount %>
+  </p>
+<% } %>
+
+<!-- SHOW REJECTED RETURN -->
+<% if (item.returnStatus === "rejected") { %>
+  <p class="mt-4 bg-red-100 text-red-800 px-4 py-2 rounded-lg">
+    ❌ Return Rejected<br>
+    <span class="font-semibold">Reason:</span> <%= item.adminReturnNote %>
+  </p>
+<% } %>
+
 </div>
       </div>
     <% }) %>
@@ -468,7 +499,59 @@ function updateItemStatus(orderId, itemId, newStatus) {
     });
   });
 }
-  
+  function approveReturn(orderId, itemId) {
+  Swal.fire({
+    title: "Approve Return?",
+    text: "This will restock the product and refund the user.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Approve",
+    confirmButtonColor: "#16a34a"
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+
+    fetch(`/admin/orders/${orderId}/items/${itemId}/approve-return`, {
+      method: "POST"
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        Swal.fire("Approved!", data.message, "success")
+          .then(() => location.reload());
+      } else {
+        Swal.fire("Error", data.message, "error");
+      }
+    });
+  });
+}
+
+function rejectReturn(orderId, itemId) {
+  Swal.fire({
+    title: "Reject Return",
+    input: "text",
+    inputPlaceholder: "Enter rejection note...",
+    showCancelButton: true,
+    confirmButtonText: "Reject",
+    confirmButtonColor: "#dc2626"
+  }).then((result) => {
+    if (!result.isConfirmed || !result.value) return;
+
+    fetch(`/admin/orders/${orderId}/items/${itemId}/reject-return`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ note: result.value })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        Swal.fire("Rejected!", data.message, "success")
+          .then(() => location.reload());
+      } else {
+        Swal.fire("Error", data.message, "error");
+      }
+    });
+  });
+}
 </script>
   </body>
 </html>

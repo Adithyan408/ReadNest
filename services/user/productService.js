@@ -2,6 +2,7 @@ import User from "../../models/userSchema.js";
 import Product from "../../models/productsSchema.js";
 import Category from "../../models/categorySchema.js";
 import Banner from "../../models/bannerSchema.js";
+import Wishlist from "../../models/wishlistSchema.js";
 
 export const homeLoad = async (req, res) => {
   try {
@@ -27,7 +28,6 @@ export const homeLoad = async (req, res) => {
 
     let filter = {
       isListed: true,
-      specialOfferType: { $in: ["none", null, undefined] },
     };
 
     if (category) filter.category = category;
@@ -78,16 +78,78 @@ export const homeLoad = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const products = await Product.find(filter)
+      .populate("category")
       .sort(sortQuery)
       .skip(skip)
       .limit(limit);
 
+    const processedProducts = await Promise.all(
+      products.map(async (p) => {
+        const productObj = p.toObject();
+        const regularPrice = p.regularPrice;
+        const now = new Date();
+
+        // PRODUCT OFFER
+        let productDiscount = 0;
+        if (p.offer?.isOffer) {
+          const start = p.offer.startDate;
+          const end = p.offer.endDate;
+
+          const valid =
+            (!start || now >= new Date(start)) &&
+            (!end || now <= new Date(end));
+
+          if (valid) productDiscount = p.offer.discountValue;
+        }
+
+        // CATEGORY OFFER (FIXED)
+        let categoryDiscount = 0;
+
+        const categoryDoc = await Category.findOne({
+          categoryName: p.category,
+        });
+
+        if (categoryDoc?.offer?.isOffer) {
+          const start = categoryDoc.offer.startDate;
+          const end = categoryDoc.offer.endDate;
+
+          const valid =
+            (!start || now >= new Date(start)) &&
+            (!end || now <= new Date(end));
+
+          if (valid) categoryDiscount = categoryDoc.offer.discountValue;
+        }
+
+        // BEST OFFER
+        const bestDiscount = Math.max(productDiscount, categoryDiscount);
+
+        if (bestDiscount > 0) {
+          productObj.offerPrice = Math.round(
+            regularPrice - (regularPrice * bestDiscount) / 100
+          );
+        } else {
+          productObj.offerPrice = null;
+        }
+
+        return productObj;
+      })
+    );
+
     const totalProducts = await Product.countDocuments(filter);
     const totalPages = Math.ceil(totalProducts / limit);
 
+    let wishlistProducts = [];
     let userData = null;
     if (user) {
       userData = await User.findById(user._id);
+
+      const wishlist = await Wishlist.findOne({
+        userId: user._id,
+      }).lean();
+
+      wishlistProducts = wishlist
+        ? wishlist.products.map((id) => id.toString())
+        : [];
     }
 
     const categories = await Category.find({ isListed: true });
@@ -111,7 +173,7 @@ export const homeLoad = async (req, res) => {
     const baseQuery = queryParams.toString();
     res.render("home", {
       user: userData,
-      products,
+      products: processedProducts,
       totalPages,
       currentPage: page,
       categories,
@@ -124,6 +186,7 @@ export const homeLoad = async (req, res) => {
       sort,
       homeBanner: homeBanner ? homeBanner.bannerImage : null,
       isHome: isHome,
+      wishlistProducts,
     });
   } catch (error) {
     res.redirect("/notfound");
@@ -140,208 +203,137 @@ export const productDetails = async (req, res) => {
 
     const baseQuery = new URLSearchParams(q).toString();
 
-    const product = await Product.findById(productId).populate("category");
+    let product = await Product.findById(productId);
     if (!product) return res.redirect("/");
 
     const categoryDoc = await Category.findOne({
       categoryName: product.category,
     });
 
-    if(!product || !product.isListed){
-      return res.redirect("/");
-    }
-    if (!categoryDoc || !categoryDoc.isListed) {
+    if (!product.isListed || !categoryDoc?.isListed) {
       return res.redirect("/");
     }
 
-    let similarProducts = await Product.find({
+    const now = new Date();
+    let regularPrice = product.regularPrice;
+
+    let productDiscount = 0;
+    if (product.offer?.isOffer) {
+      const start = product.offer.startDate;
+      const end = product.offer.endDate;
+
+      const valid =
+        (!start || now >= new Date(start)) && (!end || now <= new Date(end));
+
+      if (valid) productDiscount = product.offer.discountValue;
+    }
+
+    let categoryDiscount = 0;
+    if (categoryDoc?.offer?.isOffer) {
+      const start = categoryDoc.offer.startDate;
+      const end = categoryDoc.offer.endDate;
+
+      const valid =
+        (!start || now >= new Date(start)) && (!end || now <= new Date(end));
+
+      if (valid) categoryDiscount = categoryDoc.offer.discountValue;
+    }
+
+    const bestDiscount = Math.max(productDiscount, categoryDiscount);
+
+    let offerPrice = null;
+    if (bestDiscount > 0) {
+      offerPrice = Math.round(
+        regularPrice - (regularPrice * bestDiscount) / 100
+      );
+    }
+
+    product = {
+      ...product.toObject(),
+      offerPrice,
+      bestDiscount,
+    };
+
+    let similarProductsRaw = await Product.find({
       category: product.category,
       _id: { $ne: productId },
       isListed: true,
     }).limit(4);
 
+  
+    let similarProducts = await Promise.all(
+      similarProductsRaw.map(async (p) => {
+        const obj = p.toObject();
+        const now = new Date();
+        let regularPrice = p.regularPrice;
+
+  
+        let productDiscount = 0;
+        if (p.offer?.isOffer) {
+          const start = p.offer.startDate;
+          const end = p.offer.endDate;
+
+          const valid =
+            (!start || now >= new Date(start)) &&
+            (!end || now <= new Date(end));
+
+          if (valid) productDiscount = p.offer.discountValue;
+        }
+
+        let categoryDiscount = 0;
+        const categoryDoc = await Category.findOne({
+          categoryName: p.category,
+        });
+
+        if (categoryDoc?.offer?.isOffer) {
+          const start = categoryDoc.offer.startDate;
+          const end = categoryDoc.offer.endDate;
+
+          const valid =
+            (!start || now >= new Date(start)) &&
+            (!end || now <= new Date(end));
+
+          if (valid) categoryDiscount = categoryDoc.offer.discountValue;
+        }
+
+      
+        const bestDiscount = Math.max(productDiscount, categoryDiscount);
+
+  
+        if (bestDiscount > 0) {
+          obj.offerPrice = Math.round(
+            regularPrice - (regularPrice * bestDiscount) / 100
+          );
+        } else {
+          obj.offerPrice = null;
+        }
+
+        return obj;
+      })
+    );
+
+    let wishlistProducts = [];
+    if (req.session.user?._id) {
+      const wishlist = await Wishlist.findOne({
+        userId: req.session.user._id,
+      }).lean();
+
+      wishlistProducts = wishlist
+        ? wishlist.products.map((id) => id.toString())
+        : [];
+    }
 
     return res.render("productsDetails", {
       product,
       similarProducts,
       currentPage: page,
       baseQuery,
+      wishlistProducts,
+      user: req.session.user,
     });
   } catch (error) {
     console.log(error);
     return res.redirect("/notFound");
-  }
-};
-
-export const comboOffers = async (req, res) => {
-  try {
-    const user = req.session.user;
-
-    const min = req.query.min || null;
-    const max = req.query.max || null;
-
-    let selectedLanguages = [];
-    if (req.query.languages) {
-      if (Array.isArray(req.query.languages)) {
-        selectedLanguages = req.query.languages;
-      } else {
-        selectedLanguages = req.query.languages.split(",");
-      }
-    }
-
-    if (req.query.category) {
-      return res.redirect("/");
-    }
-
-    let filter = {
-      isListed: true,
-      specialOfferType: "combo",
-    };
-    const categories = await Category.find({ isListed: true });
-
-    if (min || max) {
-      filter.regularPrice = {};
-      if (min) filter.regularPrice.$gte = parseInt(min);
-      if (max) filter.regularPrice.$lte = parseInt(max);
-    }
-
-    if (selectedLanguages.length > 0) {
-      filter.language = { $in: selectedLanguages };
-    }
-
-    const page = parseInt(req.query.page) || 1;
-    const limit = 20;
-    const skip = (page - 1) * limit;
-
-    const comboProducts = await Product.find(filter)
-      .sort({ productName: 1 })
-      .skip(skip)
-      .limit(limit);
-
-    const totalProducts = await Product.countDocuments(filter);
-    const totalPages = Math.ceil(totalProducts / limit);
-
-    const languages = await Product.distinct("language", {
-      specialOfferType: "combo",
-    });
-
-    const queryParams = new URLSearchParams();
-
-    if (min) queryParams.set("min", min);
-    if (max) queryParams.set("max", max);
-    selectedLanguages.forEach((lang) => queryParams.append("languages", lang));
-
-    const baseQuery = queryParams.toString();
-
-    const comboBanner = await Banner.findOne({ title: "combo" });
-
-    if (totalProducts < 0) {
-      res.render("noOffers");
-    } else {
-      res.render("combo", {
-        products: comboProducts,
-        totalPages,
-        totalProducts,
-        currentPage: page,
-        languages,
-        selectedLanguages,
-        min,
-        max,
-        baseQuery,
-        user,
-        categories,
-        comboBanner: comboBanner ? comboBanner.bannerImage : null,
-      });
-    }
-  } catch (error) {
-    res.redirect("/notfound");
-  }
-};
-
-export const rushHour = async (req, res) => {
-  try {
-    const user = req.session.user;
-
-    const min = req.query.min || null;
-    const max = req.query.max || null;
-
-    let selectedLanguages = [];
-    if (req.query.languages) {
-      if (Array.isArray(req.query.languages)) {
-        selectedLanguages = req.query.languages;
-      } else {
-        selectedLanguages = req.query.languages.split(",");
-      }
-    }
-
-    if (req.query.category) {
-      return res.redirect("/");
-    }
-
-    let filter = {
-      isListed: true,
-      specialOfferType: "rush-hour",
-    };
-
-    const categories = await Category.find({ isListed: true });
-
-    if (min || max) {
-      filter.regularPrice = {};
-      if (min) filter.regularPrice.$gte = parseInt(min);
-      if (max) filter.regularPrice.$lte = parseInt(max);
-    }
-
-    if (selectedLanguages.length > 0) {
-      filter.language = { $in: selectedLanguages };
-    }
-
-    const page = parseInt(req.query.page) || 1;
-    const limit = 20;
-    const skip = (page - 1) * limit;
-
-    const rushProducts = await Product.find(filter)
-      .sort({ productName: 1 })
-      .skip(skip)
-      .limit(limit);
-
-    const totalProducts = await Product.countDocuments(filter);
-    const totalPages = Math.ceil(totalProducts / limit);
-
-    const languages = await Product.distinct("language", {
-      specialOfferType: "rush-hour",
-    });
-
-    const queryParams = new URLSearchParams();
-
-    if (min) queryParams.set("min", min);
-    if (max) queryParams.set("max", max);
-    selectedLanguages.forEach((lang) => queryParams.append("languages", lang));
-
-    const baseQuery = queryParams.toString();
-
-    const rushHourBanner = await Banner.findOne({ title: "rushHour" });
-
-    if (totalProducts <= 0) {
-      res.render("noOffers");
-    } else {
-      res.render("rush-hour", {
-        products: rushProducts,
-        totalPages,
-        totalProducts,
-        currentPage: page,
-        languages,
-        selectedLanguages,
-        min,
-        max,
-        baseQuery,
-        user,
-        categories,
-        rushHourBanner: rushHourBanner ? rushHourBanner.bannerImage : null,
-      });
-    }
-  } catch (error) {
-    console.log(error);
-    res.redirect("/notfound");
   }
 };
 

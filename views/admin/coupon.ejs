@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Banners - ReadNest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+
+      * {
+        font-family: "Poppins", sans-serif;
+      }
+
+      .sidebar-item {
+        transition: all 0.3s ease;
+      }
+
+      .sidebar-item:hover {
+        background-color: #d1d5db;
+      }
+
+      .sidebar-item.active {
+        background-color: #d1d5db;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden; /* disable full page scroll */
+      }
+
+      .main-scroll-area {
+        height: calc(100vh - 80px); /* header height is ~80px */
+        overflow-y: auto; /* enable vertical scroll only on the right */
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <!-- Header -->
+    <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
+      <div class="flex items-center justify-between px-6 py-4">
+        <!-- Logo -->
+        <a href="/admin">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-14 h-14 bg-orange-900 rounded-full flex items-center justify-center"
+            >
+              <i class="fas fa-book-open text-white text-2xl"></i>
+            </div>
+            <span class="text-2xl font-bold text-gray-800">ReadNest</span>
+          </div>
+        </a>
+
+        <!-- Right Side -->
+        <div class="flex items-center space-x-6">
+          <button
+            class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
+          >
+            <i class="fas fa-blog text-gray-700"></i>
+            <span class="text-base font-semibold text-gray-900">Blog</span>
+          </button>
+
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-user-circle text-4xl text-gray-600"></i>
+            <span class="text-base font-semibold text-gray-600">ADMIN</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside
+        class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col"
+      >
+        <nav class="flex-1 overflow-y-auto py-4">
+          <a
+            href="/admin"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-th-large text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">DashBoard</span>
+          </a>
+
+          <a
+            href="/admin/products"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-box text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Products</span>
+          </a>
+
+          <a
+            href="/admin/orders"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-shopping-bag text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Orders List</span>
+          </a>
+
+          <a
+            href="/admin/users"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-users text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Customers</span>
+          </a>
+
+          <a
+            href="/admin/sales"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-chart-line text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Sales</span>
+          </a>
+
+          <a
+            href="/admin/category"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-th text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Category</span>
+          </a>
+
+          <a
+            href="/admin/coupon"
+            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-ticket-alt text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Voucher</span>
+          </a>
+
+          <a
+            href="/admin/banner"
+            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
+          >
+            <i class="fas fa-image text-xl mr-4"></i>
+            <span class="text-lg font-semibold text-gray-900">Banner</span>
+          </a>
+        </nav>
+
+        <!-- Logout Button at Bottom -->
+
+        <div class="border-t-2 border-gray-400 bg-gray-300">
+          <a href="/admin/logout">
+            <button
+              class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
+            >
+              <i
+                class="fas fa-sign-out-alt text-xl mr-4 text-gray-700 group-hover:text-red-600"
+              ></i>
+              <span
+                class="text-lg font-semibold text-gray-900 group-hover:text-red-600"
+                >LOG OUT</span
+              >
+            </button>
+          </a>
+        </div>
+      </aside>
+
+      <!-- Main Content - Banners -->
+      <main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
+        <%- include('../../views/partials/breadcrumb') %>
+
+        <!-- Status Message -->
+        <% if (status) { %>
+        <div
+          id="statusMessage"
+          class="mb-4 p-3 text-center font-semibold rounded-md <%= status.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' %>"
+        >
+          <%= status %>
+        </div>
+
+        <script>
+          setTimeout(() => {
+            document.getElementById("statusMessage").style.display = "none";
+          }, 3000);
+        </script>
+        <% } %>
+
+        <!-- Coupon Table -->
+        <div class="bg-white rounded-2xl shadow-lg">
+          <div
+            class="p-6 border-b border-gray-200 flex justify-between items-center"
+          >
+            <h2 class="text-3xl font-bold text-gray-900">Coupons</h2>
+
+            <a href="/admin/coupon/addCoupon">
+              <button
+                class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-md"
+              >
+                ADD COUPON
+              </button>
+            </a>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+              <thead>
+                <tr class="bg-black text-white">
+                  <th class="px-6 py-4 border">Code</th>
+                  <th class="px-6 py-4 border">Discount (%)</th>
+                  <th class="px-6 py-4 border">Min Purchase</th>
+                  <th class="px-6 py-4 border">Expiry</th>
+                  <th class="px-6 py-4 border">Status</th>
+                  <th class="px-6 py-4 border text-center">Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <% if (data.length === 0) { %>
+                <tr>
+                  <td
+                    colspan="5"
+                    class="text-center py-10 text-gray-500 text-lg border"
+                  >
+                    <i
+                      class="fas fa-ticket-alt text-3xl mb-2 text-gray-400"
+                    ></i>
+                    No coupons found.
+                  </td>
+                </tr>
+                <% } else { %> <% data.forEach(coupon => { %>
+                <tr class="border hover:bg-gray-100">
+                  <td class="px-6 py-4 border"><%= coupon.code %></td>
+                  <td class="px-6 py-4 border"><%= coupon.discount %>%</td>
+
+                  <td class="px-6 py-4 border">
+                    ₹<%= coupon.minPurchase || 0 %>
+                  </td>
+
+                  <td class="px-6 py-4 border">
+                    <%= coupon.expiry.toDateString() %>
+                  </td>
+
+                  <td class="px-6 py-4 border">
+                    <% if (coupon.isUsed) { %>
+                    <span
+                      class="px-3 py-1 bg-red-200 text-red-800 rounded-full text-sm font-semibold"
+                      >USED</span
+                    >
+                    <% } else { %>
+                    <span
+                      class="px-3 py-1 bg-green-200 text-green-800 rounded-full text-sm font-semibold"
+                      >ACTIVE</span
+                    >
+                    <% } %>
+                  </td>
+
+                  <td class="px-6 py-4 border text-center">
+                    <div class="flex justify-center space-x-4 text-gray-700">
+                      <% const expiryDate =
+                      coupon.expiry.toISOString().split('T')[0]; %>
+
+                      <button
+                        onclick="openEditModal(
+    '<%= coupon._id %>',
+    '<%= coupon.code %>',
+    '<%= coupon.discount %>',
+    '<%= coupon.minPurchase || 0 %>',
+    '<%= expiryDate %>'
+  )"
+                      >
+                        <i
+                          class="fas fa-edit text-lg hover:text-yellow-500 transition"
+                        ></i>
+                      </button>
+
+                      <!-- DELETE BUTTON -->
+                      <button onclick="confirmDelete('<%= coupon._id %>')">
+                        <i
+                          class="fas fa-trash-alt text-lg hover:text-red-600 transition"
+                        ></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <% }) %> <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Edit Coupon Modal -->
+        <div
+          id="editModal"
+          class="hidden fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50"
+        >
+          <div class="bg-white w-full max-w-lg p-6 rounded-xl shadow-xl">
+            <h3 class="text-2xl font-bold mb-4 text-gray-800">Edit Coupon</h3>
+
+            <form
+              id="editForm"
+              action="/admin/coupon/updateCoupon"
+              method="POST"
+              class="space-y-4"
+            >
+              <input type="hidden" id="edit_id" name="id" />
+
+              <div>
+                <label class="block font-semibold mb-1">Coupon Code</label>
+                <input
+                  id="edit_code"
+                  name="code"
+                  class="w-full p-3 bg-gray-100 border rounded-lg outline-none"
+                />
+              </div>
+
+              <div>
+                <label class="block font-semibold mb-1">Discount (%)</label>
+                <input
+                  id="edit_discount"
+                  name="discount"
+                  type="number"
+                  class="w-full p-3 bg-gray-100 border rounded-lg outline-none"
+                />
+              </div>
+              <div>
+                <label class="block font-semibold mb-1"
+                  >Minimum Purchase (₹)</label
+                >
+                <input
+                  id="edit_minPurchase"
+                  name="minPurchase"
+                  type="number"
+                  min="0"
+                  class="w-full p-3 bg-gray-100 border rounded-lg outline-none"
+                />
+              </div>
+
+              <div>
+                <label class="block font-semibold mb-1">Expiry Date</label>
+                <input
+                  id="edit_expiry"
+                  name="expiry"
+                  type="date"
+                  class="w-full p-3 bg-gray-100 border rounded-lg outline-none"
+                />
+              </div>
+
+              <div class="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  onclick="closeEditModal()"
+                  class="px-5 py-2 bg-gray-300 font-semibold rounded-lg hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="px-5 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700"
+                >
+                  Update
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+
+      <script>
+        function openEditModal(id, code, discount, minPurchase, expiry) {
+          document.getElementById("edit_id").value = id;
+          document.getElementById("edit_code").value = code;
+          document.getElementById("edit_discount").value = discount;
+          document.getElementById("edit_minPurchase").value = minPurchase || 0;
+          document.getElementById("edit_expiry").value = expiry;
+
+          document.getElementById("editModal").classList.remove("hidden");
+        }
+
+        function closeEditModal() {
+          document.getElementById("editModal").classList.add("hidden");
+        }
+
+        // DELETE CONFIRMATION
+        function confirmDelete(id) {
+          Swal.fire({
+            title: "Are you sure?",
+            text: "This coupon will be permanently deleted.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = "/admin/coupon/delete?id=" + id;
+            }
+          });
+        }
+      </script>
+    </div>
+  </body>
+</html>

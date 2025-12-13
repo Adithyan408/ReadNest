@@ -16,7 +16,7 @@ const userSchema = new Schema(
       type: String,
       default: null,
     },
-   
+
     phone: {
       type: String,
       required: false,
@@ -55,12 +55,11 @@ const userSchema = new Schema(
         ref: "Cart",
       },
     ],
-    wallet: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Wishlist",
-      },
-    ],
+    wallet: {
+      type: Number,
+      default: 0,
+    },
+
     walletBalance: {
       type: Number,
       default: 0,
@@ -87,9 +86,18 @@ const userSchema = new Schema(
         },
       },
     ],
+    referralCode: { type: String, unique: true },
+    referredBy: { type: String, default: null },
   },
   { timestamps: true }
 );
+
+userSchema.pre("save", function (next) {
+  if (!this.referralCode) {
+    this.referralCode = this._id.toString().slice(-6).toUpperCase();
+  }
+  next();
+});
 
 const User = mongoose.model("User", userSchema);
 

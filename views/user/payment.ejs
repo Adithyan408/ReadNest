@@ -139,30 +139,76 @@
               <option value="Wallet">Wallet</option>
             </select>
 
-            <!-- COUPON SECTION -->
+            <!-- COUPON DROPDOWN -->
             <div class="mt-6">
-              <label class="text-gray-700 font-medium">Apply Coupon</label>
+              <input type="hidden" id="couponCode" />
+              <label class="text-gray-700 font-medium">Choose Coupon</label>
 
-              <div class="flex gap-2 mt-2">
-                <input
-                  type="text"
-                  id="couponCode"
-                  class="w-full p-3 border rounded-lg"
-                  placeholder="Enter coupon code"
-                />
-
-                <button
-                  onclick="applyCoupon()"
-                  class="bg-green-600 hover:bg-green-700 text-white px-4 rounded-lg font-semibold"
+              <div id="couponWrapper" class="relative mt-2">
+                <!-- Dropdown Button -->
+                <div
+                  onclick="toggleCouponDropdown()"
+                  class="w-full p-3 border rounded-lg bg-white cursor-pointer flex justify-between items-center hover:bg-gray-50 transition"
                 >
-                  Apply
-                </button>
-              </div>
+                  <div class="flex items-center gap-2">
+                    <!-- Coupon pill -->
+                    <span
+                      id="selectedCouponText"
+                      class="text-gray-600 px-2 py-1 rounded-md bg-gray-100 text-sm font-medium"
+                    >
+                      Select a coupon
+                    </span>
 
-              <p
-                id="couponMessage"
-                class="text-sm text-green-700 mt-2 hidden"
-              ></p>
+                    <!-- Remove Button -->
+                    <button
+                      id="removeCouponBtn"
+                      onclick="removeCoupon(event)"
+                      class="hidden text-red-600 text-xs font-semibold px-2 py-1 rounded-md bg-red-100 hover:bg-red-200 transition"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <i class="fas fa-chevron-down text-gray-500"></i>
+                </div>
+
+                <!-- Dropdown List -->
+                <div
+                  id="couponDropdown"
+                  class="absolute w-full bg-white border rounded-lg mt-1 hidden shadow-lg max-h-56 overflow-y-auto z-20"
+                >
+                  <% if (coupons.length === 0) { %>
+
+                  <p class="text-sm text-gray-500 p-3">No coupons available</p>
+
+                  <% } else { %> <% coupons.forEach(c => { %>
+
+                  <div
+                    class="p-3 border-b cursor-pointer hover:bg-gray-100"
+                    onclick="selectCouponFromList('<%= c.code %>')"
+                  >
+                    <div class="flex justify-between">
+                      <span class="font-semibold text-gray-800"
+                        ><%= c.code %></span
+                      >
+                      <span class="text-green-700 font-semibold"
+                        ><%= c.discount %>% OFF</span
+                      >
+                    </div>
+
+                    <p class="text-xs text-gray-500">
+                      Min purchase: ₹<%= c.minPurchase || 0 %>
+                    </p>
+
+                    <p class="text-xs text-gray-400">
+                      Expires: <%= c.expiry.toDateString() %>
+                    </p>
+                  </div>
+
+                  <% }) %> <% } %>
+                </div>
+                <p id="couponMessage" class="text-sm mt-2 hidden"></p>
+              </div>
             </div>
 
             <!-- PRICE DETAILS -->
@@ -174,16 +220,26 @@
                 >
               </div>
 
-              <div class="flex justify-between mb-3">
+              <div
+                id="discountBox"
+                class="flex justify-between mb-3 <%= discount > 0 ? '' : 'hidden' %>"
+              >
                 <span class="text-gray-700">Discount</span>
-                <span class="font-semibold text-green-700" id="discountAmount"
-                  >₹ <%= discount %></span
+                <span class="font-semibold text-green-700" id="discountAmount">
+                  ₹ <%= discount %>
+                </span>
+              </div>
+
+              <div class="flex justify-between mb-3">
+                <span class="text-gray-700">Shipping Charge</span>
+                <span class="font-semibold text-gray-800"
+                  >₹ <%= shippingCharge %></span
                 >
               </div>
 
               <div class="flex justify-between text-lg font-bold border-t pt-4">
                 <span>Total Amount</span>
-                <span id="totalAmount">₹ <%= totalAmount %></span>
+                <span id="totalAmount">₹ <%= payableAmount %></span>
               </div>
             </div>
 
@@ -201,23 +257,60 @@
 
     <%- include("../../views/partials/user/footer") %>
 
-    <script>
-      
-      let originalTotal = Number("<%- totalAmount %>");
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-      function processPayment() {
-        const method = document.getElementById("paymentMethod").value;
-        if (!method) {
-          alert("Please select a payment method");
-          return;
+    <script>
+      const SHIPPING = Number("<%= shippingCharge %>");
+    </script>
+
+    <script>
+      let baseTotal = Number("<%= totalAmount %>"); // original VAT + subtotal + shipping
+      let originalTotal = baseTotal;
+       let couponValid = true;
+      function toggleCouponDropdown() {
+        document.getElementById("couponDropdown").classList.toggle("hidden");
+      }
+
+      function selectCouponFromList(code) {
+        // Set text in dropdown
+        document.getElementById("selectedCouponText").textContent = code;
+
+        // Apply coupon in input box
+        document.getElementById("couponCode").value = code;
+
+        // Hide dropdown
+        document.getElementById("couponDropdown").classList.add("hidden");
+
+        // Apply coupon automatically
+        applyCoupon();
+      }
+
+      // Close dropdown if clicked outside
+      document.addEventListener("click", function (event) {
+        const wrapper = document.getElementById("couponWrapper");
+        const dropdown = document.getElementById("couponDropdown");
+
+        if (!wrapper.contains(event.target)) {
+          dropdown.classList.add("hidden");
         }
-        window.location.href = `/place-order?payment=${method}`;
+      });
+
+      function selectCouponFromList(code) {
+        document.getElementById("selectedCouponText").textContent = code;
+        document.getElementById("couponCode").value = code;
+
+        // SHOW REMOVE BUTTON
+        document.getElementById("removeCouponBtn").classList.remove("hidden");
+
+        document.getElementById("couponDropdown").classList.add("hidden");
+
+        applyCoupon();
       }
 
       function applyCoupon() {
         const coupon = document.getElementById("couponCode").value.trim();
         if (!coupon) {
-          alert("Enter a coupon code!");
+          Swal.fire("Error", "Enter a coupon code!", "error");
           return;
         }
 
@@ -231,35 +324,138 @@
         })
           .then((res) => res.json())
           .then((data) => {
-            console.log(data);
             const message = document.getElementById("couponMessage");
             const discountElement = document.getElementById("discountAmount");
             const totalElement = document.getElementById("totalAmount");
-            const singleTotalEl = document.getElementById("singleTotal");
 
             if (!data.success) {
+              couponValid = false;
               message.innerHTML = data.message;
               message.classList.remove("hidden");
               message.classList.add("text-red-600");
+
+              Swal.fire("Invalid Coupon", data.message, "error");
               return;
             }
 
-            // SUCCESS — update UI
+            // SUCCESS — now coupon is valid
+            couponValid = true;
+
             message.innerHTML = data.message;
             message.classList.remove("text-red-600");
             message.classList.remove("hidden");
 
             discountElement.innerText = "₹ " + data.discount;
-            totalElement.innerText = "₹ " + data.finalAmount;
 
-            // BUY NOW update
-            if (singleTotalEl) {
-              singleTotalEl.innerText = "₹ " + data.finalAmount;
+            const newTotal = data.finalAmount + SHIPPING;
+            totalElement.innerText = "₹ " + newTotal;
+
+            originalTotal = data.finalAmount;
+            document.getElementById("discountBox").classList.remove("hidden");
+          });
+      }
+
+      function removeCoupon(e) {
+       
+        e.stopPropagation();
+
+        couponValid = true;
+        document.getElementById("couponCode").value = "";
+        document.getElementById("selectedCouponText").textContent =
+          "Select a coupon";
+
+        document.getElementById("removeCouponBtn").classList.add("hidden");
+
+        document.getElementById("discountAmount").innerText = "₹ 0";
+        document.getElementById("couponMessage").classList.add("hidden");
+
+        document.getElementById("totalAmount").innerText = "₹ " + baseTotal;
+
+        const singleTotalEl = document.getElementById("singleTotal");
+        if (singleTotalEl) singleTotalEl.innerText = "₹ " + baseTotal;
+
+        originalTotal = baseTotal;
+
+        fetch("/remove-coupon", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      async function processPayment() {
+        const method = document.getElementById("paymentMethod").value;
+
+        if (!method) {
+          Swal.fire("Wait!", "Please select a payment method", "warning");
+          return;
+        }
+
+        if (method === "COD") {
+          if (!couponValid) {
+            Swal.fire(
+              "Coupon Error",
+              "Cannot place order because the coupon is invalid.",
+              "error"
+            );
+            return;
+          }
+
+          window.location.href = `/place-order?payment=COD`;
+          return;
+        }
+
+        if (method === "Razorpay") {
+          try {
+            const orderData = await fetch("/create-razorpay-order", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+            });
+
+            const { success, order } = await orderData.json();
+            if (!success) {
+              return Swal.fire(
+                "Error",
+                "Unable to create payment order",
+                "error"
+              );
             }
 
-            // update global new total
-            originalTotal = data.finalAmount;
-          });
+            const options = {
+              key: "<%= process.env.RAZO_API_KEY %>",
+              amount: order.amount,
+              currency: "INR",
+              name: "ReadNest",
+              description: "Order Payment",
+              order_id: order.id,
+
+              handler: async function (response) {
+                const verify = await fetch("/verify-razorpay-payment", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(response),
+                });
+
+                const verifyRes = await verify.json();
+
+                if (verifyRes.success) {
+                  window.location.href = `/place-order?payment=ONLINE`;
+                } else {
+                  Swal.fire(
+                    "Payment Failed",
+                    "Verification error occurred",
+                    "error"
+                  );
+                }
+              },
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+          } catch (e) {
+            console.error(e);
+            Swal.fire("Error", "Something went wrong with payment", "error");
+          }
+        }
       }
     </script>
   </body>

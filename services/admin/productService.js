@@ -30,40 +30,32 @@ export const postProducts = async (req, res) => {
       yearOfPublishing,
       pages,
       regularPrice,
-      salePrice,
       stock,
       isbnNumber,
       category,
-      specialOfferType,
+      isOffer,
+      discountValue,
+      startDate,
+      endDate,
     } = req.body;
 
     let errors = {};
     const categories = await Category.find({ isListed: true });
 
-     const imageUrls =
+    const imageUrls =
       req.files && req.files.length > 0
         ? req.files.map((file) => file.path)
         : [];
 
-    let isOfferProduct =
-      specialOfferType === "combo" || specialOfferType === "rush-hour";
-
-    if (isOfferProduct) {
-      if (!productName) errors.productName = "Product Name is required.";
-      if (!regularPrice) errors.regularPrice = "Regular Price is required.";
-      if (!salePrice) errors.salePrice = "Sale Price is required.";
-      if (!stock) errors.stock = "Stock is required.";
-      if(!req.files || req.files.length < 1) errors.imageUrls = "Image is required";
-    } else {
-      if (!productName) errors.productName = "Product Name is required.";
-      if (!description) errors.description = "Product Description is required.";
-      if (!author) errors.author = "Author Name is required.";
-      if (!category) errors.category = "Category is required.";
-      if (!language) errors.language = "Language is required.";
-      if (!regularPrice) errors.regularPrice = "Price is required.";
-      if (!stock) errors.stock = "Stock is required.";
-      if(!req.files || req.files.length < 1) errors.imageUrls = "Image is required";
-    }
+    if (!productName) errors.productName = "Product Name is required.";
+    if (!description) errors.description = "Product Description is required.";
+    if (!author) errors.author = "Author Name is required.";
+    if (!category) errors.category = "Category is required.";
+    if (!language) errors.language = "Language is required.";
+    if (!regularPrice) errors.regularPrice = "Price is required.";
+    if (!stock) errors.stock = "Stock is required.";
+    if (!req.files || req.files.length < 1)
+      errors.imageUrls = "Image is required";
 
     if (Object.keys(errors).length > 0) {
       return res.render("addProduct", {
@@ -73,7 +65,7 @@ export const postProducts = async (req, res) => {
       });
     }
 
-   
+    const offerEnabled = isOffer === "true";
 
     const newProduct = new Product({
       productName,
@@ -91,7 +83,12 @@ export const postProducts = async (req, res) => {
       stock,
       productImage: imageUrls,
       isbnNumber,
-      specialOfferType,
+      offer: {
+        isOffer: offerEnabled,
+        discountValue: offerEnabled ? Number(discountValue) : 0,
+        startDate: offerEnabled && startDate ? new Date(startDate) : null,
+        endDate: offerEnabled && endDate ? new Date(endDate) : null,
+      },
     });
 
     await newProduct.save();
@@ -146,8 +143,13 @@ export const postEditProducts = async (req, res) => {
       regularPrice,
       stock,
       isbnNumber,
+      isOffer,
+      discountValue,
+      startDate,
+      endDate,
     } = req.body;
 
+    const offerEnabled = isOffer === "true";
     const updatedFields = {
       productName,
       productNumber,
@@ -162,6 +164,12 @@ export const postEditProducts = async (req, res) => {
       regularPrice,
       stock,
       isbnNumber,
+      offer: {
+        isOffer: offerEnabled,
+        discountValue: offerEnabled ? Number(discountValue) : 0,
+        startDate: offerEnabled && startDate ? new Date(startDate) : null,
+        endDate: offerEnabled && endDate ? new Date(endDate) : null,
+      },
     };
 
     if (newImageUrls.length > 0) {
@@ -267,11 +275,6 @@ export const loadFilteredProducts = async (req, res) => {
       query.category = category;
     }
 
-    if (offer === "rushHour") {
-      query.specialOfferType = "rushHour";
-    } else if (offer === "combo") {
-      query.specialOfferType = "combo";
-    }
     let sortQuery = {};
 
     switch (sort) {
@@ -334,7 +337,6 @@ export const imageCropper = async (req, res) => {
       return res.json({ success: false, message: "No file uploaded" });
     }
 
-    // req.file.path = Cloudinary URL
     return res.json({
       success: true,
       url: req.file.path,
