@@ -89,19 +89,13 @@ const userSchema = new Schema(
     ],
     referralCode: { type: String, unique: true },
     referredBy: { type: String, default: null },
-    referralRewards: [
-      {
-        couponCode: String,
-        createdAt: { type: Date, default: Date.now },
-      },
-    ],
   },
   { timestamps: true }
 );
 
 userSchema.pre("save", function (next) {
   if (!this.referralCode) {
-    this.referralCode = this._id.toString().slice(-6);
+    this.referralCode = this._id.toString().slice(-6).toUpperCase();
   }
   next();
 });

@@ -66,7 +66,8 @@ export const postAddCoupon = async (req, res) => {
       expiry: new Date(expiry),
       isUsed: false,
       userId: null,
-      minPurchase
+      minPurchase,
+      type:"general"
     });
 
     req.session.status = "Coupon created successfully!";

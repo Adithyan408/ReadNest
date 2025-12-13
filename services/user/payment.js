@@ -8,12 +8,12 @@ import Coupon from "../../models/couponSchema.js";
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import couponUsage from "../../models/couponUsage.js";
+import ReferralReward from "../../models/referalSchema.js";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZO_API_KEY,
   key_secret: process.env.RAZO_KEY_SECRET,
 });
-
 export const loadPayment = async (req, res) => {
   try {
     const calculateOffer = async (product) => {
@@ -22,11 +22,10 @@ export const loadPayment = async (req, res) => {
 
       let productDiscount = 0;
       if (product.offer?.isOffer) {
-        const start = product.offer.startDate;
-        const end = product.offer.endDate;
-
         const valid =
-          (!start || now >= new Date(start)) && (!end || now <= new Date(end));
+          (!product.offer.startDate ||
+            now >= new Date(product.offer.startDate)) &&
+          (!product.offer.endDate || now <= new Date(product.offer.endDate));
 
         if (valid) productDiscount = product.offer.discountValue;
       }
@@ -37,11 +36,11 @@ export const loadPayment = async (req, res) => {
       });
 
       if (categoryDoc?.offer?.isOffer) {
-        const start = categoryDoc.offer.startDate;
-        const end = categoryDoc.offer.endDate;
-
         const valid =
-          (!start || now >= new Date(start)) && (!end || now <= new Date(end));
+          (!categoryDoc.offer.startDate ||
+            now >= new Date(categoryDoc.offer.startDate)) &&
+          (!categoryDoc.offer.endDate ||
+            now <= new Date(categoryDoc.offer.endDate));
 
         if (valid) categoryDiscount = categoryDoc.offer.discountValue;
       }
@@ -65,14 +64,12 @@ export const loadPayment = async (req, res) => {
     if (!userId) return res.redirect("/login");
 
     const userData = await User.findById(userId).lean();
+    const cartDoc = await Cart.findOne({ userId }).lean();
 
-    const cartData = await Cart.findOne({ userId }).lean();
-    const hasCartItems = cartData?.items?.length > 0;
-    const hasBuyNow = req.query.buyNow || req.session.buyNowProductId;
+    const hasCartItems = cartDoc?.items?.length > 0;
+    const isBuyNow = req.query.buyNow || req.session.buyNowProductId;
 
-    if (!hasCartItems && !hasBuyNow) {
-      return res.redirect("/cart");
-    }
+    if (!hasCartItems && !isBuyNow) return res.redirect("/cart");
 
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
@@ -80,30 +77,23 @@ export const loadPayment = async (req, res) => {
     let selectedAddress = null;
 
     if (addresses.length > 0) {
-      if (req.session.selectedAddressId) {
-        selectedAddress = addresses.find(
+      selectedAddress =
+        addresses.find(
           (a) => a._id.toString() === req.session.selectedAddressId
-        );
-      }
-
-      if (!selectedAddress) {
-        selectedAddress =
-          addresses.find((a) => a.addressLabel === "Home") || addresses[0];
-      }
+        ) ||
+        addresses.find((a) => a.addressLabel === "Home") ||
+        addresses[0];
     }
 
     let cart = [];
-    const buyNowId = req.query.buyNow;
 
-    if (buyNowId) {
-      const product = await Product.findById(buyNowId).lean();
+    if (req.query.buyNow) {
+      const product = await Product.findById(req.query.buyNow).lean();
       if (!product) return res.redirect("/notfound");
 
       const qty = req.session.buyNowQuantity || 1;
-
       const offer = await calculateOffer(product);
 
-      req.session.buyNowProductId = buyNowId;
       req.session.buyNowUnitPrice = offer.finalPrice;
 
       cart = [
@@ -113,54 +103,77 @@ export const loadPayment = async (req, res) => {
           image: product.productImage[0],
           quantity: qty,
           price: offer.finalPrice,
-          offerPrice: offer.offerPrice,
           regularPrice: product.regularPrice,
+          offerPrice: offer.offerPrice,
           stock: product.stock,
         },
       ];
     } else {
-      const cartData = await Cart.findOne({ userId })
+      const fullCart = await Cart.findOne({ userId })
         .populate("items.productId")
         .lean();
 
-      cart = cartData
-        ? await Promise.all(
-            cartData.items.map(async (i) => {
-              const p = i.productId;
-              const offer = await calculateOffer(p);
+      cart = await Promise.all(
+        fullCart.items.map(async (i) => {
+          const p = i.productId;
+          const offer = await calculateOffer(p);
 
-              return {
-                _id: p._id,
-                name: p.productName,
-                image: p.productImage[0],
-                quantity: i.quantity,
-                price: offer.finalPrice,
-                offerPrice: offer.offerPrice,
-                regularPrice: p.regularPrice,
-                stock: p.stock,
-              };
-            })
-          )
-        : [];
+          return {
+            _id: p._id,
+            name: p.productName,
+            image: p.productImage[0],
+            quantity: i.quantity,
+            price: offer.finalPrice,
+            offerPrice: offer.offerPrice,
+            regularPrice: p.regularPrice,
+            stock: p.stock,
+          };
+        })
+      );
     }
 
-    let subtotal = 0;
-    cart.forEach((item) => {
-      subtotal += item.price * item.quantity;
-    });
+    // PRICE CALCULATION
+    let subtotal = cart.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
 
     const now = new Date();
-    const coupons = await Coupon.find({
-      isUsed: false,
+
+    // GENERAL COUPONS
+    const generalCoupons = await Coupon.find({
+      type: "general",
       expiry: { $gte: now },
     }).lean();
 
-    const discount = 0;
-    const totalAmount = subtotal - discount;
+    // REFERRAL REWARDS (unused only)
+    const referralRewards = await ReferralReward.find({
+      userId,
+      used: false,
+    }).lean();
 
-    req.session.total = totalAmount;
+    const referralCodes = referralRewards.map((r) => r.couponCode);
+
+    const referralCoupons = await Coupon.find({
+      code: { $in: referralCodes },
+      expiry: { $gte: now },
+    }).lean();
+
+    // FILTER USED GENERAL COUPONS
+    const usedGeneral = await couponUsage.find({ userId, used: true }).lean();
+    const usedSet = new Set(usedGeneral.map((u) => u.couponId.toString()));
+
+    const filteredGeneral = generalCoupons.filter(
+      (c) => !usedSet.has(c._id.toString())
+    );
+
+    // FINAL COUPON LIST
+    const coupons = [...filteredGeneral, ...referralCoupons];
+
     const shippingCharge = 20;
-    const payableAmount = totalAmount + shippingCharge;
+    const finalAmount = subtotal + shippingCharge;
+
+    req.session.total = subtotal;
 
     res.render("payment", {
       user: userData,
@@ -168,11 +181,11 @@ export const loadPayment = async (req, res) => {
       selectedAddress,
       cart,
       subtotal,
-      discount,
-      totalAmount,
+      discount: 0,
+      totalAmount: subtotal,
       shippingCharge,
-      payableAmount,
-      isBuyNow: Boolean(buyNowId),
+      payableAmount: finalAmount,
+      isBuyNow: Boolean(req.query.buyNow),
       coupons,
     });
   } catch (error) {
@@ -180,90 +193,69 @@ export const loadPayment = async (req, res) => {
     res.render("notFound");
   }
 };
-
 export const postCoupon = async (req, res) => {
   try {
     const { coupon, totalAmount } = req.body;
-    if (!coupon || totalAmount == null) {
-      return res.json({ success: false, message: "Invalid data" });
-    }
-
     const code = coupon.trim().toUpperCase();
-    const cartTotal = Number(totalAmount);
-
-    if (Number.isNaN(cartTotal) || cartTotal <= 0) {
-      return res.json({ success: false, message: "Invalid cart total" });
-    }
-
-    if (req.session.appliedCoupon === code) {
-      return res.json({
-        success: false,
-        message: "Coupon already applied!",
-      });
-    }
+    const userId = req.session.user._id;
 
     const couponDoc = await Coupon.findOne({ code });
-
-    const usage = await couponUsage.findOne({
-      userId: req.session.user._id,
-      couponId: couponDoc._id,
-      used: true,
-    });
-
-    if (usage) {
-      return res.json({
-        success: false,
-        message: "You have already used this coupon!",
-      });
-    }
-
-    if (!couponDoc) {
-      return res.json({
-        success: false,
-        message: "Invalid coupon code!",
-      });
-    }
+    if (!couponDoc)
+      return res.json({ success: false, message: "Invalid coupon!" });
 
     const now = new Date();
+    if (couponDoc.expiry < now)
+      return res.json({ success: false, message: "Coupon expired!" });
 
-    if (couponDoc.expiry && couponDoc.expiry < now) {
-      return res.json({
-        success: false,
-        message: "Coupon has expired!",
+    let cartTotal = Number(totalAmount);
+
+    if (couponDoc.type === "referral") {
+      const reward = await ReferralReward.findOne({
+        userId,
+        couponCode: code,
+        used: false,
       });
+
+      if (!reward)
+        return res.json({
+          success: false,
+          message: "No referral reward available!",
+        });
+    } else {
+      const used = await couponUsage.findOne({
+        userId,
+        couponId: couponDoc._id,
+        used: true,
+      });
+
+      if (used)
+        return res.json({
+          success: false,
+          message: "You already used this coupon!",
+        });
     }
 
-    if (couponDoc.isUsed) {
+    if (cartTotal < couponDoc.minPurchase)
       return res.json({
         success: false,
-        message: "Coupon already used!",
+        message: `Minimum purchase ₹${couponDoc.minPurchase} required`,
       });
-    }
 
-    const minPurchase = couponDoc.minPurchase || 0;
-    if (cartTotal < minPurchase) {
-      return res.json({
-        success: false,
-        message: `Minimum purchase required: ₹${minPurchase}`,
-      });
-    }
-
-    const discountValue = Math.round((cartTotal * couponDoc.discount) / 100);
-    const finalAmount = cartTotal - discountValue;
+    const discountValue = Math.round((couponDoc.discount / 100) * cartTotal);
 
     req.session.appliedCoupon = code;
     req.session.discountValue = discountValue;
-    req.session.total = finalAmount;
+    req.session.total = cartTotal - discountValue;
 
     return res.json({
       success: true,
-      message: "Coupon applied successfully!",
+      message: "Coupon applied!",
       discount: discountValue,
-      finalAmount,
+      finalAmount: cartTotal - discountValue,
     });
-  } catch (err) {
-    console.log("Coupon Error:", err);
-    return res.json({ success: false, message: "Server Error" });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "Server error" });
   }
 };
 
@@ -280,18 +272,22 @@ export const orderPlaced = async (req, res) => {
     }
 
     let totalAmount = req.session.total || 0;
-
     let appliedCode = req.session.appliedCoupon;
     let discountValue = req.session.discountValue || 0;
 
-    if (!totalAmount) {
-      return res.redirect("/cart");
-    }
+    if (!totalAmount) return res.redirect("/cart");
+
+    let couponDoc = null;
 
     if (appliedCode) {
       const couponDoc = await Coupon.findOne({ code: appliedCode });
 
-      if (couponDoc) {
+      if (couponDoc.type === "referral") {
+        await ReferralReward.findOneAndUpdate(
+          { userId, couponCode: appliedCode, used: false },
+          { used: true, usedAt: new Date() }
+        );
+      } else {
         await couponUsage.findOneAndUpdate(
           { userId, couponId: couponDoc._id },
           { used: true, usedAt: new Date() },
@@ -318,11 +314,10 @@ export const orderPlaced = async (req, res) => {
 
       let productDiscount = 0;
       if (product.offer?.isOffer) {
-        const start = product.offer.startDate;
-        const end = product.offer.endDate;
-
         const valid =
-          (!start || now >= new Date(start)) && (!end || now <= new Date(end));
+          (!product.offer.startDate ||
+            now >= new Date(product.offer.startDate)) &&
+          (!product.offer.endDate || now <= new Date(product.offer.endDate));
 
         if (valid) productDiscount = product.offer.discountValue;
       }
@@ -333,28 +328,25 @@ export const orderPlaced = async (req, res) => {
       });
 
       if (categoryDoc?.offer?.isOffer) {
-        const start = categoryDoc.offer.startDate;
-        const end = categoryDoc.offer.endDate;
-
         const valid =
-          (!start || now >= new Date(start)) && (!end || now <= new Date(end));
+          (!categoryDoc.offer.startDate ||
+            now >= new Date(categoryDoc.offer.startDate)) &&
+          (!categoryDoc.offer.endDate ||
+            now <= new Date(categoryDoc.offer.endDate));
 
         if (valid) categoryDiscount = categoryDoc.offer.discountValue;
       }
 
       const bestDiscount = Math.max(productDiscount, categoryDiscount);
-
       const offerPrice =
         bestDiscount > 0
           ? Math.round(regularPrice - (regularPrice * bestDiscount) / 100)
           : null;
 
-      const finalPrice = offerPrice || regularPrice;
-
       return {
         regularPrice,
         offerPrice,
-        finalPrice,
+        finalPrice: offerPrice || regularPrice,
         bestDiscount,
       };
     };
@@ -406,6 +398,7 @@ export const orderPlaced = async (req, res) => {
         })
       );
     }
+
     const shippingCharge = 20;
     const payableAmount = totalAmount + shippingCharge;
 
@@ -417,7 +410,7 @@ export const orderPlaced = async (req, res) => {
       couponCode: appliedCode || null,
       shippingCharge,
       payableAmount,
-      paymentId: paymentId,
+      paymentId,
       paymentMethod: paymentMode,
       paymentStatus: paymentMode === "ONLINE" ? "paid" : "pending",
       status: "processing",
@@ -453,6 +446,7 @@ export const orderPlaced = async (req, res) => {
       orderId: newOrder._id,
     });
   } catch (error) {
+    console.log("Order Error:", error);
     res.render("notFound");
   }
 };
