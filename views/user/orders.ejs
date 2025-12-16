@@ -89,7 +89,7 @@
 
           <div class="mt-4 grid md:grid-cols-3 gap-6">
             <div>
-              <p class="text-gray-700"><span class="font-semibold">Total:</span> ₹ <%= order.total %></p>
+              <p class="text-gray-700"><span class="font-semibold">Total:</span> ₹ <%= order.items.reduce((sum, i) => sum + i.subtotal, 0) %></p>
               <p class="text-gray-700"><span class="font-semibold">Items:</span> <%= order.items.length %></p>
             </div>
 

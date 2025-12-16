@@ -15,6 +15,10 @@ const walletSchema = new Schema(
       default: 0,
       min: 0,
     },
+    refunded: {
+      type: Boolean,
+      default: false,
+    },
 
     transactions: [
       {
@@ -40,7 +44,7 @@ const walletSchema = new Schema(
         },
 
         paymentId: {
-          type: String, 
+          type: String,
           default: null,
         },
 
@@ -51,6 +55,7 @@ const walletSchema = new Schema(
       },
     ],
   },
+
   { timestamps: true }
 );
 

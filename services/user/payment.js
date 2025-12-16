@@ -360,16 +360,22 @@ export const orderPlaced = async (req, res) => {
 
       const offer = await calculateOffer(product);
 
+      const unitPrice = offer.finalPrice;
+      const itemTotal = unitPrice * qty;
+
       cartItems = [
         {
           product: product._id,
           productName: product.productName,
+
+          // display-only
           regularPrice: offer.regularPrice,
-          offerPrice: offer.offerPrice,
-          finalPrice: offer.finalPrice,
-          bestDiscount: offer.bestDiscount,
+
+          // 🔥 PRICE FREEZE (IMPORTANT)
+          unitPrice, // ₹300
           quantity: qty,
-          subtotal: offer.finalPrice * qty,
+          subtotal: itemTotal, // ₹300
+
           productImage: product.productImage,
           stock: product.stock,
         },
@@ -379,20 +385,30 @@ export const orderPlaced = async (req, res) => {
         "items.productId"
       );
 
+      const shippingPerItem = Math.round(
+        req.session.shippingCharge / cartData.items.length
+      );
+
       cartItems = await Promise.all(
         cartData.items.map(async (i) => {
           const p = i.productId;
           const offer = await calculateOffer(p);
 
+          const unitPrice = offer.finalPrice;
+          const itemTotal = unitPrice * i.quantity;
+
           return {
             product: p._id,
             productName: p.productName,
+
+            // display-only
             regularPrice: offer.regularPrice,
-            offerPrice: offer.offerPrice,
-            finalPrice: offer.finalPrice,
-            bestDiscount: offer.bestDiscount,
+
+            // 🔥 PRICE FREEZE (THIS IS WHAT REFUNDS USE)
+            unitPrice,
             quantity: i.quantity,
-            subtotal: offer.finalPrice * i.quantity,
+            subtotal: itemTotal,
+
             productImage: p.productImage,
             stock: p.stock,
           };
@@ -403,7 +419,7 @@ export const orderPlaced = async (req, res) => {
     const newOrder = new Order({
       user: userId,
       items: cartItems,
-      total: req.session.subtotal,
+      total: req.session.payableAmount,
       discount: req.session.discountValue,
       couponCode: appliedCode || null,
       shippingCharge: req.session.shippingCharge,
@@ -413,6 +429,7 @@ export const orderPlaced = async (req, res) => {
       paymentStatus: paymentMode === "ONLINE" ? "paid" : "pending",
       status: "processing",
       address: selectedAddress ? { ...selectedAddress } : null,
+      finalPayable: payableAmount
     });
 
     await newOrder.save();
@@ -440,7 +457,7 @@ export const orderPlaced = async (req, res) => {
       user: userData,
       addresses,
       selectedAddress,
-      totalAmount,
+      totalAmount: req.session.payableAmount,
       orderId: newOrder._id,
     });
   } catch (error) {

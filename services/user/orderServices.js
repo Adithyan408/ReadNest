@@ -3,6 +3,10 @@ import Product from "../../models/productsSchema.js";
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
+import {
+  creditWallet,
+  calculateRefundAmount,
+} from "../../middlewares/walletHandler.js";
 
 export const getOrderDetailsPage = async (req, res) => {
   try {
@@ -45,37 +49,57 @@ export const cancelOrderItem = async (req, res) => {
     const item = order.items.id(itemId);
     if (!item) return res.render("notFound");
 
-    if (item.status !== "ordered") {
+    if (!["ordered", "shipped"].includes(item.status)) {
       return res.render("notFound");
     }
 
+    const previousStatus = item.status;
     item.status = "cancelled";
     item.cancelledAt = new Date();
-    await order.save();
 
-    await Product.updateOne(
-      { _id: item.product },
-      { $inc: { stock: item.quantity } }
+    const activeItems = order.items.filter(
+      (i) => !["cancelled", "returned"].includes(i.status)
     );
 
-    const updatedOrder = await Order.findById(orderId)
-      .populate("items.product", "productImage")
-      .lean();
+    let refundAmount = item.subtotal;
+    let note = "Refund for cancelled item";
 
-    updatedOrder.items = updatedOrder.items.map((i) => ({
-      ...i,
-      canCancel: i.status === "ordered",
-      canReturn: i.status === "delivered",
-    }));
+    if (order.discount > 0 && !order.couponAdjusted) {
+      refundAmount -= order.discount;
+      order.couponAdjusted = true;
+      note += " (coupon adjusted)";
+    }
 
-    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+
+    if (activeItems.length === 0 && !order.shippingRefunded) {
+      refundAmount += order.shippingCharge;
+      order.shippingRefunded = true;
+      note += " + shipping refunded";
+    }
+
+    item.refundAmount = refundAmount;
+
+    order.status =
+      activeItems.length === 0 ? "cancelled" : "partially_cancelled";
+
+    await order.save();
+
+    if (["ONLINE", "WALLET"].includes(order.paymentMethod)) {
+      await creditWallet({
+        userId: order.user,
+        amount: item.refundAmount,
+        note,
+        orderId: order._id,
+        paymentId: order.paymentId || null,
+      });
+    }
 
     return res.redirect(`/orders/${orderId}`);
   } catch (err) {
+    console.log("Cancel Order Error:", err);
     return res.render("notFound");
   }
 };
-
 
 export const returnOrderItem = async (req, res) => {
   try {
@@ -86,32 +110,21 @@ export const returnOrderItem = async (req, res) => {
     if (!order) return res.render("notFound");
 
     const item = order.items.id(itemId);
-    if (!item) return res.render("notFound");
-
-    if (item.status !== "delivered") {
+    if (!item || item.status !== "delivered") {
       return res.render("notFound");
     }
 
-    item.returnStatus = "requested"; 
+
+    if (item.returnStatus !== "none") {
+      return res.redirect(`/orders/${orderId}`);
+    }
+
+    item.returnStatus = "requested";
     item.returnReason = returnReason;
 
     await order.save();
 
-    const updatedOrder = await Order.findById(orderId)
-      .populate("items.product", "productImage")
-      .lean();
-
-    updatedOrder.items = updatedOrder.items.map((i) => ({
-      ...i,
-      canCancel: i.status === "ordered",
-      canReturn: i.status === "delivered",
-      returnPending: i.returnStatus === "requested", 
-    }));
-
-    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
-
     res.redirect(`/orders/${orderId}`);
-
   } catch (err) {
     console.log("Return Item Error:", err);
     return res.render("notFound");

@@ -1,6 +1,9 @@
 import Order from "../../models/orderSchema.js";
 import Product from "../../models/productsSchema.js";
-import User from "../../models/userSchema.js";
+import {
+  creditWallet,
+  calculateRefundAmount,
+} from "../../middlewares/walletHandler.js";
 
 export const loadOrders = async (req, res) => {
   try {
@@ -32,7 +35,6 @@ export const loadOrders = async (req, res) => {
       .lean()
       .sort({ createdAt: -1 });
 
-    // ❗ FIX: USE ONLY THE SAVED STATUS
     const ordersWithStatus = allOrders.map((order) => ({
       ...order,
       overallStatus: order.status,
@@ -158,45 +160,71 @@ export const updateItemStatus = async (req, res) => {
   }
 };
 
+
 export const approveReturn = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
-    const SHIPPING_FEE = 20;
 
-    const order = await Order.findById(orderId).populate("items.product");
-    if (!order) return res.json({ success: false, message: "Order not found" });
+    const order = await Order.findById(orderId);
+    if (!order) return res.redirect("/admin/orders");
 
     const item = order.items.id(itemId);
-    if (!item) return res.json({ success: false, message: "Item not found" });
-
-    if (item.returnStatus !== "requested") {
-      return res.json({
-        success: false,
-        message: "No return request to approve",
-      });
+    if (!item || item.returnStatus !== "requested") {
+      return res.redirect("/admin/orders");
     }
 
+    if (item.refundAmount && item.refundAmount > 0) {
+      return res.redirect(`/admin/orders/${orderId}`);
+    }
     item.returnStatus = "approved";
     item.status = "returned";
     item.returnedAt = new Date();
 
-    await Product.findByIdAndUpdate(item.product._id, {
-      $inc: { stock: item.quantity },
-    });
+    const activeItems = order.items.filter(
+      (i) => !["cancelled", "returned"].includes(i.status)
+    );
 
-    const refundAmount = item.subtotal - SHIPPING_FEE;
+    let refundAmount = item.subtotal;
+    let note = "Refund for returned item";
+
+    if (order.discount > 0 && !order.couponAdjusted) {
+      refundAmount -= order.discount;
+      order.couponAdjusted = true;
+      note += " (coupon adjusted)";
+    }
+
+    if (activeItems.length === 0 && !order.shippingRefunded) {
+      refundAmount += order.shippingCharge;
+      order.shippingRefunded = true;
+      note += " + shipping refunded";
+    }
+
     item.refundAmount = refundAmount;
 
-    const user = await User.findById(order.user);
-    user.wallet += refundAmount;
-    await user.save();
+    order.status =
+      activeItems.length === 0 ? "cancelled" : "partially_cancelled";
+
+    if (["ONLINE", "WALLET"].includes(order.paymentMethod)) {
+      await creditWallet({
+        userId: order.user,
+        amount: refundAmount,
+        note,
+        orderId: order._id,
+        paymentId: order.paymentId || null,
+      });
+    }
+
+    await Product.updateOne(
+      { _id: item.product },
+      { $inc: { stock: item.quantity } }
+    );
 
     await order.save();
 
-    res.json({ success: true, message: "Return approved" });
+    res.redirect(`/admin/orders/${orderId}`);
   } catch (err) {
     console.log("Approve Return Error:", err);
-    res.json({ success: false, message: "Server error" });
+    res.redirect("/admin/orders");
   }
 };
 

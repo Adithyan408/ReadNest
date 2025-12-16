@@ -2,6 +2,10 @@ import Wallet from "../../models/walletSchema.js";
 
 export const loadWallet = async (req, res) => {
   try {
+    if (!req.session.user || !req.session.user._id) {
+      return res.redirect("/login");
+    }
+
     const userId = req.session.user._id;
 
     let wallet = await Wallet.findOne({ user: userId });
@@ -9,7 +13,6 @@ export const loadWallet = async (req, res) => {
     if (!wallet) {
       wallet = await Wallet.create({ user: userId });
     }
-
 
     let totalRefunds = 0;
     let totalSpent = 0;
@@ -36,7 +39,7 @@ export const loadWallet = async (req, res) => {
       totalAdded
     });
   } catch (err) {
-    console.error(err);
+    console.error("Wallet Load Error:", err);
     res.redirect("/500");
   }
 };

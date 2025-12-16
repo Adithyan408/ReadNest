@@ -6,31 +6,48 @@ const orderItemSchema = new mongoose.Schema({
     ref: "Product",
     required: true,
   },
+
   productName: String,
-  regularPrice: Number,
+
+  regularPrice: Number, // MRP (display only)
+  unitPrice: Number, // 🔥 actual paid per unit
+  quantity: { type: Number, required: true },
+
+  subtotal: Number, // unitPrice * quantity
+
+  shippingShare: Number, // per-item shipping (important for refunds)
+
   stock: { type: Number, required: true },
-  subtotal: Number,
+
   productImage: {
     type: [String],
     required: true,
   },
-  quantity: { type: Number },
+
   status: {
     type: String,
     enum: ["ordered", "shipped", "delivered", "cancelled", "returned"],
     default: "ordered",
   },
-  returnReason: String,
-  cancelledAt: Date,
-  returnedAt: Date,
+
   returnStatus: {
     type: String,
     enum: ["none", "requested", "approved", "rejected"],
     default: "none",
   },
 
-  adminReturnNote: { type: String }, 
-  refundAmount: Number, 
+  returnReason: String,
+  adminReturnNote: String,
+
+  cancelledAt: Date,
+  returnedAt: Date,
+
+  refundAmount: Number,
+  refundStatus: {
+    type: String,
+    enum: ["none", "initiated", "completed"],
+    default: "none",
+  },
 });
 
 const orderSchema = new mongoose.Schema(
@@ -39,11 +56,12 @@ const orderSchema = new mongoose.Schema(
 
     items: [orderItemSchema],
 
-    total: Number,
+    subtotal: Number,
     discount: Number,
-    couponCode: String,
     shippingCharge: Number,
     finalPayable: Number,
+
+    couponCode: String,
 
     paymentMethod: {
       type: String,
@@ -60,16 +78,7 @@ const orderSchema = new mongoose.Schema(
     },
 
     address: {
-      addressLabel: String,
-      houseName: String,
-      houseNumber: Number,
-      street: String,
-      post: String,
-      district: String,
-      state: String,
-      pincode: Number,
-      phone: String,
-      altPhone: String,
+      /* snapshot */
     },
 
     status: {
@@ -77,8 +86,15 @@ const orderSchema = new mongoose.Schema(
       enum: ["processing", "partially_cancelled", "cancelled", "completed"],
       default: "processing",
     },
+    shippingRefunded: {
+      type: Boolean,
+      default: false,
+    },
 
-    createdAt: { type: Date, default: Date.now },
+    couponAdjusted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
