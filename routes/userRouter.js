@@ -44,6 +44,7 @@ import { applyCoupon, getPayment, loadPlace, razorpay_order, razorpay_verify, re
 
 import { cancelOrder, invoicedownload, listOrders, loadOrderDetails,  returnOrder } from "../controllers/user/orderController.js";
 import { getWishlist, moveAllCart, moveToCart, removeAll, removeItem, toggleWishlist } from "../controllers/user/wishlistController.js";
+import { walletLoad } from "../controllers/user/walletController.js";
 
 export const router = express.Router();
 
@@ -120,6 +121,8 @@ router.post("/forgot-password", forgotEmailValid);
 
 router.get("/reset-password", nocache(), getResetPassword);
 router.post("/reset-password", postResetPassword);
+
+router.get("/wallet", walletLoad)
 
 router.post("/forgot-verify-otp", forgotVerifyOtp);
 

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account</title>
+
+    <!-- SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  </head>
+
+  <body class="bg-gray-100">
+    <div>
+      <%- include("../../views/partials/user/account") %>
+
+      <main class="main-scroll-area flex-1 bg-gray-100 p-10">
+        <!-- ================= WALLET SECTION ================= -->
+        <div class="bg-white rounded-xl shadow p-6 mb-8">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">My Wallet</h2>
+
+            <button
+              onclick="openAddMoneyModal()"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-semibold transition"
+            >
+              Add Money
+            </button>
+          </div>
+
+          <!-- WALLET BALANCE -->
+          <div
+            class="bg-indigo-50 border border-indigo-200 rounded-xl p-6 mb-6"
+          >
+            <p class="text-gray-600 text-sm">Available Balance</p>
+            <p class="text-4xl font-bold text-indigo-600 mt-2">
+              ₹ <%= (wallet.balance || 0).toFixed(2) %>
+            </p>
+          </div>
+
+          <!-- WALLET INFO -->
+          <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="bg-gray-100 rounded-lg p-4">
+              <p class="text-sm text-gray-500">Refunds</p>
+              <p class="text-lg font-semibold text-green-600">
+                ₹ <%= totalRefunds.toFixed(2) %>
+              </p>
+            </div>
+
+            <div class="bg-gray-100 rounded-lg p-4">
+              <p class="text-sm text-gray-500">Spent</p>
+              <p class="text-lg font-semibold text-red-600">
+                ₹ <%= totalSpent.toFixed(2) %>
+              </p>
+            </div>
+
+            <div class="bg-gray-100 rounded-lg p-4">
+              <p class="text-sm text-gray-500">Added</p>
+              <p class="text-lg font-semibold text-blue-600">
+                ₹ <%= totalAdded.toFixed(2) %>
+              </p>
+            </div>
+          </div>
+
+          <!-- TRANSACTION HISTORY -->
+          <h3 class="text-xl font-bold text-gray-900 mb-4">
+            Wallet Transactions
+          </h3>
+
+          <% if(wallet.transactions.length === 0){ %>
+          <div class="text-center text-gray-500 py-10">
+            No wallet transactions yet.
+          </div>
+          <% } else { %>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-100 text-gray-700">
+                  <th class="p-3">Date</th>
+                  <th class="p-3">Type</th>
+                  <th class="p-3">Description</th>
+                  <th class="p-3 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% wallet.transactions.forEach(tx => { %>
+                <tr class="border-b hover:bg-gray-50">
+                  <td class="p-3 text-sm text-gray-600">
+                    <%= new Date(tx.date).toLocaleDateString() %>
+                  </td>
+
+                  <td class="p-3">
+                    <% if(tx.type === 'credit'){ %>
+                    <span
+                      class="px-3 py-1 rounded-full text-sm bg-green-100 text-green-700"
+                    >
+                      Credit
+                    </span>
+                    <% } else { %>
+                    <span
+                      class="px-3 py-1 rounded-full text-sm bg-red-100 text-red-700"
+                    >
+                      Debit
+                    </span>
+                    <% } %>
+                  </td>
+
+                  <td class="p-3 text-gray-700"><%= tx.note %></td>
+
+                  <td
+                    class="p-3 text-right font-semibold <%= tx.type === 'credit' ? 'text-green-600' : 'text-red-600' %>"
+                  >
+                    <%= tx.type === 'credit' ? '+' : '-' %> ₹ <%=
+                    tx.amount.toFixed(2) %>
+                  </td>
+                </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+          <% } %>
+        </div>
+
+        <!-- ================= ADD MONEY MODAL ================= -->
+        <div
+          id="addMoneyModal"
+          class="fixed inset-0 bg-black bg-opacity-40 hidden justify-center items-center z-50"
+        >
+          <div class="bg-white w-[400px] p-6 rounded-xl shadow-lg">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-bold">Add Money to Wallet</h3>
+              <button
+                onclick="closeAddMoneyModal()"
+                class="text-gray-600 text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <label class="block text-gray-700 font-medium mb-1">Amount</label>
+            <input
+              id="walletAmount"
+              type="number"
+              min="1"
+              placeholder="Enter amount"
+              class="w-full bg-gray-100 p-3 rounded-lg mb-4"
+            />
+
+            <button
+              onclick="addMoneyWithRazorpay()"
+              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold"
+            >
+              Proceed to Pay
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= JS ================= -->
+        <script>
+          function openAddMoneyModal() {
+            document.getElementById("addMoneyModal").classList.remove("hidden");
+            document.getElementById("addMoneyModal").classList.add("flex");
+          }
+
+          function closeAddMoneyModal() {
+            document.getElementById("addMoneyModal").classList.add("hidden");
+            document.getElementById("addMoneyModal").classList.remove("flex");
+          }
+
+          function addMoneyWithRazorpay() {
+            const amount = document.getElementById("walletAmount").value;
+            if (!amount || amount <= 0) {
+              Swal.fire(
+                "Invalid Amount",
+                "Please enter a valid amount",
+                "warning"
+              );
+              return;
+            }
+
+            // Razorpay integration hook
+            // call backend -> create order -> open razorpay
+            console.log("Add money:", amount);
+          }
+        </script>
+      </main>
+    </div>
+  </body>
+</html>

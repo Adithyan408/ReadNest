@@ -260,13 +260,9 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <script>
-      const SHIPPING = Number("<%= shippingCharge %>");
-    </script>
-
-    <script>
-      let baseTotal = Number("<%= totalAmount %>"); // original VAT + subtotal + shipping
+      let baseTotal = Number("<%= payableAmount %>");
       let originalTotal = baseTotal;
-       let couponValid = true;
+      let couponValid = true;
       function toggleCouponDropdown() {
         document.getElementById("couponDropdown").classList.toggle("hidden");
       }
@@ -346,17 +342,14 @@
             message.classList.remove("hidden");
 
             discountElement.innerText = "₹ " + data.discount;
-
-            const newTotal = data.finalAmount + SHIPPING;
-            totalElement.innerText = "₹ " + newTotal;
-
+            document.getElementById("totalAmount").innerText =
+              "₹ " + data.finalAmount;
             originalTotal = data.finalAmount;
             document.getElementById("discountBox").classList.remove("hidden");
           });
       }
 
       function removeCoupon(e) {
-       
         e.stopPropagation();
 
         couponValid = true;

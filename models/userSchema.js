@@ -55,16 +55,6 @@ const userSchema = new Schema(
         ref: "Cart",
       },
     ],
-    wallet: {
-      type: Number,
-      default: 0,
-    },
-
-    walletBalance: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
     orderHistory: [
       {
         type: Schema.Types.ObjectId,

@@ -132,7 +132,6 @@ export const loadPayment = async (req, res) => {
       );
     }
 
-    // PRICE CALCULATION
     let subtotal = cart.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
@@ -140,13 +139,11 @@ export const loadPayment = async (req, res) => {
 
     const now = new Date();
 
-    // GENERAL COUPONS
     const generalCoupons = await Coupon.find({
       type: "general",
       expiry: { $gte: now },
     }).lean();
 
-    // REFERRAL REWARDS (unused only)
     const referralRewards = await ReferralReward.find({
       userId,
       used: false,
@@ -159,7 +156,6 @@ export const loadPayment = async (req, res) => {
       expiry: { $gte: now },
     }).lean();
 
-    // FILTER USED GENERAL COUPONS
     const usedGeneral = await couponUsage.find({ userId, used: true }).lean();
     const usedSet = new Set(usedGeneral.map((u) => u.couponId.toString()));
 
@@ -167,13 +163,15 @@ export const loadPayment = async (req, res) => {
       (c) => !usedSet.has(c._id.toString())
     );
 
-    // FINAL COUPON LIST
     const coupons = [...filteredGeneral, ...referralCoupons];
 
     const shippingCharge = 20;
-    const finalAmount = subtotal + shippingCharge;
+    const payableAmount = subtotal + shippingCharge;
 
-    req.session.total = subtotal;
+    req.session.subtotal = subtotal;
+    req.session.discountValue = 0;
+    req.session.shippingCharge = shippingCharge;
+    req.session.payableAmount = payableAmount;
 
     res.render("payment", {
       user: userData,
@@ -184,7 +182,7 @@ export const loadPayment = async (req, res) => {
       discount: 0,
       totalAmount: subtotal,
       shippingCharge,
-      payableAmount: finalAmount,
+      payableAmount,
       isBuyNow: Boolean(req.query.buyNow),
       coupons,
     });
@@ -193,6 +191,7 @@ export const loadPayment = async (req, res) => {
     res.render("notFound");
   }
 };
+
 export const postCoupon = async (req, res) => {
   try {
     const { coupon, totalAmount } = req.body;
@@ -207,7 +206,8 @@ export const postCoupon = async (req, res) => {
     if (couponDoc.expiry < now)
       return res.json({ success: false, message: "Coupon expired!" });
 
-    let cartTotal = Number(totalAmount);
+    let sub = req.session.subtotal;
+    let cartTotal = Number(sub);
 
     if (couponDoc.type === "referral") {
       const reward = await ReferralReward.findOne({
@@ -245,13 +245,14 @@ export const postCoupon = async (req, res) => {
 
     req.session.appliedCoupon = code;
     req.session.discountValue = discountValue;
-    req.session.total = cartTotal - discountValue;
+    req.session.payableAmount =
+      req.session.subtotal + req.session.shippingCharge - discountValue;
 
     return res.json({
       success: true,
       message: "Coupon applied!",
       discount: discountValue,
-      finalAmount: cartTotal - discountValue,
+      finalAmount: req.session.payableAmount,
     });
   } catch (error) {
     console.log(error);
@@ -271,11 +272,11 @@ export const orderPlaced = async (req, res) => {
       return res.redirect("/payment");
     }
 
-    let totalAmount = req.session.total || 0;
+    const payableAmount = req.session.payableAmount;
     let appliedCode = req.session.appliedCoupon;
     let discountValue = req.session.discountValue || 0;
 
-    if (!totalAmount) return res.redirect("/cart");
+    if (!payableAmount) return res.redirect("/cart");
 
     let couponDoc = null;
 
@@ -399,16 +400,13 @@ export const orderPlaced = async (req, res) => {
       );
     }
 
-    const shippingCharge = 20;
-    const payableAmount = totalAmount + shippingCharge;
-
     const newOrder = new Order({
       user: userId,
       items: cartItems,
-      total: totalAmount,
-      discount: discountValue,
+      total: req.session.subtotal,
+      discount: req.session.discountValue,
       couponCode: appliedCode || null,
-      shippingCharge,
+      shippingCharge: req.session.shippingCharge,
       payableAmount,
       paymentId,
       paymentMethod: paymentMode,
@@ -453,14 +451,14 @@ export const orderPlaced = async (req, res) => {
 
 export const createRazorpayOrder = async (req, res) => {
   try {
-    const amount = req.session.total;
+    const amount = req.session.payableAmount;
     if (!amount)
       return res
         .status(400)
         .json({ success: false, message: "No total amount found." });
 
     const options = {
-      amount: amount * 100, // Razorpay works in paise
+      amount: amount * 100,
       currency: "INR",
       receipt: "order_rcptid_" + Date.now(),
     };
@@ -496,7 +494,6 @@ export const verifyRazorpayPayment = async (req, res) => {
         .json({ success: false, message: "Invalid payment signature" });
     }
 
-    // Payment Verified → Now create order in DB
     req.session.paymentSuccess = true;
     req.session.razorpayPaymentId = razorpay_payment_id;
 
@@ -511,7 +508,8 @@ export const postRemoveCoupon = async (req, res) => {
   try {
     req.session.appliedCoupon = null;
     req.session.discountValue = 0;
-    req.session.total = req.session.baseTotal; // optional
+    req.session.payableAmount =
+      req.session.subtotal + req.session.shippingCharge;
     res.json({ success: true });
   } catch (error) {}
 };
