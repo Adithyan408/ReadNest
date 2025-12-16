@@ -160,7 +160,6 @@ export const updateItemStatus = async (req, res) => {
   }
 };
 
-
 export const approveReturn = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
@@ -211,6 +210,7 @@ export const approveReturn = async (req, res) => {
         note,
         orderId: order._id,
         paymentId: order.paymentId || null,
+        source: "refund",
       });
     }
 

@@ -14,6 +14,7 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZO_API_KEY,
   key_secret: process.env.RAZO_KEY_SECRET,
 });
+
 export const loadPayment = async (req, res) => {
   try {
     const calculateOffer = async (product) => {

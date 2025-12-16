@@ -154,6 +154,8 @@
           </div>
         </div>
 
+       
+
         <!-- ================= JS ================= -->
         <script>
           function openAddMoneyModal() {
@@ -184,5 +186,73 @@
         </script>
       </main>
     </div>
+     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+      async function addMoneyWithRazorpay() {
+        const amount = document.getElementById("walletAmount").value;
+
+        if (!amount || amount <= 0) {
+          Swal.fire("Invalid Amount", "Please enter a valid amount", "warning");
+          return;
+        }
+
+        try {
+          // 1️⃣ Create Razorpay order for wallet
+          const res = await fetch("/wallet/create-razorpay-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amount }),
+          });
+
+          const data = await res.json();
+
+          if (!data.success) {
+            return Swal.fire(
+              "Error",
+              "Unable to create payment order",
+              "error"
+            );
+          }
+
+          // 2️⃣ Razorpay options
+          const options = {
+            key: "<%= process.env.RAZO_API_KEY %>",
+            amount: data.order.amount,
+            currency: "INR",
+            name: "ReadNest Wallet",
+            description: "Add Money to Wallet",
+            order_id: data.order.id,
+
+            handler: async function (response) {
+              // 3️⃣ Verify payment
+              const verifyRes = await fetch("/wallet/verify-razorpay-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  ...response,
+                  amount,
+                }),
+              });
+
+              const verifyData = await verifyRes.json();
+
+              if (verifyData.success) {
+                Swal.fire("Success", "Money added to wallet", "success").then(
+                  () => location.reload()
+                );
+              } else {
+                Swal.fire("Payment Failed", "Verification failed", "error");
+              }
+            },
+          };
+
+          const rzp = new Razorpay(options);
+          rzp.open();
+        } catch (err) {
+          console.error(err);
+          Swal.fire("Error", "Something went wrong", "error");
+        }
+      }
+    </script>
   </body>
 </html>
