@@ -1,9 +1,12 @@
 import Wallet from "../../models/walletSchema.js";
 import crypto from "crypto";
-import { creditWallet } from "../../middlewares/walletHandler.js";
+import { creditWallet, debitWallet } from "../../middlewares/walletHandler.js";
 
 export const loadWallet = async (req, res) => {
   try {
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = 4; 
+    const skip = (page - 1) * limit;
     if (!req.session.user || !req.session.user._id) {
       return res.redirect("/login");
     }
@@ -33,12 +36,23 @@ export const loadWallet = async (req, res) => {
         totalSpent += tx.amount;
       }
     });
+    const totalTransactions = wallet.transactions.length;
+    const totalPages = Math.ceil(totalTransactions / limit);
+
+    const paginatedTransactions = wallet.transactions
+      .slice()
+      .reverse()
+      .slice(skip, skip + limit);
+
+     wallet.transactions = paginatedTransactions;
 
     res.render("wallet", {
       wallet,
       totalRefunds,
       totalSpent,
       totalAdded,
+      currentPage: page,
+      totalPages,
     });
   } catch (err) {
     console.error("Wallet Load Error:", err);
@@ -103,5 +117,36 @@ export const walletVerify = async (req, res) => {
   } catch (err) {
     console.log(err);
     res.json({ success: false });
+  }
+};
+
+export const walletPayment = async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+
+    const amount =
+      req.session.subtotal +
+      req.session.shippingCharge -
+      (req.session.discountValue || 0);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.json({ success: false, message: "Invalid amount" });
+    }
+
+    await debitWallet({
+      userId,
+      amount,
+      note: "Order payment via wallet",
+    });
+
+    req.session.walletPaymentSuccess = true;
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Wallet payment error:", err.message);
+    res.json({
+      success: false,
+      message: err.message || "Wallet payment failed",
+    });
   }
 };

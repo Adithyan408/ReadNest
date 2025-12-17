@@ -44,7 +44,7 @@ import { applyCoupon, getPayment, loadPlace, razorpay_order, razorpay_verify, re
 
 import { cancelOrder, invoicedownload, listOrders, loadOrderDetails,  returnOrder } from "../controllers/user/orderController.js";
 import { getWishlist, moveAllCart, moveToCart, removeAll, removeItem, toggleWishlist } from "../controllers/user/wishlistController.js";
-import { createWalletRazorpayOrder, verifyWalletRazorpayPayment, walletLoad } from "../controllers/user/walletController.js";
+import { createWalletRazorpayOrder, payWithWallet, verifyWalletRazorpayPayment, walletLoad } from "../controllers/user/walletController.js";
 
 export const router = express.Router();
 
@@ -125,6 +125,8 @@ router.post("/reset-password", postResetPassword);
 router.get("/wallet", walletLoad);
 router.post("/wallet/create-razorpay-order", createWalletRazorpayOrder);
 router.post("/wallet/verify-razorpay-payment", verifyWalletRazorpayPayment);
+router.post("/pay-with-wallet", payWithWallet);
+
 
 
 router.post("/forgot-verify-otp", forgotVerifyOtp);

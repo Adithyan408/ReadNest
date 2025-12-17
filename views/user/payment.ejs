@@ -397,6 +397,33 @@
           return;
         }
 
+        if (method === "Wallet") {
+          try {
+            const res = await fetch("/pay-with-wallet", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+              return Swal.fire("Wallet Error", data.message, "error");
+            }
+
+            Swal.fire(
+              "Success",
+              "Payment completed using wallet",
+              "success"
+            ).then(() => {
+              window.location.href = `/place-order?payment=WALLET`;
+            });
+          } catch (err) {
+            console.error(err);
+            Swal.fire("Error", "Wallet payment failed", "error");
+          }
+          return;
+        }
+        
         if (method === "Razorpay") {
           try {
             const orderData = await fetch("/create-razorpay-order", {
