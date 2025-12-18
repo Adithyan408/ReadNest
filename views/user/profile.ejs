@@ -768,11 +768,17 @@
           Swal.fire("Error", "All fields required!", "error");
           return;
         }
+        if(password.lenght < 6){
+          swal.fire(
+            "Password must have at least 6 characters"
+          );
+          return;
+        }
 
         if (!isValidPassword(password)) {
           Swal.fire(
             "Weak Password!",
-            "Password must have at least 6 characters, 1 number, 1 uppercase and 1 lowercase letter.",
+            " Password should contail atleast 1 number, 1 uppercase and 1 lowercase letter.",
             "error"
           );
           return;
@@ -818,12 +824,17 @@
           return;
         }
 
-        
+        if(newPassword.lenght < 6){
+          swal.fire(
+            "Password must have at least 6 characters"
+          );
+          return;
+        }
 
         if (!isValidPassword(newPassword)) {
           Swal.fire(
             "Weak Password!",
-            "Password must have at least 6 characters, 1 number, 1 uppercase and 1 lowercase letter.",
+            " Password should contail atleast 1 number, 1 uppercase and 1 lowercase letter.",
             "error"
           );
           return;
