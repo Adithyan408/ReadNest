@@ -425,41 +425,57 @@
       }
 
       async function saveNewAddress() {
-        const body = {
-          addressLabel: document.getElementById("addrLabel").value,
-          houseName: document.getElementById("addrHouseName").value,
-          houseNumber: document.getElementById("addrHouseNumber").value,
-          street: document.getElementById("addrStreet").value,
-          post: document.getElementById("addrPost").value,
-          district: document.getElementById("addrDistrict").value,
-          state: document.getElementById("addrState").value,
-          pincode: document.getElementById("addrPincode").value,
-          phone: document.getElementById("addrPhone").value,
-          altPhone: document.getElementById("addrAltPhone").value,
-        };
+  const body = {
+    addressLabel: document.getElementById("addrLabel").value.trim(),
+    houseName: document.getElementById("addrHouseName").value.trim(),
+    houseNumber: document.getElementById("addrHouseNumber").value.trim(),
+    street: document.getElementById("addrStreet").value.trim(),
+    post: document.getElementById("addrPost").value.trim(),
+    district: document.getElementById("addrDistrict").value.trim(),
+    state: document.getElementById("addrState").value.trim(),
+    pincode: document.getElementById("addrPincode").value.trim(),
+    phone: document.getElementById("addrPhone").value.trim(),
+    altPhone: document.getElementById("addrAltPhone").value.trim(),
+  };
 
-        const res = await fetch("/account/add-address", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(body),
-        });
+  // ✅ FRONTEND VALIDATION
+  const hasEmptyField = Object.values(body).some(
+    (value) => value === ""
+  );
 
-        const data = await res.json();
+  if (hasEmptyField) {
+    Swal.fire(
+      "Missing Details",
+      "All fields are required. Please fill in all details.",
+      "warning"
+    );
+    return; // ❗ stop execution
+  }
 
-        if (!data.success) {
-          Swal.fire("Error", data.message, "error");
-          return;
-        }
+  // 🔥 API CALL
+  const res = await fetch("/account/add-address", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
 
-        Swal.fire("Success", "Address added successfully!", "success");
+  const data = await res.json();
 
-        closeAddAddressModal();
+  if (!data.success) {
+    Swal.fire("Error", data.message, "error");
+    return;
+  }
 
-        setTimeout(() => {
-          location.reload(); // refresh to show new address
-        }, 800);
-      }
+  Swal.fire("Success", "Address added successfully!", "success");
+
+  closeAddAddressModal();
+
+  setTimeout(() => {
+    location.reload();
+  }, 800);
+}
+
 
       function editAddress(id) {
         fetch(`/account/address/${id}`)
@@ -565,6 +581,27 @@
 
         setTimeout(() => location.reload(), 700);
       }
+
+      function resetAddressFields() {
+  const fieldIds = [
+    "addrLabel",
+    "addrHouseName",
+    "addrHouseNumber",
+    "addrStreet",
+    "addrPost",
+    "addrDistrict",
+    "addrState",
+    "addrPincode",
+    "addrPhone",
+    "addrAltPhone",
+  ];
+
+  fieldIds.forEach((id) => {
+    const input = document.getElementById(id);
+    if (input) input.value = "";
+  });
+}
+
     </script>
   </body>
 </html>

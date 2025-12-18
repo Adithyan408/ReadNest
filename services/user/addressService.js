@@ -86,7 +86,7 @@ export const postAddress = async (req, res) => {
     console.error("Add address error:", error);
     return res.json({
       success: false,
-      message: "Server error while saving address",
+      message: "Something went wrong",
     });
   }
 };
