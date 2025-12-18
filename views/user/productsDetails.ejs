@@ -142,6 +142,7 @@
                 type="hidden"
                 name="productId"
                 value="<%= product._id %>"
+                onsubmit="return handleAddToCart(event, '<%= product._id %>')"
               />
 
               <button
@@ -642,6 +643,34 @@
           }
         });
       });
+
+      function handleAddToCart(event, productId) {
+  const CART_ITEMS = JSON.parse(
+    document.getElementById("cart-data").textContent
+  );
+
+  // check if product already in cart
+  const alreadyExists = CART_ITEMS.some(
+    (item) => item._id === productId
+  );
+
+  // limit = 10 different products
+  if (!alreadyExists && CART_ITEMS.length >= 10) {
+    event.preventDefault(); // 🚫 stop form submit
+
+    Swal.fire({
+      icon: "warning",
+      title: "Cart Limit Reached",
+      text: "You can only add up to 10 different products to your cart.",
+      confirmButtonColor: "#2563eb",
+    });
+
+    return false; // extra safety
+  }
+
+  return true; // ✅ allow submit
+}
+
     </script>
   </body>
 </html>

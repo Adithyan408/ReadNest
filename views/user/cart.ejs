@@ -33,6 +33,16 @@
           <!-- CART BOX -->
           <div class="bg-white rounded-lg shadow-sm p-6 mb-4">
             <h1 class="text-2xl font-bold mb-4">Your Cart</h1>
+            <% if (query?.error === 'max-products') { %>
+<script>
+  Swal.fire({
+    icon: "warning",
+    title: "Cart Limit Reached",
+    text: "You can only add up to 10 different products to your cart.",
+    confirmButtonColor: "#2563eb"
+  });
+</script>
+<% } %>
 
             <% if (!cart || cart.length === 0) { %>
 
@@ -177,11 +187,7 @@
                 <span>₹ <span id="subtotal">0</span></span>
               </div>
 
-              <div class="flex justify-between text-gray-700">
-                <span>Discount</span>
-                <span>- ₹ <span id="discount">0</span></span>
-              </div>
-            </div>
+              
 
             <div class="border-t pt-4 mb-6">
               <div class="flex justify-between text-lg font-bold text-gray-800">
@@ -220,37 +226,53 @@
       );
 
       window.updateQuantity = function (productId, change) {
-        const qtyField = document.getElementById("quantity-" + productId);
-        const stock = document.getElementById("stock-" + productId).value;
+      const qtyField = document.getElementById("quantity-" + productId);
+      const stock = document.getElementById("stock-" + productId).value;
 
-        let qty = parseInt(qtyField.value);
-        let maxStock = parseInt(stock);
+      let qty = parseInt(qtyField.value);
+      let maxStock = parseInt(stock);
 
-        // BLOCK increment beyond stock
-        if (change === 1 && qty >= maxStock) {
-          Swal.fire({
-            icon: "warning",
-            title: "Stock Limit Reached",
-            text: `Only ${maxStock} item(s) available in stock.`,
-            confirmButtonColor: "#2563eb",
-          });
-          return;
+      // STOCK LIMIT
+      if (change === 1 && qty >= maxStock) {
+      Swal.fire("Stock Limit", `Only ${maxStock} item(s) available.`, "warning");
+      return;
         }
-        // If decrement below 1 → stop
-        qty += change;
-        if (qty < 1) return;
 
-        qtyField.value = qty;
+      // CART LIMIT (10)
+      if (change === 1 && qty >= 10) {
+    Swal.fire(
+      "Limit Reached",
+      "You can only add up to 10 units of this product.",
+      "warning"
+    );
+    return;
+  }
 
-        // Save to DB
-        fetch("/update-cart-quantity", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productId, quantity: qty }),
-        });
+  qty += change;
+  if (qty < 1) return;
 
-        updateTotals();
-      };
+  qtyField.value = qty;
+
+  fetch("/update-cart-quantity", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId, quantity: qty }),
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) {
+        Swal.fire("Error", data.message, "error");
+        qtyField.value = qty - change; // rollback
+        return;
+      }
+      updateTotals();
+    })
+    .catch(() => {
+      Swal.fire("Error", "Update failed", "error");
+      qtyField.value = qty - change;
+    });
+};
+
 
       function updateTotals() {
         let subtotal = 0;
@@ -265,16 +287,18 @@
           totalItems += qty;
         });
 
-        const discount = Math.floor(subtotal * 0.05);
-        const total = subtotal - discount;
+       
 
         document.getElementById("total-items").textContent = totalItems;
         document.getElementById("subtotal").textContent = subtotal;
-        document.getElementById("discount").textContent = discount;
-        document.getElementById("total").textContent = total;
+        document.getElementById("total").textContent = subtotal;
       }
 
       updateTotals();
     });
+
+
+   
+
   </script>
 </html>

@@ -16,7 +16,6 @@ export const loadCart = async (req, res) => {
             const now = new Date();
             const regularPrice = product.regularPrice;
 
-            // PRODUCT OFFER
             let productDiscount = 0;
             if (product.offer?.isOffer) {
               const start = product.offer.startDate;
@@ -29,7 +28,6 @@ export const loadCart = async (req, res) => {
               if (valid) productDiscount = product.offer.discountValue;
             }
 
-            // CATEGORY OFFER
             let categoryDiscount = 0;
             const categoryDoc = await Category.findOne({
               categoryName: product.category,
@@ -46,10 +44,8 @@ export const loadCart = async (req, res) => {
               if (valid) categoryDiscount = categoryDoc.offer.discountValue;
             }
 
-            // BEST DISCOUNT
             const bestDiscount = Math.max(productDiscount, categoryDiscount);
 
-            // FINAL OFFER PRICE
             let offerPrice =
               bestDiscount > 0
                 ? Math.round(regularPrice - (regularPrice * bestDiscount) / 100)
@@ -60,7 +56,7 @@ export const loadCart = async (req, res) => {
             return {
               _id: product._id,
               name: product.productName,
-              price: finalPrice, 
+              price: finalPrice,
               offerPrice: offerPrice,
               regularPrice: regularPrice,
               discount: bestDiscount,
@@ -74,7 +70,11 @@ export const loadCart = async (req, res) => {
 
     const addresses = await Address.find({ userId });
 
-    res.render("cart", { cart, addresses });
+    res.render("cart", {
+      cart,
+      addresses,
+      query: req.query,
+    });
   } catch (error) {
     console.log("Cart load error:", error);
     res.redirect("/notfound");
@@ -90,35 +90,37 @@ export const addcart = async (req, res) => {
       return res.redirect("/login");
     }
 
-    // Find product
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).send("Product not found");
     }
 
-    // Find user's cart
     let cart = await Cart.findOne({ userId });
 
-    // If no cart, create new
     if (!cart) {
       cart = new Cart({
         userId,
         items: [],
       });
     }
-
-    // Check if product already exists
+    
     const existingItem = cart.items.find(
       (i) => i.productId.toString() === productId.toString()
     );
 
     if (existingItem) {
+      if (existingItem.quantity >= 10) {
+        return res.redirect("/cart?error=max-limit");
+      }
       existingItem.quantity += 1;
     } else {
       cart.items.push({
         productId,
         quantity: 1,
       });
+    }
+    if (cart.items.length >= 10 && !existingItem) {
+      return res.redirect("/cart?error=max-products");
     }
 
     await cart.save();
