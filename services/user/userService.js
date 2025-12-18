@@ -133,6 +133,7 @@ export const postSignup = async (req, res) => {
     res.redirect("/notfound");
   }
 };
+
 export const otpVerify = async (req, res) => {
   try {
     const { otp } = req.body;

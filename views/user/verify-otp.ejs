@@ -317,42 +317,64 @@
 
     //  AJAX call for verifying OTP
     async function verifyCode() {
-      const otp = getOTP();
-      if (otp.length !== 6) return showError("Enter all 6 digits");
+  const otp = getOTP();
+  if (otp.length !== 6) {
+    showError("Enter all 6 digits");
+    return;
+  }
 
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = "Verifying...";
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "Verifying...";
 
-      try {
-        const res = await fetch(
-          isFromForgotPassword ? "/forgot-verify-otp" : "/verify-otp",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ otp }),
-          }
-        );
-
-        const data = await res.json();
-
-        if (data.success) {
-          showSuccess("Verification successful! Redirecting...");
-          setTimeout(() => {
-            if (isFromForgotPassword) {
-              window.location.href = `/reset-password?email=${encodeURIComponent(
-                "<%= email %>"
-              )}`;
-            } else {
-              window.location.href = "/";
-            }
-          }, 1000);
-        }
-      } catch (err) {
-        showError("Something went wrong. Try again.");
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = "Confirm";
+  try {
+    const res = await fetch(
+      isFromForgotPassword ? "/forgot-verify-otp" : "/verify-otp",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp }),
       }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      showSuccess(data.message || "Verification successful!");
+
+      setTimeout(() => {
+        if (isFromForgotPassword) {
+          window.location.href = `/reset-password?email=${encodeURIComponent(
+            "<%= email %>"
+          )}`;
+        } else {
+          window.location.href = "/";
+        }
+      }, 1000);
+    } else {
+      // ✅ HANDLE WRONG OTP HERE
+      showError(data.message || "Invalid OTP. Please try again.");
+
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "Confirm";
+
+      // Optional: shake + clear inputs
+      otpInputs.forEach((input) => {
+        input.classList.add("error");
+        input.value = "";
+      });
+      otpInputs[0].focus();
+
+      setTimeout(() => {
+        otpInputs.forEach((input) => input.classList.remove("error"));
+      }, 300);
     }
+  } catch (err) {
+    showError("Something went wrong. Try again.");
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "Confirm";
+  }
+}
+
 
     //  AJAX call for resending OTP
    async function resendCode() {
