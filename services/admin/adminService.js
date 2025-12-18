@@ -26,8 +26,12 @@ export const postLogin = async (req, res) => {
 
     const passwordMatch = await bcrypt.compare(password, admin.password);
     if (!passwordMatch) {
-      return res.render("admin-login", { message: "Invalid password" });
-    }
+  return res.status(401).json({
+    success: false,
+    message: "Invalid email or password",
+  });
+}
+
 
     req.session.admin = true;
     req.session.adminData = admin;
