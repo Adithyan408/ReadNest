@@ -5,6 +5,7 @@ import {
   logout,
   loadPageError,
   loadDashboard,
+  downloadSalesReport,
 } from "../controllers/admin/adminController.js";
 import {
   customerInfo,
@@ -148,3 +149,10 @@ adminRouter.get("/coupon/addCoupon", adminAuth, getAddCoupon);
 adminRouter.post("/coupon/addCoupon", adminAuth, postCouponAdd);
 adminRouter.post("/coupon/updateCoupon", adminAuth, couponUpdate);
 adminRouter.get("/coupon/delete", adminAuth, couponDelete);
+
+adminRouter.get(
+  "/sales-report/download",
+  adminAuth,
+  downloadSalesReport
+);
+

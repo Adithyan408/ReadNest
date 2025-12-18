@@ -94,10 +94,10 @@
     <!-- Main Content -->
     <div class="flex">
       <!-- Sidebar -->
-      <aside class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col">
-
+      <aside
+        class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col"
+      >
         <nav class="flex-1 overflow-y-auto py-4">
-
           <a
             href="/admin"
             class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
@@ -165,7 +165,6 @@
 
         <!-- Logout Button at Bottom -->
         <div class="border-t-2 border-gray-400 bg-gray-300">
-
           <a href="/admin/logout">
             <button
               class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
@@ -184,271 +183,218 @@
 
       <!-- Main Dashboard Content -->
       <main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
+  <%- include('../../views/partials/breadcrumb') %>
 
-        <%- include('../../views/partials/breadcrumb') %>
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-4 gap-6 mb-8">
-          <!-- Total Customers -->
-          <div
-            class="stat-card bg-white rounded-2xl shadow-md p-6 border border-gray-200"
-          >
-            <div class="flex items-center justify-between mb-4">
-              <div
-                class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center"
-              >
-                <i class="fas fa-users text-2xl text-green-600"></i>
-              </div>
-            </div>
-            <p class="text-gray-600 text-sm mb-1">Total Customers</p>
-            <h3 class="text-3xl font-bold text-gray-900 mb-1">5,423</h3>
-            <p class="text-green-600 text-sm font-semibold">↑ 16% this month</p>
-          </div>
+  <% 
+    /* ================= PRECOMPUTED UI VALUES ================= */
 
-          <!-- Total Orders -->
-          <div
-            class="stat-card bg-white rounded-2xl shadow-md p-6 border border-gray-200"
-          >
-            <div class="flex items-center justify-between mb-4">
-              <div
-                class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center"
-              >
-                <i class="fas fa-shopping-cart text-2xl text-green-600"></i>
-              </div>
-            </div>
-            <p class="text-gray-600 text-sm mb-1">Total Orders</p>
-            <h3 class="text-3xl font-bold text-gray-900">1,893</h3>
-          </div>
+    const radius = 72;
+    const circumference = 2 * Math.PI * radius;
+    const progressOffset = circumference * (1 - normalizedGrowth / 100);
 
-          <!-- Total Sales -->
-          <div
-            class="stat-card bg-white rounded-2xl shadow-md p-6 border border-gray-200"
-          >
-            <div class="flex items-center justify-between mb-4">
-              <div
-                class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center"
-              >
-                <i class="fas fa-rupee-sign text-2xl text-green-600"></i>
-              </div>
-            </div>
-            <p class="text-gray-600 text-sm mb-1">Total Sales</p>
-            <h3 class="text-3xl font-bold text-gray-900">₹65,805</h3>
-          </div>
+    let statusClass = "bg-red-100 text-red-700";
+    if (targetStatus === "Achieved") {
+      statusClass = "bg-green-100 text-green-700";
+    } else if (targetStatus === "On Track") {
+      statusClass = "bg-blue-100 text-blue-700";
+    }
 
-          <!-- Total Pending -->
-          <div
-            class="stat-card bg-white rounded-2xl shadow-md p-6 border border-gray-200"
-          >
-            <div class="flex items-center justify-between mb-4">
-              <div
-                class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center"
-              >
-                <i class="fas fa-clock text-2xl text-gray-600"></i>
-              </div>
-            </div>
-            <p class="text-gray-600 text-sm mb-1">Total Pending</p>
-            <h3 class="text-3xl font-bold text-gray-900">189</h3>
-          </div>
-        </div>
+    const growthColor = growthPercent >= 0 ? "#16a34a" : "#dc2626";
+    const growthTextClass = growthPercent >= 0 ? "text-green-600" : "text-red-600";
+    const growthArrow = growthPercent >= 0 ? "↑" : "↓";
 
-        <!-- Sales Details Section -->
-        <div class="mb-6">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6">SALES DETAILS</h2>
+    const growthSummary =
+      growthPercent >= 0
+        ? "Revenue increased compared to last month"
+        : "Revenue declined compared to last month";
+  %>
 
-          <div class="grid grid-cols-3 gap-6">
-            <!-- Sales Progress Card -->
-            <div
-              class="bg-white rounded-2xl shadow-md p-6 border border-gray-200"
-            >
-              <div class="flex items-center justify-between mb-4">
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-900">
-                    Sales Progress
-                  </h3>
-                  <p class="text-sm text-gray-500">This Quarter</p>
-                </div>
-                <button class="text-gray-400 hover:text-gray-600">
-                  <i class="fas fa-ellipsis-v"></i>
-                </button>
-              </div>
+  <!-- ================= STATS CARDS ================= -->
+  <div class="grid grid-cols-4 gap-6 mb-8">
 
-              <!-- Progress Circle -->
-              <div class="relative w-48 h-48 mx-auto mb-6">
-                <svg class="transform -rotate-90 w-48 h-48">
-                  <circle
-                    cx="96"
-                    cy="96"
-                    r="80"
-                    stroke="#e5e7eb"
-                    stroke-width="16"
-                    fill="none"
-                  />
-                  <circle
-                    cx="96"
-                    cy="96"
-                    r="80"
-                    stroke="#667eea"
-                    stroke-width="16"
-                    fill="none"
-                    stroke-dasharray="502"
-                    stroke-dashoffset="123"
-                    stroke-linecap="round"
-                  />
-                </svg>
-                <div
-                  class="absolute inset-0 flex flex-col items-center justify-center"
-                >
-                  <span class="text-3xl font-bold text-gray-900">75.55%</span>
-                  <span class="text-green-600 text-sm font-semibold"
-                    >↑ +10%</span
-                  >
-                </div>
-              </div>
-
-              <p class="text-center text-sm text-gray-600 mb-4">
-                You succeed earn ₹28963 today, its higher than yesterday
-              </p>
-
-              <div class="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <p class="text-xs text-gray-500 mb-1">Target</p>
-                  <p class="text-lg font-bold text-gray-900">
-                    ₹30k <i class="fas fa-arrow-down text-red-500 text-xs"></i>
-                  </p>
-                </div>
-                <div>
-                  <p class="text-xs text-gray-500 mb-1">Revenue</p>
-                  <p class="text-lg font-bold text-gray-900">
-                    ₹16k <i class="fas fa-arrow-up text-green-500 text-xs"></i>
-                  </p>
-                </div>
-                <div>
-                  <p class="text-xs text-gray-500 mb-1">Today</p>
-                  <p class="text-lg font-bold text-gray-900">
-                    ₹28k <i class="fas fa-arrow-up text-green-500 text-xs"></i>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Activity Chart -->
-            <div
-              class="col-span-2 bg-white rounded-2xl shadow-md p-6 border border-gray-200"
-            >
-              <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-gray-900">Activity</h3>
-                <select
-                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
-                >
-                  <option>Month</option>
-                  <option>Week</option>
-                  <option>Year</option>
-                </select>
-              </div>
-
-              <canvas id="activityChart" height="80"></canvas>
-            </div>
-          </div>
-        </div>
-      </main>
+    <!-- Customers -->
+    <div class="stat-card bg-white rounded-2xl shadow-md p-6 border">
+      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-3">
+        <i class="fas fa-users text-2xl text-green-600"></i>
+      </div>
+      <p class="text-sm text-gray-600">Total Customers</p>
+      <h3 class="text-3xl font-bold text-gray-900"><%= totalCustomers %></h3>
+      <p class="text-sm font-semibold <%= growthTextClass %>">
+        <%= growthArrow %> <%= Math.abs(growthPercent) %>% this month
+      </p>
     </div>
 
-    <script>
-      // Activity Chart
-      const ctx = document.getElementById("activityChart").getContext("2d");
-      const activityChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: [
-            "JAN",
-            "FEB",
-            "MAR",
-            "APR",
-            "MAY",
-            "JUN",
-            "JUL",
-            "AUG",
-            "SEP",
-            "OCT",
-            "NOV",
-            "DEC",
-          ],
-          datasets: [
-            {
-              label: "Sales",
-              data: [
-                120, 150, 130, 250, 280, 200, 220, 100, 270, 340, 370, 400,
-              ],
-              backgroundColor: "#667eea",
-              borderRadius: 8,
-              barThickness: 30,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          plugins: {
-            legend: {
-              display: false,
-            },
-            tooltip: {
-              backgroundColor: "#1f2937",
-              padding: 12,
-              titleColor: "#fff",
-              bodyColor: "#fff",
-              cornerRadius: 8,
-            },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 400,
-              ticks: {
-                stepSize: 100,
-                color: "#6b7280",
-              },
-              grid: {
-                color: "#f3f4f6",
-                drawBorder: false,
-              },
-            },
-            x: {
-              ticks: {
-                color: "#6b7280",
-                font: {
-                  size: 11,
-                },
-              },
-              grid: {
-                display: false,
-              },
-            },
-          },
-        },
-      });
+    <!-- Orders -->
+    <div class="stat-card bg-white rounded-2xl shadow-md p-6 border">
+      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-3">
+        <i class="fas fa-shopping-cart text-2xl text-green-600"></i>
+      </div>
+      <p class="text-sm text-gray-600">Total Orders</p>
+      <h3 class="text-3xl font-bold text-gray-900"><%= totalOrders %></h3>
+    </div>
 
-      // Animate stats on load
-      document.addEventListener("DOMContentLoaded", function () {
-        const statCards = document.querySelectorAll(".stat-card");
-        statCards.forEach((card, index) => {
-          card.style.animationDelay = `${index * 0.1}s`;
-        });
-      });
+    <!-- Sales -->
+    <div class="stat-card bg-white rounded-2xl shadow-md p-6 border">
+      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-3">
+        <i class="fas fa-rupee-sign text-2xl text-green-600"></i>
+      </div>
+      <p class="text-sm text-gray-600">Total Sales</p>
+      <h3 class="text-3xl font-bold text-gray-900">
+        ₹<%= Number(totalSales).toLocaleString() %>
+      </h3>
+    </div>
 
-      // Update stats dynamically (example)
-      function updateStats() {
-        // This would typically fetch data from your API
-        fetch("/admin/api/stats")
-          .then((response) => response.json())
-          .then((data) => {
-            // Update DOM with new data
-            console.log("Stats updated:", data);
-          })
-          .catch((error) => console.error("Error fetching stats:", error));
+    <!-- Pending -->
+    <div class="stat-card bg-white rounded-2xl shadow-md p-6 border">
+      <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+        <i class="fas fa-clock text-2xl text-gray-600"></i>
+      </div>
+      <p class="text-sm text-gray-600">Pending Items</p>
+      <h3 class="text-3xl font-bold text-gray-900"><%= pendingOrders %></h3>
+    </div>
+
+  </div>
+
+  <!-- ================= SALES OVERVIEW ================= -->
+  <div class="mb-10">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold text-gray-900">Sales Overview</h2>
+
+      <a
+        href="/admin/sales-report/download?range=monthly"
+        class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-semibold"
+      >
+        <i class="fas fa-download"></i>
+        Download Report
+      </a>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6">
+
+      <!-- ================= SALES PROGRESS ================= -->
+      <div class="bg-white rounded-2xl shadow p-6 border">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">Sales Progress</h3>
+            <p class="text-sm text-gray-500">Current Month</p>
+          </div>
+
+          <span class="text-xs px-3 py-1 rounded-full <%= statusClass %>">
+            <%= targetStatus %>
+          </span>
+        </div>
+
+        <!-- Progress Circle -->
+        <div class="relative w-44 h-44 mx-auto my-6">
+          <svg class="transform -rotate-90 w-44 h-44">
+            <circle
+              cx="88"
+              cy="88"
+              r="<%= radius %>"
+              stroke="#e5e7eb"
+              stroke-width="14"
+              fill="none"
+            />
+            <circle
+              cx="88"
+              cy="88"
+              r="<%= radius %>"
+              stroke="<%= growthColor %>"
+              stroke-width="14"
+              fill="none"
+              stroke-dasharray="<%= circumference %>"
+              stroke-dashoffset="<%= progressOffset %>"
+              stroke-linecap="round"
+              class="transition-all duration-700 ease-out"
+            />
+          </svg>
+
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-3xl font-bold text-gray-900">
+              <%= normalizedGrowth %>%
+            </span>
+            <span class="text-sm font-semibold <%= growthTextClass %>">
+              <%= growthArrow %> <%= Math.abs(growthPercent) %>% growth
+            </span>
+          </div>
+        </div>
+
+        <p class="text-center text-sm text-gray-600 mb-6">
+          <%= growthSummary %>
+        </p>
+
+        <!-- KPIs -->
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div class="bg-gray-50 rounded-lg py-3">
+            <p class="text-xs text-gray-500">Target</p>
+            <p class="text-lg font-bold text-gray-900">
+              ₹<%= Number(monthlyTarget).toLocaleString() %>
+            </p>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg py-3">
+            <p class="text-xs text-gray-500">Revenue</p>
+            <p class="text-lg font-bold text-gray-900">
+              ₹<%= Number(monthlyRevenue).toLocaleString() %>
+            </p>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg py-3">
+            <p class="text-xs text-gray-500">Today</p>
+            <p class="text-lg font-bold text-gray-900">
+              ₹<%= Number(todayRevenue).toLocaleString() %>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SALES CHART ================= -->
+      <div class="col-span-2 bg-white rounded-2xl shadow p-6 border">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900">Sales Activity</h3>
+        </div>
+
+        <canvas id="activityChart" height="90"></canvas>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+  const chartLabels = <%- JSON.stringify(chartLabels) %>;
+  const chartValues = <%- JSON.stringify(chartValues) %>;
+
+  const ctx = document.getElementById("activityChart").getContext("2d");
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: chartLabels,
+      datasets: [{
+        label: "Delivered Revenue",
+        data: chartValues,
+        borderWidth: 2,
+        tension: 0.35,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          ticks: {
+            callback: value => "₹" + value
+          }
+        }
       }
+    }
+  });
+</script>
 
-      // Refresh stats every 30 seconds
-      setInterval(updateStats, 30000);
-    </script>
+    
   </body>
 </html>
