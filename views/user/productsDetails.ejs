@@ -135,34 +135,39 @@
           </div>
 
           <!-- BUTTONS BLOCK -->
-          <div class="flex gap-4 mt-6">
-            <!-- ADD TO CART -->
-            <form action="/addcart" method="POST" class="flex-1">
-              <input
-                type="hidden"
-                name="productId"
-                value="<%= product._id %>"
-                onsubmit="return handleAddToCart(event, '<%= product._id %>')"
-              />
+          <% const isOutOfStock = product.stock <= 0; %>
 
-              <button
-                type="submit"
-                class="w-full py-3 rounded-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white transition duration-200 shadow-md flex items-center justify-center gap-2"
-              >
-                <i class="fa-solid fa-cart-plus"></i>
-                Add to Cart
-              </button>
-            </form>
+<div class="flex gap-4 mt-6">
+  <!-- ADD TO CART -->
+  <form action="/addcart" method="POST" class="flex-1">
+    <input type="hidden" name="productId" value="<%= product._id %>" />
 
-            <!-- BUY NOW -->
-            <a
-              href="/buy-now/<%= product._id %>"
-              class="flex-1 py-3 rounded-lg font-semibold bg-orange-500 hover:bg-orange-600 text-white text-center transition duration-200 shadow-md flex items-center justify-center gap-2"
-            >
-              <i class="fa-solid fa-bolt"></i>
-              Buy Now
-            </a>
-          </div>
+    <button
+      type="submit"
+      <%= isOutOfStock ? "disabled" : "" %>
+      class="w-full py-3 rounded-lg font-semibold transition duration-200 shadow-md flex items-center justify-center gap-2
+        <%= isOutOfStock
+          ? 'bg-gray-400 cursor-not-allowed'
+          : 'bg-blue-600 hover:bg-blue-700 text-white' %>"
+    >
+      <i class="fa-solid fa-cart-plus"></i>
+      <%= isOutOfStock ? "Out of Stock" : "Add to Cart" %>
+    </button>
+  </form>
+
+  <!-- BUY NOW -->
+  <a
+    href="<%= isOutOfStock ? 'javascript:void(0)' : `/buy-now/${product._id}` %>"
+    class="flex-1 py-3 rounded-lg font-semibold text-center transition duration-200 shadow-md flex items-center justify-center gap-2
+      <%= isOutOfStock
+        ? 'bg-gray-400 cursor-not-allowed pointer-events-none'
+        : 'bg-orange-500 hover:bg-orange-600 text-white' %>"
+  >
+    <i class="fa-solid fa-bolt"></i>
+    <%= isOutOfStock ? "Out of Stock" : "Buy Now" %>
+  </a>
+</div>
+
         </div>
 
         <!-- RIGHT: SCROLLABLE SECTION (Details + Description + Reviews) -->

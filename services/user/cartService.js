@@ -95,6 +95,12 @@ export const addcart = async (req, res) => {
       return res.status(404).send("Product not found");
     }
 
+    if (!product || product.stock <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Product is out of stock",
+      });
+    }
     let cart = await Cart.findOne({ userId });
 
     if (!cart) {
@@ -103,7 +109,7 @@ export const addcart = async (req, res) => {
         items: [],
       });
     }
-    
+
     const existingItem = cart.items.find(
       (i) => i.productId.toString() === productId.toString()
     );

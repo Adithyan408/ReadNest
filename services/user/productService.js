@@ -205,7 +205,7 @@ export const productDetails = async (req, res) => {
 
     let product = await Product.findById(productId);
     if (!product) return res.redirect("/");
-
+    
     const categoryDoc = await Category.findOne({
       categoryName: product.category,
     });

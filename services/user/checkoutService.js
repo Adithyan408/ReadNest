@@ -2,7 +2,7 @@ import Product from "../../models/productsSchema.js";
 import User from "../../models/userSchema.js";
 import Cart from "../../models/cartSchema.js";
 import Address from "../../models/addressSchema.js";
-import Category from "../../models/categorySchema.js"
+import Category from "../../models/categorySchema.js";
 
 export const getCheckout = async (req, res) => {
   try {
@@ -24,6 +24,7 @@ export const getCheckout = async (req, res) => {
       if (product.offer?.isOffer) {
         const start = product.offer.startDate;
         const end = product.offer.endDate;
+       
 
         const valid =
           (!start || now >= new Date(start)) && (!end || now <= new Date(end));
@@ -142,7 +143,6 @@ export const getCheckout = async (req, res) => {
     return res.redirect("/notfound");
   }
 };
-
 
 export const setSelectedAddress = (req, res) => {
   try {
