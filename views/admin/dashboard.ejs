@@ -182,185 +182,150 @@
       </aside>
 
       <!-- Main Dashboard Content -->
-      <main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
+      <!-- Main Dashboard Content -->
+<main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
   <%- include('../../views/partials/breadcrumb') %>
 
-  <% 
-    /* ================= PRECOMPUTED UI VALUES ================= */
-
-    const radius = 72;
-    const circumference = 2 * Math.PI * radius;
-    const progressOffset = circumference * (1 - normalizedGrowth / 100);
-
-    let statusClass = "bg-red-100 text-red-700";
-    if (targetStatus === "Achieved") {
-      statusClass = "bg-green-100 text-green-700";
-    } else if (targetStatus === "On Track") {
-      statusClass = "bg-blue-100 text-blue-700";
-    }
-
-    const growthColor = growthPercent >= 0 ? "#16a34a" : "#dc2626";
-    const growthTextClass = growthPercent >= 0 ? "text-green-600" : "text-red-600";
-    const growthArrow = growthPercent >= 0 ? "↑" : "↓";
-
-    const growthSummary =
-      growthPercent >= 0
-        ? "Revenue increased compared to last month"
-        : "Revenue declined compared to last month";
-  %>
-
-  <!-- ================= STATS CARDS ================= -->
-  <div class="grid grid-cols-4 gap-6 mb-8">
+  <!-- ================= TOP STATS ================= -->
+  <div class="grid grid-cols-4 gap-6 mb-10">
 
     <!-- Customers -->
-    <div class="stat-card bg-white rounded-2xl shadow-md p-6 border">
-      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-3">
-        <i class="fas fa-users text-2xl text-green-600"></i>
-      </div>
-      <p class="text-sm text-gray-600">Total Customers</p>
-      <h3 class="text-3xl font-bold text-gray-900"><%= totalCustomers %></h3>
-      <p class="text-sm font-semibold <%= growthTextClass %>">
-        <%= growthArrow %> <%= Math.abs(growthPercent) %>% this month
-      </p>
-    </div>
-
-    <!-- Orders -->
-    <div class="stat-card bg-white rounded-2xl shadow-md p-6 border">
-      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-3">
-        <i class="fas fa-shopping-cart text-2xl text-green-600"></i>
-      </div>
-      <p class="text-sm text-gray-600">Total Orders</p>
-      <h3 class="text-3xl font-bold text-gray-900"><%= totalOrders %></h3>
-    </div>
-
-    <!-- Sales -->
-    <div class="stat-card bg-white rounded-2xl shadow-md p-6 border">
-      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-3">
-        <i class="fas fa-rupee-sign text-2xl text-green-600"></i>
-      </div>
-      <p class="text-sm text-gray-600">Total Sales</p>
-      <h3 class="text-3xl font-bold text-gray-900">
-        ₹<%= Number(totalSales).toLocaleString() %>
+    <div class="bg-white rounded-2xl shadow p-6 border">
+      <p class="text-sm text-gray-500">Customers</p>
+      <h3 class="text-2xl font-bold text-gray-900">
+        <%= totalCustomers %>
       </h3>
     </div>
 
-    <!-- Pending -->
-    <div class="stat-card bg-white rounded-2xl shadow-md p-6 border">
-      <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-        <i class="fas fa-clock text-2xl text-gray-600"></i>
-      </div>
-      <p class="text-sm text-gray-600">Pending Items</p>
-      <h3 class="text-3xl font-bold text-gray-900"><%= pendingOrders %></h3>
+    <!-- Total Orders -->
+    <div class="bg-white rounded-2xl shadow p-6 border">
+      <p class="text-sm text-gray-500">Total Orders</p>
+      <h3 class="text-2xl font-bold text-gray-900">
+        <%= lifetime.totalOrders %>
+      </h3>
+    </div>
+
+    <!-- Total Sales -->
+    <div class="bg-white rounded-2xl shadow p-6 border">
+      <p class="text-sm text-gray-500">Total Sales</p>
+      <h3 class="text-2xl font-bold text-gray-900">
+        ₹<%= Number(lifetime.totalSales).toLocaleString() %>
+      </h3>
+    </div>
+
+    <!-- Total Discount -->
+    <div class="bg-white rounded-2xl shadow p-6 border">
+      <p class="text-sm text-gray-500">Total Discount</p>
+      <h3 class="text-2xl font-bold text-red-600">
+        ₹<%= Number(lifetime.totalDiscount).toLocaleString() %>
+      </h3>
     </div>
 
   </div>
 
-  <!-- ================= SALES OVERVIEW ================= -->
-  <div class="mb-10">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-gray-900">Sales Overview</h2>
+  <!-- ================= SALES REPORT ================= -->
+  <div class="bg-white rounded-2xl shadow p-6 border mb-10">
 
-      <a
-        href="/admin/sales-report/download?range=monthly"
-        class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-semibold"
-      >
-        <i class="fas fa-download"></i>
-        Download Report
-      </a>
-    </div>
+   <div class="flex items-center justify-between mb-6">
+  <h2 class="text-xl font-bold text-gray-900">Sales Report</h2>
 
-    <div class="grid grid-cols-3 gap-6">
+  <div class="flex gap-3">
+    <a
+      href="/admin/sales-report/download?<%= 
+        filter ? `filter=${filter}&start=${start || ''}&end=${end || ''}` : '' 
+      %>"
+      class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700"
+    >
+      PDF
+    </a>
 
-      <!-- ================= SALES PROGRESS ================= -->
-      <div class="bg-white rounded-2xl shadow p-6 border">
+    <a
+      href="/admin/sales-report/excel?<%= 
+        filter ? `filter=${filter}&start=${start || ''}&end=${end || ''}` : '' 
+      %>"
+      class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700"
+    >
+      Excel
+    </a>
+  </div>
+</div>
 
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h3 class="text-lg font-semibold text-gray-900">Sales Progress</h3>
-            <p class="text-sm text-gray-500">Current Month</p>
-          </div>
 
-          <span class="text-xs px-3 py-1 rounded-full <%= statusClass %>">
-            <%= targetStatus %>
-          </span>
-        </div>
+    <!-- Filters -->
+    <form method="GET" action="/admin" class="flex flex-wrap gap-4 items-end mb-6">
+    <select name="filter" class="border rounded-lg px-4 py-2">
+  <option value="today" <%= filter === "today" ? "selected" : "" %>>Today</option>
+  <option value="week" <%= filter === "week" ? "selected" : "" %>>Last 7 Days</option>
+  <option value="month" <%= filter === "month" ? "selected" : "" %>>This Month</option>
+  <option value="year" <%= filter === "year" ? "selected" : "" %>>This Year</option>
+  <option value="custom" <%= filter === "custom" ? "selected" : "" %>>Custom</option>
+</select>
 
-        <!-- Progress Circle -->
-        <div class="relative w-44 h-44 mx-auto my-6">
-          <svg class="transform -rotate-90 w-44 h-44">
-            <circle
-              cx="88"
-              cy="88"
-              r="<%= radius %>"
-              stroke="#e5e7eb"
-              stroke-width="14"
-              fill="none"
-            />
-            <circle
-              cx="88"
-              cy="88"
-              r="<%= radius %>"
-              stroke="<%= growthColor %>"
-              stroke-width="14"
-              fill="none"
-              stroke-dasharray="<%= circumference %>"
-              stroke-dashoffset="<%= progressOffset %>"
-              stroke-linecap="round"
-              class="transition-all duration-700 ease-out"
-            />
-          </svg>
 
-          <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="text-3xl font-bold text-gray-900">
-              <%= normalizedGrowth %>%
-            </span>
-            <span class="text-sm font-semibold <%= growthTextClass %>">
-              <%= growthArrow %> <%= Math.abs(growthPercent) %>% growth
-            </span>
-          </div>
-        </div>
 
-        <p class="text-center text-sm text-gray-600 mb-6">
-          <%= growthSummary %>
+    <input
+  type="date"
+  name="start"
+  value="<%= start || '' %>"
+  class="border rounded-lg px-4 py-2"
+/>
+
+<input
+  type="date"
+  name="end"
+  value="<%= end || '' %>"
+  class="border rounded-lg px-4 py-2"
+/>
+
+
+      <button
+        class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700">
+        Apply
+      </button>
+    </form>
+
+    <!-- ================= FILTERED SUMMARY ================= -->
+    <div class="grid grid-cols-4 gap-6 text-center">
+
+      <div class="bg-gray-50 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Orders</p>
+        <p class="text-xl font-bold text-gray-900">
+          <%= filtered.ordersCount %>
         </p>
-
-        <!-- KPIs -->
-        <div class="grid grid-cols-3 gap-4 text-center">
-          <div class="bg-gray-50 rounded-lg py-3">
-            <p class="text-xs text-gray-500">Target</p>
-            <p class="text-lg font-bold text-gray-900">
-              ₹<%= Number(monthlyTarget).toLocaleString() %>
-            </p>
-          </div>
-
-          <div class="bg-gray-50 rounded-lg py-3">
-            <p class="text-xs text-gray-500">Revenue</p>
-            <p class="text-lg font-bold text-gray-900">
-              ₹<%= Number(monthlyRevenue).toLocaleString() %>
-            </p>
-          </div>
-
-          <div class="bg-gray-50 rounded-lg py-3">
-            <p class="text-xs text-gray-500">Today</p>
-            <p class="text-lg font-bold text-gray-900">
-              ₹<%= Number(todayRevenue).toLocaleString() %>
-            </p>
-          </div>
-        </div>
       </div>
 
-      <!-- ================= SALES CHART ================= -->
-      <div class="col-span-2 bg-white rounded-2xl shadow p-6 border">
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-lg font-semibold text-gray-900">Sales Activity</h3>
-        </div>
+      <div class="bg-gray-50 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Order Amount</p>
+        <p class="text-xl font-bold text-gray-900">
+          ₹<%= Number(filtered.orderAmount).toLocaleString() %>
+        </p>
+      </div>
 
-        <canvas id="activityChart" height="90"></canvas>
+      <div class="bg-gray-50 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Discount</p>
+        <p class="text-xl font-bold text-red-600">
+          ₹<%= Number(filtered.discountAmount).toLocaleString() %>
+        </p>
+      </div>
+
+      <div class="bg-gray-50 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Net Sales</p>
+        <p class="text-xl font-bold text-green-600">
+          ₹<%= Number(filtered.netSales).toLocaleString() %>
+        </p>
       </div>
 
     </div>
   </div>
+
+  <!-- ================= SALES CHART ================= -->
+  <div class="bg-white rounded-2xl shadow p-6 border">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">
+      Sales Trend
+    </h2>
+    <canvas id="activityChart" height="100"></canvas>
+  </div>
+
 </main>
 
 <script>
@@ -374,16 +339,19 @@
     data: {
       labels: chartLabels,
       datasets: [{
-        label: "Delivered Revenue",
+        label: "Sales",
         data: chartValues,
-        borderWidth: 2,
-        tension: 0.35,
-        fill: true
+        borderColor: "#4f46e5",
+        backgroundColor: "rgba(79,70,229,0.15)",
+        fill: true,
+        tension: 0.35
       }]
     },
     options: {
       responsive: true,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false }
+      },
       scales: {
         y: {
           ticks: {
@@ -394,6 +362,8 @@
     }
   });
 </script>
+
+
 
     
   </body>

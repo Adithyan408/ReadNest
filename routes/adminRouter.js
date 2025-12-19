@@ -6,6 +6,7 @@ import {
   loadPageError,
   loadDashboard,
   downloadSalesReport,
+  downloadExcel,
 } from "../controllers/admin/adminController.js";
 import {
   customerInfo,
@@ -155,4 +156,5 @@ adminRouter.get(
   adminAuth,
   downloadSalesReport
 );
+adminRouter.get("/sales-report/excel",adminAuth, downloadExcel);
 
