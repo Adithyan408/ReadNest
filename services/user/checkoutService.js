@@ -13,6 +13,7 @@ export const getCheckout = async (req, res) => {
     const userData = await User.findById(userId).lean();
 
     let cart = [];
+    
     const buyNowId = req.query.buyNow;
 
     // 🟢 Function to calculate offer price
@@ -130,7 +131,9 @@ export const getCheckout = async (req, res) => {
           addresses.find((a) => a.addressLabel === "Home") || addresses[0];
       }
     }
-
+    if(cart.length < 1){
+      return res.redirect("/")
+    }
     return res.render("checkout", {
       user: userData,
       cart,
