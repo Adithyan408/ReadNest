@@ -218,8 +218,6 @@
                   type="number"
                   name="discount"
                   placeholder="Enter discount percentage"
-                  min="1"
-                  max="90"
                   class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
                 <p class="text-xs text-gray-500 mt-1">Recommended: 5% - 50%</p>
@@ -285,7 +283,6 @@
           ).value;
           const expiry = document.querySelector('input[name="expiry"]').value;
 
-          // ❌ Coupon code
           if (!code) {
             Swal.fire(
               "Validation Error",
@@ -304,7 +301,6 @@
             return;
           }
 
-          // ❌ Discount
           if (!discount) {
             Swal.fire(
               "Validation Error",
@@ -323,7 +319,6 @@
             return;
           }
 
-          // ❌ Minimum purchase
           if (minPurchase && minPurchase < 0) {
             Swal.fire(
               "Invalid Amount",
@@ -333,7 +328,6 @@
             return;
           }
 
-          // ❌ Expiry date
           if (!expiry) {
             Swal.fire(
               "Validation Error",
