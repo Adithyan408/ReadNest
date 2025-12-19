@@ -719,7 +719,16 @@
           phone: document.getElementById("add_addrPhone").value,
           altPhone: document.getElementById("add_addrAltPhone").value,
         };
+        
 
+        if (data.phone && data.altPhone && data.phone === data.altPhone) {
+        Swal.fire(
+        "Invalid Phone Numbers",
+        "Phone number and alternate phone number cannot be the same.",
+        "warning"
+        );
+        return;
+         }
         const homeExists = homeAddressExists();
         if (homeExists && data.addressLabel === "Home") {
           Swal.fire(
@@ -729,7 +738,7 @@
           );
           return;
         }
-
+       
         fetch("/add-address", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -789,6 +798,15 @@
           altPhone: document.getElementById("edit_addrAltPhone").value,
         };
 
+
+        if (data.phone && data.altPhone && data.phone === data.altPhone) {
+    Swal.fire(
+      "Invalid Phone Numbers",
+      "Phone number and alternate phone number cannot be the same.",
+      "warning"
+    );
+    return;
+  }
         const homeExists = homeAddressExists();
         if (homeExists && data.addressLabel === "Home") {
           Swal.fire(
