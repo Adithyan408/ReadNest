@@ -301,6 +301,7 @@
               action="/admin/coupon/updateCoupon"
               method="POST"
               class="space-y-4"
+              onsubmit="return validateEditCoupon()"
             >
               <input type="hidden" id="edit_id" name="id" />
 
@@ -380,7 +381,6 @@
           document.getElementById("editModal").classList.add("hidden");
         }
 
-        // DELETE CONFIRMATION
         function confirmDelete(id) {
           Swal.fire({
             title: "Are you sure?",
@@ -396,6 +396,55 @@
             }
           });
         }
+  function validateEditCoupon() {
+    const discount = Number(document.getElementById("edit_discount").value);
+    const expiry = document.getElementById("edit_expiry").value;
+    const code = document.getElementById("edit_code").value.trim();
+
+    if (!code) {
+      Swal.fire("Validation Error", "Coupon code is required.", "warning");
+      return false;
+    }
+
+    if (!/^[A-Z0-9]{3,20}$/.test(code)) {
+      Swal.fire(
+        "Invalid Coupon Code",
+        "Use only uppercase letters and numbers (3–20 characters).",
+        "warning"
+      );
+      return false;
+    }
+
+    if (isNaN(discount) || discount <= 1 || discount >= 90) {
+      Swal.fire(
+        "Invalid Discount",
+        "Discount must be greater than 1% and less than 90%.",
+        "warning"
+      );
+      return false;
+    }
+
+    if (!expiry) {
+      Swal.fire("Invalid Date", "Expiry date is required.", "warning");
+      return false;
+    }
+
+    const expiryDate = new Date(expiry);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (expiryDate <= today) {
+      Swal.fire(
+        "Invalid Expiry Date",
+        "Expiry date must be a future date (not today).",
+        "warning"
+      );
+      return false;
+    }
+
+    return true;
+  }
+
       </script>
     </div>
   </body>
