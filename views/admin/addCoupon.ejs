@@ -188,6 +188,7 @@
             class="bg-white rounded-2xl shadow-xl p-8 border border-gray-200"
           >
             <form
+             id="couponForm"
               action="/admin/coupon/addCoupon"
               method="POST"
               class="space-y-6"
@@ -202,7 +203,6 @@
                   name="code"
                   placeholder="E.g., SAVE10, FIRST50"
                   class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                  required
                 />
                 <p class="text-xs text-gray-500 mt-1">
                   Use uppercase letters or numbers.
@@ -221,7 +221,6 @@
                   min="1"
                   max="90"
                   class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                  required
                 />
                 <p class="text-xs text-gray-500 mt-1">Recommended: 5% - 50%</p>
               </div>
@@ -252,7 +251,6 @@
                   type="date"
                   name="expiry"
                   class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                  required
                 />
               </div>
 
@@ -270,5 +268,97 @@
         </div>
       </main>
     </div>
+    <script>
+      document
+        .getElementById("couponForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault(); // stop normal submit
+
+          const code = document
+            .querySelector('input[name="code"]')
+            .value.trim();
+          const discount = document.querySelector(
+            'input[name="discount"]'
+          ).value;
+          const minPurchase = document.querySelector(
+            'input[name="minPurchase"]'
+          ).value;
+          const expiry = document.querySelector('input[name="expiry"]').value;
+
+          // ❌ Coupon code
+          if (!code) {
+            Swal.fire(
+              "Validation Error",
+              "Coupon code is required.",
+              "warning"
+            );
+            return;
+          }
+
+          if (!/^[A-Z0-9]{3,20}$/.test(code)) {
+            Swal.fire(
+              "Invalid Coupon Code",
+              "Coupon code must be uppercase letters and numbers only (3–20 chars).",
+              "warning"
+            );
+            return;
+          }
+
+          // ❌ Discount
+          if (!discount) {
+            Swal.fire(
+              "Validation Error",
+              "Discount percentage is required.",
+              "warning"
+            );
+            return;
+          }
+
+          if (discount < 1 || discount > 90) {
+            Swal.fire(
+              "Invalid Discount",
+              "Discount must be between 1% and 90%.",
+              "warning"
+            );
+            return;
+          }
+
+          // ❌ Minimum purchase
+          if (minPurchase && minPurchase < 0) {
+            Swal.fire(
+              "Invalid Amount",
+              "Minimum purchase cannot be negative.",
+              "warning"
+            );
+            return;
+          }
+
+          // ❌ Expiry date
+          if (!expiry) {
+            Swal.fire(
+              "Validation Error",
+              "Expiry date is required.",
+              "warning"
+            );
+            return;
+          }
+
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const expiryDate = new Date(expiry);
+
+          if (expiryDate <= today) {
+            Swal.fire(
+              "Invalid Expiry Date",
+              "Expiry date must be a future date.",
+              "warning"
+            );
+            return;
+          }
+
+          // ✅ All validations passed
+          this.submit();
+        });
+    </script>
   </body>
 </html>
