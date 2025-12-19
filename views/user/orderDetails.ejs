@@ -86,13 +86,25 @@
           <span class="font-semibold">Items:</span> <%= order.items.length %>
         </p>
 
-        <a
-          href="/orders/<%= order._id %>/invoice"
-          class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition w-fit"
-        >
-          <i class="fa-solid fa-file-invoice"></i>
-          Download Invoice
-        </a>
+        <% if (isInvoiceAvailable) { %>
+  <a
+    href="/orders/<%= order._id %>/invoice"
+    class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition w-fit"
+  >
+    <i class="fa-solid fa-file-invoice"></i>
+    Download Invoice
+  </a>
+<% } else { %>
+  <button
+    type="button"
+    disabled
+    class="inline-flex items-center gap-2 bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed w-fit"
+  >
+    <i class="fa-solid fa-file-invoice"></i>
+    Invoice available after delivery
+  </button>
+<% } %>
+
       </div>
 
       <!-- Placed On + Delivery Date -->

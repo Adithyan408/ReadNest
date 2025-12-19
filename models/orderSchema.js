@@ -9,13 +9,13 @@ const orderItemSchema = new mongoose.Schema({
 
   productName: String,
 
-  regularPrice: Number, // MRP (display only)
-  unitPrice: Number, // 🔥 actual paid per unit
+  regularPrice: Number, 
+  unitPrice: Number, 
   quantity: { type: Number, required: true },
 
-  subtotal: Number, // unitPrice * quantity
+  subtotal: Number, 
 
-  shippingShare: Number, // per-item shipping (important for refunds)
+  shippingShare: Number, 
 
   stock: { type: Number, required: true },
 
