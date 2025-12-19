@@ -8,6 +8,8 @@
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
   <!-- Cropper -->
   <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css" />
@@ -351,15 +353,14 @@
           text: "This action cannot be undone!",
           icon: "warning",
           showCancelButton: true,
-          confirmButtonColor: "#d33", // Red for delete
-          cancelButtonColor: "#6b7280", // Gray
+          confirmButtonColor: "#d33", 
+          cancelButtonColor: "#6b7280", 
           confirmButtonText: "Yes, delete it!",
           cancelButtonText: "Cancel",
           reverseButtons: true,
           focusCancel: true,
         }).then((result) => {
           if (result.isConfirmed) {
-            // Redirect to your delete route
             window.location.href = `/admin/deleteBanner?id=${bannerId}`;
           }
         });

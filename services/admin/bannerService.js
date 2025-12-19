@@ -92,21 +92,25 @@ export const postEditBanner = async (req, res) => {
   try {
     const id = req.query.id;
     const { title, startDate, endDate, status, existingImage } = req.body;
-    const newImageUrl =  req.file.path || existingImage;
+
+    let newImageUrl = existingImage; 
+
+    if (req.file && req.file.path) {
+      newImageUrl = req.file.path;
+    }
 
     const updatedData = {
       title,
       startDate,
       endDate,
       status,
+      bannerImage: newImageUrl,
     };
-    if (newImageUrl) {
-      updatedData.bannerImage = newImageUrl;
-    }
 
     const updateBanner = await Banner.findByIdAndUpdate(id, updatedData, {
       new: true,
     });
+
     if (updateBanner) {
       res.redirect("/admin/banner?status=updated");
     } else {
@@ -126,7 +130,7 @@ export const bannerDelete = async (req, res) => {
     }
 
     const deletedBanner = await Banner.findByIdAndDelete(id);
-    console.log(deletedBanner);
+    
 
     if (!deletedBanner) {
       return res.status(404).send("Banner not found");
