@@ -11,6 +11,9 @@ import { adminRouter } from "./routes/adminRouter.js";
 import { generateBreadcrumbs } from "./middlewares/breadCrumb.js";
 import userSessionMiddleware from "./middlewares/userSession.js";
 import errorHandler from "./middlewares/errorHandler.js";
+import cartCountMiddleware from "./helpers/cartCounter.js";
+
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -37,9 +40,9 @@ app.use(
     },
   })
 );
-
 app.use(passport.initialize());
 app.use(passport.session());
+
 
 app.set("view engine", "ejs");
 app.set("views", [
@@ -52,9 +55,9 @@ app.use(generateBreadcrumbs);
 
 app.use(userSessionMiddleware);
 
+app.use(cartCountMiddleware);
 app.use("/", router);
 app.use("/admin", adminRouter);
-
 app.use(errorHandler);
 
 app.listen(process.env.PORT, () => {
