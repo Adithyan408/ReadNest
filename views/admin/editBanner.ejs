@@ -150,7 +150,7 @@
         <!-- CARD -->
         <div class="bg-white rounded-2xl p-10 shadow-xl">
 
-          <form action="/admin/updateBanner?id=<%= data._id %>" method="POST" enctype="multipart/form-data">
+          <form action="/admin/banner/updateBanner?id=<%= data._id %>" method="POST" enctype="multipart/form-data">
 
             <input type="hidden" name="existingImage" value="<%= data.bannerImage %>"/>
 
@@ -344,6 +344,26 @@
         cropper = null;
       }, "image/jpeg", 0.9);
     };
+
+    function confirmDelete(bannerId) {
+        Swal.fire({
+          title: "Are you sure?",
+          text: "This action cannot be undone!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#d33", // Red for delete
+          cancelButtonColor: "#6b7280", // Gray
+          confirmButtonText: "Yes, delete it!",
+          cancelButtonText: "Cancel",
+          reverseButtons: true,
+          focusCancel: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Redirect to your delete route
+            window.location.href = `/admin/deleteBanner?id=${bannerId}`;
+          }
+        });
+      }
   </script>
 
 </body>
