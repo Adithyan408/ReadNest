@@ -278,7 +278,7 @@ export const orderPlaced = async (req, res) => {
     const paymentId = req.session.razorpayPaymentId || null;
 
     if (paymentMode === "ONLINE" && !req.session.paymentSuccess) {
-      return res.redirect("/payment");
+      return res.redirect("/payment-failed?reason=Payment not completed");
     }
 
     const payableAmount = req.session.payableAmount;
@@ -377,13 +377,11 @@ export const orderPlaced = async (req, res) => {
           product: product._id,
           productName: product.productName,
 
-          // display-only
           regularPrice: offer.regularPrice,
 
-          // 🔥 PRICE FREEZE (IMPORTANT)
-          unitPrice, // ₹300
+          unitPrice,
           quantity: qty,
-          subtotal: itemTotal, // ₹300
+          subtotal: itemTotal,
 
           productImage: product.productImage,
           stock: product.stock,
@@ -410,10 +408,8 @@ export const orderPlaced = async (req, res) => {
             product: p._id,
             productName: p.productName,
 
-            // display-only
             regularPrice: offer.regularPrice,
 
-            // 🔥 PRICE FREEZE (THIS IS WHAT REFUNDS USE)
             unitPrice,
             quantity: i.quantity,
             subtotal: itemTotal,
@@ -475,6 +471,28 @@ export const orderPlaced = async (req, res) => {
   }
 };
 
+export const paymentFailed = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+    if (!userId) return res.redirect("/login");
+
+    req.session.paymentSuccess = null;
+    req.session.razorpayPaymentId = null;
+
+    const failureReason =
+      req.query.reason || "Your payment could not be completed.";
+
+    res.render("failedPayment", {
+      user: req.session.user,
+      reason: failureReason,
+      retryUrl: "/payment",
+    });
+  } catch (error) {
+    console.error("Payment Failed Controller Error:", error);
+    res.render("notFound");
+  }
+};
+
 export const createRazorpayOrder = async (req, res) => {
   try {
     const amount = req.session.payableAmount;
@@ -515,9 +533,10 @@ export const verifyRazorpayPayment = async (req, res) => {
       .digest("hex");
 
     if (expectedSign !== razorpay_signature) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid payment signature" });
+      req.session.paymentSuccess = null;
+      req.session.razorpayPaymentId = null;
+
+      return res.redirect("/payment-failed?reason=Payment verification failed");
     }
 
     req.session.paymentSuccess = true;

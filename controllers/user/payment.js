@@ -1,5 +1,5 @@
 
-import { createRazorpayOrder, loadPayment, orderPlaced, postCoupon, verifyRazorpayPayment, postRemoveCoupon } from "../../services/user/payment.js"
+import { createRazorpayOrder, loadPayment, orderPlaced, postCoupon, verifyRazorpayPayment, postRemoveCoupon, paymentFailed } from "../../services/user/payment.js"
 
 
 export const getPayment = async(req, res) => {
@@ -12,6 +12,10 @@ export const applyCoupon = async(req, res) => {
 
 export const loadPlace = async(req, res) => {
     await orderPlaced(req, res);
+}
+
+export const loadFailed = async(req, res) => {
+    await paymentFailed(req, res);
 }
 
 export const removeCoupon = async(req, res) => {

@@ -436,57 +436,72 @@
         }
         
         if (method === "Razorpay") {
-          try {
-            const orderData = await fetch("/create-razorpay-order", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-            });
+  try {
+    const orderData = await fetch("/create-razorpay-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
 
-            const { success, order } = await orderData.json();
-            if (!success) {
-              return Swal.fire(
-                "Error",
-                "Unable to create payment order",
-                "error"
-              );
-            }
+    const { success, order } = await orderData.json();
+    if (!success) {
+      return Swal.fire(
+        "Error",
+        "Unable to create payment order",
+        "error"
+      );
+    }
 
-            const options = {
-              key: "<%= process.env.RAZO_API_KEY %>",
-              amount: order.amount,
-              currency: "INR",
-              name: "ReadNest",
-              description: "Order Payment",
-              order_id: order.id,
+    const options = {
+      key: "<%= process.env.RAZO_API_KEY %>",
+      amount: order.amount,
+      currency: "INR",
+      name: "ReadNest",
+      description: "Order Payment",
+      order_id: order.id,
 
-              handler: async function (response) {
-                const verify = await fetch("/verify-razorpay-payment", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(response),
-                });
+      // ✅ SUCCESS
+      handler: async function (response) {
+        try {
+          const verify = await fetch("/verify-razorpay-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(response),
+          });
 
-                const verifyRes = await verify.json();
+          const verifyRes = await verify.json();
 
-                if (verifyRes.success) {
-                  window.location.href = `/place-order?payment=ONLINE`;
-                } else {
-                  Swal.fire(
-                    "Payment Failed",
-                    "Verification error occurred",
-                    "error"
-                  );
-                }
-              },
-            };
-
-            const rzp = new Razorpay(options);
-            rzp.open();
-          } catch (e) {
-            console.error(e);
-            Swal.fire("Error", "Something went wrong with payment", "error");
+          if (verifyRes.success) {
+            window.location.href = `/place-order?payment=ONLINE`;
+          } else {
+            window.location.href =
+              "/payment-failed?reason=Payment verification failed";
           }
+        } catch (err) {
+          window.location.href =
+            "/payment-failed?reason=Verification error";
         }
+      },
+
+      // ❌ FAILURE / CANCEL / CLOSE
+      modal: {
+        ondismiss: function () {
+          window.location.href =
+            "/payment-failed?reason=Payment cancelled or failed";
+        },
+      },
+
+      theme: { color: "#2563eb" },
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+  } catch (e) {
+    console.error(e);
+    window.location.href =
+      "/payment-failed?reason=Payment initialization failed";
+  }
+}
+
       }
     </script>
   </body>
