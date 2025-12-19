@@ -9,6 +9,7 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import couponUsage from "../../models/couponUsage.js";
 import ReferralReward from "../../models/referalSchema.js";
+import Wallet from "../../models/walletSchema.js";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZO_API_KEY,
@@ -174,6 +175,11 @@ export const loadPayment = async (req, res) => {
     req.session.shippingCharge = shippingCharge;
     req.session.payableAmount = payableAmount;
 
+    const walletDoc = await Wallet.findOne({ user: userId }).lean();
+    const walletBalance = walletDoc?.balance || 0;
+
+    const isWalletUsable = walletBalance > payableAmount;
+
     res.render("payment", {
       user: userData,
       addresses,
@@ -186,6 +192,8 @@ export const loadPayment = async (req, res) => {
       payableAmount,
       isBuyNow: Boolean(req.query.buyNow),
       coupons,
+      walletBalance,
+      isWalletUsable,
     });
   } catch (error) {
     console.log("Load Payment Error:", error);
@@ -430,7 +438,7 @@ export const orderPlaced = async (req, res) => {
       paymentStatus: paymentMode === "ONLINE" ? "paid" : "pending",
       status: "processing",
       address: selectedAddress ? { ...selectedAddress } : null,
-      finalPayable: payableAmount
+      finalPayable: payableAmount,
     });
 
     await newOrder.save();

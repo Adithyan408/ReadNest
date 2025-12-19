@@ -130,14 +130,25 @@
               >Select Payment Method</label
             >
             <select
-              id="paymentMethod"
-              class="w-full p-3 border mt-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            id="paymentMethod"
+            class="w-full p-3 border mt-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Choose payment method</option>
-              <option value="COD">Cash On Delivery</option>
-              <option value="Razorpay">Razorpay</option>
-              <option value="Wallet">Wallet</option>
+            <option value="">Choose payment method</option>
+            <option value="COD">Cash On Delivery</option>
+            <option value="Razorpay">Razorpay</option>
+            <option
+            value="Wallet"
+            <%= !isWalletUsable ? "disabled" : "" %>
+            >
+            Wallet
+            <% if (!isWalletUsable) { %>
+            (Insufficient balance)
+            <% } else { %>
+            (₹ <%= walletBalance.toFixed(2) %>)
+            <% } %>
+            </option>
             </select>
+
 
             <!-- COUPON DROPDOWN -->
             <div class="mt-6">
