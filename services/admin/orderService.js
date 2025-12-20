@@ -187,45 +187,46 @@ export const approveReturn = async (req, res) => {
       });
     }
 
+    // -----------------------------
+    // MARK ITEM AS RETURNED
+    // -----------------------------
     item.returnStatus = "approved";
     item.status = "returned";
     item.returnedAt = new Date();
 
+    // -----------------------------
+    // REFUND AMOUNT (PROPORTIONAL)
+    // -----------------------------
+    const refundAmount = item.finalAmount; // 🔥 already coupon-adjusted
+    const note = "Refund for returned item";
+
+    item.refundAmount = refundAmount;
+
+    // -----------------------------
+    // UPDATE ORDER STATUS
+    // -----------------------------
     const activeItems = order.items.filter(
       (i) => !["cancelled", "returned"].includes(i.status)
     );
 
-    let refundAmount = item.subtotal;
-    let note = "Refund for returned item";
-
-    if (order.discount > 0 && !order.couponAdjusted) {
-      refundAmount -= order.discount;
-      order.couponAdjusted = true;
-      note += " (coupon adjusted)";
-    }
-
-    if (activeItems.length === 0 && !order.shippingRefunded) {
-      refundAmount += order.shippingCharge;
-      order.shippingRefunded = true;
-      note += " + shipping refunded";
-    }
-
-    item.refundAmount = refundAmount;
-
     order.status =
       activeItems.length === 0 ? "cancelled" : "partially_cancelled";
 
-    if (["ONLINE", "WALLET"].includes(order.paymentMethod)) {
-      await creditWallet({
-        userId: order.user,
-        amount: refundAmount,
-        note,
-        orderId: order._id,
-        paymentId: order.paymentId || null,
-        source: "refund",
-      });
-    }
+    // -----------------------------
+    // CREDIT WALLET
+    // -----------------------------
+    await creditWallet({
+      userId: order.user,
+      amount: refundAmount,
+      note,
+      orderId: order._id,
+      paymentId: order.paymentId || null,
+      source: "return_refund",
+    });
 
+    // -----------------------------
+    // RESTOCK INVENTORY
+    // -----------------------------
     await Product.updateOne(
       { _id: item.product },
       { $inc: { stock: item.quantity } }
@@ -235,7 +236,7 @@ export const approveReturn = async (req, res) => {
 
     return res.json({
       success: true,
-      message: `Return approved successfully. ₹${refundAmount} refunded.`,
+      message: `Return approved. ₹${refundAmount} credited to wallet and item restocked.`,
     });
   } catch (err) {
     console.error("Approve Return Error:", err);

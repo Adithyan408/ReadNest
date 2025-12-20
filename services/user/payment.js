@@ -421,6 +421,36 @@ export const orderPlaced = async (req, res) => {
       );
     }
 
+    if (discountValue > 0 && cartItems.length > 0) {
+      const totalItemsAmount = cartItems.reduce(
+        (sum, item) => sum + item.subtotal,
+        0
+      );
+
+      let remainingDiscount = discountValue;
+
+      cartItems.forEach((item, index) => {
+        let itemDiscount;
+
+        if (index === cartItems.length - 1) {
+          itemDiscount = remainingDiscount;
+        } else {
+          itemDiscount = Math.round(
+            (item.subtotal / totalItemsAmount) * discountValue
+          );
+          remainingDiscount -= itemDiscount;
+        }
+
+        item.couponDiscount = itemDiscount;
+        item.finalAmount = item.subtotal - itemDiscount;
+      });
+    } else {
+      cartItems.forEach((item) => {
+        item.couponDiscount = 0;
+        item.finalAmount = item.subtotal;
+      });
+    }
+
     const newOrder = new Order({
       user: userId,
       items: cartItems,

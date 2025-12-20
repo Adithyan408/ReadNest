@@ -37,7 +37,6 @@ export const getOrderDetailsPage = async (req, res) => {
     const isInvoiceAvailable = order.items.every((item) =>
       FINAL_STATUSES.includes(item.status)
     );
-    
 
     res.render("orderDetails", {
       order,
@@ -63,26 +62,20 @@ export const cancelOrderItem = async (req, res) => {
       return res.render("notFound");
     }
 
-    const previousStatus = item.status;
     item.status = "cancelled";
     item.cancelledAt = new Date();
+
+    let refundAmount = item.finalAmount;
+    let note = "Refund for cancelled item";
 
     const activeItems = order.items.filter(
       (i) => !["cancelled", "returned"].includes(i.status)
     );
 
-    let refundAmount = item.subtotal;
-    let note = "Refund for cancelled item";
+    const anyDelivered = order.items.some((i) => i.status === "delivered");
 
-    if (order.discount > 0 && !order.couponAdjusted) {
-      refundAmount -= order.discount;
-      order.couponAdjusted = true;
-      note += " (coupon adjusted)";
-    }
-
-    if (activeItems.length === 0 && !order.shippingRefunded) {
-      refundAmount += order.shippingCharge;
-      order.shippingRefunded = true;
+    if (activeItems.length === 0 && !anyDelivered) {
+      refundAmount += Number(order.shippingCharge || 0);
       note += " + shipping refunded";
     }
 
@@ -96,10 +89,11 @@ export const cancelOrderItem = async (req, res) => {
     if (["ONLINE", "WALLET"].includes(order.paymentMethod)) {
       await creditWallet({
         userId: order.user,
-        amount: item.refundAmount,
+        amount: refundAmount,
         note,
         orderId: order._id,
         paymentId: order.paymentId || null,
+        source: "cancel_refund",
       });
     }
 
@@ -146,7 +140,7 @@ export const downloadInvoice = async (req, res) => {
     const order = await Order.findById(orderId).lean();
     if (!order) return res.render("notFound");
 
-    // 🔒 Allow invoice only if all items reached final state
+    // ---------------- FINAL STATE CHECK ----------------
     const FINAL_STATUSES = ["delivered", "returned", "cancelled"];
     const isInvoiceAvailable = order.items.every((item) =>
       FINAL_STATUSES.includes(item.status)
@@ -158,6 +152,7 @@ export const downloadInvoice = async (req, res) => {
       });
     }
 
+    // ---------------- PDF SETUP ----------------
     const invoiceName = `invoice-${orderId}.pdf`;
     const invoiceDir = "invoices";
     const invoicePath = path.join(invoiceDir, invoiceName);
@@ -172,21 +167,18 @@ export const downloadInvoice = async (req, res) => {
     doc.pipe(fs.createWriteStream(invoicePath));
     doc.pipe(res);
 
-    /* ---------------- HEADER ---------------- */
-
+    // ---------------- HEADER ----------------
     const logoPath = path.join("public", "images", "logo2.png");
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, 40, 30, { width: 70 });
     }
 
     doc.fontSize(26).fillColor("#333").text("READNEST", { align: "center" });
+    doc.fontSize(12).fillColor("#666").text("Digital Book Store", {
+      align: "center",
+    });
 
-    doc
-      .fontSize(12)
-      .fillColor("#666")
-      .text("Digital Book Store", { align: "center" });
-
-    doc.moveTo(40, 100).lineTo(550, 100).strokeColor("#ccc").stroke();
+    doc.moveTo(40, 100).lineTo(550, 100).stroke("#ccc");
     doc.moveDown(2);
 
     doc.fontSize(20).fillColor("#222").text("INVOICE", { align: "center" });
@@ -202,8 +194,7 @@ export const downloadInvoice = async (req, res) => {
 
     doc.moveDown(2);
 
-    /* ---------------- ADDRESS ---------------- */
-
+    // ---------------- ADDRESS ----------------
     if (order.address) {
       const a = order.address;
 
@@ -230,12 +221,17 @@ Phone: ${a.phone}`,
       doc.moveDown(4);
     }
 
-    /* ---------------- ITEMS TABLE ---------------- */
-
+    // ---------------- ITEMS TABLE ----------------
     doc.fontSize(14).fillColor("#222").text("Order Items", { underline: true });
 
     const tableTop = doc.y + 10;
-    const columnX = { item: 40, qty: 260, price: 330, subtotal: 430 };
+    const columnX = {
+      item: 40,
+      qty: 220,
+      price: 290,
+      subtotal: 380,
+      status: 480,
+    };
 
     doc.rect(40, tableTop, 510, 22).fill("#f2f2f2").stroke();
 
@@ -245,57 +241,67 @@ Phone: ${a.phone}`,
       .text("Item", columnX.item, tableTop + 6)
       .text("Qty", columnX.qty, tableTop + 6)
       .text("Price", columnX.price, tableTop + 6)
-      .text("Subtotal", columnX.subtotal, tableTop + 6);
+      .text("Subtotal", columnX.subtotal, tableTop + 6)
+      .text("Status", columnX.status, tableTop + 6);
 
     let posY = tableTop + 30;
 
-    const invoiceItems = order.items.filter(
-      (item) => item.status !== "cancelled"
-    );
+    order.items.forEach((item) => {
+      let statusLabel = "Delivered";
+      let statusColor = "#2e7d32";
 
-    invoiceItems.forEach((item) => {
+      if (item.status === "cancelled") {
+        statusLabel = "Cancelled";
+        statusColor = "#c62828";
+      } else if (item.status === "returned") {
+        statusLabel = "Returned (Refunded)";
+        statusColor = "#ef6c00";
+      }
+
       doc
         .fillColor("#333")
         .text(item.productName, columnX.item, posY)
         .text(item.quantity.toString(), columnX.qty, posY)
         .text(`₹${item.unitPrice}`, columnX.price, posY)
-        .text(`₹${item.subtotal}`, columnX.subtotal, posY);
+        .text(`₹${item.subtotal}`, columnX.subtotal, posY)
+        .fillColor(statusColor)
+        .text(statusLabel, columnX.status, posY);
 
       doc
         .moveTo(40, posY + 18)
         .lineTo(550, posY + 18)
         .stroke("#ddd");
+
       posY += 25;
     });
 
-    /* ---------------- SUMMARY ---------------- */
-
-    const subtotal = invoiceItems.reduce((sum, item) => sum + item.subtotal, 0);
+    // ---------------- SUMMARY ----------------
+    const subtotal = order.items
+      .filter((item) => item.status === "delivered")
+      .reduce((sum, item) => sum + item.subtotal, 0);
 
     const discount = Number(order.discount || 0);
     const shippingCharge = Number(order.shippingCharge || 0);
-    const totalAmount = Number(order.finalPayable);
+    const totalPaid = Number(order.finalPayable);
 
     doc.roundedRect(300, posY + 10, 250, 120, 8).stroke("#999");
 
     doc
       .fontSize(12)
       .fillColor("#444")
-      .text(`Subtotal: ₹${subtotal}`, 320, posY + 25)
+      .text(`Subtotal (Delivered Items): ₹${subtotal}`, 320, posY + 25)
       .text(`Discount: ₹${discount}`, 320, posY + 45)
       .text(`Shipping: ₹${shippingCharge}`, 320, posY + 65)
       .fontSize(13)
       .fillColor("#000")
-      .text(`Total Amount Paid: ₹${totalAmount}`, 320, posY + 90);
+      .text(`Total Amount Paid: ₹${totalPaid}`, 320, posY + 90);
 
     doc.moveDown(5);
 
     doc
       .fontSize(10)
       .fillColor("#777")
-      .text("Thank you for shopping with READNEST!", {
-        align: "center",
-      });
+      .text("Thank you for shopping with READNEST!", { align: "center" });
 
     doc.end();
   } catch (error) {

@@ -16,7 +16,8 @@ const orderItemSchema = new mongoose.Schema({
   subtotal: Number, 
 
   shippingShare: Number, 
-
+  couponDiscount: Number, 
+  finalAmount:Number,
   stock: { type: Number, required: true },
 
   productImage: {
