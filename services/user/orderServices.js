@@ -37,11 +37,7 @@ export const getOrderDetailsPage = async (req, res) => {
     const isInvoiceAvailable = order.items.every((item) =>
       FINAL_STATUSES.includes(item.status)
     );
-    if (!isInvoiceAvailable) {
-      return res.status(403).render("notAuthorized", {
-        message: "Invoice is available only after order completion",
-      });
-    }
+    
 
     res.render("orderDetails", {
       order,
@@ -142,6 +138,7 @@ export const returnOrderItem = async (req, res) => {
     return res.render("notFound");
   }
 };
+
 export const downloadInvoice = async (req, res) => {
   try {
     const orderId = req.params.orderId;

@@ -165,16 +165,28 @@ export const approveReturn = async (req, res) => {
     const { orderId, itemId } = req.params;
 
     const order = await Order.findById(orderId);
-    if (!order) return res.redirect("/admin/orders");
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
 
     const item = order.items.id(itemId);
     if (!item || item.returnStatus !== "requested") {
-      return res.redirect("/admin/orders");
+      return res.status(400).json({
+        success: false,
+        message: "Invalid return request",
+      });
     }
 
     if (item.refundAmount && item.refundAmount > 0) {
-      return res.redirect(`/admin/orders/${orderId}`);
+      return res.status(400).json({
+        success: false,
+        message: "Refund already processed",
+      });
     }
+
     item.returnStatus = "approved";
     item.status = "returned";
     item.returnedAt = new Date();
@@ -221,10 +233,16 @@ export const approveReturn = async (req, res) => {
 
     await order.save();
 
-    res.redirect(`/admin/orders/${orderId}`);
+    return res.json({
+      success: true,
+      message: `Return approved successfully. ₹${refundAmount} refunded.`,
+    });
   } catch (err) {
-    console.log("Approve Return Error:", err);
-    res.redirect("/admin/orders");
+    console.error("Approve Return Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while approving return",
+    });
   }
 };
 

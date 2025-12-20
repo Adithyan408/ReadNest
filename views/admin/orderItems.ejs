@@ -507,21 +507,33 @@ function updateItemStatus(orderId, itemId, newStatus) {
     showCancelButton: true,
     confirmButtonText: "Approve",
     confirmButtonColor: "#16a34a"
-  }).then((result) => {
+  }).then(async (result) => {
     if (!result.isConfirmed) return;
 
-    fetch(`/admin/orders/${orderId}/items/${itemId}/approve-return`, {
-      method: "POST"
-    })
-    .then(res => res.json())
-    .then(data => {
+    try {
+      const res = await fetch(
+        `/admin/orders/${orderId}/items/${itemId}/approve-return`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      const data = await res.json();
+
       if (data.success) {
-        Swal.fire("Approved!", data.message, "success")
-          .then(() => location.reload());
+        await Swal.fire("Approved!", data.message, "success");
+        location.reload();
       } else {
-        Swal.fire("Error", data.message, "error");
+        Swal.fire("Error", data.message || "Something went wrong", "error");
       }
-    });
+
+    } catch (err) {
+      console.error("Approve return error:", err);
+      Swal.fire("Error", "Server error. Please try again.", "error");
+    }
   });
 }
 
