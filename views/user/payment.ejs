@@ -134,10 +134,27 @@
             class="w-full p-3 border mt-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
             <option value="">Choose payment method</option>
-            <option value="COD">Cash On Delivery</option>
-            <option value="Razorpay">Razorpay</option>
+
+            <!-- COD -->
             <option
-            value="Wallet"
+            value="COD"
+            <%= selectedPaymentMethod === "COD" ? "selected" : "" %>
+            >
+            Cash On Delivery
+            </option>
+
+            <!-- RAZORPAY -->
+            <option
+            value="Razorpay"
+            <%= selectedPaymentMethod === "Razorpay" ? "selected" : "" %>
+            >
+            Razorpay
+            </option>
+
+            <!-- WALLET -->
+            <option
+            value="WALLET"
+            <%= selectedPaymentMethod === "WALLET" ? "selected" : "" %>
             <%= !isWalletUsable ? "disabled" : "" %>
             >
             Wallet
@@ -147,7 +164,8 @@
             (₹ <%= walletBalance.toFixed(2) %>)
             <% } %>
             </option>
-            </select>
+          </select>
+
 
 
             <!-- COUPON DROPDOWN -->
@@ -212,7 +230,7 @@
                     </p>
 
                     <p class="text-xs text-gray-400">
-                      Expires: <%= c.expiry.toDateString() %>
+                      Expires: <%= c.expiryFormatted %>
                     </p>
                   </div>
 
@@ -271,238 +289,224 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <script>
-      let baseTotal = Number("<%= payableAmount %>");
-      let originalTotal = baseTotal;
-      let couponValid = true;
-      function toggleCouponDropdown() {
-        document.getElementById("couponDropdown").classList.toggle("hidden");
-      }
+  /* =====================================================
+     GLOBAL STATE (UI ONLY)
+  ===================================================== */
+  let couponValid = true;
+  let paymentInProgress = false;
 
-      function selectCouponFromList(code) {
-        // Set text in dropdown
-        document.getElementById("selectedCouponText").textContent = code;
+  /* =====================================================
+     COUPON DROPDOWN
+  ===================================================== */
+  function toggleCouponDropdown() {
+    document.getElementById("couponDropdown").classList.toggle("hidden");
+  }
 
-        // Apply coupon in input box
-        document.getElementById("couponCode").value = code;
+  document.addEventListener("click", function (event) {
+    const wrapper = document.getElementById("couponWrapper");
+    if (!wrapper.contains(event.target)) {
+      document.getElementById("couponDropdown").classList.add("hidden");
+    }
+  });
 
-        // Hide dropdown
-        document.getElementById("couponDropdown").classList.add("hidden");
+  function selectCouponFromList(code) {
+    document.getElementById("selectedCouponText").textContent = code;
+    document.getElementById("couponCode").value = code;
+    document.getElementById("removeCouponBtn").classList.remove("hidden");
+    document.getElementById("couponDropdown").classList.add("hidden");
+    applyCoupon();
+  }
 
-        // Apply coupon automatically
-        applyCoupon();
-      }
-
-      // Close dropdown if clicked outside
-      document.addEventListener("click", function (event) {
-        const wrapper = document.getElementById("couponWrapper");
-        const dropdown = document.getElementById("couponDropdown");
-
-        if (!wrapper.contains(event.target)) {
-          dropdown.classList.add("hidden");
-        }
-      });
-
-      function selectCouponFromList(code) {
-        document.getElementById("selectedCouponText").textContent = code;
-        document.getElementById("couponCode").value = code;
-
-        // SHOW REMOVE BUTTON
-        document.getElementById("removeCouponBtn").classList.remove("hidden");
-
-        document.getElementById("couponDropdown").classList.add("hidden");
-
-        applyCoupon();
-      }
-
-      function applyCoupon() {
-        const coupon = document.getElementById("couponCode").value.trim();
-        if (!coupon) {
-          Swal.fire("Error", "Enter a coupon code!", "error");
-          return;
-        }
-
-        fetch("/apply-coupon", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            coupon,
-            totalAmount: originalTotal,
-          }),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            const message = document.getElementById("couponMessage");
-            const discountElement = document.getElementById("discountAmount");
-            const totalElement = document.getElementById("totalAmount");
-
-            if (!data.success) {
-              couponValid = false;
-              message.innerHTML = data.message;
-              message.classList.remove("hidden");
-              message.classList.add("text-red-600");
-
-              Swal.fire("Invalid Coupon", data.message, "error");
-              return;
-            }
-
-            // SUCCESS — now coupon is valid
-            couponValid = true;
-
-            message.innerHTML = data.message;
-            message.classList.remove("text-red-600");
-            message.classList.remove("hidden");
-
-            discountElement.innerText = "₹ " + data.discount;
-            document.getElementById("totalAmount").innerText =
-              "₹ " + data.finalAmount;
-            originalTotal = data.finalAmount;
-            document.getElementById("discountBox").classList.remove("hidden");
-          });
-      }
-
-      function removeCoupon(e) {
-        e.stopPropagation();
-
-        couponValid = true;
-        document.getElementById("couponCode").value = "";
-        document.getElementById("selectedCouponText").textContent =
-          "Select a coupon";
-
-        document.getElementById("removeCouponBtn").classList.add("hidden");
-
-        document.getElementById("discountAmount").innerText = "₹ 0";
-        document.getElementById("couponMessage").classList.add("hidden");
-
-        document.getElementById("totalAmount").innerText = "₹ " + baseTotal;
-
-        const singleTotalEl = document.getElementById("singleTotal");
-        if (singleTotalEl) singleTotalEl.innerText = "₹ " + baseTotal;
-
-        originalTotal = baseTotal;
-
-        fetch("/remove-coupon", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      async function processPayment() {
-        const method = document.getElementById("paymentMethod").value;
-
-        if (!method) {
-          Swal.fire("Wait!", "Please select a payment method", "warning");
-          return;
-        }
-
-        if (method === "COD") {
-          if (!couponValid) {
-            Swal.fire(
-              "Coupon Error",
-              "Cannot place order because the coupon is invalid.",
-              "error"
-            );
-            return;
-          }
-
-          window.location.href = `/place-order?payment=COD`;
-          return;
-        }
-
-        if (method === "Wallet") {
-          try {
-            const res = await fetch("/pay-with-wallet", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-            });
-
-            const data = await res.json();
-
-            if (!data.success) {
-              return Swal.fire("Wallet Error", data.message, "error");
-            }
-
-            Swal.fire(
-              "Success",
-              "Payment completed using wallet",
-              "success"
-            ).then(() => {
-              window.location.href = `/place-order?payment=WALLET`;
-            });
-          } catch (err) {
-            console.error(err);
-            Swal.fire("Error", "Wallet payment failed", "error");
-          }
-          return;
-        }
-        
-        if (method === "Razorpay") {
-  try {
-    const orderData = await fetch("/create-razorpay-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    });
-
-    const { success, order } = await orderData.json();
-    if (!success) {
-      return Swal.fire(
-        "Error",
-        "Unable to create payment order",
-        "error"
-      );
+  /* =====================================================
+     APPLY COUPON
+  ===================================================== */
+  function applyCoupon() {
+    const coupon = document.getElementById("couponCode").value.trim();
+    if (!coupon) {
+      Swal.fire("Error", "Please select a coupon", "error");
+      return;
     }
 
-    const options = {
-      key: "<%= process.env.RAZO_API_KEY %>",
-      amount: order.amount,
-      currency: "INR",
-      name: "ReadNest",
-      description: "Order Payment",
-      order_id: order.id,
+    fetch("/apply-coupon", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ coupon }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        const message = document.getElementById("couponMessage");
 
-      // ✅ SUCCESS
-      handler: async function (response) {
-        try {
-          const verify = await fetch("/verify-razorpay-payment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(response),
-          });
-
-          const verifyRes = await verify.json();
-
-          if (verifyRes.success) {
-            window.location.href = `/place-order?payment=ONLINE`;
-          } else {
-            window.location.href =
-              "/payment-failed?reason=Payment verification failed";
-          }
-        } catch (err) {
-          window.location.href =
-            "/payment-failed?reason=Verification error";
+        if (!data.success) {
+          couponValid = false;
+          message.textContent = data.message;
+          message.className = "text-sm mt-2 text-red-600";
+          message.classList.remove("hidden");
+          Swal.fire("Invalid Coupon", data.message, "error");
+          return;
         }
-      },
 
-      // ❌ FAILURE / CANCEL / CLOSE
-      modal: {
-        ondismiss: function () {
-          window.location.href =
-            "/payment-failed?reason=Payment cancelled or failed";
-        },
-      },
+        couponValid = true;
 
-      theme: { color: "#2563eb" },
-    };
+        document.getElementById("discountAmount").textContent = "₹ " + data.discount;
+        document.getElementById("totalAmount").textContent = "₹ " + data.finalAmount;
+        document.getElementById("discountBox").classList.remove("hidden");
 
-    const rzp = new Razorpay(options);
-    rzp.open();
-  } catch (e) {
-    console.error(e);
-    window.location.href =
-      "/payment-failed?reason=Payment initialization failed";
+        message.textContent = "Coupon applied successfully";
+        message.className = "text-sm mt-2 text-green-600";
+        message.classList.remove("hidden");
+      });
   }
-}
 
+  /* =====================================================
+     REMOVE COUPON
+  ===================================================== */
+  function removeCoupon(e) {
+    e.stopPropagation();
+
+    fetch("/remove-coupon", { method: "POST" }).then(() => {
+      couponValid = true;
+      document.getElementById("couponCode").value = "";
+      document.getElementById("selectedCouponText").textContent = "Select a coupon";
+      document.getElementById("removeCouponBtn").classList.add("hidden");
+      document.getElementById("couponMessage").classList.add("hidden");
+      document.getElementById("discountBox").classList.add("hidden");
+    });
+  }
+
+  /* =====================================================
+     PROCESS PAYMENT
+  ===================================================== */
+  async function processPayment() {
+    if (paymentInProgress) return;
+    paymentInProgress = true;
+
+    const method = document.getElementById("paymentMethod").value;
+
+    if (!method) {
+      paymentInProgress = false;
+      Swal.fire("Wait!", "Please select a payment method", "warning");
+      return;
+    }
+
+    if (!couponValid) {
+      paymentInProgress = false;
+      Swal.fire("Coupon Error", "Cannot continue due to invalid coupon", "error");
+      return;
+    }
+
+    /* SAVE METHOD TO REDIS (ONCE) */
+    await fetch("/save-payment-method", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ method }),
+    });
+
+    /* COD */
+    if (method === "COD") {
+      window.location.href = "/place-order?payment=COD";
+      return;
+    }
+
+    /* WALLET */
+    if (method === "WALLET") {
+      try {
+        const res = await fetch("/pay-with-wallet", { method: "POST" });
+        const data = await res.json();
+
+        if (!data.success) {
+          paymentInProgress = false;
+          return Swal.fire("Wallet Error", data.message, "error");
+        }
+
+        window.location.href = "/place-order?payment=WALLET";
+      } catch {
+        paymentInProgress = false;
+        Swal.fire("Error", "Wallet payment failed", "error");
       }
-    </script>
+      return;
+    }
+
+    /* RAZORPAY */
+    if (method === "Razorpay") {
+      try {
+        const res = await fetch("/create-razorpay-order", { method: "POST" });
+        const { success, order, message } = await res.json();
+
+        if (!success) {
+          paymentInProgress = false;
+          return Swal.fire("Error", message || "Payment expired", "error");
+        }
+
+        const options = {
+          key: "<%= process.env.RAZO_API_KEY %>",
+          amount: order.amount,
+          currency: "INR",
+          name: "ReadNest",
+          description: "Order Payment",
+          order_id: order.id,
+
+          handler: async function (response) {
+            try {
+              const verify = await fetch("/verify-razorpay-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(response),
+              });
+
+              const result = await verify.json();
+              window.location.href = result.success
+                ? "/place-order?payment=Razorpay"
+                : "/payment-failed?reason=Payment cancelled&paymentMethod=Razorpay";
+            } catch {
+              window.location.href =
+                "/payment-failed?reason=Verification error&paymentMethod=Razorpay";
+            }
+          },
+
+          modal: {
+            ondismiss: function () {
+              window.location.href =
+                "/payment-failed?reason=Payment cancelled&paymentMethod=Razorpay";
+            },
+          },
+
+          theme: { color: "#2563eb" },
+        };
+
+        new Razorpay(options).open();
+      } catch {
+        paymentInProgress = false;
+        window.location.href =
+          "/payment-failed?reason=Payment initialization failed&paymentMethod=Razorpay";
+      }
+    }
+  }
+
+  /* =====================================================
+     RESTORE STATE ON RETRY
+  ===================================================== */
+  document.addEventListener("DOMContentLoaded", () => {
+    const coupon = "<%= appliedCoupon || '' %>";
+    const discount = Number("<%= discount || 0 %>");
+    const total = Number("<%= payableAmount %>");
+    const method = "<%= selectedPaymentMethod || '' %>";
+
+    if (coupon) {
+      couponValid = true;
+      document.getElementById("selectedCouponText").textContent = coupon;
+      document.getElementById("couponCode").value = coupon;
+      document.getElementById("removeCouponBtn").classList.remove("hidden");
+      document.getElementById("discountAmount").textContent = "₹ " + discount;
+      document.getElementById("totalAmount").textContent = "₹ " + total;
+      document.getElementById("discountBox").classList.remove("hidden");
+    }
+
+    if (method) {
+      document.getElementById("paymentMethod").value = method;
+    }
+  });
+</script>
+
+
   </body>
 </html>
