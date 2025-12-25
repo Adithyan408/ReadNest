@@ -74,7 +74,6 @@ export const loadPayment = async (req, res) => {
       });
     }
 
-
     const calculateOffer = async (product) => {
       const now = new Date();
       const regularPrice = product.regularPrice;
@@ -177,10 +176,10 @@ export const loadPayment = async (req, res) => {
 
     const normalizedCoupons = normalizeCoupons(coupons);
 
-    const razorpayOrder = await razorpay.orders.create({
-      amount: payableAmount * 100,
-      currency: "INR",
-    });
+    // const razorpayOrder = await razorpay.orders.create({
+    //   amount: payableAmount * 100,
+    //   currency: "INR",
+    // });
 
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
@@ -194,7 +193,7 @@ export const loadPayment = async (req, res) => {
       null;
 
     await savePaymentState(userId, {
-      razorpayOrderId: razorpayOrder.id,
+      // razorpayOrderId: razorpayOrder.id,
       cart,
       subtotal,
       discount: 0,
@@ -226,7 +225,7 @@ export const loadPayment = async (req, res) => {
       coupons: normalizedCoupons,
       walletBalance,
       isWalletUsable,
-      razorpayOrderId: razorpayOrder.id,
+      // razorpayOrderId: razorpayOrder.id,
       selectedPaymentMethod: undefined,
       appliedCoupon: undefined,
     });
@@ -260,10 +259,16 @@ export const postCoupon = async (req, res) => {
         message: `Minimum purchase ₹${couponDoc.minPurchase} required`,
       });
 
-    const discountValue = Math.round(
+    const discountValueOff = Math.round(
       (couponDoc.discount / 100) * cached.subtotal
     );
 
+    const maxDiscountOff =
+      Number.isFinite(couponDoc.maxDiscount) && couponDoc.maxDiscount > 0
+        ? couponDoc.maxDiscount
+        : discountValueOff;
+
+    const discountValue = Math.min(discountValueOff, maxDiscountOff);
     const newPayable = cached.subtotal + cached.shippingCharge - discountValue;
 
     await savePaymentState(userId, {
@@ -345,18 +350,33 @@ export const orderPlaced = async (req, res) => {
       addresses[0] ||
       null;
 
-    let cartItems = cart.map((item) => ({
-      product: item._id,
-      productName: item.name,
+    let cartItems = [];
 
-      regularPrice: item.regularPrice,
-      unitPrice: item.price,
-      quantity: item.quantity,
+    for (const item of cart) {
+      const productDoc = await Product.findById(item._id).lean();
 
-      subtotal: item.price * item.quantity,
-      productImage: [item.image],
-      stock: item.stock,
-    }));
+      if (!productDoc) {
+        return res.redirect("/cart?error=product-not-found");
+      }
+
+      if (productDoc.stock < item.quantity) {
+        return res.redirect("/cart?error=out-of-stock");
+      }
+
+      cartItems.push({
+        product: item._id,
+        productName: item.name,
+
+        regularPrice: item.regularPrice,
+        unitPrice: item.price,
+        quantity: item.quantity,
+
+        subtotal: item.price * item.quantity,
+        productImage: [item.image],
+
+        stock: productDoc.stock, // ✅ REAL STOCK FROM DB
+      });
+    }
 
     if (discount > 0 && cartItems.length > 0) {
       const totalItemsAmount = cartItems.reduce(
@@ -507,12 +527,24 @@ export const createRazorpayOrder = async (req, res) => {
       });
     }
 
+    const razorpayOrder = await razorpay.orders.create({
+      amount: cached.payableAmount * 100, // ✅ CORRECT
+      currency: "INR",
+      receipt: `order_${Date.now()}`,
+    });
+
+    // 🔐 SAVE NEW ORDER ID
+    await savePaymentState(userId, {
+      ...cached,
+      razorpayOrderId: razorpayOrder.id,
+    });
+
     return res.json({
       success: true,
       order: {
-        id: cached.razorpayOrderId,
-        amount: cached.payableAmount * 100,
-        currency: "INR",
+        id: razorpayOrder.id, // ✅ FIXED
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
       },
     });
   } catch (error) {

@@ -44,7 +44,7 @@ export const loadAddCoupon = async (req, res) => {
 
 export const postAddCoupon = async (req, res) => {
   try {
-    const { code, discount, expiry, minPurchase } = req.body;
+    const { code, discount, expiry, minPurchase, maxDiscount } = req.body;
 
     if (!code || !discount || !expiry) {
       req.session.status = "All fields are required";
@@ -76,6 +76,7 @@ export const postAddCoupon = async (req, res) => {
       isUsed: false,
       userId: null,
       minPurchase: Number(minPurchase) || 0,
+      maxDiscount: Number(maxDiscount),
       type: "general",
     });
 
@@ -90,7 +91,7 @@ export const postAddCoupon = async (req, res) => {
 
 export const updateCoupon = async (req, res) => {
   try {
-    const { id, code, discount, minPurchase, expiry } = req.body;
+    const { id, code, discount, minPurchase, expiry, maxDiscount } = req.body;
 
     if (!id) {
       req.session.status = "Invalid coupon ID";
@@ -115,6 +116,7 @@ export const updateCoupon = async (req, res) => {
     coupon.code = code.trim().toUpperCase();
     coupon.discount = Number(discount);
     coupon.minPurchase = Number(minPurchase) || 0;
+    coupon.maxDiscount = Number(maxDiscount);
     coupon.expiry = expiryDate;
 
     await coupon.save();

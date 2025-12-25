@@ -10,6 +10,8 @@ const couponSchema = new mongoose.Schema(
 
     minPurchase: { type: Number, default: 0 },
 
+    maxDiscount: {type: Number},
+
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

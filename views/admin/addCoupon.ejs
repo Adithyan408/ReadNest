@@ -239,6 +239,19 @@
                   Leave as 0 if no minimum purchase is required.
                 </p>
               </div>
+               <!--  Maximum Discount (NEW FIELD) -->
+              <div>
+                <label class="block text-gray-700 font-semibold mb-2">
+                  Maximum Discount (₹)
+                </label>
+                <input
+                  type="number"
+                  name="maxDiscount"
+                  placeholder="Enter maximum Discount amount"
+                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+                
+              </div>
 
               <!-- Expiry Date -->
               <div>
@@ -280,6 +293,9 @@
           ).value;
           const minPurchase = document.querySelector(
             'input[name="minPurchase"]'
+          ).value;
+          const maxDiscount = document.querySelector(
+            'input[name="maxDiscount"]'
           ).value;
           const expiry = document.querySelector('input[name="expiry"]').value;
 
@@ -328,6 +344,24 @@
             return;
           }
 
+          if(!maxDiscount){
+            Swal.fire(
+              "Validation Error",
+              "Maximum Discount field is Required",
+              "warning"
+            );
+            return;
+          }
+
+          if( maxDiscount && maxDiscount < 0){
+            Swal.fire(
+              "Validation Error",
+              "Maximum Discount should be a positive Number",
+              "warning"
+            );
+            return;
+          }
+          
           if (!expiry) {
             Swal.fire(
               "Validation Error",

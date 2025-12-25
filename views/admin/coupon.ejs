@@ -335,6 +335,17 @@
                   class="w-full p-3 bg-gray-100 border rounded-lg outline-none"
                 />
               </div>
+               <div>
+                <label class="block font-semibold mb-1"
+                  >Maximum Discount (₹)</label
+                >
+                <input
+                  id="edit_maxDiscount"
+                  name="maxDiscount"
+                  type="number"
+                  class="w-full p-3 bg-gray-100 border rounded-lg outline-none"
+                />
+              </div>
 
               <div>
                 <label class="block font-semibold mb-1">Expiry Date</label>
@@ -367,11 +378,12 @@
       </main>
 
       <script>
-        function openEditModal(id, code, discount, minPurchase, expiry) {
+        function openEditModal(id, code, discount, minPurchase, maxDiscount, expiry) {
           document.getElementById("edit_id").value = id;
           document.getElementById("edit_code").value = code;
           document.getElementById("edit_discount").value = discount;
           document.getElementById("edit_minPurchase").value = minPurchase || 0;
+          document.getElementById("edit_maxDiscount").value = maxDiscount ;
           document.getElementById("edit_expiry").value = expiry;
 
           document.getElementById("editModal").classList.remove("hidden");
@@ -400,6 +412,7 @@
     const discount = Number(document.getElementById("edit_discount").value);
     const expiry = document.getElementById("edit_expiry").value;
     const code = document.getElementById("edit_code").value.trim();
+    const maxDiscount = document.getElementById("edit_maxDiscount").value;
 
     if (!code) {
       Swal.fire("Validation Error", "Coupon code is required.", "warning");
@@ -424,6 +437,23 @@
       return false;
     }
 
+    if(!maxDiscount){
+      Swal.fire(
+        "Invalid ",
+        "Maximum Discount field is required",
+        "warning"
+      );
+      return false;
+    }
+
+    if(maxDiscount && maxDiscount < 0){
+      Swal.fire(
+        "Invalid Amount",
+        "Maximum Discount must be an Positive Number",
+        "warning"
+      );
+      return false
+    }
     if (!expiry) {
       Swal.fire("Invalid Date", "Expiry date is required.", "warning");
       return false;
