@@ -311,9 +311,17 @@
                 <% orders.forEach(function(order) { %>
                 <tr class="border-b hover:bg-gray-50">
                   <!-- ORDER ID -->
-                  <td class="px-6 py-4 border text-indigo-600 font-semibold">
+                  <td class="px-6 py-4 border text-indigo-600 font-semibold relative">
                     #<%= order._id %>
-                  </td>
+
+                    <% if (order.hasReturnRequest) { %>
+                    <span
+                    class="absolute top-2 right-2 w-3 h-3 bg-red-600 rounded-full"
+                    title="Return requested"
+                    ></span>
+                    <% } %>
+                    </td>
+
 
                   <!-- CUSTOMER -->
                   <td class="px-6 py-4 border">

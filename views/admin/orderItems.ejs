@@ -337,18 +337,25 @@
 
           <!-- BADGE -->
           <span
-            id="item-badge-<%= item._id %>"
-            class="px-3 py-1 rounded-md text-xs font-semibold cursor-pointer <%= itemBadge %>"
-            onclick="toggleItemStatusMenu('<%= item._id %>')"
+          id="item-badge-<%= item._id %>"
+          class="px-3 py-1 rounded-md text-xs font-semibold 
+          <%= itemBadge %> 
+          <%= ['cancelled','returned'].includes(item.status) ? 'cursor-not-allowed opacity-70' : 'cursor-pointer' %>"
+          <% if (!['cancelled','returned'].includes(item.status)) { %>
+          onclick="toggleItemStatusMenu('<%= item._id %>')"
+          <% } %>
           >
-            <%= item.status %>
+          <%= item.status %>
           </span>
 
+
           <!-- DROPDOWN MENU -->
-          <div
-            id="item-menu-<%= item._id %>"
-            class="hidden absolute right-0 bg-white shadow-lg border rounded-lg w-40 mt-2 z-50"
-          >
+          <% if (!['cancelled','returned'].includes(item.status)) { %>
+  <div
+    id="item-menu-<%= item._id %>"
+    class="hidden absolute right-0 bg-white shadow-lg border rounded-lg w-40 mt-2 z-50"
+  >
+
             <div
               onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'ordered')"
               class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
@@ -363,12 +370,7 @@
               Delivered
             </div>
 
-            <div
-              onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'returned')"
-              class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-orange-700"
-            >
-              Returned
-            </div>
+            
 
             <div
               onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'cancelled')"
@@ -376,7 +378,9 @@
             >
               Cancelled
             </div>
-          </div>
+            </div>
+<% } %>
+
 
         </div>
       </div>
@@ -453,6 +457,13 @@
 }
 
 function updateItemStatus(orderId, itemId, newStatus) {
+  const finalStates = ["cancelled", "returned"];
+
+if (finalStates.includes(document.getElementById(`item-badge-${itemId}`).textContent.trim())) {
+  Swal.fire("Not Allowed", "This item is already finalized.", "info");
+  return;
+}
+
   Swal.fire({
     title: "Confirm Status Change",
     text: `Update item status to "${newStatus}"?`,

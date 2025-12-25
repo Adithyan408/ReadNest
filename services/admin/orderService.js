@@ -35,10 +35,17 @@ export const loadOrders = async (req, res) => {
       .lean()
       .sort({ createdAt: -1 });
 
-    const ordersWithStatus = allOrders.map((order) => ({
-      ...order,
-      overallStatus: order.status,
-    }));
+    const ordersWithStatus = allOrders.map((order) => {
+      const hasReturnRequest = order.items?.some(
+        (item) => item.returnStatus === "requested"
+      );
+
+      return {
+        ...order,
+        overallStatus: order.status,
+        hasReturnRequest, // 🔴 THIS ENABLES THE RED DOT
+      };
+    });
 
     let filteredOrders = ordersWithStatus;
 
@@ -129,6 +136,13 @@ export const updateItemStatus = async (req, res) => {
       return res.json({ success: false, message: "Item not found" });
     }
 
+    if (["cancelled", "returned"].includes(item.status)) {
+      return res.json({
+        success: false,
+        message: `Item is already ${item.status} and cannot be updated`,
+      });
+    }
+
     const previousStatus = item.status;
 
     item.status = status;
@@ -212,9 +226,6 @@ export const approveReturn = async (req, res) => {
     order.status =
       activeItems.length === 0 ? "cancelled" : "partially_cancelled";
 
-    // -----------------------------
-    // CREDIT WALLET
-    // -----------------------------
     await creditWallet({
       userId: order.user,
       amount: refundAmount,
@@ -224,9 +235,6 @@ export const approveReturn = async (req, res) => {
       source: "return_refund",
     });
 
-    // -----------------------------
-    // RESTOCK INVENTORY
-    // -----------------------------
     await Product.updateOne(
       { _id: item.product },
       { $inc: { stock: item.quantity } }
