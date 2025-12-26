@@ -234,59 +234,129 @@ export const postCoupon = async (req, res) => {
   try {
     const { coupon } = req.body;
     const code = coupon.trim().toUpperCase();
-    const userId = req.session.user._id;
+    const userId = req.session.user?._id;
 
-    const cached = await getPaymentState(userId);
-    if (!cached) {
-      return res.json({ success: false, message: "Payment expired" });
+    if (!userId) {
+      return res.json({ success: false, message: "Unauthorized" });
     }
 
-    const couponDoc = await Coupon.findOne({ code });
-    if (!couponDoc)
-      return res.json({ success: false, message: "Invalid coupon!" });
+    /* ---------------------------
+       LOAD PAYMENT STATE
+    ---------------------------- */
+    const cached = await getPaymentState(userId);
+    if (!cached) {
+      return res.json({ success: false, message: "Payment session expired" });
+    }
 
-    if (couponDoc.expiry < new Date())
-      return res.json({ success: false, message: "Coupon expired!" });
+    /* ---------------------------
+       FIND COUPON
+    ---------------------------- */
+    const couponDoc = await Coupon.findOne({ code }).lean();
+    if (!couponDoc) {
+      return res.json({ success: false, message: "Invalid coupon" });
+    }
 
-    if (cached.subtotal < couponDoc.minPurchase)
+    /* ---------------------------
+       EXPIRY CHECK
+    ---------------------------- */
+    if (couponDoc.expiry < new Date()) {
+      return res.json({ success: false, message: "Coupon expired" });
+    }
+
+    /* ---------------------------
+       MIN PURCHASE CHECK
+    ---------------------------- */
+    if (cached.subtotal < couponDoc.minPurchase) {
       return res.json({
         success: false,
         message: `Minimum purchase ₹${couponDoc.minPurchase} required`,
       });
+    }
 
-    const discountValueOff = Math.round(
+    /* ---------------------------
+       🚫 USAGE VALIDATION
+    ---------------------------- */
+
+    // ✅ GENERAL COUPON → ONCE PER USER
+    if (couponDoc.type === "general") {
+      const alreadyUsed = await couponUsage.findOne({
+        userId,
+        couponId: couponDoc._id,
+        used: true,
+      });
+
+      if (alreadyUsed) {
+        return res.json({
+          success: false,
+          message: "You have already used this coupon",
+        });
+      }
+    }
+
+    // ✅ REFERRAL COUPON → ONCE PER USER
+    if (couponDoc.type === "referral") {
+      const referralUsed = await ReferralReward.findOne({
+        userId,
+        couponCode: code,
+        used: true,
+      });
+
+      if (referralUsed) {
+        return res.json({
+          success: false,
+          message: "Referral coupon already used",
+        });
+      }
+    }
+
+    /* ---------------------------
+       DISCOUNT CALCULATION
+    ---------------------------- */
+    const percentageDiscount = Math.round(
       (couponDoc.discount / 100) * cached.subtotal
     );
 
-    const maxDiscountOff =
+    const maxAllowedDiscount =
       Number.isFinite(couponDoc.maxDiscount) && couponDoc.maxDiscount > 0
         ? couponDoc.maxDiscount
-        : discountValueOff;
+        : percentageDiscount;
 
-    const discountValue = Math.min(discountValueOff, maxDiscountOff);
-    const newPayable = cached.subtotal + cached.shippingCharge - discountValue;
+    const discountValue = Math.min(
+      percentageDiscount,
+      maxAllowedDiscount
+    );
 
+    const payableAmount =
+      cached.subtotal + cached.shippingCharge - discountValue;
+
+    /* ---------------------------
+       SAVE TO PAYMENT STATE
+    ---------------------------- */
     await savePaymentState(userId, {
       ...cached,
       discount: discountValue,
-      payableAmount: newPayable,
+      payableAmount,
       appliedCoupon: code,
     });
 
     req.session.discountValue = discountValue;
-    req.session.payableAmount = newPayable;
+    req.session.payableAmount = payableAmount;
     req.session.appliedCoupon = code;
 
-    res.json({
+    /* ---------------------------
+       RESPONSE
+    ---------------------------- */
+    return res.json({
       success: true,
       discount: discountValue,
-      finalAmount: newPayable,
+      finalAmount: payableAmount,
     });
-  } catch (err) {
-    console.log(err);
-    res.json({ success: false, message: "Server error" });
+  } catch (error) {
+    console.error("Apply Coupon Error:", error);
+    return res.json({ success: false, message: "Server error" });
   }
 };
+
 
 export const orderPlaced = async (req, res) => {
   try {
