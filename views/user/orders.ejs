@@ -75,7 +75,7 @@
 
           <div class="flex justify-between items-center">
             <h2 class="text-xl font-bold text-gray-800">
-              Order ID: <span class="text-blue-600"><%= order._id %></span>
+              Order ID: <span class="text-blue-600"><%= order.orderId %></span>
             </h2>
 
             <span class="px-4 py-2 rounded-lg text-sm font-semibold 
@@ -101,7 +101,7 @@
             </div>
 
             <div class="flex items-center md:justify-end">
-              <a href="/orders/<%= order._id %>" class="bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition">
+              <a href="/orders/<%= order.orderId %>" class="bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition">
                 View Details
               </a>
             </div>

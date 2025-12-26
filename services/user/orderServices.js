@@ -12,7 +12,7 @@ export const getOrderDetailsPage = async (req, res) => {
   try {
     const orderId = req.params.orderId;
 
-    const order = await Order.findById(orderId)
+    const order = await Order.findOne({orderId})
       .populate("items.product", "productImage")
       .lean();
 

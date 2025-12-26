@@ -312,7 +312,7 @@
                 <tr class="border-b hover:bg-gray-50">
                   <!-- ORDER ID -->
                   <td class="px-6 py-4 border text-indigo-600 font-semibold relative">
-                    #<%= order._id %>
+                    #<%= order.orderId %>
 
                     <% if (order.hasReturnRequest) { %>
                     <span
@@ -391,7 +391,7 @@
                   <!-- VIEW BUTTON -->
                   <td class="px-6 py-4 border text-center">
                     <a
-                      href="/admin/orders/<%= order._id %>"
+                      href="/admin/orders/<%= order.orderId %>"
                       class="text-indigo-600 text-xl hover:text-indigo-800"
                       title="View Order"
                     >

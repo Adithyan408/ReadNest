@@ -16,6 +16,9 @@ import {
   clearPaymentState,
 } from "../../helpers/paymentCache.js";
 import { normalizeCoupons } from "../../helpers/couponNormal.js";
+import { generateOrderId } from "../../middlewares/orderId.js";
+
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZO_API_KEY,
   key_secret: process.env.RAZO_KEY_SECRET,
@@ -176,11 +179,6 @@ export const loadPayment = async (req, res) => {
 
     const normalizedCoupons = normalizeCoupons(coupons);
 
-    // const razorpayOrder = await razorpay.orders.create({
-    //   amount: payableAmount * 100,
-    //   currency: "INR",
-    // });
-
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
 
@@ -193,7 +191,6 @@ export const loadPayment = async (req, res) => {
       null;
 
     await savePaymentState(userId, {
-      // razorpayOrderId: razorpayOrder.id,
       cart,
       subtotal,
       discount: 0,
@@ -225,7 +222,6 @@ export const loadPayment = async (req, res) => {
       coupons: normalizedCoupons,
       walletBalance,
       isWalletUsable,
-      // razorpayOrderId: razorpayOrder.id,
       selectedPaymentMethod: undefined,
       appliedCoupon: undefined,
     });
@@ -374,7 +370,7 @@ export const orderPlaced = async (req, res) => {
         subtotal: item.price * item.quantity,
         productImage: [item.image],
 
-        stock: productDoc.stock, // ✅ REAL STOCK FROM DB
+        stock: productDoc.stock, 
       });
     }
 
@@ -409,6 +405,7 @@ export const orderPlaced = async (req, res) => {
     }
 
     const newOrder = new Order({
+      orderId: generateOrderId(),
       user: userId,
       items: cartItems,
       total: subtotal,
@@ -452,7 +449,7 @@ export const orderPlaced = async (req, res) => {
       addresses,
       selectedAddress,
       totalAmount: payableAmount,
-      orderId: newOrder._id,
+      orderId: newOrder.orderId,
     });
   } catch (error) {
     console.error("Order Error:", error);

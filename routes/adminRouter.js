@@ -136,7 +136,7 @@ adminRouter.get("/deleteBanner", nocache(), adminAuth, deleteBanner);
 //Order Managment
 adminRouter.get("/orders", adminAuth, getOrderList);
 adminRouter.post("/orders/:orderId/status", adminAuth, postOrderUpdate);
-adminRouter.get("/orders/:ordersId", adminAuth, loadOrderDetails);
+adminRouter.get("/orders/:orderId", adminAuth, loadOrderDetails);
 adminRouter.post("/orders/:orderId/items/:itemId/approve-return", adminAuth , returnApprove);
 adminRouter.post("/orders/:orderId/items/:itemId/reject-return", adminAuth , returnReject);
 

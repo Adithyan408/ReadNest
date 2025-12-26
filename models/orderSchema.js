@@ -9,15 +9,15 @@ const orderItemSchema = new mongoose.Schema({
 
   productName: String,
 
-  regularPrice: Number, 
-  unitPrice: Number, 
+  regularPrice: Number,
+  unitPrice: Number,
   quantity: { type: Number, required: true },
 
-  subtotal: Number, 
+  subtotal: Number,
 
-  shippingShare: Number, 
-  couponDiscount: Number, 
-  finalAmount:Number,
+  shippingShare: Number,
+  couponDiscount: Number,
+  finalAmount: Number,
   stock: { type: Number, required: true },
 
   productImage: {
@@ -53,6 +53,12 @@ const orderItemSchema = new mongoose.Schema({
 
 const orderSchema = new mongoose.Schema(
   {
+    orderId: {
+      type: String,
+      unique: true,
+      required: true,
+      index: true,
+    },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
     items: [orderItemSchema],

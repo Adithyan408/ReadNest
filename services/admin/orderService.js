@@ -43,7 +43,7 @@ export const loadOrders = async (req, res) => {
       return {
         ...order,
         overallStatus: order.status,
-        hasReturnRequest, // 🔴 THIS ENABLES THE RED DOT
+        hasReturnRequest, 
       };
     });
 
@@ -78,9 +78,8 @@ export const loadOrders = async (req, res) => {
 
 export const orderDetails = async (req, res) => {
   try {
-    const orderId = req.params.ordersId;
-
-    const order = await Order.findById(orderId)
+    const orderId = req.params.orderId;
+    const order = await Order.findOne({orderId})
       .populate("user", "name email phone")
       .populate("items.product", "productName productImage regularPrice")
       .lean();

@@ -35,7 +35,7 @@
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-xl font-bold text-gray-800">
         Order ID:
-        <span class="text-blue-600"><%= order._id %></span>
+        <span class="text-blue-600"><%= order.orderId %></span>
       </h2>
 
       <%
@@ -107,7 +107,6 @@
 
       </div>
 
-      <!-- Placed On + Delivery Date -->
       <div>
         <p class="text-gray-700">
           <span class="font-semibold">Placed On:</span><br />
@@ -125,7 +124,6 @@
         <% } %>
       </div>
 
-      <!-- Payment + Address -->
       <div>
         <p class="text-gray-700">
           <span class="font-semibold">Payment:</span>

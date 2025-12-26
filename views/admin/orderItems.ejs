@@ -219,7 +219,7 @@
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-xl font-bold text-gray-800">
         Order ID:
-        <span class="text-blue-600"><%= order._id %></span>
+        <span class="text-blue-600"><%= order.orderId %></span>
       </h2>
 
       <% 
@@ -258,21 +258,36 @@
       </div>
 
       <!-- DELIVERY ADDRESS -->
-      <div>
-        <p class="text-gray-700 font-semibold mb-1">Delivery Address:</p>
-        <p class="text-gray-700">
-          <%= order.address.addressLabel %> Address <br>
-          <%= order.address.houseName %>,
-          <% if(order.address.houseNumber){ %>
-            <%= order.address.houseNumber %>,
-          <% } %>
-          <%= order.address.street %><br>
-          <%= order.address.post %>, <%= order.address.district %><br>
-          <%= order.address.state %> - <%= order.address.pincode %><br>
-          Phone: <%= order.address.phone %><br>
-          Alternate: <%= order.address.altPhone %>
-        </p>
-      </div>
+    <div>
+  <p class="text-gray-700 font-semibold mb-1">Delivery Address:</p>
+
+  <% if (order.address) { %>
+    <p class="text-gray-700">
+      <%= order.address.addressLabel || "Delivery" %> Address <br>
+
+      <%= order.address.houseName %>
+      <% if (order.address.houseNumber) { %>
+        , <%= order.address.houseNumber %>
+      <% } %>
+      <br>
+
+      <%= order.address.street %><br>
+      <%= order.address.post %>, <%= order.address.district %><br>
+      <%= order.address.state %> - <%= order.address.pincode %><br>
+
+      Phone: <%= order.address.phone %><br>
+
+      <% if (order.address.altPhone) { %>
+        Alternate: <%= order.address.altPhone %>
+      <% } %>
+    </p>
+  <% } else { %>
+    <p class="text-red-500">
+      Address not available for this order
+    </p>
+  <% } %>
+</div>
+
 
       <!-- PAYMENTS & TOTAL -->
       <div>
@@ -283,7 +298,7 @@
 
         <p class="text-gray-700 mt-3">
           <span class="font-semibold">Total Amount:</span>
-          ₹ <%= order.total %>
+          ₹ <%= order.finalPayable ?? order.total %>
         </p>
 
         <p class="text-gray-700 mt-3">
