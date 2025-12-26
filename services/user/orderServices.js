@@ -12,7 +12,7 @@ export const getOrderDetailsPage = async (req, res) => {
   try {
     const orderId = req.params.orderId;
 
-    const order = await Order.findOne({orderId})
+    const order = await Order.findOne({ orderId })
       .populate("items.product", "productImage")
       .lean();
 
@@ -52,7 +52,7 @@ export const cancelOrderItem = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ orderId });
     if (!order) return res.render("notFound");
 
     const item = order.items.id(itemId);
@@ -91,7 +91,7 @@ export const cancelOrderItem = async (req, res) => {
         userId: order.user,
         amount: refundAmount,
         note,
-        orderId: order._id,
+        orderId: order.orderId,
         paymentId: order.paymentId || null,
         source: "cancel_refund",
       });
@@ -109,7 +109,7 @@ export const returnOrderItem = async (req, res) => {
     const { orderId, itemId } = req.params;
     const { returnReason } = req.body;
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ orderId });
     if (!order) return res.render("notFound");
 
     const item = order.items.id(itemId);
@@ -137,7 +137,7 @@ export const downloadInvoice = async (req, res) => {
   try {
     const orderId = req.params.orderId;
 
-    const order = await Order.findById(orderId).lean();
+    const order = await Order.findOne({ orderId }).lean();
     if (!order) return res.render("notFound");
 
     // ---------------- FINAL STATE CHECK ----------------
@@ -187,7 +187,7 @@ export const downloadInvoice = async (req, res) => {
     doc
       .fontSize(12)
       .fillColor("#444")
-      .text(`Order ID: ${order._id}`, { align: "center" })
+      .text(`Order ID: ${order.orderId}`, { align: "center" })
       .text(`Order Date: ${new Date(order.createdAt).toLocaleString()}`, {
         align: "center",
       });
@@ -198,27 +198,45 @@ export const downloadInvoice = async (req, res) => {
     if (order.address) {
       const a = order.address;
 
-      doc.roundedRect(40, doc.y, 510, 90, 8).stroke("#999");
+      const boxX = 40;
+      const boxY = doc.y;
+      const boxWidth = 510;
+      const padding = 10;
 
+      const addressText = `${a.addressLabel}
+${a.houseName}, ${a.street}
+${a.city}, ${a.state} - ${a.pincode}
+Phone: ${a.phone}`;
+
+      // Measure text height
+      doc.fontSize(12);
+      const textHeight = doc.heightOfString(addressText, {
+        width: boxWidth - padding * 2,
+        lineGap: 2,
+      });
+
+      const boxHeight = textHeight + padding * 2 + 20; // title space
+
+      // Draw box
+      doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 8).stroke("#999");
+
+      // Title
       doc
         .fontSize(14)
         .fillColor("#222")
-        .text("Delivery Address", 50, doc.y + 8);
+        .text("Delivery Address", boxX + padding, boxY + 8);
 
+      // Address text
       doc
         .fontSize(12)
         .fillColor("#444")
-        .text(
-          `${a.addressLabel}
-${a.houseName}, ${a.street}
-${a.city}, ${a.state} - ${a.pincode}
-Phone: ${a.phone}`,
-          50,
-          doc.y + 25,
-          { lineGap: 2 }
-        );
+        .text(addressText, boxX + padding, boxY + 28, {
+          width: boxWidth - padding * 2,
+          lineGap: 2,
+        });
 
-      doc.moveDown(4);
+      // Move cursor BELOW the box
+      doc.y = boxY + boxHeight + 10;
     }
 
     // ---------------- ITEMS TABLE ----------------

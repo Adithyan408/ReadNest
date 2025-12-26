@@ -88,7 +88,7 @@
 
         <% if (isInvoiceAvailable) { %>
   <a
-    href="/orders/<%= order._id %>/invoice"
+    href="/orders/<%= order.orderId %>/invoice"
     class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition w-fit"
   >
     <i class="fa-solid fa-file-invoice"></i>
@@ -214,7 +214,7 @@
             <!-- CANCEL -->
             <button
               type="button"
-              onclick="confirmCancel('<%= order._id %>', '<%= item._id %>')"
+              onclick="confirmCancel('<%= order.orderId %>', '<%= item._id %>')"
               class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition"
             >
               Cancel Item
@@ -225,7 +225,7 @@
             <!-- RETURN -->
             <button
               type="button"
-              onclick="confirmReturn('<%= order._id %>', '<%= item._id %>')"
+              onclick="confirmReturn('<%= order.orderId %>', '<%= item._id %>')"
               class="bg-orange-500 text-white px-5 py-2 rounded-lg hover:bg-orange-600 transition"
             >
               Return Item

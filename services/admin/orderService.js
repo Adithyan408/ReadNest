@@ -229,7 +229,7 @@ export const approveReturn = async (req, res) => {
       userId: order.user,
       amount: refundAmount,
       note,
-      orderId: order._id,
+      orderId: order.orderId,
       paymentId: order.paymentId || null,
       source: "return_refund",
     });
