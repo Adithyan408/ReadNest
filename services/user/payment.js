@@ -240,32 +240,20 @@ export const postCoupon = async (req, res) => {
       return res.json({ success: false, message: "Unauthorized" });
     }
 
-    /* ---------------------------
-       LOAD PAYMENT STATE
-    ---------------------------- */
     const cached = await getPaymentState(userId);
     if (!cached) {
       return res.json({ success: false, message: "Payment session expired" });
     }
 
-    /* ---------------------------
-       FIND COUPON
-    ---------------------------- */
     const couponDoc = await Coupon.findOne({ code }).lean();
     if (!couponDoc) {
       return res.json({ success: false, message: "Invalid coupon" });
     }
 
-    /* ---------------------------
-       EXPIRY CHECK
-    ---------------------------- */
     if (couponDoc.expiry < new Date()) {
       return res.json({ success: false, message: "Coupon expired" });
     }
 
-    /* ---------------------------
-       MIN PURCHASE CHECK
-    ---------------------------- */
     if (cached.subtotal < couponDoc.minPurchase) {
       return res.json({
         success: false,
@@ -273,11 +261,7 @@ export const postCoupon = async (req, res) => {
       });
     }
 
-    /* ---------------------------
-       🚫 USAGE VALIDATION
-    ---------------------------- */
 
-    // ✅ GENERAL COUPON → ONCE PER USER
     if (couponDoc.type === "general") {
       const alreadyUsed = await couponUsage.findOne({
         userId,
@@ -293,7 +277,6 @@ export const postCoupon = async (req, res) => {
       }
     }
 
-    // ✅ REFERRAL COUPON → ONCE PER USER
     if (couponDoc.type === "referral") {
       const referralUsed = await ReferralReward.findOne({
         userId,
@@ -309,9 +292,6 @@ export const postCoupon = async (req, res) => {
       }
     }
 
-    /* ---------------------------
-       DISCOUNT CALCULATION
-    ---------------------------- */
     const percentageDiscount = Math.round(
       (couponDoc.discount / 100) * cached.subtotal
     );
@@ -329,9 +309,6 @@ export const postCoupon = async (req, res) => {
     const payableAmount =
       cached.subtotal + cached.shippingCharge - discountValue;
 
-    /* ---------------------------
-       SAVE TO PAYMENT STATE
-    ---------------------------- */
     await savePaymentState(userId, {
       ...cached,
       discount: discountValue,
@@ -343,9 +320,6 @@ export const postCoupon = async (req, res) => {
     req.session.payableAmount = payableAmount;
     req.session.appliedCoupon = code;
 
-    /* ---------------------------
-       RESPONSE
-    ---------------------------- */
     return res.json({
       success: true,
       discount: discountValue,
