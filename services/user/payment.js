@@ -18,7 +18,6 @@ import {
 import { normalizeCoupons } from "../../helpers/couponNormal.js";
 import { generateOrderId } from "../../middlewares/orderId.js";
 
-
 const razorpay = new Razorpay({
   key_id: process.env.RAZO_API_KEY,
   key_secret: process.env.RAZO_KEY_SECRET,
@@ -370,7 +369,7 @@ export const orderPlaced = async (req, res) => {
         subtotal: item.price * item.quantity,
         productImage: [item.image],
 
-        stock: productDoc.stock, 
+        stock: productDoc.stock,
       });
     }
 
@@ -415,7 +414,11 @@ export const orderPlaced = async (req, res) => {
       payableAmount,
       paymentId,
       paymentMethod: paymentMode,
-      paymentStatus: paymentMode === "Razorpay" ? "paid" : "pending",
+      paymentStatus:
+        paymentMode === "Razorpay" || paymentMode === "WALLET"
+          ? "paid"
+          : "pending",
+
       status: "processing",
       address: selectedAddress ? { ...selectedAddress } : null,
       finalPayable: payableAmount,

@@ -38,11 +38,9 @@ const walletSchema = new Schema(
         },
 
         orderId: {
-          type: Schema.Types.ObjectId,
-          ref: "Order",
+          type: String, 
           default: null,
         },
-
         paymentId: {
           type: String,
           default: null,

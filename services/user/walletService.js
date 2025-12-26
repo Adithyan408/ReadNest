@@ -1,11 +1,12 @@
 import Wallet from "../../models/walletSchema.js";
 import crypto from "crypto";
 import { creditWallet, debitWallet } from "../../middlewares/walletHandler.js";
+import { getPaymentState } from "../../helpers/paymentCache.js";
 
 export const loadWallet = async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page) || 1, 1);
-    const limit = 4; 
+    const limit = 4;
     const skip = (page - 1) * limit;
     if (!req.session.user || !req.session.user._id) {
       return res.redirect("/login");
@@ -44,7 +45,7 @@ export const loadWallet = async (req, res) => {
       .reverse()
       .slice(skip, skip + limit);
 
-     wallet.transactions = paginatedTransactions;
+    wallet.transactions = paginatedTransactions;
 
     res.render("wallet", {
       wallet,
@@ -122,31 +123,53 @@ export const walletVerify = async (req, res) => {
 
 export const walletPayment = async (req, res) => {
   try {
-    const userId = req.session.user._id;
 
-    const amount =
-      req.session.subtotal +
-      req.session.shippingCharge -
-      (req.session.discountValue || 0);
+    const userId = req.session.user?._id;
+    if (!userId) {
+      return res.json({ success: false, message: "Unauthorized" });
+    }
 
-    if (!Number.isFinite(amount) || amount <= 0) {
-      return res.json({ success: false, message: "Invalid amount" });
+    const cached = await getPaymentState(userId);
+    if (!cached) {
+      return res.json({
+        success: false,
+        message: "Payment session expired",
+      });
+    }
+    
+    const payableAmount = Number(cached.payableAmount);
+
+    if (!Number.isFinite(payableAmount) || payableAmount <= 0) {
+      return res.json({
+        success: false,
+        message: "Invalid payable amount",
+      });
+    }
+
+    const wallet = await Wallet.findOne({ user: userId });
+    if (!wallet || wallet.balance < payableAmount) {
+      return res.json({
+        success: false,
+        message: "Insufficient wallet balance",
+      });
     }
 
     await debitWallet({
       userId,
-      amount,
+      amount: payableAmount,
       note: "Order payment via wallet",
+      paymentId: `WALLET-${Date.now()}`,
     });
 
-    req.session.walletPaymentSuccess = true;
+    req.session.paymentSuccess = true;
+    req.session.razorpayPaymentId = null;
 
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Wallet payment error:", err.message);
-    res.json({
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("Wallet Payment Error:", error);
+    return res.json({
       success: false,
-      message: err.message || "Wallet payment failed",
+      message: "Wallet payment failed",
     });
   }
 };
