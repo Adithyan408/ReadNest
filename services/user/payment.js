@@ -405,7 +405,8 @@ export const orderPlaced = async (req, res) => {
       cartItems.push({
         product: item._id,
         productName: item.name,
-
+        category: productDoc.category, 
+        
         regularPrice: item.regularPrice,
         unitPrice: item.price,
         quantity: item.quantity,

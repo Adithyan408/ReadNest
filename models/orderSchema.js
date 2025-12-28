@@ -7,6 +7,11 @@ const orderItemSchema = new mongoose.Schema({
     required: true,
   },
 
+  category: {
+    type: String, // 👈 ADD THIS
+    required: true,
+  },
+  
   productName: String,
 
   regularPrice: Number,

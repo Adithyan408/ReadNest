@@ -182,9 +182,46 @@
       </aside>
 
       <!-- Main Dashboard Content -->
-      <!-- Main Dashboard Content -->
 <main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
   <%- include('../../views/partials/breadcrumb') %>
+
+  <!-- ================= INSIGHTS ================= -->
+<div class="grid grid-cols-3 gap-6 mb-10">
+
+  <!-- Best Selling Product -->
+  <div class="bg-white rounded-2xl shadow p-6 border">
+    <p class="text-sm text-gray-500">Best Selling Product</p>
+    <h3 class="text-lg font-bold text-gray-900 mt-2">
+      <%= bestProduct?.name || "—" %>
+    </h3>
+    <p class="text-sm text-gray-600 mt-1">
+      Sold: <%= bestProduct?.sold || 0 %>
+    </p>
+  </div>
+
+  <!-- Best Selling Category -->
+  <div class="bg-white rounded-2xl shadow p-6 border">
+    <p class="text-sm text-gray-500">Best Selling Category</p>
+    <h3 class="text-lg font-bold text-gray-900 mt-2">
+      <%= bestCategory?.name || "—" %>
+    </h3>
+    <p class="text-sm text-gray-600 mt-1">
+      Sold: <%= bestCategory?.sold || 0 %>
+    </p>
+  </div>
+
+  <!-- Top Payment Method -->
+  <div class="bg-white rounded-2xl shadow p-6 border">
+    <p class="text-sm text-gray-500">Top Payment Method</p>
+    <h3 class="text-lg font-bold text-gray-900 mt-2">
+      <%= topPaymentMethod?.method || "—" %>
+    </h3>
+    <p class="text-sm text-gray-600 mt-1">
+      Transactions: <%= topPaymentMethod?.count || 0 %>
+    </p>
+  </div>
+
+</div>
 
   <!-- ================= TOP STATS ================= -->
   <div class="grid grid-cols-4 gap-6 mb-10">

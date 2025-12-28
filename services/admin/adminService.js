@@ -83,6 +83,7 @@ const getDateRange = (filter, start, end) => {
 
   return { fromDate, toDate };
 };
+
 export const getDashboard = async (req, res) => {
   try {
     if (!req.session.admin) {
@@ -90,7 +91,6 @@ export const getDashboard = async (req, res) => {
     }
 
     const { filter, start, end } = req.query;
-    
 
     /* =====================================================
        1. BASIC LIFETIME STATS (NO FILTER)
@@ -264,6 +264,67 @@ export const getDashboard = async (req, res) => {
     const chartLabels = salesByDate.map((d) => d._id);
     const chartValues = salesByDate.map((d) => d.total);
 
+    const bestProductAgg = await Order.aggregate([
+      { $unwind: "$items" },
+
+      { $match: { "items.status": "delivered" } },
+
+      {
+        $group: {
+          _id: "$items.productId",
+          name: { $first: "$items.productName" },
+          sold: { $sum: "$items.quantity" },
+        },
+      },
+
+      { $sort: { sold: -1 } },
+      { $limit: 1 },
+    ]);
+
+    const bestProduct = bestProductAgg[0] || null;
+
+    const bestCategoryAgg = await Order.aggregate([
+      { $unwind: "$items" },
+
+      { $match: { "items.status": "delivered" } },
+
+      {
+        $group: {
+          _id: "$items.category",
+          sold: { $sum: "$items.quantity" },
+        },
+      },
+
+      { $sort: { sold: -1 } },
+      { $limit: 1 },
+    ]);
+
+    const bestCategory = bestCategoryAgg[0]
+      ? {
+          name: bestCategoryAgg[0]._id,
+          sold: bestCategoryAgg[0].sold,
+        }
+      : null;
+
+    const topPaymentAgg = await Order.aggregate([
+      {
+        $group: {
+          _id: "$paymentMethod",
+          count: { $sum: 1 },
+        },
+      },
+
+      { $sort: { count: -1 } },
+      { $limit: 1 },
+    ]);
+
+    const topPaymentMethod = topPaymentAgg[0]
+      ? {
+          method: topPaymentAgg[0]._id,
+          count: topPaymentAgg[0].count,
+        }
+      : null;
+
     /* =====================================================
        5. RENDER DASHBOARD
     ===================================================== */
@@ -277,6 +338,9 @@ export const getDashboard = async (req, res) => {
       end,
       chartLabels,
       chartValues,
+      bestProduct,
+      bestCategory,
+      topPaymentMethod,
     });
   } catch (error) {
     console.error("Dashboard Error:", error);
@@ -295,8 +359,6 @@ export const postLogout = async (req, res) => {
     res.redirect("/pageerror");
   }
 };
-
-
 
 export const salesReport = async (req, res) => {
   try {
@@ -368,7 +430,7 @@ export const salesReport = async (req, res) => {
     ]);
 
     // -------- PDF SETUP --------
-    const doc = new PDFDocument({ margin: 40 });
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
@@ -378,6 +440,7 @@ export const salesReport = async (req, res) => {
 
     doc.pipe(res);
 
+    /* -------------------- TITLE -------------------- */
     doc.fontSize(18).text("ReadNest Sales Report", { align: "center" });
     doc
       .fontSize(10)
@@ -387,41 +450,100 @@ export const salesReport = async (req, res) => {
 
     doc.moveDown(2);
 
+    /* -------------------- TABLE CONFIG -------------------- */
+    const tableTop = doc.y;
+    const rowHeight = 22;
+
+    // Column positions
+    const col = {
+      no: 40,
+      order: 70,
+      product: 180,
+      qty: 330,
+      date: 370,
+      amount: 460,
+    };
+
+    // Table Header
+    doc.fontSize(10).font("Helvetica-Bold");
+    drawRow(tableTop, "No", "Order ID", "Product", "Qty", "Date", "Amount");
+
+    drawLine(tableTop + rowHeight);
+
+    /* -------------------- TABLE DATA -------------------- */
+    doc.font("Helvetica");
+    let y = tableTop + rowHeight;
     let totalRevenue = 0;
 
     if (!salesData.length) {
-      doc.fontSize(12).text("No sales found for selected period.");
+      doc.moveDown(2).fontSize(12).text("No sales found for selected period.");
     } else {
       salesData.forEach((item, index) => {
         totalRevenue += item.amount;
 
-        doc
-          .fontSize(10)
-          .text(
-            `${index + 1}. Order: ${item.orderId}
-   Product: ${item.product}
-   Qty: ${item.quantity}
-   Date: ${new Date(item.date).toDateString()}
-   Amount: ₹${item.amount.toFixed(2)}`
-          )
-          .moveDown(0.6);
+        // Page break handling
+        if (y > doc.page.height - 50) {
+          doc.addPage();
+          y = 50;
+
+          doc.font("Helvetica-Bold");
+          drawRow(y, "No", "Order ID", "Product", "Qty", "Date", "Amount");
+          drawLine(y + rowHeight);
+          y += rowHeight;
+          doc.font("Helvetica");
+        }
+
+        drawRow(
+          y,
+          index + 1,
+          item.orderId,
+          item.product,
+          item.quantity,
+          new Date(item.date).toDateString(),
+          `₹${item.amount.toFixed(2)}`
+        );
+
+        drawLine(y + rowHeight);
+        y += rowHeight;
       });
     }
 
-    doc.moveDown();
+    /* -------------------- TOTAL -------------------- */
+    doc.moveDown(2);
     doc
       .fontSize(14)
+      .font("Helvetica-Bold")
       .text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`, {
-        underline: true,
+        align: "right",
       });
 
     doc.end();
+
+    /* -------------------- HELPERS -------------------- */
+    function drawRow(y, no, order, product, qty, date, amount) {
+      doc
+        .fontSize(10)
+        .text(no, col.no, y, { width: 25 })
+        .text(order, col.order, y, { width: 100 })
+        .text(product, col.product, y, { width: 140 })
+        .text(qty, col.qty, y, { width: 30, align: "center" })
+        .text(date, col.date, y, { width: 80 })
+        .text(amount, col.amount, y, { width: 80, align: "right" });
+    }
+
+    function drawLine(y) {
+      doc
+        .strokeColor("#aaa")
+        .lineWidth(0.5)
+        .moveTo(40, y)
+        .lineTo(555, y)
+        .stroke();
+    }
   } catch (error) {
     console.error("PDF Error:", error);
     res.status(500).send("Unable to generate PDF");
   }
 };
-
 
 export const downloadSalesExcel = async (req, res) => {
   try {
@@ -527,4 +649,3 @@ export const downloadSalesExcel = async (req, res) => {
     res.status(500).send("Unable to generate Excel");
   }
 };
-
