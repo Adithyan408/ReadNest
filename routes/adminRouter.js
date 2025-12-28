@@ -141,7 +141,7 @@ adminRouter.post("/orders/:orderId/items/:itemId/approve-return", adminAuth , re
 adminRouter.post("/orders/:orderId/items/:itemId/reject-return", adminAuth , returnReject);
 
 adminRouter.post(
-  "/orders/:ordersId/items/:itemId/status",
+  "/orders/:orderId/items/:itemId/status",
   adminAuth,
   updateSingleItemStatus
 );

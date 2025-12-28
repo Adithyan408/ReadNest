@@ -122,10 +122,10 @@ export const updateOrderStatus = async (req, res) => {
 
 export const updateItemStatus = async (req, res) => {
   try {
-    const { ordersId, itemId } = req.params;
+    const { orderId, itemId } = req.params;
     const { status } = req.body;
 
-    const order = await Order.findById(ordersId);
+    const order = await Order.findOne({orderId});
     if (!order) {
       return res.json({ success: false, message: "Order not found" });
     }
