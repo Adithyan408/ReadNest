@@ -139,9 +139,14 @@
             <option
             value="COD"
             <%= selectedPaymentMethod === "COD" ? "selected" : "" %>
+            <%= payableAmount > 1000 ? "disabled" : "" %>
             >
             Cash On Delivery
-            </option>
+            <% if (payableAmount > 1000) { %>
+            (Not available above ₹1000)
+            <% } %>
+          </option>
+
 
             <!-- RAZORPAY -->
             <option
@@ -403,6 +408,19 @@
 
     /* COD */
     if (method === "COD") {
+        const total = Number(
+      document.getElementById("totalAmount").textContent.replace("₹", "").trim()
+      );
+
+      if (total > 1000) {
+        paymentInProgress = false;
+        Swal.fire(
+      "COD Not Available",
+      "Cash on Delivery is not allowed for orders above ₹1000",
+      "warning"
+          );
+      return;
+     }
       window.location.href = "/place-order?payment=COD";
       return;
     }

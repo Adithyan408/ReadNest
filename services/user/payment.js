@@ -503,6 +503,7 @@ export const orderPlaced = async (req, res) => {
     res.render("notFound");
   }
 };
+
 export const paymentFailed = async (req, res) => {
   try {
     const userId = req.session.user?._id;
@@ -552,6 +553,7 @@ export const paymentFailed = async (req, res) => {
     res.render("notFound");
   }
 };
+
 export const createRazorpayOrder = async (req, res) => {
   try {
     const userId = req.session.user?._id;
@@ -572,12 +574,11 @@ export const createRazorpayOrder = async (req, res) => {
     }
 
     const razorpayOrder = await razorpay.orders.create({
-      amount: cached.payableAmount * 100, // ✅ CORRECT
+      amount: cached.payableAmount * 100, 
       currency: "INR",
       receipt: `order_${Date.now()}`,
     });
 
-    // 🔐 SAVE NEW ORDER ID
     await savePaymentState(userId, {
       ...cached,
       razorpayOrderId: razorpayOrder.id,
@@ -586,7 +587,7 @@ export const createRazorpayOrder = async (req, res) => {
     return res.json({
       success: true,
       order: {
-        id: razorpayOrder.id, // ✅ FIXED
+        id: razorpayOrder.id, 
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
       },
