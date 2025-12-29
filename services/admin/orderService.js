@@ -43,7 +43,7 @@ export const loadOrders = async (req, res) => {
       return {
         ...order,
         overallStatus: order.status,
-        hasReturnRequest, 
+        hasReturnRequest,
       };
     });
 
@@ -79,7 +79,7 @@ export const loadOrders = async (req, res) => {
 export const orderDetails = async (req, res) => {
   try {
     const orderId = req.params.orderId;
-    const order = await Order.findOne({orderId})
+    const order = await Order.findOne({ orderId })
       .populate("user", "name email phone")
       .populate("items.product", "productName productImage regularPrice")
       .lean();
@@ -111,7 +111,7 @@ export const updateOrderStatus = async (req, res) => {
       return res.json({ success: false, message: "Invalid status" });
     }
 
-    await Order.findByIdAndUpdate(orderId, { status });
+    await Order.findOneAndUpdate({ orderId }, { status });
 
     res.json({ success: true });
   } catch (error) {
@@ -125,7 +125,7 @@ export const updateItemStatus = async (req, res) => {
     const { orderId, itemId } = req.params;
     const { status } = req.body;
 
-    const order = await Order.findOne({orderId});
+    const order = await Order.findOne({ orderId });
     if (!order) {
       return res.json({ success: false, message: "Order not found" });
     }
@@ -143,6 +143,23 @@ export const updateItemStatus = async (req, res) => {
     }
 
     const previousStatus = item.status;
+    
+    const ADMIN_STATUS_FLOW = {
+      ordered: ["shipped"],
+      shipped: ["delivered"],
+      delivered: [], // locked
+      cancelled: [], // locked
+      returned: [], // locked
+    };
+
+    const allowedNextStatuses = ADMIN_STATUS_FLOW[item.status] || [];
+
+    if (!allowedNextStatuses.includes(status)) {
+      return res.json({
+        success: false,
+        message: `Cannot change status from ${item.status} to ${status}`,
+      });
+    }
 
     item.status = status;
 
@@ -177,7 +194,7 @@ export const approveReturn = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ orderId });
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -200,24 +217,15 @@ export const approveReturn = async (req, res) => {
       });
     }
 
-    // -----------------------------
-    // MARK ITEM AS RETURNED
-    // -----------------------------
     item.returnStatus = "approved";
     item.status = "returned";
     item.returnedAt = new Date();
 
-    // -----------------------------
-    // REFUND AMOUNT (PROPORTIONAL)
-    // -----------------------------
-    const refundAmount = item.finalAmount; // 🔥 already coupon-adjusted
+    const refundAmount = item.finalAmount;
     const note = "Refund for returned item";
 
     item.refundAmount = refundAmount;
 
-    // -----------------------------
-    // UPDATE ORDER STATUS
-    // -----------------------------
     const activeItems = order.items.filter(
       (i) => !["cancelled", "returned"].includes(i.status)
     );
@@ -259,7 +267,7 @@ export const rejectReturn = async (req, res) => {
     const { orderId, itemId } = req.params;
     const { note } = req.body;
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ orderId });
     if (!order) return res.json({ success: false, message: "Order not found" });
 
     const item = order.items.id(itemId);

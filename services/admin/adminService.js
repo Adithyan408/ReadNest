@@ -42,47 +42,47 @@ export const postLogin = async (req, res) => {
   }
 };
 
-const getDateRange = (filter, start, end) => {
-  const now = new Date();
-  let fromDate, toDate;
+// const getDateRange = (filter, start, end) => {
+//   const now = new Date();
+//   let fromDate, toDate;
 
-  switch (filter) {
-    case "today":
-      fromDate = new Date();
-      fromDate.setHours(0, 0, 0, 0);
-      toDate = new Date();
-      break;
+//   switch (filter) {
+//     case "today":
+//       fromDate = new Date();
+//       fromDate.setHours(0, 0, 0, 0);
+//       toDate = new Date();
+//       break;
 
-    case "week":
-      fromDate = new Date();
-      fromDate.setDate(now.getDate() - 6);
-      fromDate.setHours(0, 0, 0, 0);
-      toDate = new Date();
-      break;
+//     case "week":
+//       fromDate = new Date();
+//       fromDate.setDate(now.getDate() - 6);
+//       fromDate.setHours(0, 0, 0, 0);
+//       toDate = new Date();
+//       break;
 
-    case "month":
-      fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      toDate = new Date();
-      break;
+//     case "month":
+//       fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+//       toDate = new Date();
+//       break;
 
-    case "year":
-      fromDate = new Date(now.getFullYear(), 0, 1);
-      toDate = new Date();
-      break;
+//     case "year":
+//       fromDate = new Date(now.getFullYear(), 0, 1);
+//       toDate = new Date();
+//       break;
 
-    case "custom":
-      fromDate = new Date(start);
-      toDate = new Date(end);
-      toDate.setHours(23, 59, 59, 999);
-      break;
+//     case "custom":
+//       fromDate = new Date(start);
+//       toDate = new Date(end);
+//       toDate.setHours(23, 59, 59, 999);
+//       break;
 
-    default:
-      fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      toDate = new Date();
-  }
+//     default:
+//       fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+//       toDate = new Date();
+//   }
 
-  return { fromDate, toDate };
-};
+//   return { fromDate, toDate };
+// };
 
 export const getDashboard = async (req, res) => {
   try {
@@ -92,9 +92,6 @@ export const getDashboard = async (req, res) => {
 
     const { filter, start, end } = req.query;
 
-    /* =====================================================
-       1. BASIC LIFETIME STATS (NO FILTER)
-    ===================================================== */
 
     const totalCustomers = await User.countDocuments({ isBlocked: false });
 
@@ -144,9 +141,6 @@ export const getDashboard = async (req, res) => {
       totalDiscount: lifetimeSalesAgg[0]?.totalDiscount || 0,
     };
 
-    /* =====================================================
-       2. DATE RANGE (FILTERED)
-    ===================================================== */
 
     const now = new Date();
     let fromDate, toDate;
@@ -186,9 +180,6 @@ export const getDashboard = async (req, res) => {
         toDate = new Date();
     }
 
-    /* =====================================================
-       3. FILTERED SALES REPORT
-    ===================================================== */
 
     const filteredAgg = await Order.aggregate([
       {
@@ -231,9 +222,6 @@ export const getDashboard = async (req, res) => {
       netSales: 0,
     };
 
-    /* =====================================================
-       4. SALES CHART DATA (FILTERED)
-    ===================================================== */
 
     const salesByDate = await Order.aggregate([
       {
@@ -260,7 +248,6 @@ export const getDashboard = async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
-    /* ✅ MISSING PART — ADD THIS */
     const chartLabels = salesByDate.map((d) => d._id);
     const chartValues = salesByDate.map((d) => d.total);
 
@@ -325,9 +312,6 @@ export const getDashboard = async (req, res) => {
         }
       : null;
 
-    /* =====================================================
-       5. RENDER DASHBOARD
-    ===================================================== */
 
     res.render("dashboard", {
       totalCustomers,

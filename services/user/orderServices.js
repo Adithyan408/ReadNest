@@ -62,6 +62,11 @@ export const cancelOrderItem = async (req, res) => {
       return res.render("notFound");
     }
 
+    await Product.updateOne(
+      { _id: item.product },
+      { $inc: { stock: item.quantity } }
+    );
+
     item.status = "cancelled";
     item.cancelledAt = new Date();
 
