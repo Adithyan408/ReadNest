@@ -307,21 +307,14 @@
                     No Orders Found
                   </td>
                 </tr>
-                <% } else { %>
-                <% orders.forEach(function(order) { %>
+                <% } else { %> <% orders.forEach(function(order) { %>
                 <tr class="border-b hover:bg-gray-50">
                   <!-- ORDER ID -->
-                  <td class="px-6 py-4 border text-indigo-600 font-semibold relative">
+                  <td
+                    class="px-6 py-4 border text-indigo-600 font-semibold relative"
+                  >
                     #<%= order.orderId %>
-
-                    <% if (order.hasReturnRequest) { %>
-                    <span
-                    class="absolute top-2 right-2 w-3 h-3 bg-red-600 rounded-full"
-                    title="Return requested"
-                    ></span>
-                    <% } %>
-                    </td>
-
+                  </td>
 
                   <!-- CUSTOMER -->
                   <td class="px-6 py-4 border">
@@ -347,7 +340,7 @@
                   <td class="px-6 py-4 border relative order-status-wrapper">
                     <div
                       class="badge cursor-pointer <%= order.overallStatus %> status-badge"
-                      onclick="toggleOrderStatusMenu('<%= order._id %>')"
+                     
                       id="order-status-<%= order._id %>"
                     >
                       <%= order.overallStatus %>
@@ -358,33 +351,43 @@
                       id="order-menu-<%= order._id %>"
                       class="order-menu hidden absolute right-0 mt-2 bg-white shadow-lg border rounded-lg w-40 z-50"
                     >
+                      <% if (order.hasReturnRequest === true) { %>
                       <div
-                        onclick="changeOrderStatus('<%= order._id %>', 'processing')"
+                        class="px-4 py-2 bg-purple-50 text-purple-700 font-medium cursor-default"
+                      >
+                        Return Requested
+                      </div>
+                      <% } else { %>
+
+                      <div
+                       
                         class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                       >
                         Processing
                       </div>
 
                       <div
-                        onclick="changeOrderStatus('<%= order._id %>', 'partially_cancelled')"
+                       
                         class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                       >
                         Partially Cancelled
                       </div>
 
                       <div
-                        onclick="changeOrderStatus('<%= order._id %>', 'cancelled')"
+                        
                         class="px-4 py-2 hover:bg-gray-100 text-red-600 cursor-pointer"
                       >
                         Cancelled
                       </div>
 
                       <div
-                        onclick="changeOrderStatus('<%= order._id %>', 'completed')"
+                       
                         class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                       >
                         Completed
                       </div>
+
+                      <% } %>
                     </div>
                   </td>
 
@@ -399,8 +402,7 @@
                     </a>
                   </td>
                 </tr>
-                <% }); %>
-                <% } %>
+                <% }); %> <% } %>
               </tbody>
             </table>
           </div>
@@ -481,62 +483,6 @@
           closeAllOrderMenus();
         }
       });
-
-      // ------- CHANGE ORDER STATUS -------
-      function changeOrderStatus(orderId, newStatus) {
-        const menu = document.getElementById("order-menu-" + orderId);
-
-        Swal.fire({
-          title: "Confirm Status Update",
-          text: `Do you want to change order status to "${newStatus}"?`,
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#2563eb",
-          cancelButtonColor: "#6b7280",
-          confirmButtonText: "Yes, Update",
-        }).then(function (result) {
-          if (!result.isConfirmed) {
-            if (menu) menu.classList.add("hidden");
-            return;
-          }
-
-          fetch("/admin/orders/" + orderId + "/status", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: newStatus }),
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              if (data.success) {
-                // Update status badge instantly
-                const badge = document.getElementById(
-                  "order-status-" + orderId
-                );
-                if (badge) {
-                  badge.textContent = newStatus;
-                  badge.className =
-                    "badge cursor-pointer " + newStatus;
-                }
-
-                if (menu) menu.classList.add("hidden");
-
-                Swal.fire(
-                  "Updated!",
-                  "Order status updated successfully",
-                  "success"
-                );
-                // If you want the filter counts / pagination to reflect
-                // DB changes perfectly, you can uncomment this:
-                // window.location.reload();
-              } else {
-                Swal.fire("Error", data.message || "Failed to update", "error");
-              }
-            })
-            .catch(() => {
-              Swal.fire("Error", "Server error", "error");
-            });
-        });
-      }
     </script>
   </body>
 </html>

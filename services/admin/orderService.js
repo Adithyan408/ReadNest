@@ -40,9 +40,15 @@ export const loadOrders = async (req, res) => {
         (item) => item.returnStatus === "requested"
       );
 
+      let overallStatus = order.status;
+
+      if (hasReturnRequest) {
+        overallStatus = "Return_Requested";
+      }
+
       return {
         ...order,
-        overallStatus: order.status,
+        overallStatus,
         hasReturnRequest,
       };
     });
@@ -143,13 +149,13 @@ export const updateItemStatus = async (req, res) => {
     }
 
     const previousStatus = item.status;
-    
+
     const ADMIN_STATUS_FLOW = {
       ordered: ["shipped"],
       shipped: ["delivered"],
-      delivered: [], // locked
-      cancelled: [], // locked
-      returned: [], // locked
+      delivered: [],
+      cancelled: [],
+      returned: [],
     };
 
     const allowedNextStatuses = ADMIN_STATUS_FLOW[item.status] || [];

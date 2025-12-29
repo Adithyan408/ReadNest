@@ -95,7 +95,7 @@ const orderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["processing", "partially_cancelled", "cancelled", "completed"],
+      enum: ["processing", "partially_cancelled", "cancelled", "completed", "Return_Requested"],
       default: "processing",
     },
     shippingRefunded: {
