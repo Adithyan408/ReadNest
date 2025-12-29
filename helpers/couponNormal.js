@@ -1,6 +1,10 @@
 export const normalizeCoupons = (coupons = []) => {
   return coupons.map(c => ({
-    ...c,
-    expiryFormatted: new Date(c.expiry).toDateString(),
+    _id: c._id,
+    code: c.code,
+    type: c.type,             
+    discount: c.discount,
+    maxDiscount: c.maxDiscount,
+    minPurchase: c.minPurchase,
   }));
 };

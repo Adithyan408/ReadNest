@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import crypto from "crypto";
 
 const orderItemSchema = new mongoose.Schema({
   product: {
@@ -8,7 +9,7 @@ const orderItemSchema = new mongoose.Schema({
   },
 
   category: {
-    type: String, // 👈 ADD THIS
+    type: String, 
     required: true,
   },
   
@@ -63,6 +64,7 @@ const orderSchema = new mongoose.Schema(
       unique: true,
       required: true,
       index: true,
+      default: () => crypto.randomUUID(),
     },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
@@ -90,7 +92,7 @@ const orderSchema = new mongoose.Schema(
     },
 
     address: {
-      /* snapshot */
+      
     },
 
     status: {

@@ -176,7 +176,53 @@ export const loadPayment = async (req, res) => {
       expiry: { $gte: now },
     }).lean();
 
-    const normalizedCoupons = normalizeCoupons(coupons);
+    const referralRewards = await ReferralReward.find({
+      referrerId: userId,
+      used: false,
+    }).select("couponCode");
+
+    const availableReferralCodes = referralRewards.map((r) => r.couponCode);
+
+    const usedCoupons = await couponUsage
+      .find({ userId, used: true })
+      .select("couponId")
+      .lean();
+
+    const usedCouponIds = usedCoupons.map((c) => c.couponId.toString());
+
+    const isBuyNowMode = Boolean(
+      req.query.buyNow || req.session.buyNowProductId
+    );
+
+    const applicableCoupons = coupons.filter((coupon) => {
+      const couponId = coupon._id.toString();
+      const minPurchase = coupon.minPurchase || 0;
+
+      if (usedCouponIds.includes(couponId)) {
+        return false;
+      }
+
+      if (subtotal < minPurchase) {
+        return false;
+      }
+
+      if (coupon.buyNowOnly && !isBuyNowMode) return false;
+      if (coupon.cartOnly && isBuyNowMode) return false;
+
+      if (coupon.type === "referral") {
+        if (!availableReferralCodes.includes(coupon.code)) {
+          return false;
+        }
+
+        if (coupon.userId?.toString() !== userId.toString()) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    const normalizedCoupons = normalizeCoupons(applicableCoupons);
 
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
@@ -195,7 +241,7 @@ export const loadPayment = async (req, res) => {
       discount: 0,
       shippingCharge,
       payableAmount,
-      coupons,
+      coupons: normalizedCoupons,
       selectedAddress,
       isBuyNow: Boolean(req.query.buyNow),
       appliedCoupon: null,
@@ -245,7 +291,11 @@ export const postCoupon = async (req, res) => {
       return res.json({ success: false, message: "Payment session expired" });
     }
 
-    const couponDoc = await Coupon.findOne({ code }).lean();
+    const couponDoc = await Coupon.findOne({
+      code,
+      $or: [{ type: "general" }, { type: "referral", userId }],
+    }).lean();
+
     if (!couponDoc) {
       return res.json({ success: false, message: "Invalid coupon" });
     }
@@ -261,33 +311,17 @@ export const postCoupon = async (req, res) => {
       });
     }
 
-
-    if (couponDoc.type === "general") {
-      const alreadyUsed = await couponUsage.findOne({
-        userId,
-        couponId: couponDoc._id,
-        used: true,
-      });
-
-      if (alreadyUsed) {
-        return res.json({
-          success: false,
-          message: "You have already used this coupon",
-        });
-      }
-    }
-
     if (couponDoc.type === "referral") {
-      const referralUsed = await ReferralReward.findOne({
-        userId,
-        couponCode: code,
-        used: true,
+      const reward = await ReferralReward.findOne({
+        referrerId: userId,
+        couponCode: couponDoc.code,
+        used: false,
       });
 
-      if (referralUsed) {
+      if (!reward) {
         return res.json({
           success: false,
-          message: "Referral coupon already used",
+          message: "Invalid or already used referral coupon",
         });
       }
     }
@@ -301,10 +335,7 @@ export const postCoupon = async (req, res) => {
         ? couponDoc.maxDiscount
         : percentageDiscount;
 
-    const discountValue = Math.min(
-      percentageDiscount,
-      maxAllowedDiscount
-    );
+    const discountValue = Math.min(percentageDiscount, maxAllowedDiscount);
 
     const payableAmount =
       cached.subtotal + cached.shippingCharge - discountValue;
@@ -314,6 +345,7 @@ export const postCoupon = async (req, res) => {
       discount: discountValue,
       payableAmount,
       appliedCoupon: code,
+      couponType: couponDoc.type,
     });
 
     req.session.discountValue = discountValue;
@@ -330,7 +362,6 @@ export const postCoupon = async (req, res) => {
     return res.json({ success: false, message: "Server error" });
   }
 };
-
 
 export const orderPlaced = async (req, res) => {
   try {
@@ -365,14 +396,34 @@ export const orderPlaced = async (req, res) => {
 
       if (couponDoc) {
         if (couponDoc.type === "referral") {
-          await ReferralReward.findOneAndUpdate(
-            { userId, couponCode: appliedCoupon, used: false },
-            { used: true, usedAt: new Date() }
+          const reward = await ReferralReward.findOneAndUpdate(
+            {
+              referrerId: userId,
+              couponCode: couponDoc.code,
+              used: false,
+            },
+            {
+              used: true,
+              usedAt: new Date(),
+            },
+            { new: true }
           );
+
+          if (!reward) {
+            return res.redirect(
+              "/payment-failed?reason=Referral coupon invalid"
+            );
+          }
         } else {
           await couponUsage.findOneAndUpdate(
-            { userId, couponId: couponDoc._id },
-            { used: true, usedAt: new Date() },
+            {
+              userId,
+              couponId: couponDoc._id,
+            },
+            {
+              used: true,
+              usedAt: new Date(),
+            },
             { upsert: true }
           );
         }
@@ -405,8 +456,8 @@ export const orderPlaced = async (req, res) => {
       cartItems.push({
         product: item._id,
         productName: item.name,
-        category: productDoc.category, 
-        
+        category: productDoc.category,
+
         regularPrice: item.regularPrice,
         unitPrice: item.price,
         quantity: item.quantity,
@@ -449,7 +500,6 @@ export const orderPlaced = async (req, res) => {
     }
 
     const newOrder = new Order({
-      orderId: generateOrderId(),
       user: userId,
       items: cartItems,
       total: subtotal,
@@ -470,6 +520,8 @@ export const orderPlaced = async (req, res) => {
       razorpayOrderId,
     });
 
+    await newOrder.save();
+    newOrder.orderId = `RN${newOrder._id.toString().slice(-6).toUpperCase()}`;
     await newOrder.save();
 
     for (const item of cartItems) {
@@ -575,7 +627,7 @@ export const createRazorpayOrder = async (req, res) => {
     }
 
     const razorpayOrder = await razorpay.orders.create({
-      amount: cached.payableAmount * 100, 
+      amount: cached.payableAmount * 100,
       currency: "INR",
       receipt: `order_${Date.now()}`,
     });
@@ -588,7 +640,7 @@ export const createRazorpayOrder = async (req, res) => {
     return res.json({
       success: true,
       order: {
-        id: razorpayOrder.id, 
+        id: razorpayOrder.id,
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
       },

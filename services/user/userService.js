@@ -159,28 +159,37 @@ export const otpVerify = async (req, res) => {
       const inviter = await User.findOne({ referralCode: newUser.referredBy });
 
       if (inviter && inviter._id.toString() !== newUser._id.toString()) {
-     
-        const referralCouponExists = await Coupon.findOne({
+        let referralCoupon = await Coupon.findOne({
           code: "SPECIAL10",
+          userId: inviter._id,
+          type: "referral",
         });
-        if (!referralCouponExists) {
-          console.error(
-            "SPECIAL10 coupon missing! Add it to Coupon collection."
-          );
+
+        if (!referralCoupon) {
+          referralCoupon = await Coupon.create({
+            code: "SPECIAL10",
+            discount: 10,
+            expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            minPurchase: 0,
+            maxDiscount: null,
+            userId: inviter._id,
+            type: "referral",
+            maxUse: 1,
+          });
         }
 
         const alreadyRewarded = await ReferralReward.findOne({
-          userId: inviter._id,
+          referrerId: inviter._id,
+          referredUserId: newUser._id,
           couponCode: "SPECIAL10",
-          referredUser: newUser._id,
         });
 
         if (!alreadyRewarded) {
           await ReferralReward.create({
-            userId: inviter._id,
+            referrerId: inviter._id,
+            referredUserId: newUser._id,
             couponCode: "SPECIAL10",
             discount: 10,
-            referredUser: newUser._id,
           });
         }
       }
