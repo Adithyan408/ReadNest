@@ -42,48 +42,6 @@ export const postLogin = async (req, res) => {
   }
 };
 
-// const getDateRange = (filter, start, end) => {
-//   const now = new Date();
-//   let fromDate, toDate;
-
-//   switch (filter) {
-//     case "today":
-//       fromDate = new Date();
-//       fromDate.setHours(0, 0, 0, 0);
-//       toDate = new Date();
-//       break;
-
-//     case "week":
-//       fromDate = new Date();
-//       fromDate.setDate(now.getDate() - 6);
-//       fromDate.setHours(0, 0, 0, 0);
-//       toDate = new Date();
-//       break;
-
-//     case "month":
-//       fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
-//       toDate = new Date();
-//       break;
-
-//     case "year":
-//       fromDate = new Date(now.getFullYear(), 0, 1);
-//       toDate = new Date();
-//       break;
-
-//     case "custom":
-//       fromDate = new Date(start);
-//       toDate = new Date(end);
-//       toDate.setHours(23, 59, 59, 999);
-//       break;
-
-//     default:
-//       fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
-//       toDate = new Date();
-//   }
-
-//   return { fromDate, toDate };
-// };
-
 export const getDashboard = async (req, res) => {
   try {
     if (!req.session.admin) {
@@ -91,7 +49,6 @@ export const getDashboard = async (req, res) => {
     }
 
     const { filter, start, end } = req.query;
-
 
     const totalCustomers = await User.countDocuments({ isBlocked: false });
 
@@ -141,7 +98,6 @@ export const getDashboard = async (req, res) => {
       totalDiscount: lifetimeSalesAgg[0]?.totalDiscount || 0,
     };
 
-
     const now = new Date();
     let fromDate, toDate;
 
@@ -179,7 +135,6 @@ export const getDashboard = async (req, res) => {
         fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
         toDate = new Date();
     }
-
 
     const filteredAgg = await Order.aggregate([
       {
@@ -222,7 +177,6 @@ export const getDashboard = async (req, res) => {
       netSales: 0,
     };
 
-
     const salesByDate = await Order.aggregate([
       {
         $match: {
@@ -238,7 +192,7 @@ export const getDashboard = async (req, res) => {
         $group: {
           _id: {
             $dateToString: {
-              format: "%Y-%m-%d",
+              format: "%Y-%m",
               date: "$createdAt",
             },
           },
@@ -251,47 +205,40 @@ export const getDashboard = async (req, res) => {
     const chartLabels = salesByDate.map((d) => d._id);
     const chartValues = salesByDate.map((d) => d.total);
 
-    const bestProductAgg = await Order.aggregate([
+    const topProducts = await Order.aggregate([
       { $unwind: "$items" },
 
       { $match: { "items.status": "delivered" } },
 
       {
         $group: {
-          _id: "$items.productId",
+          _id: "$items.product",
           name: { $first: "$items.productName" },
           sold: { $sum: "$items.quantity" },
         },
       },
 
       { $sort: { sold: -1 } },
-      { $limit: 1 },
+      { $limit: 5 },
     ]);
 
-    const bestProduct = bestProductAgg[0] || null;
-
-    const bestCategoryAgg = await Order.aggregate([
+    const topCategories = await Order.aggregate([
       { $unwind: "$items" },
-
       { $match: { "items.status": "delivered" } },
-
       {
         $group: {
           _id: "$items.category",
           sold: { $sum: "$items.quantity" },
         },
       },
-
       { $sort: { sold: -1 } },
-      { $limit: 1 },
-    ]);
-
-    const bestCategory = bestCategoryAgg[0]
-      ? {
-          name: bestCategoryAgg[0]._id,
-          sold: bestCategoryAgg[0].sold,
-        }
-      : null;
+      { $limit: 3 },
+    ]).then((data) =>
+      data.map((c) => ({
+        name: c._id,
+        sold: c.sold,
+      }))
+    );
 
     const topPaymentAgg = await Order.aggregate([
       {
@@ -312,7 +259,6 @@ export const getDashboard = async (req, res) => {
         }
       : null;
 
-
     res.render("dashboard", {
       totalCustomers,
       lifetime,
@@ -322,8 +268,8 @@ export const getDashboard = async (req, res) => {
       end,
       chartLabels,
       chartValues,
-      bestProduct,
-      bestCategory,
+      topProducts,
+      topCategories,
       topPaymentMethod,
     });
   } catch (error) {
@@ -350,7 +296,6 @@ export const salesReport = async (req, res) => {
     const now = new Date();
     let fromDate, toDate;
 
-    // -------- DATE RANGE (SAME AS DASHBOARD) --------
     switch (filter) {
       case "today":
         fromDate = new Date();
@@ -386,7 +331,6 @@ export const salesReport = async (req, res) => {
         toDate = new Date();
     }
 
-    // -------- AGGREGATION --------
     const salesData = await Order.aggregate([
       {
         $match: {
@@ -396,24 +340,44 @@ export const salesReport = async (req, res) => {
         },
       },
       { $unwind: "$items" },
+      { $match: { "items.status": "delivered" } },
+
       {
-        $match: {
-          "items.status": "delivered",
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
         },
       },
+      { $unwind: "$user" },
+
       {
         $project: {
+          username: "$user.name",
           orderId: "$_id",
           date: "$createdAt",
           product: "$items.productName",
           quantity: "$items.quantity",
           amount: "$items.subtotal",
+          discount: {
+            $subtract: ["$items.regularPrice", "$items.unitPrice"],
+          },
         },
       },
       { $sort: { date: -1 } },
     ]);
 
-    // -------- PDF SETUP --------
+    const totalOrders = new Set(salesData.map((s) => s.orderId.toString()))
+      .size;
+
+    const totalSales = salesData.reduce((sum, s) => sum + s.amount, 0);
+
+    const totalDiscount = salesData.reduce(
+      (sum, s) => sum + (s.discount || 0),
+      0
+    );
+
     const doc = new PDFDocument({ margin: 40, size: "A4" });
 
     res.setHeader("Content-Type", "application/pdf");
@@ -426,11 +390,28 @@ export const salesReport = async (req, res) => {
 
     /* -------------------- TITLE -------------------- */
     doc.fontSize(18).text("ReadNest Sales Report", { align: "center" });
+
     doc
       .fontSize(10)
       .text(`Period: ${fromDate.toDateString()} - ${toDate.toDateString()}`, {
         align: "center",
       });
+
+    doc.fontSize(10).text(`Generated on: ${new Date().toDateString()}`, {
+      align: "center",
+    });
+
+    doc.moveDown(1.5);
+
+    /* ---------- SUMMARY ---------- */
+    doc.font("Helvetica-Bold").fontSize(12).text("Summary (Selected Period)");
+
+    doc.moveDown(0.5);
+
+    doc.font("Helvetica").fontSize(10);
+    doc.text(`Total Orders   : ${totalOrders}`);
+    doc.text(`Total Sales    : ₹${totalSales.toFixed(2)}`);
+    doc.text(`Total Discount : ₹${totalDiscount.toFixed(2)}`);
 
     doc.moveDown(2);
 
@@ -441,16 +422,16 @@ export const salesReport = async (req, res) => {
     // Column positions
     const col = {
       no: 40,
-      order: 70,
+      user: 70,
       product: 180,
-      qty: 330,
-      date: 370,
+      qty: 340,
+      date: 380,
       amount: 460,
     };
 
     // Table Header
     doc.fontSize(10).font("Helvetica-Bold");
-    drawRow(tableTop, "No", "Order ID", "Product", "Qty", "Date", "Amount");
+    drawRow(tableTop, "No", "Customer", "Product", "Qty", "Date", "Amount");
 
     drawLine(tableTop + rowHeight);
 
@@ -471,7 +452,7 @@ export const salesReport = async (req, res) => {
           y = 50;
 
           doc.font("Helvetica-Bold");
-          drawRow(y, "No", "Order ID", "Product", "Qty", "Date", "Amount");
+          drawRow(y, "No", "Customer", "Product", "Qty", "Date", "Amount");
           drawLine(y + rowHeight);
           y += rowHeight;
           doc.font("Helvetica");
@@ -480,7 +461,7 @@ export const salesReport = async (req, res) => {
         drawRow(
           y,
           index + 1,
-          item.orderId,
+          item.username,
           item.product,
           item.quantity,
           new Date(item.date).toDateString(),
@@ -492,23 +473,12 @@ export const salesReport = async (req, res) => {
       });
     }
 
-    /* -------------------- TOTAL -------------------- */
-    doc.moveDown(2);
-    doc
-      .fontSize(14)
-      .font("Helvetica-Bold")
-      .text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`, {
-        align: "right",
-      });
-
-    doc.end();
-
     /* -------------------- HELPERS -------------------- */
-    function drawRow(y, no, order, product, qty, date, amount) {
+    function drawRow(y, no, user, product, qty, date, amount) {
       doc
         .fontSize(10)
         .text(no, col.no, y, { width: 25 })
-        .text(order, col.order, y, { width: 100 })
+        .text(user, col.user, y, { width: 100 })
         .text(product, col.product, y, { width: 140 })
         .text(qty, col.qty, y, { width: 30, align: "center" })
         .text(date, col.date, y, { width: 80 })
@@ -523,6 +493,7 @@ export const salesReport = async (req, res) => {
         .lineTo(555, y)
         .stroke();
     }
+    doc.end();
   } catch (error) {
     console.error("PDF Error:", error);
     res.status(500).send("Unable to generate PDF");
@@ -580,18 +551,28 @@ export const downloadSalesExcel = async (req, res) => {
         },
       },
       { $unwind: "$items" },
+      { $match: { "items.status": "delivered" } },
+
       {
-        $match: {
-          "items.status": "delivered",
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
         },
       },
+      { $unwind: "$user" },
+
       {
         $project: {
-          orderId: "$_id",
+          username: "$user.name",
           date: "$createdAt",
           product: "$items.productName",
           quantity: "$items.quantity",
           amount: "$items.subtotal",
+          discount: {
+            $subtract: ["$items.regularPrice", "$items.unitPrice"],
+          },
         },
       },
     ]);

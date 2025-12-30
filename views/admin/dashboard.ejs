@@ -189,26 +189,42 @@
 <div class="grid grid-cols-3 gap-6 mb-10">
 
   <!-- Best Selling Product -->
-  <div class="bg-white rounded-2xl shadow p-6 border">
-    <p class="text-sm text-gray-500">Best Selling Product</p>
-    <h3 class="text-lg font-bold text-gray-900 mt-2">
-      <%= bestProduct?.name || "—" %>
-    </h3>
-    <p class="text-sm text-gray-600 mt-1">
-      Sold: <%= bestProduct?.sold || 0 %>
-    </p>
-  </div>
+<div class="bg-white rounded-2xl shadow p-6 border">
+  <p class="text-sm text-gray-500 mb-3">Top 5 Selling Products</p>
+
+  <ul class="space-y-2">
+    <% topProducts.forEach((p, index) => { %>
+      <li class="flex justify-between text-sm">
+        <span class="font-medium text-gray-800">
+          <%= index + 1 %>. <%= p.name %>
+        </span>
+        <span class="text-gray-600">
+          <%= p.sold %>
+        </span>
+      </li>
+    <% }) %>
+  </ul>
+</div>
+
 
   <!-- Best Selling Category -->
   <div class="bg-white rounded-2xl shadow p-6 border">
-    <p class="text-sm text-gray-500">Best Selling Category</p>
-    <h3 class="text-lg font-bold text-gray-900 mt-2">
-      <%= bestCategory?.name || "—" %>
-    </h3>
-    <p class="text-sm text-gray-600 mt-1">
-      Sold: <%= bestCategory?.sold || 0 %>
-    </p>
-  </div>
+  <p class="text-sm text-gray-500 mb-3">Top 3 Categories</p>
+
+  <ul class="space-y-2">
+    <% topCategories.forEach((c, index) => { %>
+      <li class="flex justify-between text-sm">
+        <span class="font-medium text-gray-800">
+          <%= index + 1 %>. <%= c.name %>
+        </span>
+        <span class="text-gray-600">
+          <%= c.sold %>
+        </span>
+      </li>
+    <% }) %>
+  </ul>
+</div>
+
 
   <!-- Top Payment Method -->
   <div class="bg-white rounded-2xl shadow p-6 border">
@@ -290,7 +306,7 @@
 
     <!-- Filters -->
     <form method="GET" action="/admin" class="flex flex-wrap gap-4 items-end mb-6">
-    <select name="filter" class="border rounded-lg px-4 py-2">
+    <select name="filter" onchange="this.form.submit()" class="border rounded-lg px-4 py-2">
   <option value="today" <%= filter === "today" ? "selected" : "" %>>Today</option>
   <option value="week" <%= filter === "week" ? "selected" : "" %>>Last 7 Days</option>
   <option value="month" <%= filter === "month" ? "selected" : "" %>>This Month</option>
@@ -355,50 +371,129 @@
     </div>
   </div>
 
-  <!-- ================= SALES CHART ================= -->
-  <div class="bg-white rounded-2xl shadow p-6 border">
+  <!-- ================= CHARTS ================= -->
+<div class="grid grid-cols-2 gap-6">
+
+  <!-- SALES vs DISCOUNT (DOUGHNUT) -->
+  <div class="bg-white rounded-2xl shadow p-6 border flex flex-col items-center">
     <h2 class="text-lg font-semibold text-gray-900 mb-4">
-      Sales Trend
+      Sales vs Discount
     </h2>
-    <canvas id="activityChart" height="100"></canvas>
+
+    <div class="w-56 h-56">
+  <canvas id="salesDiscountChart"></canvas>
+</div>
+
+
+    <!-- Legend -->
+    <div class="flex gap-6 mt-4 text-sm">
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 bg-indigo-600 rounded-full"></span>
+        <span>Total Sales</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+        <span>Total Discount</span>
+      </div>
+    </div>
   </div>
+
+  <!-- MONTHLY SALES BAR CHART -->
+  <div class="bg-white rounded-2xl shadow p-6 border h-[320px]">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">
+      Monthly Sales
+    </h2>
+    <canvas id="monthlySalesChart" height="140"></canvas>
+  </div>
+
+</div>
+
 
 </main>
 
 <script>
-  const chartLabels = <%- JSON.stringify(chartLabels) %>;
-  const chartValues = <%- JSON.stringify(chartValues) %>;
+  let chartLabels = <%- JSON.stringify(chartLabels) %>;
+  let chartValues = <%- JSON.stringify(chartValues) %>;
 
-  const ctx = document.getElementById("activityChart").getContext("2d");
+  if (!chartLabels.length) {
+    chartLabels = ["No Data"];
+    chartValues = [0];
+  }
+
+  const ctx = document
+    .getElementById("monthlySalesChart")
+    .getContext("2d");
 
   new Chart(ctx, {
-    type: "line",
+    type: "bar",
     data: {
       labels: chartLabels,
-      datasets: [{
-        label: "Sales",
-        data: chartValues,
-        borderColor: "#4f46e5",
-        backgroundColor: "rgba(79,70,229,0.15)",
-        fill: true,
-        tension: 0.35
-      }]
+      datasets: [
+        {
+          label: "Monthly Sales",
+          data: chartValues,
+          backgroundColor: "#4f46e5",
+          borderRadius: 8,
+          barThickness: 36,
+        },
+      ],
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
-        legend: { display: false }
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => "₹" + ctx.raw.toLocaleString(),
+          },
+        },
       },
       scales: {
+        x: { grid: { display: false } },
         y: {
-          ticks: {
-            callback: value => "₹" + value
-          }
-        }
-      }
-    }
+          ticks: { callback: (v) => "₹" + v },
+          grid: { borderDash: [4, 4] },
+        },
+      },
+    },
+  });
+
+  const salesDiscountCtx = document
+    .getElementById("salesDiscountChart")
+    .getContext("2d");
+
+  new Chart(salesDiscountCtx, {
+    type: "doughnut",
+    data: {
+      labels: ["Sales", "Discount"],
+      datasets: [
+        {
+          data: [
+            <%= filtered.netSales %>,
+            <%= filtered.discountAmount %>
+          ],
+          backgroundColor: ["#4f46e5", "#ef4444"],
+          borderWidth: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      cutout: "65%",
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => "₹" + ctx.raw.toLocaleString(),
+          },
+        },
+      },
+    },
   });
 </script>
+
+
 
 
 
