@@ -44,7 +44,8 @@ export const loadAddCoupon = async (req, res) => {
 
 export const postAddCoupon = async (req, res) => {
   try {
-    const { code, discount, expiry, minPurchase, maxDiscount } = req.body;
+    const { code, discount, start, expiry, minPurchase, maxDiscount } =
+      req.body;
 
     if (!code || !discount || !expiry) {
       req.session.status = "All fields are required";
@@ -55,9 +56,17 @@ export const postAddCoupon = async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const startDate = start ? new Date(start) : today;
+    startDate.setHours(0, 0, 0, 0);
+
     if (isNaN(expiryDate.getTime()) || expiryDate <= today) {
       req.session.status = "Expiry date must be a future date!";
       return res.redirect("/admin/coupon/addCoupon");
+    }
+
+    if (expiryDate <= startDate) {
+      req.session.status = "Expiry date must be later than start date!";
+      return res.redirect("/admin/coupon");
     }
 
     const existingCoupon = await Coupon.findOne({
@@ -68,11 +77,12 @@ export const postAddCoupon = async (req, res) => {
       req.session.status = "Coupon code already exists!";
       return res.redirect("/admin/coupon/addCoupon");
     }
-
+    
     await Coupon.create({
       code: code.trim().toUpperCase(),
       discount: Number(discount),
       expiry: expiryDate,
+      start: startDate,
       isUsed: false,
       userId: null,
       minPurchase: Number(minPurchase) || 0,
@@ -91,19 +101,30 @@ export const postAddCoupon = async (req, res) => {
 
 export const updateCoupon = async (req, res) => {
   try {
-    const { id, code, discount, minPurchase, expiry, maxDiscount } = req.body;
+    const { id, code, discount, minPurchase, expiry, maxDiscount, start } =
+      req.body;
 
     if (!id) {
       req.session.status = "Invalid coupon ID";
       return res.redirect("/admin/coupon");
     }
 
-    const expiryDate = new Date(expiry);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const startDate = start ? new Date(start) : today;
+    startDate.setHours(0, 0, 0, 0);
+
+    const expiryDate = new Date(expiry);
+    expiryDate.setHours(0, 0, 0, 0);
+
     if (isNaN(expiryDate.getTime()) || expiryDate <= today) {
       req.session.status = "Expiry date must be a future date!";
+      return res.redirect("/admin/coupon");
+    }
+
+    if (expiryDate <= startDate) {
+      req.session.status = "Expiry date must be later than start date!";
       return res.redirect("/admin/coupon");
     }
 
@@ -118,6 +139,7 @@ export const updateCoupon = async (req, res) => {
     coupon.minPurchase = Number(minPurchase) || 0;
     coupon.maxDiscount = Number(maxDiscount);
     coupon.expiry = expiryDate;
+    coupon.start = startDate;
 
     await coupon.save();
 

@@ -6,6 +6,7 @@ const couponSchema = new mongoose.Schema(
 
     discount: { type: Number, required: true },
 
+    start: { type: Date, required: true },
     expiry: { type: Date, required: true },
 
     minPurchase: { type: Number, default: 0 },

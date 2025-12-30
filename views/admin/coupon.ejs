@@ -256,22 +256,30 @@
 
                   <td class="px-6 py-4 border text-center">
                     <div class="flex justify-center space-x-4 text-gray-700">
-                      <% const expiryDate =
-                      coupon.expiry.toISOString().split('T')[0]; %>
+                      <%
+                        const expiryDate = coupon.expiry
+                          ? coupon.expiry.toISOString().split("T")[0]
+                          : "";
+
+                        const startDate = coupon.start
+                          ? coupon.start.toISOString().split("T")[0]
+                          : "";
+                      %>
 
                       <button
                         onclick="openEditModal(
-    '<%= coupon._id %>',
-    '<%= coupon.code %>',
-    '<%= coupon.discount %>',
-    '<%= coupon.minPurchase || 0 %>',
-    '<%= expiryDate %>'
-  )"
-                      >
-                        <i
-                          class="fas fa-edit text-lg hover:text-yellow-500 transition"
-                        ></i>
-                      </button>
+                        '<%= coupon._id %>',
+                        '<%= coupon.code %>',
+                        '<%= coupon.discount %>',
+                        '<%= coupon.minPurchase || 0 %>',
+                        '<%= coupon.maxDiscount || 0 %>',
+                        '<%= expiryDate %>',
+                        '<%= startDate %>'
+                      )"
+                    >
+                  <i class="fas fa-edit text-lg hover:text-yellow-500 transition"></i>
+                  </button>
+
 
                       <!-- DELETE BUTTON -->
                       <button onclick="confirmDelete('<%= coupon._id %>')">
@@ -347,6 +355,16 @@
                 />
               </div>
 
+               <div>
+                <label class="block font-semibold mb-1">Start Date</label>
+                <input
+                  id="edit_start"
+                  name="start"
+                  type="date"
+                  class="w-full p-3 bg-gray-100 border rounded-lg outline-none"
+                />
+              </div>
+
               <div>
                 <label class="block font-semibold mb-1">Expiry Date</label>
                 <input
@@ -378,13 +396,14 @@
       </main>
 
       <script>
-        function openEditModal(id, code, discount, minPurchase, maxDiscount, expiry) {
+        function openEditModal(id, code, discount, minPurchase, maxDiscount, expiry, start) {
           document.getElementById("edit_id").value = id;
           document.getElementById("edit_code").value = code;
           document.getElementById("edit_discount").value = discount;
           document.getElementById("edit_minPurchase").value = minPurchase || 0;
           document.getElementById("edit_maxDiscount").value = maxDiscount ;
           document.getElementById("edit_expiry").value = expiry;
+          document.getElementById("edit_start").value = start;
 
           document.getElementById("editModal").classList.remove("hidden");
         }
@@ -411,6 +430,7 @@
   function validateEditCoupon() {
     const discount = Number(document.getElementById("edit_discount").value);
     const expiry = document.getElementById("edit_expiry").value;
+    const start = document.getElementById("edit_start").value;
     const code = document.getElementById("edit_code").value.trim();
     const maxDiscount = document.getElementById("edit_maxDiscount").value;
 
@@ -471,9 +491,31 @@
       );
       return false;
     }
+     if (!start || !expiry) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing date",
+        text: "Please select both start date and expiry date.",
+        confirmButtonColor: "#2563eb",
+      });
+      return false;
+    }
+
+    const startDate = new Date(start);
+
+    if (expiryDate <= startDate) {
+      Swal.fire({
+        icon: "error",
+        title: "Invalid date range",
+        text: "Expiry date must be later than the start date.",
+        confirmButtonColor: "#2563eb",
+      });
+      return false;
+    }
 
     return true;
   }
+  
 
       </script>
     </div>
