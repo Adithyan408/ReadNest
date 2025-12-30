@@ -2,38 +2,59 @@ import User from "../../models/userSchema.js";
 
 export const loadCustomer = async (req, res) => {
   try {
-    let search = req.query.search || "";
-    if (req.query.search) {
-      search = req.query.search;
-    }
+    const search = req.query.search || "";
     const page = parseInt(req.query.page) || 1;
-    const limit = 3;
+    const limit = 10;
 
-    const userData = await User.find({
+    const matchStage = {
       isAdmin: false,
       $or: [
-        { name: { $regex: ".*" + search + ".*" } },
-        { email: { $regex: ".*" + search + ".*" } },
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
       ],
-    })
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .exec();
+    };
 
-    const count = await User.find({
-      isAdmin: false,
-      $or: [
-        { name: { $regex: ".*" + search + ".*" } },
-        { email: { $regex: ".*" + search + ".*" } },
-      ],
-    }).countDocuments();
+    const userData = await User.aggregate([
+      { $match: matchStage },
+      { $sort: { createdAt: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
 
+      {
+        $lookup: {
+          from: "wallets",        
+          localField: "_id",      
+          foreignField: "user",   
+          as: "wallet",
+        },
+      },
+
+      {
+        $addFields: {
+          walletBalance: {
+            $ifNull: [{ $arrayElemAt: ["$wallet.balance", 0] }, 0],
+          },
+        },
+      },
+
+      {
+        $project: {
+          wallet: 0,
+        },
+      },
+    ]);
+
+    const count = await User.countDocuments(matchStage);
     const totalPages = Math.ceil(count / limit);
-    const currentPage = page;
 
-    res.render("customer", { data: userData, totalPages, currentPage });
+    res.render("customer", {
+      data: userData,
+      totalPages,
+      currentPage: page,
+      search,
+    });
   } catch (error) {
+    console.error(error);
     res.render("admin-error");
   }
 };

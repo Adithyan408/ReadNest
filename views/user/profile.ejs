@@ -819,6 +819,12 @@
           Swal.fire("Error", "All fields required!", "error");
           return;
         }
+        
+        if(currentPassword === newPassword){
+          Swal.fire("Error", "New Password should not be same as current Password", "error");
+          return;
+        }
+
         if (newPassword !== confirmPassword) {
           Swal.fire("Error", "Passwords do not match", "error");
           return;
@@ -883,7 +889,13 @@
         const btn = document.getElementById("sendOtpEmailBtn");
 
         if (!email) {
-          Swal.fire("Error", "Enter email", "error");
+          Swal.fire("Missing", "Enter email", "warning");
+          return;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(email)) {
+          Swal.fire("Invalid Email", "Enter a valid email address", "error");
           return;
         }
 

@@ -9,6 +9,8 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
 
@@ -227,7 +229,7 @@
         id="confirmBtn"
         onclick="verifyCode()"
         class="w-full bg-indigo-600 text-white font-bold text-2xl py-4 rounded-2xl hover:bg-indigo-700"
-        disabled
+     
       >
         Confirm
       </button>
@@ -302,26 +304,36 @@
       });
     }
 
-    function checkAllFilled() {
-      const allFilled = Array.from(otpInputs).every(
-        (input) => input.value !== ""
-      );
-      confirmBtn.disabled = !allFilled;
-    }
-
     function getOTP() {
       return Array.from(otpInputs)
         .map((input) => input.value)
         .join("");
     }
 
-    //  AJAX call for verifying OTP
     async function verifyCode() {
-  const otp = getOTP();
-  if (otp.length !== 6) {
-    showError("Enter all 6 digits");
+        const filledCount = [...otpInputs].filter(i => i.value !== "").length;
+
+       if (filledCount === 0) {
+      showError("Please enter the 6-digit verification code");
+      return;
+    }
+
+    if (filledCount < 6) {
+    showError("Please fill all 6 OTP fields");
+
+    otpInputs.forEach(input => {
+      if (!input.value) input.classList.add("error");
+    });
+
+    setTimeout(() => {
+      otpInputs.forEach(input => input.classList.remove("error"));
+    }, 300);
+
     return;
   }
+
+      const otp = getOTP();
+
 
   confirmBtn.disabled = true;
   confirmBtn.textContent = "Verifying...";
@@ -337,7 +349,7 @@
     );
 
     const data = await res.json();
-
+    
     if (data.success) {
       showSuccess(data.message || "Verification successful!");
 

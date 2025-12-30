@@ -52,7 +52,7 @@ router.get("/notfound", loadNotFound);
 router.get("/", nocache(), loadHome);
 router.get("/signup", nocache(), loadSigup);
 router.get("/login", nocache(), loadLogin);
-router.get("/verify-otp", loadVerify);
+router.get("/verify-otp", nocache(), loadVerify);
 router.get("/auth/google", googleAuth);
 router.get("/auth/google/callback", googleAuthCallback);
 router.get("/account", loadProfile);
