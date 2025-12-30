@@ -87,23 +87,26 @@
         </p>
 
         <% if (isInvoiceAvailable) { %>
-  <a
-    href="/orders/<%= order.orderId %>/invoice"
-    class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition w-fit"
-  >
-    <i class="fa-solid fa-file-invoice"></i>
-    Download Invoice
-  </a>
+  <button
+  type="button"
+  onclick="downloadInvoice('<%= order.orderId %>')"
+  class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition w-fit"
+>
+  <i class="fa-solid fa-file-invoice"></i>
+  Download Invoice
+</button>
+
 <% } else { %>
   <button
     type="button"
-    disabled
-    class="inline-flex items-center gap-2 bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed w-fit"
+    onclick="showInvoiceInfo()"
+    class="inline-flex items-center gap-2 bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition w-fit"
   >
     <i class="fa-solid fa-file-invoice"></i>
-    Invoice available after delivery
+    Download Invoice
   </button>
 <% } %>
+
 
       </div>
 
@@ -294,6 +297,42 @@
     <%- include("../../views/partials/user/footer") %>
   </body>
   <script>
+
+     function showInvoiceInfo() {
+    Swal.fire({
+      icon: "info",
+      title: "Invoice not available",
+      text: "Invoice will be available after at least one item is delivered.",
+      confirmButtonColor: "#2563eb",
+    });
+  }
+  async function downloadInvoice(orderId) {
+  try {
+    const res = await fetch(`/orders/${orderId}/invoice`);
+
+    if (!res.ok) {
+      const data = await res.json();
+
+      Swal.fire({
+        icon: "info",
+        title: "Invoice not available",
+        text: data.message,
+        confirmButtonColor: "#2563eb",
+      });
+
+      return;
+    }
+
+    window.location.href = `/orders/${orderId}/invoice`;
+
+  } catch (err) {
+    Swal.fire({
+      icon: "error",
+      title: "Something went wrong",
+      text: "Please try again later.",
+    });
+  }
+}
     // CANCEL ITEM
     function confirmCancel(orderId, itemId) {
       Swal.fire({

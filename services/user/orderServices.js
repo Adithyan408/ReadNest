@@ -91,7 +91,7 @@ export const cancelOrderItem = async (req, res) => {
 
     await order.save();
 
-    if (["ONLINE", "WALLET"].includes(order.paymentMethod)) {
+    if (["Razorpay", "WALLET"].includes(order.paymentMethod)) {
       await creditWallet({
         userId: order.user,
         amount: refundAmount,
@@ -143,19 +143,28 @@ export const downloadInvoice = async (req, res) => {
     const orderId = req.params.orderId;
 
     const order = await Order.findOne({ orderId }).lean();
-    if (!order) return res.render("notFound");
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
 
-    // ---------------- FINAL STATE CHECK ----------------
-    const FINAL_STATUSES = ["delivered", "returned", "cancelled"];
-    const isInvoiceAvailable = order.items.every((item) =>
-      FINAL_STATUSES.includes(item.status)
+    // ---------------- INVOICE ELIGIBILITY ----------------
+
+    // At least one item must be delivered
+    const isInvoiceAvailable = order.items.some(
+      (item) => item.status === "delivered"
     );
 
     if (!isInvoiceAvailable) {
-      return res.status(403).render("notAuthorized", {
-        message: "Invoice is available only after order completion",
+      return res.status(403).json({
+        success: false,
+        message: "Invoice is available only for delivered items",
       });
     }
+
+    // ✅ If eligible → continue invoice generation below
 
     // ---------------- PDF SETUP ----------------
     const invoiceName = `invoice-${orderId}.pdf`;
