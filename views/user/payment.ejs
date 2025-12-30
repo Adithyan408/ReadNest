@@ -365,18 +365,30 @@
   /* =====================================================
      REMOVE COUPON
   ===================================================== */
-  function removeCoupon(e) {
-    e.stopPropagation();
+ function removeCoupon(e) {
+  e.stopPropagation();
 
-    fetch("/remove-coupon", { method: "POST" }).then(() => {
+  fetch("/remove-coupon", { method: "POST" })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) return;
+
       couponValid = true;
+
+      // Reset coupon UI
       document.getElementById("couponCode").value = "";
       document.getElementById("selectedCouponText").textContent = "Select a coupon";
       document.getElementById("removeCouponBtn").classList.add("hidden");
       document.getElementById("couponMessage").classList.add("hidden");
+
+      document.getElementById("discountAmount").textContent = "₹ 0";
+      document.getElementById("totalAmount").textContent =
+        "₹ " + data.payableAmount;
+
       document.getElementById("discountBox").classList.add("hidden");
     });
-  }
+}
+
 
   /* =====================================================
      PROCESS PAYMENT

@@ -705,14 +705,20 @@ export const postRemoveCoupon = async (req, res) => {
   const cached = await getPaymentState(userId);
   if (!cached) return res.json({ success: false });
 
+  const payableAmount = cached.subtotal + cached.shippingCharge;
+
   await savePaymentState(userId, {
     ...cached,
     appliedCoupon: null,
     discount: 0,
-    payableAmount: cached.subtotal + cached.shippingCharge,
+    payableAmount,
   });
 
-  res.json({ success: true });
+  return res.json({
+    success: true,
+    payableAmount,
+    discount: 0,
+  });
 };
 
 export const savePaymentMethod = async (req, res) => {
