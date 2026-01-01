@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -33,8 +34,6 @@
             <a href="/" class="text-xl font-bold text-gray-800">ReadNest</a>
           </div>
 
-        
-
           <!-- Right Menu -->
           <div class="flex items-center space-x-6">
             <button
@@ -52,7 +51,9 @@
 
             <a href="/account" class="flex items-center space-x-2">
               <i class="fas fa-user-circle text-2xl text-gray-700"></i>
-              <span class="text-sm font-medium text-gray-700"><%= user.name %></span>
+              <span class="text-sm font-medium text-gray-700"
+                ><%= user.name %></span
+              >
             </a>
           </div>
         </div>
@@ -60,23 +61,39 @@
     </header>
 
     <!-- ================= PAGE TOOLBAR ================= -->
-    <section class="max-w-7xl mx-auto px-4 mt-6">
+    <section
+      class="sticky top-[76px] z-40 bg-white/90 backdrop-blur border-b border-gray-200"
+    >
       <div
-        class="bg-white rounded-xl shadow-sm px-6 py-4 flex justify-between items-center"
+        class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between"
       >
-        <h2 class="text-xl font-semibold text-gray-800">Blogs</h2>
+        <!-- Left -->
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-book-open text-blue-600"></i>
+          </div>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-800">Blogs</h2>
+            <p class="text-xs text-gray-500">
+              Read & share thoughts from the community
+            </p>
+          </div>
+        </div>
 
+        <!-- Right -->
         <div class="flex items-center gap-4">
           <button
             onclick="window.location.href='/blog/addBlog'"
-            class="flex items-center gap-2 px-5 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            class="flex items-center gap-2 px-5 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition shadow-sm"
           >
             <i class="fa-solid fa-pen"></i>
             Publish
           </button>
 
           <button
-            class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-blue-100"
+            class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-blue-100 transition"
           >
             <i class="fa-regular fa-bell text-blue-600"></i>
           </button>
@@ -85,60 +102,109 @@
     </section>
 
     <!-- ================= BLOG CONTENT ================= -->
-    <main class="max-w-7xl mx-auto px-4 py-8">
-      <div class="max-w-xl mx-auto">
-        <% if (blogs.length === 0) { %>
-        <p class="text-center text-gray-500 mt-20">
-          No blogs published yet
-        </p>
-        <% } %>
-
-        <% blogs.forEach(blog => { %>
-        <div
-          class="bg-white rounded-xl shadow-md p-6 mb-6"
+    <%- include("../../views/partials/user/blogSidebar") %>
+    <main class="max-w-7xl mx-auto px-4 py-10">
+  <div class="max-w-3xl mx-auto px-8">
+    <% if (blogs.length === 0) { %>
+      <p class="text-center text-gray-500 mt-20 text-sm">
+        No blogs published yet
+      </p>
+    <% } %>
+    <% blogs.forEach(blog => { %>
+      <div
+        class="bg-white rounded-2xl border border-gray-200
+               hover:shadow-sm transition p-8 mb-6"
+      >
+        <!-- TITLE -->
+        <h3
+          class="text-xl font-semibold text-gray-900
+                 leading-snug mb-2 hover:text-blue-700 transition"
         >
-          <h3 class="text-lg font-semibold text-gray-800 mb-2">
-            <%= blog.title %>
-          </h3>
-          
-           <p class="text-sm text-gray-500 mb-3">
-          By <span class="font-medium text-gray-700">
+          <%= blog.title %>
+        </h3>
+        <!-- META -->
+        <p class="text-sm text-gray-500 mb-4">
+          By
+          <span class="font-medium text-gray-700">
             <%= blog.author?.name || "Unknown" %>
           </span>
           · <%= new Date(blog.createdAt).toDateString() %>
         </p>
-
-          <a
-            href="/blogs/<%= blog._id %>"
-            class="text-blue-600 text-sm font-medium hover:underline"
-          >
-            Read more →
-          </a>
-
-          <div
-            class="flex justify-around border-t mt-4 pt-4 text-gray-600"
-          >
-            <button class="flex items-center gap-2 hover:text-blue-600">
-              <i class="fa-regular fa-heart"></i> Like
+        <!-- CTA -->
+        <a
+          href="/blog/<%= blog._id %>"
+          class="inline-flex items-center gap-1
+                 text-blue-600 text-sm font-medium
+                 hover:underline mb-5"
+        >
+          Read more
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </a>
+        <!-- ACTION BAR -->
+        <div
+          class="flex justify-between items-center
+                 border-t border-gray-100 pt-4 text-gray-600"
+        >
+          <!-- LEFT ACTIONS -->
+          <div class="flex gap-6">
+            <!-- LIKE -->
+            <button
+              onclick="toggleLike('<%= blog._id %>')"
+              class="flex items-center gap-2 hover:text-red-500 transition"
+            >
+              <i
+                class="fa-heart
+                <%= blog.userLiked ? 'fa-solid text-red-500' : 'fa-regular' %>"
+              ></i>
+              <span class="text-sm">
+                <%= blog.likeCount %>
+              </span>
             </button>
-
-            <button class="flex items-center gap-2 hover:text-blue-600">
-              <i class="fa-regular fa-comment"></i> Comment
-            </button>
-
-            <button class="flex items-center gap-2 hover:text-blue-600">
-              <i class="fa-solid fa-share"></i> Share
-            </button>
+            <!-- COMMENT -->
+            <a
+              href="/blog/<%= blog._id %>#comments"
+              class="flex items-center gap-2 hover:text-blue-600 transition"
+            >
+              <i class="fa-regular fa-comment"></i>
+              <span class="text-sm">
+                <%= blog.commentCount %>
+              </span>
+            </a>
           </div>
+          <!-- SHARE -->
+          <button
+            class="flex items-center gap-2 hover:text-blue-600 transition text-sm"
+          >
+            <i class="fa-solid fa-share"></i>
+            Share
+          </button>
         </div>
-        <% }) %>
       </div>
-    </main>
+    <% }) %>
+  </div>
+</main>
 
     <!-- ================= SCRIPT ================= -->
     <script>
       function openBlog() {
         window.location.href = "/blog";
+      }
+
+      async function toggleLike(blogId) {
+        try {
+          const res = await fetch("/blog/like", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ blogId }),
+          });
+
+          const data = await res.json();
+          if (data.success !== false) {
+            location.reload(); // simple & safe
+          }
+        } catch (err) {
+          console.error("Like failed");
+        }
       }
     </script>
   </body>
