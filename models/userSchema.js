@@ -76,6 +76,12 @@ const userSchema = new Schema(
         },
       },
     ],
+    savedBlogs: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Blog",
+      },
+    ],
     referralCode: { type: String, unique: true },
     referredBy: { type: String, default: null },
   },

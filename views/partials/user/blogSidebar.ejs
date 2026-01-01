@@ -27,17 +27,17 @@
       </h3>
 
       <nav class="space-y-1">
-        <a href="/" class="sidebar-link">
+        <a href="/blog" class="sidebar-link active">
           <i class="fa-solid fa-house"></i>
           Home
         </a>
 
-        <a href="/library" class="sidebar-link">
+        <a href="/blog/library" class="sidebar-link">
           <i class="fa-solid fa-book"></i>
           Library
         </a>
 
-        <a href="/blogs" class="sidebar-link active">
+        <a href="/blog/stories" class="sidebar-link ">
           <i class="fa-solid fa-pen-nib"></i>
           Stories
         </a>
@@ -47,7 +47,7 @@
           Insights
         </a>
 
-        <a href="/profile" class="sidebar-link">
+        <a href="/blog/profile" class="sidebar-link">
           <i class="fa-solid fa-user"></i>
           Profile
         </a>
@@ -92,16 +92,19 @@
       }
     </style>
 
-    <script>
-      const links = document.querySelectorAll(".sidebar-link");
-      const currentPath = window.location.pathname;
+ <script>
+  const links = document.querySelectorAll(".sidebar-link");
+  const currentPath = window.location.pathname;
 
-      links.forEach((link) => {
-        const href = link.getAttribute("href");
-        if (currentPath === href || currentPath.startsWith(href + "/")) {
-          link.classList.add("active");
-        }
-      });
-    </script>
+  links.forEach(link => {
+    link.classList.remove("active"); 
+
+    const href = link.getAttribute("href");
+    if (currentPath === href || currentPath.startsWith(href + "/blogs")) {
+      link.classList.add("active");
+    }
+  });
+</script>
+
   </body>
 </html>

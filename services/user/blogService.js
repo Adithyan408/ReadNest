@@ -43,6 +43,15 @@ export const listBlog = async (req, res) => {
       blog.userLiked = likedBlogIds.has(blog._id.toString());
     });
 
+    if (userId) {
+      const user = await User.findById(userId).select("savedBlogs");
+
+      const savedSet = new Set(user.savedBlogs.map((id) => id.toString()));
+
+      blogs.forEach((blog) => {
+        blog.isSaved = savedSet.has(blog._id.toString());
+      });
+    }
     const user = await User.findById(userId);
 
     res.render("blog", {
@@ -183,6 +192,76 @@ export const addComment = async (req, res) => {
     await newComment.populate("user", "name");
     res.json({ success: true, comment: newComment });
   } catch (error) {
+    res.status(500).json({ success: false });
+  }
+};
+
+export const toggelSaveBlog = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+    const { blogId } = req.body;
+
+    const user = await User.findById(userId);
+
+    const alreadySaved = user.savedBlogs.includes(blogId);
+    if (alreadySaved) {
+      user.savedBlogs.pull(blogId);
+    } else {
+      user.savedBlogs.push(blogId);
+    }
+    await user.save();
+    res.json({ success: true, saved: !alreadySaved });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+};
+
+export const getSavedBlog = async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+
+    const user = await User.findById(userId)
+      .populate({
+        path: "savedBlogs",
+        populate: { path: "author", select: "name" },
+      })
+      .lean();
+
+    const blogs = user.savedBlogs.map((blog) => ({
+      ...blog,
+      isSaved: true,
+    }));
+
+    const users = await User.findById(userId);
+    res.render("savedBlogs", {
+      users,
+      blogs,
+      user: req.session.user,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false });
+  }
+};
+
+export const getStories = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+    if (!userId) {
+      return res.redirect("/login");
+    }
+
+    const blogs = await Blog.find({ author: userId })
+      .populate("author", "name")
+      .sort({ createdAt: -1 })
+      .lean();
+    const user = await User.findById(userId);
+    res.render("myStories", {
+      blogs,
+      user
+    });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false });
   }
 };
