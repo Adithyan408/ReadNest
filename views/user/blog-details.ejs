@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title><%= blog.title %> | ReadNest</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  />
+</head>
+
+<body class="bg-gray-50">
+
+<main class="max-w-3xl mx-auto px-4 py-10 bg-white shadow rounded-lg mt-10">
+
+  <!-- Title -->
+  <h1 class="text-3xl font-bold text-gray-900 mb-4">
+    <%= blog.title %>
+  </h1>
+
+    <p class="text-sm text-gray-500 mb-6">
+    By <span class="font-medium text-gray-700">
+      <%= blog.author?.name %>
+    </span>
+    · <%= new Date(blog.createdAt).toDateString() %>
+  </p>
+
+  <!-- Blog Content -->
+  <article class="prose max-w-none">
+    <%- blog.content %>
+  </article>
+
+  <!-- Divider -->
+  <hr class="my-8" />
+
+  <!-- Actions -->
+  <div class="flex justify-around text-gray-600">
+    <button class="flex items-center gap-2 hover:text-blue-600">
+      <i class="fa-regular fa-heart"></i> Like
+    </button>
+
+    <button class="flex items-center gap-2 hover:text-blue-600">
+      <i class="fa-regular fa-comment"></i> Comment
+    </button>
+
+    <button class="flex items-center gap-2 hover:text-blue-600">
+      <i class="fa-solid fa-share"></i> Share
+    </button>
+  </div>
+
+</main>
+
+</body>
+</html>

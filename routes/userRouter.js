@@ -45,6 +45,8 @@ import { applyCoupon, getPayment, loadFailed, loadPlace, razorpay_order, razorpa
 import { cancelOrder, invoicedownload, listOrders, loadOrderDetails,  returnOrder } from "../controllers/user/orderController.js";
 import { getWishlist, moveAllCart, moveToCart, removeAll, removeItem, toggleWishlist } from "../controllers/user/wishlistController.js";
 import { createWalletRazorpayOrder, payWithWallet, verifyWalletRazorpayPayment, walletLoad } from "../controllers/user/walletController.js";
+import { blogList, getSingleBlog, loadAddBlog, postCreateBlog } from "../controllers/user/blogController.js";
+import { userAuth } from "../middlewares/auth.js";
 
 export const router = express.Router();
 
@@ -136,3 +138,7 @@ router.post("/forgot-verify-otp", forgotVerifyOtp);
 router.get("/product", getProductsDetails);
 router.get("/live-search", liveSearch);
 
+router.get("/blog", userAuth, blogList);
+router.get("/blog/addBlog", userAuth, loadAddBlog);
+router.post("/blog/addBlog", userAuth, postCreateBlog);
+router.get("/blogs/:id", userAuth, getSingleBlog);

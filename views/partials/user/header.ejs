@@ -44,6 +44,7 @@
       <!-- Right Menu -->
       <div class="flex items-center space-x-6">
         <button
+        onclick="openBlog()"
           class="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-300 hover:bg-gray-50"
         >
           <i class="fas fa-bars text-gray-700"></i>
@@ -153,4 +154,7 @@
       globalResults.classList.add("hidden");
     }
   });
+  function openBlog() {
+    window.location.href = "/blog";
+  }
 </script>
