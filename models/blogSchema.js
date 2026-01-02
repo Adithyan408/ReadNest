@@ -19,6 +19,10 @@ const blogSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   {

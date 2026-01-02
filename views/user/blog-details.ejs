@@ -78,28 +78,55 @@
     <%- include("../../views/partials/user/blogSidebar") %>
     <main class="max-w-3xl mx-auto px-4 py-10 bg-white shadow rounded-lg mt-10">
       <!-- Title -->
+      <p class="text-sm text-gray-500 mb-4">
+        By
+        <span class="font-medium text-gray-700">
+          <%= blog.author?.name || "Unknown" %>
+        </span>
+        · <%= new Date(blog.createdAt).toDateString() %>
+      </p>
       <div class="flex items-start justify-between mb-4">
         <h1 class="text-3xl font-bold text-gray-900"><%= blog.title %></h1>
 
         <% if (user && blog.author && blog.author._id.toString() ===
         user._id.toString()) { %>
-        <div class="flex gap-3">
-          <!-- EDIT BLOG -->
-          <button
-            onclick="openEditModal()"
-            class="text-blue-600 hover:text-blue-800 text-sm font-medium"
-          >
-            <i class="fa-solid fa-pen"></i> Edit
-          </button>
 
-          <!-- DELETE BLOG -->
-          <button
-            onclick="deleteBlog('<%= blog._id %>')"
-            class="text-red-600 hover:text-red-800 text-sm font-medium"
+        <div class="flex flex-col items-end gap-2">
+          <!-- STATUS BADGE -->
+          <% if (blog.isBlocked) { %>
+          <span
+            class="text-xs px-3 py-1 rounded-full bg-red-100 text-red-700 font-medium"
           >
-            <i class="fa-solid fa-trash"></i> Delete
-          </button>
+            Blocked
+          </span>
+          <% } else { %>
+          <span
+            class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium"
+          >
+            Published
+          </span>
+          <% } %>
+
+          <!-- ACTION BUTTONS -->
+          <div class="flex gap-3">
+            <!-- EDIT BLOG -->
+            <button
+              onclick="openEditModal()"
+              class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              <i class="fa-solid fa-pen"></i> Edit
+            </button>
+
+            <!-- DELETE BLOG -->
+            <button
+              onclick="deleteBlog('<%= blog._id %>')"
+              class="text-red-600 hover:text-red-800 text-sm font-medium"
+            >
+              <i class="fa-solid fa-trash"></i> Delete
+            </button>
+          </div>
         </div>
+
         <% } %>
       </div>
 
@@ -127,7 +154,7 @@
       <% comments.forEach(c => { %>
       <div class="border-b py-3 flex justify-between items-start">
         <div>
-          <p class="text-grey-100 "><%= c.user.name %></p>
+          <p class="text-grey-100"><%= c.user.name %></p>
           <p class="text font-medium"><%= c.comment %></p>
         </div>
 

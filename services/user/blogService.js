@@ -8,7 +8,7 @@ export const listBlog = async (req, res) => {
   try {
     const userId = req.session.user?._id;
 
-    const blogs = await Blog.find()
+    const blogs = await Blog.find({isBlocked: false})
       .populate("author", "name")
       .sort({ createdAt: -1 })
       .lean();

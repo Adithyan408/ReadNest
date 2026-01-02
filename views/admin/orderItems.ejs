@@ -99,12 +99,15 @@
 
         <!-- Right Side -->
         <div class="flex items-center space-x-6">
-          <button
-            class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
-          >
+          <a href="/admin/blogs">
+            <button
+              class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
+            >
             <i class="fas fa-blog text-gray-700"></i>
             <span class="text-base font-semibold text-gray-900">Blog</span>
-          </button>
+            </button>
+          </a>
+
 
           <div class="flex items-center space-x-3">
             <i class="fas fa-user-circle text-4xl text-gray-600"></i>
@@ -368,10 +371,10 @@
 
           <!-- DROPDOWN MENU -->
           <% if (!['cancelled','returned'].includes(item.status)) { %>
-  <div
-    id="item-menu-<%= item._id %>"
-    class="hidden absolute right-0 bg-white shadow-lg border rounded-lg w-40 mt-2 z-50"
-  >
+          <div
+            id="item-menu-<%= item._id %>"
+            class="hidden absolute right-0 bg-white shadow-lg border rounded-lg w-40 mt-2 z-50"
+          >
 
             <div
               onclick="updateItemStatus('<%= order.orderId %>', '<%= item._id %>', 'ordered')"

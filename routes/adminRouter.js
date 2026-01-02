@@ -60,6 +60,7 @@ import {
   getCoupon,
   postCouponAdd,
 } from "../controllers/admin/couponController.js";
+import { blogsGet,  commentDelete, detailedBlog, unblockBlockBlog } from "../controllers/admin/blogController.js";
 
 export const adminRouter = express.Router();
 
@@ -158,3 +159,7 @@ adminRouter.get(
 );
 adminRouter.get("/sales-report/excel",adminAuth, downloadExcel);
 
+adminRouter.get("/blogs", adminAuth, blogsGet);
+adminRouter.get("/blogs/:id", adminAuth, detailedBlog);
+adminRouter.patch("/blogs/block/:id", adminAuth, unblockBlockBlog);
+adminRouter.delete("/blogs/comment/:id",adminAuth, commentDelete);
