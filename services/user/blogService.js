@@ -87,11 +87,13 @@ export const singleBlog = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
+      const user = await User.findById(userId)
     res.render("blog-details", {
       blog,
       likeCount,
       userLiked,
       comments,
+      user
     });
   } catch (error) {
     console.error(error);
@@ -230,7 +232,7 @@ export const getSavedBlog = async (req, res) => {
     const blogs = user.savedBlogs.map((blog) => ({
       ...blog,
       isSaved: true,
-    }));
+    })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const users = await User.findById(userId);
     res.render("savedBlogs", {
@@ -399,5 +401,51 @@ export const putEditComment = async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.json({ success: false, message: "Update failed" });
+  }
+};
+
+
+export const searchBlogs = async (req, res) => {
+  try {
+    const query = req.query.q?.trim();
+
+    let blogs = [];
+
+    if (query) {
+      blogs = await Blog.aggregate([
+        {
+          $lookup: {
+            from: "users", 
+            localField: "author",
+            foreignField: "_id",
+            as: "author",
+          },
+        },
+        { $unwind: "$author" },
+
+        {
+          $match: {
+            isBlocked: false,
+            $or: [
+              { title: { $regex: query, $options: "i" } },
+              { content: { $regex: query, $options: "i" } },
+              { "author.name": { $regex: query, $options: "i" } }, 
+            ],
+          },
+        },
+
+        { $sort: { createdAt: -1 } },
+      ]);
+    } else {
+      blogs = await Blog.find({ isBlocked: false })
+        .populate("author", "name")
+        .sort({ createdAt: -1 })
+        .lean();
+    }
+
+    res.render("blogList", { blogs });
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).send("");
   }
 };

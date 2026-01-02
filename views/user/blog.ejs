@@ -80,6 +80,31 @@
             </p>
           </div>
         </div>
+        <!-- SEARCH BAR -->
+        <div class="relative">
+          <input
+            type="text"
+            id="blogSearch"
+            placeholder="Search blogs..."
+            class="w-64 pl-10 pr-10 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            oninput="searchBlogs(this.value)"
+          />
+
+          <!-- Search Icon -->
+          <i
+            class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"
+          ></i>
+
+          <!-- Clear Button -->
+          <button
+            id="clearSearchBtn"
+            onclick="clearSearch()"
+            class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+            title="Clear"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
 
         <!-- Right -->
         <div class="flex items-center gap-4">
@@ -103,7 +128,7 @@
     <!-- ================= BLOG CONTENT ================= -->
     <%- include("../../views/partials/user/blogSidebar") %>
     <main class="max-w-7xl mx-auto px-4 py-10">
-      <div class="max-w-3xl mx-auto px-8">
+      <div class="max-w-3xl mx-auto px-8" id="blogsContainer">
         <% if (blogs.length === 0) { %>
         <p class="text-center text-gray-500 mt-20 text-sm">
           No blogs published yet
@@ -224,6 +249,33 @@
         } catch (err) {
           console.error("Save failed");
         }
+      }
+
+      let searchTimeout;
+
+      function searchBlogs(query) {
+        const clearBtn = document.getElementById("clearSearchBtn");
+
+        // Toggle clear button
+        clearBtn.classList.toggle("hidden", !query);
+
+        // Debounce (prevents too many requests)
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(async () => {
+          const res = await fetch(
+            `/blog/search?q=${encodeURIComponent(query)}`
+          );
+          const data = await res.text();
+
+          // Replace blog list HTML
+          document.getElementById("blogsContainer").innerHTML = data;
+        }, 300);
+      }
+
+      function clearSearch() {
+        document.getElementById("blogSearch").value = "";
+        document.getElementById("clearSearchBtn").classList.add("hidden");
+        searchBlogs("");
       }
     </script>
   </body>

@@ -45,7 +45,7 @@ import { applyCoupon, getPayment, loadFailed, loadPlace, razorpay_order, razorpa
 import { cancelOrder, invoicedownload, listOrders, loadOrderDetails,  returnOrder } from "../controllers/user/orderController.js";
 import { getWishlist, moveAllCart, moveToCart, removeAll, removeItem, toggleWishlist } from "../controllers/user/wishlistController.js";
 import { createWalletRazorpayOrder, payWithWallet, verifyWalletRazorpayPayment, walletLoad } from "../controllers/user/walletController.js";
-import { blogComment, blogLike, blogList, deleteBlog, deleteComment, editBlog, editComment, getEditBlog, getSingleBlog, loadAddBlog, postCreateBlog, postEditBlog, savedBlog, saveToggleBlog, stories } from "../controllers/user/blogController.js";
+import { blogComment, blogLike, blogList, blogSearch, deleteBlog, deleteComment, editBlog, editComment, getEditBlog, getSingleBlog, loadAddBlog, postCreateBlog, postEditBlog, savedBlog, saveToggleBlog, stories } from "../controllers/user/blogController.js";
 import { userAuth } from "../middlewares/auth.js";
 
 export const router = express.Router();
@@ -153,3 +153,4 @@ router.post("/blog/edit/:id", userAuth, postEditBlog);
 router.delete("/blog/comment/:id", userAuth, deleteComment);
 router.put("/blog/edit/:id", userAuth, editBlog)
 router.put("/blog/comment/:id", userAuth, editComment);
+router.get("/blog/search", userAuth, blogSearch);
