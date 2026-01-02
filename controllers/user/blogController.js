@@ -1,4 +1,4 @@
-import { addComment, blogDelete, commentDelete, createBlog, editBlogGet, editBlogPost, getSavedBlog, getStories, listBlog, loadCreateBlog, putEditBlog, singleBlog, toggelSaveBlog, toggleBlogLike } from "../../services/user/blogService.js"
+import { addComment, blogDelete, commentDelete, createBlog, editBlogGet, editBlogPost, getSavedBlog, getStories, listBlog, loadCreateBlog, putEditBlog, putEditComment, singleBlog, toggelSaveBlog, toggleBlogLike } from "../../services/user/blogService.js"
 
 export const blogList = async(req, res) => {
     await listBlog(req, res);
@@ -55,4 +55,8 @@ export const deleteComment = async(req, res) => {
 
 export const editBlog = async(req, res) => {
     await putEditBlog(req, res);
+}
+
+export const editComment = async(req, res) =>{
+    await putEditComment(req, res);
 }

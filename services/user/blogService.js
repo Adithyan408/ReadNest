@@ -255,7 +255,47 @@ export const getStories = async (req, res) => {
       .populate("author", "name")
       .sort({ createdAt: -1 })
       .lean();
+
+    const blogIds = blogs.map((b) => b._id);
+    const likeAgg = await BlogLike.aggregate([
+      { $match: { blog: { $in: blogIds } } },
+      { $group: { _id: "$blog", count: { $sum: 1 } } },
+    ]);
+
+    const commentAgg = await BlogComment.aggregate([
+      { $match: { blog: { $in: blogIds } } },
+      { $group: { _id: "$blog", count: { $sum: 1 } } },
+    ]);
+
+    const userLikes = userId
+      ? await BlogLike.find({ user: userId, blog: { $in: blogIds } }).lean()
+      : [];
+
+    const likedBlogIds = new Set(userLikes.map((like) => like.blog.toString()));
+
+    const likeMap = {};
+    likeAgg.forEach((l) => (likeMap[l._id] = l.count));
+
+    const commentMap = {};
+    commentAgg.forEach((c) => (commentMap[c._id] = c.count));
+
+    blogs.forEach((blog) => {
+      blog.likeCount = likeMap[blog._id] || 0;
+      blog.commentCount = commentMap[blog._id] || 0;
+      blog.userLiked = likedBlogIds.has(blog._id.toString());
+    });
+
+    if (userId) {
+      const user = await User.findById(userId).select("savedBlogs");
+
+      const savedSet = new Set(user.savedBlogs.map((id) => id.toString()));
+
+      blogs.forEach((blog) => {
+        blog.isSaved = savedSet.has(blog._id.toString());
+      });
+    }
     const user = await User.findById(userId);
+
     res.render("myStories", {
       blogs,
       user,
@@ -334,6 +374,27 @@ export const putEditBlog = async (req, res) => {
       title,
       content,
     });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, message: "Update failed" });
+  }
+};
+
+export const putEditComment = async (req, res) => {
+  try {
+    const { comment } = req.body;
+    const userId = req.session.user._id;
+
+    const updated = await BlogComment.findOneAndUpdate(
+      { _id: req.params.id, user: userId },
+      { comment },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.json({ success: false, message: "Unauthorized" });
+    }
 
     res.json({ success: true });
   } catch (err) {

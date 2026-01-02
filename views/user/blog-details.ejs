@@ -11,7 +11,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+    <script src="https://cdn.ckeditor.com/4.22.1/full/ckeditor.js"></script>
   </head>
 
   <body class="bg-gray-50">
@@ -127,17 +127,30 @@
       <% comments.forEach(c => { %>
       <div class="border-b py-3 flex justify-between items-start">
         <div>
-          <p class="text-sm font-medium"><%= c.user.name %></p>
-          <p class="text-gray-700"><%= c.comment %></p>
+          <p class="text-grey-100 "><%= c.user.name %></p>
+          <p class="text font-medium"><%= c.comment %></p>
         </div>
 
         <% if (user && c.user._id.toString() === user._id.toString()) { %>
-        <button
-          onclick="deleteComment('<%= c._id %>')"
-          class="text-red-500 hover:text-red-700 text-sm"
-        >
-          <i class="fa-solid fa-trash"></i>
-        </button>
+        <div class="flex gap-3">
+          <!-- EDIT COMMENT -->
+          <button
+            onclick="openEditCommentModal('<%= c._id %>', `<%- c.comment %>`)"
+            class="text-blue-500 hover:text-blue-700 text-sm"
+            title="Edit comment"
+          >
+            <i class="fa-solid fa-pen"></i>
+          </button>
+
+          <!-- DELETE COMMENT -->
+          <button
+            onclick="deleteComment('<%= c._id %>')"
+            class="text-red-500 hover:text-red-700 text-sm"
+            title="Delete comment"
+          >
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
         <% } %>
       </div>
       <% }) %>
@@ -189,6 +202,46 @@
           <button
             onclick="updateBlog('<%= blog._id %>')"
             class="px-5 py-2 bg-blue-600 text-white rounded"
+          >
+            Update
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDIT COMMENT MODAL -->
+    <div
+      id="editCommentModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
+    >
+      <div class="bg-white w-full max-w-md rounded-lg shadow-lg p-6 relative">
+        <!-- Close -->
+        <button
+          onclick="closeEditCommentModal()"
+          class="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <h3 class="text-lg font-semibold mb-4">Edit Comment</h3>
+
+        <textarea
+          id="editCommentText"
+          class="w-full border rounded p-3"
+          rows="4"
+        ></textarea>
+
+        <div class="flex justify-end gap-3 mt-4">
+          <button
+            onclick="closeEditCommentModal()"
+            class="px-4 py-2 border rounded"
+          >
+            Cancel
+          </button>
+
+          <button
+            onclick="updateComment()"
+            class="px-4 py-2 bg-blue-600 text-white rounded"
           >
             Update
           </button>
@@ -321,6 +374,50 @@
         if (data.success) {
           Swal.fire("Updated!", "Blog updated successfully", "success").then(
             () => location.reload()
+          );
+        } else {
+          Swal.fire("Error", data.message || "Update failed", "error");
+        }
+      }
+      let currentCommentId = null;
+
+      function openEditCommentModal(commentId, commentText) {
+        currentCommentId = commentId;
+
+        document.getElementById("editCommentText").value = commentText;
+
+        const modal = document.getElementById("editCommentModal");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+
+      function closeEditCommentModal() {
+        const modal = document.getElementById("editCommentModal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+
+        currentCommentId = null;
+      }
+
+      async function updateComment() {
+        const text = document.getElementById("editCommentText").value.trim();
+
+        if (!text) {
+          Swal.fire("Error", "Comment cannot be empty", "error");
+          return;
+        }
+
+        const res = await fetch(`/blog/comment/${currentCommentId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ comment: text }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          Swal.fire("Updated!", "Comment updated", "success").then(() =>
+            location.reload()
           );
         } else {
           Swal.fire("Error", data.message || "Update failed", "error");
