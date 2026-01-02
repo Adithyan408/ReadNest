@@ -279,51 +279,64 @@ export const blogDelete = async (req, res) => {
     await Blog.findByIdAndDelete(blogId);
     await BlogComment.deleteMany({ blog: blog._id });
 
-    return res.json({success:  true,   message: "Blog deleted successfully",});
+    return res.json({ success: true, message: "Blog deleted successfully" });
   } catch (error) {
-    res.status(500).json({success: false});
+    res.status(500).json({ success: false });
   }
 };
 
-export const editBlogGet = async(req, res) => {
+export const editBlogGet = async (req, res) => {
   try {
     const blogId = req.params.id;
     const blog = await Blog.findById(blogId);
-    if(blog.author.toString() !== req.session.user.id.toString()){
-      return res.status(403).json({success: false});
+    if (blog.author.toString() !== req.session.user.id.toString()) {
+      return res.status(403).json({ success: false });
     }
-    res.render("edit-blog", {blog});
+    res.render("edit-blog", { blog });
   } catch (error) {
-    res.status(500).json({success: false});
+    res.status(500).json({ success: false });
   }
-}
+};
 
-export const editBlogPost = async(req, res) => {
+export const editBlogPost = async (req, res) => {
   try {
-
-    const {title, content} = req.body;
+    const { title, content } = req.body;
     const blogId = req.params.id;
 
     await Blog.findOneAndUpdate(blogId, {
-      title, 
-      content
+      title,
+      content,
     });
-
   } catch (error) {
     res.redirect("/notfound");
   }
-}
+};
 
-export const commentDelete = async(req, res) => {
+export const commentDelete = async (req, res) => {
   try {
     const comment = await BlogComment.findById(req.params.id);
-    if(!comment){
-      return res.json({success: false});
+    if (!comment) {
+      return res.json({ success: false });
     }
 
     await BlogComment.findByIdAndDelete(req.params.id);
-    res.json({success: true});
+    res.json({ success: true });
   } catch (error) {
-    return res.json({success: false});
+    return res.json({ success: false });
   }
-}
+};
+
+export const putEditBlog = async (req, res) => {
+  try {
+    const { title, content } = req.body;
+
+    await Blog.findByIdAndUpdate(req.params.id, {
+      title,
+      content,
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, message: "Update failed" });
+  }
+};

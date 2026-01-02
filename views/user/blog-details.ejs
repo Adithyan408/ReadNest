@@ -11,6 +11,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
   </head>
 
   <body class="bg-gray-50">
@@ -84,12 +85,12 @@
         user._id.toString()) { %>
         <div class="flex gap-3">
           <!-- EDIT BLOG -->
-          <a
-            href="/blog/edit/<%= blog._id %>"
+          <button
+            onclick="openEditModal()"
             class="text-blue-600 hover:text-blue-800 text-sm font-medium"
           >
             <i class="fa-solid fa-pen"></i> Edit
-          </a>
+          </button>
 
           <!-- DELETE BLOG -->
           <button
@@ -153,6 +154,47 @@
         Post Comment
       </button>
     </main>
+    <!-- EDIT BLOG MODAL -->
+    <div
+      id="editModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
+    >
+      <div class="bg-white w-full max-w-3xl rounded-lg shadow-lg p-6 relative">
+        <!-- Close -->
+        <button
+          onclick="closeEditModal()"
+          class="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <h2 class="text-xl font-semibold mb-4">Edit Blog</h2>
+
+        <!-- TITLE -->
+        <input
+          id="editTitle"
+          class="w-full border rounded p-3 mb-4"
+          value="<%= blog.title %>"
+        />
+
+        <!-- CONTENT -->
+        <textarea id="editContent"><%- blog.content %></textarea>
+
+        <!-- ACTIONS -->
+        <div class="flex justify-end gap-3 mt-4">
+          <button onclick="closeEditModal()" class="px-4 py-2 border rounded">
+            Cancel
+          </button>
+
+          <button
+            onclick="updateBlog('<%= blog._id %>')"
+            class="px-5 py-2 bg-blue-600 text-white rounded"
+          >
+            Update
+          </button>
+        </div>
+      </div>
+    </div>
 
     <script>
       async function toggleLike(blogId) {
@@ -226,6 +268,63 @@
             if (data.success) location.reload();
           }
         });
+      }
+      let editor;
+
+      function openEditModal() {
+        const modal = document.getElementById("editModal");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+
+        if (!editor) {
+          editor = CKEDITOR.replace("editContent", {
+            height: 300,
+            toolbar: [
+              { name: "styles", items: ["Font", "FontSize"] },
+              {
+                name: "basicstyles",
+                items: ["Bold", "Italic", "Underline", "Strike"],
+              },
+              { name: "colors", items: ["TextColor", "BGColor"] },
+              { name: "paragraph", items: ["NumberedList", "BulletedList"] },
+              { name: "links", items: ["Link", "Unlink"] },
+              { name: "cleanup", items: ["RemoveFormat"] },
+            ],
+            removePlugins: "resize,elementspath",
+          });
+        }
+      }
+
+      function closeEditModal() {
+        const modal = document.getElementById("editModal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+
+      async function updateBlog(blogId) {
+        const title = document.getElementById("editTitle").value;
+        const content = editor.getData();
+
+        if (!title.trim() || !content.trim()) {
+          Swal.fire("Error", "Title and content required", "error");
+          return;
+        }
+
+        const res = await fetch(`/blog/edit/${blogId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, content }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          Swal.fire("Updated!", "Blog updated successfully", "success").then(
+            () => location.reload()
+          );
+        } else {
+          Swal.fire("Error", data.message || "Update failed", "error");
+        }
       }
     </script>
   </body>
