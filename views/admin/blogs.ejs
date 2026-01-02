@@ -33,14 +33,10 @@
       html,
       body {
         height: 100%;
-        overflow: hidden; /* disable full page scroll */
+        overflow: hidden; 
       }
 
-      .main-scroll-area {
-        height: calc(100vh - 80px); /* header height is ~80px */
-        overflow-y: auto; /* enable vertical scroll only on the right */
-        overflow-x: hidden;
-      }
+      
     </style>
   </head>
   <body class="bg-gray-100">
@@ -169,81 +165,148 @@
         </div>
       </aside>
 
-      <!-- Main Content - Categories -->
-      <main class="flex-1 main-scroll-area px-10 py-8">
-        <div class="max-w-6xl mx-auto">
-          <% if (blogs.length === 0) { %>
-          <p class="text-center text-gray-500 mt-20 text-sm">
-            No blogs published yet
-          </p>
-          <% } %> <% blogs.forEach(blog => { %>
-          <div
-            class="bg-white rounded-xl border border-gray-200 hover:shadow transition p-6 mb-5"
-          >
-            <!-- TITLE + STATUS -->
-            <div class="flex items-start justify-between">
-              <h3
-                class="text-lg font-semibold text-gray-900 hover:text-blue-700"
-              >
-                <%= blog.title %>
-              </h3>
+      <!-- ================= BLOGS SECOND HEADER ================= -->
+      <div class="flex-1 flex flex-col h-[calc(100vh-80px)]">
+        <section
+          class="bg-gray-100 border-b border-gray-300 sticky top-[80px] z-40"
+        >
+          <div class="max-w-6xl mx-auto px-10 py-4">
+            <div class="flex items-center gap-6">
+              <!-- HEADING -->
+              <h2 class="text-2xl font-semibold text-gray-800">Blogs</h2>
 
-              <% if (blog.isBlocked) { %>
-              <!-- BLOCKED -->
-              <span
-                class="text-xs px-3 py-1 rounded-full bg-red-100 text-red-700 font-medium"
-              >
-                Blocked
-              </span>
-              <% } else { %>
-              <!-- PUBLISHED -->
-              <span
-                class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium"
-              >
-                Published
-              </span>
-              <% } %>
-            </div>
+              <!-- SEARCH BAR -->
+              <div class="relative">
+                <input
+                  type="text"
+                  id="blogSearch"
+                  placeholder="Search blogs..."
+                  class="w-64 pl-10 pr-10 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  oninput="searchBlogs(this.value)"
+                />
 
-            <!-- META -->
-            <p class="text-sm text-gray-500 mt-1">
-              By
-              <span class="font-medium text-gray-700"
-                ><%= blog.author?.name || "Unknown" %></span
-              >
-              · <%= new Date(blog.createdAt).toDateString() %>
-            </p>
+                <i
+                  class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"
+                ></i>
 
-            <!-- ACTION ROW -->
-            <div
-              class="flex justify-between items-center border-t border-gray-100 mt-4 pt-4 text-gray-600"
-            >
-              <!-- LEFT: STATS -->
-              <div class="flex gap-6 text-sm">
-                <div class="flex items-center gap-2">
-                  <i class="fa-solid fa-heart text-red-500"></i>
-                  <span><%= blog.likeCount %></span>
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <i class="fa-regular fa-comment"></i>
-                  <span><%= blog.commentCount %></span>
-                </div>
+                <button
+                  id="clearSearchBtn"
+                  onclick="clearSearch()"
+                  class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                >
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
               </div>
-
-              <!-- RIGHT: VIEW -->
-              <a
-                href="/admin/blogs/<%= blog._id %>"
-                class="text-blue-600 text-sm font-medium hover:underline"
-              >
-                View Blog →
-              </a>
             </div>
           </div>
+        </section>
 
-          <% }) %>
-        </div>
-      </main>
+        <!-- Main Content - Categories -->
+        <main class="flex-1 overflow-y-auto px-10 py-6">
+          <div class="max-w-6xl mx-auto" id="blogsContainer">
+            <!-- PAGE HEADING + SEARCH -->
+
+            <% if (blogs.length === 0) { %>
+            <p class="text-center text-gray-500 mt-20 text-sm">
+              No blogs published yet
+            </p>
+            <% } %> <% blogs.forEach(blog => { %>
+            <div
+              class="bg-white rounded-xl border border-gray-200 hover:shadow transition p-6 mb-5"
+            >
+              <!-- TITLE + STATUS -->
+              <div class="flex items-start justify-between">
+                <h3
+                  class="text-lg font-semibold text-gray-900 hover:text-blue-700"
+                >
+                  <%= blog.title %>
+                </h3>
+
+                <% if (blog.isBlocked) { %>
+                <!-- BLOCKED -->
+                <span
+                  class="text-xs px-3 py-1 rounded-full bg-red-100 text-red-700 font-medium"
+                >
+                  Blocked
+                </span>
+                <% } else { %>
+                <!-- PUBLISHED -->
+                <span
+                  class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium"
+                >
+                  Published
+                </span>
+                <% } %>
+              </div>
+
+              <!-- META -->
+              <p class="text-sm text-gray-500 mt-1">
+                By
+                <span class="font-medium text-gray-700"
+                  ><%= blog.author?.name || "Unknown" %></span
+                >
+                · <%= new Date(blog.createdAt).toDateString() %>
+              </p>
+
+              <!-- ACTION ROW -->
+              <div
+                class="flex justify-between items-center border-t border-gray-100 mt-4 pt-4 text-gray-600"
+              >
+                <!-- LEFT: STATS -->
+                <div class="flex gap-6 text-sm">
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-heart text-red-500"></i>
+                    <span><%= blog.likeCount %></span>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <i class="fa-regular fa-comment"></i>
+                    <span><%= blog.commentCount %></span>
+                  </div>
+                </div>
+
+                <!-- RIGHT: VIEW -->
+                <a
+                  href="/admin/blogs/<%= blog._id %>"
+                  class="text-blue-600 text-sm font-medium hover:underline"
+                >
+                  View Blog →
+                </a>
+              </div>
+            </div>
+
+            <% }) %>
+          </div>
+        </main>
+      </div>
     </div>
+    <script>
+      let searchTimeout;
+
+      function searchBlogs(query) {
+        const clearBtn = document.getElementById("clearSearchBtn");
+
+        // Toggle clear button
+        clearBtn.classList.toggle("hidden", !query);
+
+        // Debounce (prevents too many requests)
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(async () => {
+          const res = await fetch(
+            `/admin/blogs/search?q=${encodeURIComponent(query)}`
+          );
+          const data = await res.text();
+
+          // Replace blog list HTML
+          document.getElementById("blogsContainer").innerHTML = data;
+        }, 300);
+      }
+
+      function clearSearch() {
+        document.getElementById("blogSearch").value = "";
+        document.getElementById("clearSearchBtn").classList.add("hidden");
+        searchBlogs("");
+      }
+    </script>
   </body>
 </html>

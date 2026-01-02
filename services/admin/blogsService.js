@@ -51,7 +51,7 @@ export const getBlogs = async (req, res) => {
 export const getBlogDetails = async (req, res) => {
   try {
     const blogId = req.params.id;
-    const admin = req.session.admin; // assuming admin session
+    const admin = req.session.admin; 
 
     const blog = await Blog.findById(blogId).populate("author", "name").lean();
 
@@ -122,4 +122,45 @@ export const deleteCommentAdmin = async (req, res) => {
   }
 };
 
+export const adminBlogSearch = async (req, res) => {
+  try {
+    if (!req.session.admin) return res.status(401).send("");
 
+    const query = req.query.q?.trim();
+    let blogs = [];
+
+    if (query) {
+      blogs = await Blog.aggregate([
+        {
+          $lookup: {
+            from: "users",
+            localField: "author",
+            foreignField: "_id",
+            as: "author",
+          },
+        },
+        { $unwind: "$author" },
+        {
+          $match: {
+            $or: [
+              { title: { $regex: query, $options: "i" } },
+              { content: { $regex: query, $options: "i" } },
+              { "author.name": { $regex: query, $options: "i" } },
+            ],
+          },
+        },
+        { $sort: { createdAt: -1 } },
+      ]);
+    } else {
+      blogs = await Blog.find()
+        .populate("author", "name")
+        .sort({ createdAt: -1 })
+        .lean();
+    }
+
+    return res.render("blogListAdmin", { blogs });
+  } catch (error) {
+    console.error("Search error:", error);
+    return res.status(500).send("");
+  }
+};
