@@ -3,12 +3,13 @@ import sanitizeHtml from "sanitize-html";
 import BlogLike from "../../models/blogLikeSchema.js";
 import BlogComment from "../../models/blogCommentSchema.js";
 import User from "../../models/userSchema.js";
+import Notification from "../../models/blogNotification.js";
 
 export const listBlog = async (req, res) => {
   try {
     const userId = req.session.user?._id;
 
-    const blogs = await Blog.find({isBlocked: false})
+    const blogs = await Blog.find({ isBlocked: false })
       .populate("author", "name")
       .sort({ createdAt: -1 })
       .lean();
@@ -87,13 +88,13 @@ export const singleBlog = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-      const user = await User.findById(userId)
+    const user = await User.findById(userId);
     res.render("blog-details", {
       blog,
       likeCount,
       userLiked,
       comments,
-      user
+      user,
     });
   } catch (error) {
     console.error(error);
@@ -168,6 +169,18 @@ export const toggleBlogLike = async (req, res) => {
       blog: blogId,
       user: userId,
     });
+
+    const blog = await Blog.findById(blogId);
+
+    if (blog.author.toString() !== userId.toString()) {
+      await Notification.create({
+        recipient: blog.author,
+        sender: userId,
+        blog: blogId,
+        type: "like",
+      });
+    }
+
     res.json({ liked: true });
   } catch (error) {
     res.status(500).json({ success: false });
@@ -182,8 +195,9 @@ export const addComment = async (req, res) => {
     if (!userId) {
       return res.status(401).json({ success: false });
     }
-    if (!comment.trim()) {
-      return res.status(401).json({ success: false });
+
+    if (!comment || !comment.trim()) {
+      return res.status(400).json({ success: false });
     }
 
     const newComment = await BlogComment.create({
@@ -191,9 +205,23 @@ export const addComment = async (req, res) => {
       user: userId,
       comment,
     });
+
     await newComment.populate("user", "name");
+
+    const blog = await Blog.findById(blogId);
+
+    if (blog && blog.author.toString() !== userId.toString()) {
+      await Notification.create({
+        recipient: blog.author,
+        sender: userId,
+        blog: blogId,
+        type: "comment",
+      });
+    }
+
     res.json({ success: true, comment: newComment });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false });
   }
 };
@@ -229,10 +257,12 @@ export const getSavedBlog = async (req, res) => {
       })
       .lean();
 
-    const blogs = user.savedBlogs.map((blog) => ({
-      ...blog,
-      isSaved: true,
-    })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const blogs = user.savedBlogs
+      .map((blog) => ({
+        ...blog,
+        isSaved: true,
+      }))
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const users = await User.findById(userId);
     res.render("savedBlogs", {
@@ -404,7 +434,6 @@ export const putEditComment = async (req, res) => {
   }
 };
 
-
 export const searchBlogs = async (req, res) => {
   try {
     const query = req.query.q?.trim();
@@ -415,7 +444,7 @@ export const searchBlogs = async (req, res) => {
       blogs = await Blog.aggregate([
         {
           $lookup: {
-            from: "users", 
+            from: "users",
             localField: "author",
             foreignField: "_id",
             as: "author",
@@ -429,7 +458,7 @@ export const searchBlogs = async (req, res) => {
             $or: [
               { title: { $regex: query, $options: "i" } },
               { content: { $regex: query, $options: "i" } },
-              { "author.name": { $regex: query, $options: "i" } }, 
+              { "author.name": { $regex: query, $options: "i" } },
             ],
           },
         },
@@ -447,5 +476,51 @@ export const searchBlogs = async (req, res) => {
   } catch (error) {
     console.error("Search error:", error);
     res.status(500).send("");
+  }
+};
+
+export const getUnreadNotificationCount = async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+
+    const count = await Notification.countDocuments({
+      recipient: userId,
+      isRead: false,
+    });
+
+    res.json({ count });
+  } catch {
+    res.json({ count: 0 });
+  }
+};
+
+export const getNotifications = async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+
+    const notifications = await Notification.find({
+      recipient: userId,
+      isRead: false, 
+    })
+      .populate("sender", "name")
+      .populate("blog", "title")
+      .sort({ createdAt: -1 })
+      .limit(30);
+
+    res.json(notifications);
+  } catch {
+    res.json([]);
+  }
+};
+
+export const markAllNotificationsRead = async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+
+    await Notification.updateMany({ recipient: userId }, { isRead: true });
+
+    res.json({ success: true });
+  } catch {
+    res.json({ success: false });
   }
 };

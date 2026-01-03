@@ -92,9 +92,16 @@
           </button>
 
           <button
-            class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-blue-100 transition"
+            id="notificationBtn"
+            class="relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-blue-100 transition"
           >
             <i class="fa-regular fa-bell text-blue-600"></i>
+
+            <!-- Count -->
+            <span
+              id="notifCount"
+              class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center"
+            ></span>
           </button>
         </div>
       </div>
@@ -208,6 +215,40 @@
         </div>
         <% }) %>
       </div>
+      <div
+        id="notificationModal"
+        class="hidden absolute right-6 top-[132px] z-50 w-96"
+      >
+        <div
+          class="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden"
+        >
+          <!-- Header -->
+          <div class="flex justify-between items-center px-4 py-3 border-b">
+            <button
+              id="closeNotification"
+              class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+            >
+              <i class="fa-solid fa-arrow-left"></i>
+              Back
+            </button>
+
+            <h3 class="font-semibold text-sm">Notifications</h3>
+
+            <button
+              id="markAllRead"
+              class="text-xs text-blue-600 hover:underline"
+            >
+              ✓ Mark all
+            </button>
+          </div>
+
+          <!-- List -->
+          <div
+            id="notificationList"
+            class="max-h-80 overflow-y-auto divide-y"
+          ></div>
+        </div>
+      </div>
     </main>
 
     <!-- ================= SCRIPT ================= -->
@@ -247,6 +288,83 @@
           console.error("Save failed");
         }
       }
+
+      const notifBtn = document.getElementById("notificationBtn");
+      const notifModal = document.getElementById("notificationModal");
+
+      notifBtn.onclick = async () => {
+        notifModal.classList.toggle("hidden");
+
+        if (notifModal.classList.contains("hidden")) return;
+
+        const res = await fetch("/notifications");
+        const notifications = await res.json();
+
+        const list = document.getElementById("notificationList");
+        list.innerHTML = "";
+
+        if (notifications.length === 0) {
+          list.innerHTML = `<p class="p-6 text-center text-gray-500 text-sm">No notifications</p>`;
+          return;
+        }
+
+        notifications.forEach((n) => {
+          list.innerHTML += `
+      <div class="p-4 flex gap-3 ${n.isRead ? "bg-white" : "bg-blue-50"}">
+        <i class="fa-solid ${
+          n.type === "like"
+            ? "fa-heart text-red-500"
+            : "fa-comment text-blue-500"
+        } mt-1"></i>
+
+        <div class="text-sm">
+          <p>
+            <strong>${n.sender.name}</strong>
+            ${n.type === "like" ? "liked" : "commented on"}
+            <a href="/blogs/${
+              n.blog._id
+            }" class="text-blue-600 hover:underline">
+              ${n.blog.title}
+            </a>
+          </p>
+
+          <p class="text-xs text-gray-400">
+            ${new Date(n.createdAt).toLocaleString()}
+          </p>
+        </div>
+      </div>
+    `;
+        });
+      };
+
+      document.getElementById("closeNotification").onclick = () => {
+        document.getElementById("notificationModal").classList.add("hidden");
+      };
+
+      document.getElementById("markAllRead").onclick = async () => {
+        await fetch("/notifications/mark-all-read", { method: "POST" });
+
+        document.getElementById(
+          "notificationList"
+        ).innerHTML = `<p class="p-6 text-center text-gray-500">All caught up 🎉</p>`;
+
+        document.getElementById("notifCount").classList.add("hidden");
+      };
+
+      async function loadUnreadCount() {
+        const res = await fetch("/notifications/unread-count");
+        const data = await res.json();
+
+        const badge = document.getElementById("notifCount");
+        if (data.count > 0) {
+          badge.textContent = data.count;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+      }
+
+      loadUnreadCount();
     </script>
   </body>
 </html>
