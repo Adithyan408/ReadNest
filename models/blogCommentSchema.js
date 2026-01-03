@@ -21,7 +21,7 @@ const blogCommentSchema = new mongoose.Schema(
       maxLength: 500,
     },
   },
-  { Timestamp: true }
+  { timestamps: true }
 );
 
 const BlogComment = mongoose.model("BlogComment", blogCommentSchema);

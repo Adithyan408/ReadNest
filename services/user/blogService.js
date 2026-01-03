@@ -524,3 +524,60 @@ export const markAllNotificationsRead = async (req, res) => {
     res.json({ success: false });
   }
 };
+
+export const getInsights = async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+
+    const fromDate = new Date();
+    fromDate.setDate(fromDate.getDate() - 30);
+
+    const postsCount = await Blog.countDocuments({
+      author: userId,
+      createdAt: { $gte: fromDate },
+    });
+
+    const userBlogs = await Blog.find(
+      { author: userId },
+      { _id: 1 }
+    ).lean();
+
+    const blogIds = userBlogs.map((b) => b._id);
+
+    const likesReceived = await BlogLike.countDocuments({
+      blog: { $in: blogIds },
+      createdAt: { $gte: fromDate },
+    });
+
+    const commentsReceived = await BlogComment.countDocuments({
+      blog: { $in: blogIds },
+      createdAt: { $gte: fromDate },
+    });
+
+    const likesMade = await BlogLike.countDocuments({
+      user: userId,
+      createdAt: { $gte: fromDate },
+    });
+
+    const commentsMade = await BlogComment.countDocuments({
+      user: userId,
+      createdAt: { $gte: fromDate },
+    });
+
+    const interactions = likesMade + commentsMade;
+    const users = await User.findById(userId)
+    res.render("blogInsights", {
+      likes: likesReceived, 
+      comments: commentsReceived, 
+      posts: postsCount, 
+      interactions, 
+      users
+    })
+  } catch (error) {
+    console.error("Insights error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to load insights",
+    });
+  }
+};

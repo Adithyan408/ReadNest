@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blogs</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+  </head>
+
+  <body class="bg-gray-100">
+    <!-- ================= GLOBAL HEADER ================= -->
+    <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 py-3">
+        <div class="flex items-center justify-between">
+          <!-- Logo -->
+          <div class="flex items-center space-x-2">
+            <div class="w-14 h-14 rounded-full overflow-hidden">
+              <a href="/">
+                <img
+                  src="/images/logo2.png"
+                  class="w-full h-full object-cover"
+                />
+              </a>
+            </div>
+            <a href="/" class="text-xl font-bold text-gray-800">ReadNest</a>
+          </div>
+
+          <!-- Right Menu -->
+          <div class="flex items-center space-x-6">
+            <button
+              onclick="openBlog()"
+              class="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-300 hover:bg-gray-50"
+            >
+              <i class="fas fa-bars text-gray-700"></i>
+              <span class="text-sm font-medium text-gray-700">BLOG</span>
+            </button>
+
+            <a href="/cart" class="flex items-center space-x-1">
+              <i class="fas fa-shopping-cart text-xl text-gray-700"></i>
+              <span class="text-sm text-gray-700">Cart</span>
+            </a>
+
+            <a href="/account" class="flex items-center space-x-2">
+              <i class="fas fa-user-circle text-2xl text-gray-700"></i>
+              <span class="text-sm font-medium text-gray-700"
+                ><%= users.name %></span
+              >
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= PAGE TOOLBAR ================= -->
+    <section
+      class="sticky top-[76px] z-40 bg-white/90 backdrop-blur border-b border-gray-200"
+    >
+      <div
+        class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between"
+      >
+        <!-- Left -->
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-book-open text-blue-600"></i>
+          </div>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-800">Blogs</h2>
+            <p class="text-xs text-gray-500">
+              Read & share thoughts from the community
+            </p>
+          </div>
+        </div>
+
+        <!-- Right -->
+        <div class="flex items-center gap-4">
+          <button
+            onclick="window.location.href='/blog/addBlog'"
+            class="flex items-center gap-2 px-5 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition shadow-sm"
+          >
+            <i class="fa-solid fa-pen"></i>
+            Publish
+          </button>
+
+          <button
+            id="notificationBtn"
+            class="relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-blue-100 transition"
+          >
+            <i class="fa-regular fa-bell text-blue-600"></i>
+
+            <!-- Count -->
+            <span
+              id="notifCount"
+              class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center"
+            ></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= BLOG CONTENT ================= -->
+    <%- include("../../views/partials/user/blogSidebar") %>
+    <main class="ml-60 px-8 py-10 max-w-[calc(100vw-240px)]">
+      <!-- Page Header -->
+      <div class="mb-10 max-w-5xl">
+        <h1 class="text-2xl font-semibold text-gray-800">Insights</h1>
+        <p class="text-sm text-gray-500 mt-1">
+          Your activity & engagement summary (last 30 days)
+        </p>
+      </div>
+
+      <!-- Insights Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl">
+        <!-- Card -->
+        <div
+          class="bg-white rounded-2xl border border-gray-200 p-7 flex items-center gap-6 hover:shadow-md transition"
+        >
+          <div
+            class="w-14 h-14 rounded-xl bg-red-100 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-heart text-red-500 text-2xl"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Likes Received</p>
+            <h2
+              id="likesCount"
+              class="text-3xl font-semibold text-gray-800 mt-1"
+            >
+              <%= likes %>
+            </h2>
+          </div>
+        </div>
+
+        <div
+          class="bg-white rounded-2xl border border-gray-200 p-7 flex items-center gap-6 hover:shadow-md transition"
+        >
+          <div
+            class="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-comment text-blue-600 text-2xl"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Comments Received</p>
+            <h2
+              id="commentsCount"
+              class="text-3xl font-semibold text-gray-800 mt-1"
+            >
+                <%= comments %>
+            </h2>
+          </div>
+        </div>
+
+        <div
+          class="bg-white rounded-2xl border border-gray-200 p-7 flex items-center gap-6 hover:shadow-md transition"
+        >
+          <div
+            class="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-pen text-purple-600 text-2xl"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Posts Published</p>
+            <h2
+              id="postsCount"
+              class="text-3xl font-semibold text-gray-800 mt-1"
+            >
+              <%= posts %>
+            </h2>
+          </div>
+        </div>
+
+        <div
+          class="bg-white rounded-2xl border border-gray-200 p-7 flex items-center gap-6 hover:shadow-md transition"
+        >
+          <div
+            class="w-14 h-14 rounded-xl bg-green-100 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-hand-pointer text-green-600 text-2xl"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Your Interactions</p>
+            <h2
+              id="interactionCount"
+              class="text-3xl font-semibold text-gray-800 mt-1"
+            >
+              <%= interactions %>
+            </h2>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="notificationModal"
+        class="hidden absolute right-6 top-[132px] z-50 w-96"
+      >
+        <div
+          class="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden"
+        >
+          <!-- Header -->
+          <div class="flex justify-between items-center px-4 py-3 border-b">
+            <button
+              id="closeNotification"
+              class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+            >
+              <i class="fa-solid fa-arrow-left"></i>
+              Back
+            </button>
+
+            <h3 class="font-semibold text-sm">Notifications</h3>
+
+            <button
+              id="markAllRead"
+              class="text-xs text-blue-600 hover:underline"
+            >
+              ✓ Mark all
+            </button>
+          </div>
+
+          <!-- List -->
+          <div
+            id="notificationList"
+            class="max-h-80 overflow-y-auto divide-y"
+          ></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ================= SCRIPT ================= -->
+    <script>
+
+      const notifBtn = document.getElementById("notificationBtn");
+      const notifModal = document.getElementById("notificationModal");
+
+      notifBtn.onclick = async () => {
+        notifModal.classList.toggle("hidden");
+
+        if (notifModal.classList.contains("hidden")) return;
+
+        const res = await fetch("/notifications");
+        const notifications = await res.json();
+
+        const list = document.getElementById("notificationList");
+        list.innerHTML = "";
+
+        if (notifications.length === 0) {
+          list.innerHTML = `<p class="p-6 text-center text-gray-500 text-sm">No notifications</p>`;
+          return;
+        }
+
+        notifications.forEach((n) => {
+          list.innerHTML += `
+      <div class="p-4 flex gap-3 ${n.isRead ? "bg-white" : "bg-blue-50"}">
+        <i class="fa-solid ${
+          n.type === "like"
+            ? "fa-heart text-red-500"
+            : "fa-comment text-blue-500"
+        } mt-1"></i>
+
+        <div class="text-sm">
+          <p>
+            <strong>${n.sender.name}</strong>
+            ${n.type === "like" ? "liked" : "commented on"}
+            <a href="/blogs/${
+              n.blog._id
+            }" class="text-blue-600 hover:underline">
+              ${n.blog.title}
+            </a>
+          </p>
+
+          <p class="text-xs text-gray-400">
+            ${new Date(n.createdAt).toLocaleString()}
+          </p>
+        </div>
+      </div>
+    `;
+        });
+      };
+
+      document.getElementById("closeNotification").onclick = () => {
+        document.getElementById("notificationModal").classList.add("hidden");
+      };
+
+      document.getElementById("markAllRead").onclick = async () => {
+        await fetch("/notifications/mark-all-read", { method: "POST" });
+
+        document.getElementById(
+          "notificationList"
+        ).innerHTML = `<p class="p-6 text-center text-gray-500">All caught up 🎉</p>`;
+
+        document.getElementById("notifCount").classList.add("hidden");
+      };
+
+      async function loadUnreadCount() {
+        const res = await fetch("/notifications/unread-count");
+        const data = await res.json();
+
+        const badge = document.getElementById("notifCount");
+        if (data.count > 0) {
+          badge.textContent = data.count;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+      }
+
+      loadUnreadCount();
+    </script>
+  </body>
+</html>

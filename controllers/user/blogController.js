@@ -1,4 +1,4 @@
-import { addComment, blogDelete, commentDelete, createBlog, editBlogGet, editBlogPost, getNotifications, getSavedBlog, getStories, getUnreadNotificationCount, listBlog, loadCreateBlog, markAllNotificationsRead, putEditBlog, putEditComment, searchBlogs, singleBlog, toggelSaveBlog, toggleBlogLike } from "../../services/user/blogService.js"
+import { addComment, blogDelete, commentDelete, createBlog, editBlogGet, editBlogPost, getInsights, getNotifications, getSavedBlog, getStories, getUnreadNotificationCount, listBlog, loadCreateBlog, markAllNotificationsRead, putEditBlog, putEditComment, searchBlogs, singleBlog, toggelSaveBlog, toggleBlogLike } from "../../services/user/blogService.js"
 
 export const blogList = async(req, res) => {
     await listBlog(req, res);
@@ -75,4 +75,8 @@ export const notificationGet = async(req, res) => {
 
 export const readNotification = async(req, res) => {
     await markAllNotificationsRead(req, res);
+}
+
+export const blogInsights = async(req, res) => {
+    await getInsights(req, res);
 }
