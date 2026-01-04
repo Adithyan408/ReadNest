@@ -58,6 +58,7 @@ export const listBlog = async (req, res) => {
     res.render("blog", {
       blogs,
       user,
+      baseUrl: `${req.protocol}://${req.get("host")}`,
     });
   } catch (error) {
     console.error(error);
@@ -89,12 +90,14 @@ export const singleBlog = async (req, res) => {
       .lean();
 
     const user = await User.findById(userId);
+    const blogUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     res.render("blog-details", {
       blog,
       likeCount,
       userLiked,
       comments,
       user,
+      blogUrl
     });
   } catch (error) {
     console.error(error);

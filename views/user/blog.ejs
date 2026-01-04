@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Blogs</title>
+    <meta name="description" content="Read and share blogs from the ReadNest community" />
+    
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -208,10 +210,12 @@
 
               <!-- SHARE -->
               <button
-                class="flex items-center gap-2 hover:text-blue-600 transition text-sm"
+                class="text-gray-600 text-sm hover:text-indigo-600"
+                data-id="<%= blog._id %>"
+                data-title="<%= blog.title %>"
+                onclick="openShareModal(this)"
               >
-                <i class="fa-solid fa-share"></i>
-                Share
+                <i class="fa-solid fa-share-nodes"></i> Share
               </button>
             </div>
           </div>
@@ -252,9 +256,52 @@
           ></div>
         </div>
       </div>
+
+      <div
+        id="shareModal"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
+      >
+        <div class="bg-white rounded-xl w-80 p-6 relative">
+          <h3 class="text-lg font-semibold mb-4 text-center">
+            Share this blog
+          </h3>
+
+          <!-- Social Links -->
+          <div class="flex justify-around text-2xl">
+            <a id="whatsappShare" target="_blank" class="text-green-500">
+              <i class="fab fa-whatsapp"></i>
+            </a>
+
+            <a id="facebookShare" target="_blank" class="text-blue-600">
+              <i class="fab fa-facebook"></i>
+            </a>
+
+            <a id="twitterShare" target="_blank" class="text-sky-500">
+              <i class="fab fa-x-twitter"></i>
+            </a>
+          </div>
+
+          <!-- Copy -->
+          <button
+            onclick="copyLink()"
+            class="mt-4 w-full bg-gray-200 py-2 rounded-lg text-sm"
+          >
+            Copy Link
+          </button>
+
+          <!-- Close -->
+          <button
+            onclick="closeShareModal()"
+            class="absolute top-2 right-3 text-gray-500"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
     </main>
 
     <!-- ================= SCRIPT ================= -->
+
     <script>
       function openBlog() {
         window.location.href = "/blog";
@@ -395,6 +442,47 @@
       }
 
       loadUnreadCount();
+
+      const baseUrl = window.location.origin;
+      let currentShareUrl = "";
+
+      function openShareModal(btn) {
+        const blogId = btn.dataset.id;
+        const title = btn.dataset.title;
+
+        currentShareUrl = `${baseUrl}/blogs/${blogId}`;
+
+        document.getElementById(
+          "whatsappShare"
+        ).href = `https://wa.me/?text=${encodeURIComponent(
+          title + " - " + currentShareUrl
+        )}`;
+
+        document.getElementById(
+          "facebookShare"
+        ).href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+          currentShareUrl
+        )}`;
+
+        document.getElementById(
+          "twitterShare"
+        ).href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+          title
+        )}&url=${encodeURIComponent(currentShareUrl)}`;
+
+        document.getElementById("shareModal").classList.remove("hidden");
+        document.getElementById("shareModal").classList.add("flex");
+      }
+
+      function closeShareModal() {
+        document.getElementById("shareModal").classList.add("hidden");
+        document.getElementById("shareModal").classList.remove("flex");
+      }
+
+      function copyLink() {
+        navigator.clipboard.writeText(currentShareUrl);
+        alert("Blog link copied!");
+      }
     </script>
   </body>
 </html>

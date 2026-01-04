@@ -506,7 +506,6 @@ export const downloadSalesExcel = async (req, res) => {
     const now = new Date();
     let fromDate, toDate;
 
-    // -------- DATE RANGE --------
     switch (filter) {
       case "today":
         fromDate = new Date();
@@ -565,6 +564,7 @@ export const downloadSalesExcel = async (req, res) => {
 
       {
         $project: {
+          orderId: "$orderId",
           username: "$user.name",
           date: "$createdAt",
           product: "$items.productName",
@@ -581,22 +581,23 @@ export const downloadSalesExcel = async (req, res) => {
     const sheet = workbook.addWorksheet("Sales Report");
 
     sheet.columns = [
-      { header: "Order ID", key: "orderId", width: 25 },
+      { header: "User Name", key: "username", width: 25 },
       { header: "Date", key: "date", width: 15 },
       { header: "Product", key: "product", width: 30 },
       { header: "Quantity", key: "quantity", width: 10 },
       { header: "Amount", key: "amount", width: 15 },
     ];
 
-    salesData.forEach((row) => {
-      sheet.addRow({
-        orderId: row.orderId.toString(),
-        date: new Date(row.date).toDateString(),
-        product: row.product,
-        quantity: row.quantity,
-        amount: row.amount,
-      });
-    });
+  salesData.forEach((row) => {
+  sheet.addRow({
+    username: row.username, 
+    date: new Date(row.date).toDateString(),
+    product: row.product,
+    quantity: row.quantity,
+    amount: row.amount,
+  });
+});
+
 
     res.setHeader(
       "Content-Type",
