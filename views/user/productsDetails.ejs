@@ -69,6 +69,8 @@
         height: 400px;
       }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   </head>
   <body class="bg-gray-50">
     <!-- Header -->
@@ -136,37 +138,53 @@
 
           <!-- BUTTONS BLOCK -->
           <% const isOutOfStock = product.stock <= 0; %>
+          <% const isUnlisted =
+            isProductListed === false || isCategoryListed === false; %>
+
+          <% const isDisabled = isOutOfStock || isUnlisted; %>
 
 <div class="flex gap-4 mt-6">
   <!-- ADD TO CART -->
-  <form action="/addcart" method="POST" class="flex-1">
-    <input type="hidden" name="productId" value="<%= product._id %>" />
-
-    <button
-      type="submit"
-      <%= isOutOfStock ? "disabled" : "" %>
-      class="w-full py-3 rounded-lg font-semibold transition duration-200 shadow-md flex items-center justify-center gap-2
-        <%= isOutOfStock
-          ? 'bg-gray-400 cursor-not-allowed'
-          : 'bg-blue-600 hover:bg-blue-700 text-white' %>"
-    >
-      <i class="fa-solid fa-cart-plus"></i>
-      <%= isOutOfStock ? "Out of Stock" : "Add to Cart" %>
-    </button>
-  </form>
+  <button
+    onclick="addToCart(event, '<%= product._id %>')"
+    <%= isDisabled ? "disabled" : "" %>
+    class="flex-1 py-3 rounded-lg font-semibold transition duration-200 shadow-md
+           flex items-center justify-center gap-2 buy-btn
+           <%= isDisabled
+             ? 'bg-gray-400 cursor-not-allowed'
+             : 'bg-blue-600 hover:bg-blue-700 text-white' %>"
+  >
+    <i class="fa-solid fa-cart-plus"></i>
+    <span>
+      <%= isUnlisted
+        ? "Unavailable"
+        : isOutOfStock
+          ? "Out of Stock"
+          : "Add to Cart" %>
+    </span>
+  </button>
 
   <!-- BUY NOW -->
-  <a
-    href="<%= isOutOfStock ? 'javascript:void(0)' : `/buy-now/${product._id}` %>"
-    class="flex-1 py-3 rounded-lg font-semibold text-center transition duration-200 shadow-md flex items-center justify-center gap-2
-      <%= isOutOfStock
-        ? 'bg-gray-400 cursor-not-allowed pointer-events-none'
-        : 'bg-orange-500 hover:bg-orange-600 text-white' %>"
+  <button
+    onclick="buyNow('<%= product._id %>')"
+    <%= isDisabled ? "disabled" : "" %>
+    class="flex-1 py-3 rounded-lg font-semibold transition duration-200 shadow-md
+           flex items-center justify-center gap-2 buy-btn
+           <%= isDisabled
+             ? 'bg-gray-400 cursor-not-allowed'
+             : 'bg-orange-500 hover:bg-orange-600 text-white' %>"
   >
     <i class="fa-solid fa-bolt"></i>
-    <%= isOutOfStock ? "Out of Stock" : "Buy Now" %>
-  </a>
+    <span>
+      <%= isUnlisted
+        ? "Unavailable"
+        : isOutOfStock
+          ? "Out of Stock"
+          : "Buy Now" %>
+    </span>
+  </button>
 </div>
+
 
         </div>
 
@@ -676,6 +694,108 @@
   return true; // ✅ allow submit
 }
 
+const productId = "<%= product._id %>";
+  let productDisabled = false;
+
+  async function checkProductStatus() {
+    try {
+      const res = await fetch(`/api/product/status/${productId}`);
+      const data = await res.json();
+
+      if (
+        data.isProductListed === false ||
+        data.isCategoryListed === false ||
+        data.isOutOfStock
+        ) {
+
+        if (!productDisabled) {
+          productDisabled = true;
+
+          // Disable buttons
+         document.querySelectorAll(".buy-btn").forEach(el => {
+            if (el.tagName === "BUTTON") {
+            el.disabled = true;
+        }
+
+  el.classList.add("cursor-not-allowed", "opacity-60");
+});
+
+          alert("⚠️ This product is no longer available for purchase.");
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  setInterval(checkProductStatus, 5000);
+
+  async function addToCart(event, productId) {
+  event.preventDefault();
+
+  try {
+    const res = await fetch("/addcart", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId })
+    });
+
+    const data = await res.json();
+
+    if (res.status === 401) {
+      return window.location.href = "/login";
+    }
+
+    if (!res.ok) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Unavailable",
+        text: data.message || "Cannot add product"
+      });
+    }
+
+    window.location.href = "/cart";
+
+  } catch (err) {
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Something went wrong"
+    });
+  }
+}
+
+async function buyNow(productId) {
+  try {
+    const res = await fetch("/buy-now/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId })
+    });
+
+    const data = await res.json();
+
+    if (res.status === 401) {
+      return window.location.href = "/login";
+    }
+
+    if (!res.ok) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Unavailable",
+        text: data.message || "Cannot proceed"
+      });
+    }
+
+    window.location.href = `/checkout?buyNow=${productId}`;
+  } catch (err) {
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Something went wrong"
+    });
+  }
+}
     </script>
   </body>
 </html>

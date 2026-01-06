@@ -89,7 +89,6 @@ export const homeLoad = async (req, res) => {
         const regularPrice = p.regularPrice;
         const now = new Date();
 
-        // PRODUCT OFFER
         let productDiscount = 0;
         if (p.offer?.isOffer) {
           const start = p.offer.startDate;
@@ -102,7 +101,6 @@ export const homeLoad = async (req, res) => {
           if (valid) productDiscount = p.offer.discountValue;
         }
 
-        // CATEGORY OFFER (FIXED)
         let categoryDiscount = 0;
 
         const categoryDoc = await Category.findOne({
@@ -120,7 +118,6 @@ export const homeLoad = async (req, res) => {
           if (valid) categoryDiscount = categoryDoc.offer.discountValue;
         }
 
-        // BEST OFFER
         const bestDiscount = Math.max(productDiscount, categoryDiscount);
 
         if (bestDiscount > 0) {
@@ -193,6 +190,32 @@ export const homeLoad = async (req, res) => {
   }
 };
 
+// GET /api/product/status/:id
+export const getProductStatus = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).select(
+      "isListed stock category"
+    );
+
+    if (!product) {
+      return res.status(404).json({ exists: false });
+    }
+
+    const category = await Category.findOne({
+      categoryName: product.category,
+    }).select("isListed");
+
+    res.json({
+      isProductListed: product.isListed,
+      isCategoryListed: category?.isListed ?? false,
+      isOutOfStock: product.stock <= 0,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Status check failed" });
+  }
+};
+
 export const productDetails = async (req, res) => {
   try {
     const productId = req.query.id;
@@ -205,7 +228,7 @@ export const productDetails = async (req, res) => {
 
     let product = await Product.findById(productId);
     if (!product) return res.redirect("/");
-    
+
     const categoryDoc = await Category.findOne({
       categoryName: product.category,
     });
@@ -260,14 +283,12 @@ export const productDetails = async (req, res) => {
       isListed: true,
     }).limit(4);
 
-  
     let similarProducts = await Promise.all(
       similarProductsRaw.map(async (p) => {
         const obj = p.toObject();
         const now = new Date();
         let regularPrice = p.regularPrice;
 
-  
         let productDiscount = 0;
         if (p.offer?.isOffer) {
           const start = p.offer.startDate;
@@ -296,10 +317,8 @@ export const productDetails = async (req, res) => {
           if (valid) categoryDiscount = categoryDoc.offer.discountValue;
         }
 
-      
         const bestDiscount = Math.max(productDiscount, categoryDiscount);
 
-  
         if (bestDiscount > 0) {
           obj.offerPrice = Math.round(
             regularPrice - (regularPrice * bestDiscount) / 100
@@ -323,6 +342,9 @@ export const productDetails = async (req, res) => {
         : [];
     }
 
+    const isProductListed = product.isListed;
+    const isCategoryListed = categoryDoc?.isListed ?? false;
+
     return res.render("productsDetails", {
       product,
       similarProducts,
@@ -330,6 +352,8 @@ export const productDetails = async (req, res) => {
       baseQuery,
       wishlistProducts,
       user: req.session.user,
+      isProductListed, 
+      isCategoryListed
     });
   } catch (error) {
     console.log(error);

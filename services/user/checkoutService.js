@@ -13,38 +13,40 @@ export const getCheckout = async (req, res) => {
     const userData = await User.findById(userId).lean();
 
     let cart = [];
-    
+
     const buyNowId = req.query.buyNow;
 
-    // 🟢 Function to calculate offer price
     const calculateOffer = async (product) => {
       const now = new Date();
       const regularPrice = product.regularPrice;
 
-      let productDiscount = 0;
-      if (product.offer?.isOffer) {
-        const start = product.offer.startDate;
-        const end = product.offer.endDate;
-       
-
-        const valid =
-          (!start || now >= new Date(start)) && (!end || now <= new Date(end));
-
-        if (valid) productDiscount = product.offer.discountValue;
-      }
-
-      let categoryDiscount = 0;
       const categoryDoc = await Category.findOne({
         categoryName: product.category,
       });
 
-      if (categoryDoc?.offer?.isOffer) {
-        const start = categoryDoc.offer.startDate;
-        const end = categoryDoc.offer.endDate;
+      if (
+        product.isListed === false ||
+        categoryDoc?.isListed === false ||
+        product.stock <= 0
+      ) {
+        return { unavailable: true };
+      }
 
+      let productDiscount = 0;
+      if (product.offer?.isOffer) {
+        const { startDate, endDate } = product.offer;
         const valid =
-          (!start || now >= new Date(start)) && (!end || now <= new Date(end));
+          (!startDate || now >= new Date(startDate)) &&
+          (!endDate || now <= new Date(endDate));
+        if (valid) productDiscount = product.offer.discountValue;
+      }
 
+      let categoryDiscount = 0;
+      if (categoryDoc?.offer?.isOffer) {
+        const { startDate, endDate } = categoryDoc.offer;
+        const valid =
+          (!startDate || now >= new Date(startDate)) &&
+          (!endDate || now <= new Date(endDate));
         if (valid) categoryDiscount = categoryDoc.offer.discountValue;
       }
 
@@ -56,6 +58,7 @@ export const getCheckout = async (req, res) => {
           : null;
 
       return {
+        unavailable: false,
         offerPrice,
         bestDiscount,
         finalPrice: offerPrice || regularPrice,
@@ -67,8 +70,13 @@ export const getCheckout = async (req, res) => {
       if (!product) return res.redirect("/notfound");
 
       const qty = req.session.buyNowQuantity || 1;
+      const pricing = await calculateOffer(product);
 
-      const { finalPrice, offerPrice } = await calculateOffer(product);
+      if (pricing.unavailable) {
+        return res.redirect("/?error=product-unavailable");
+      }
+
+      const { finalPrice, offerPrice } = pricing;
 
       req.session.buyNowProductId = buyNowId;
       req.session.buyNowPrice = finalPrice;
@@ -85,36 +93,36 @@ export const getCheckout = async (req, res) => {
           stock: product.stock,
         },
       ];
-    }
-
-    // 🟢 NORMAL CART CHECKOUT
-    else {
+    } else {
       const cartData = await Cart.findOne({ userId })
         .populate("items.productId")
         .lean();
 
       cart = cartData
-        ? await Promise.all(
-            cartData.items.map(async (item) => {
-              const p = item.productId;
-              const { finalPrice, offerPrice } = await calculateOffer(p);
+        ? (
+            await Promise.all(
+              cartData.items.map(async (item) => {
+                const p = item.productId;
+                const pricing = await calculateOffer(p);
 
-              return {
-                _id: p._id,
-                name: p.productName,
-                image: p.productImage[0],
-                quantity: item.quantity,
-                price: finalPrice,
-                regularPrice: p.regularPrice,
-                offerPrice,
-                stock: p.stock,
-              };
-            })
-          )
+                if (pricing.unavailable) return null;
+
+                return {
+                  _id: p._id,
+                  name: p.productName,
+                  image: p.productImage[0],
+                  quantity: item.quantity,
+                  price: pricing.finalPrice,
+                  regularPrice: p.regularPrice,
+                  offerPrice: pricing.offerPrice,
+                  stock: p.stock,
+                };
+              })
+            )
+          ).filter(Boolean)
         : [];
     }
 
-    // 🟢 LOAD ADDRESSES
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
 
@@ -131,8 +139,8 @@ export const getCheckout = async (req, res) => {
           addresses.find((a) => a.addressLabel === "Home") || addresses[0];
       }
     }
-    if(cart.length < 1){
-      return res.redirect("/")
+    if (cart.length < 1) {
+      return res.redirect("/");
     }
     return res.render("checkout", {
       user: userData,
@@ -274,4 +282,53 @@ export const getBuyNow = async (req, res) => {
   req.session.buyNowUnitPrice = product.salePrice || product.regularPrice;
 
   return res.redirect(`/checkout?buyNow=${product._id}`);
+};
+
+export const validateBuyNow = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+    const { productId } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Please login to continue",
+      });
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    const categoryDoc = await Category.findOne({
+      categoryName: product.category,
+    });
+
+    if (
+      product.isListed === false ||
+      categoryDoc?.isListed === false ||
+      product.stock <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "This product is no longer available",
+      });
+    }
+
+   
+    req.session.buyNowProductId = product._id;
+    req.session.buyNowQuantity = 1;
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.log("BuyNow validation error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
 };

@@ -16,6 +16,13 @@ const cartSchema = new mongoose.Schema({
       quantity: { type: Number, default: 1 },
     },
   ],
+   inactiveItems: [
+    {
+      productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+      quantity: Number,
+      reason: String, 
+    },
+  ],
 });
 
 const Cart = mongoose.model("Cart", cartSchema);

@@ -49,7 +49,6 @@ export const WishlistToggle = async (req, res) => {
 export const loadWishlist = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-
     if (!userId) return res.redirect("/login");
 
     const wishlist = await Wishlist.findOne({ userId }).lean();
@@ -63,64 +62,59 @@ export const loadWishlist = async (req, res) => {
 
     const products = await Product.find({
       _id: { $in: wishlist.products },
-      isListed: true,
     }).lean();
-
-    const now = new Date();
 
     const finalWishlist = await Promise.all(
       products.map(async (product) => {
-        const regularPrice = product.regularPrice;
-
-        let productDiscount = 0;
-
-        if (product.offer?.isOffer) {
-          const start = product.offer.startDate;
-          const end = product.offer.endDate;
-
-          const valid =
-            (!start || now >= new Date(start)) &&
-            (!end || now <= new Date(end));
-
-          if (valid) productDiscount = product.offer.discountValue;
-        }
-
-        let categoryDiscount = 0;
-
         const categoryDoc = await Category.findOne({
           categoryName: product.category,
         });
 
-        if (categoryDoc?.offer?.isOffer) {
-          const start = categoryDoc.offer.startDate;
-          const end = categoryDoc.offer.endDate;
+        const isAvailable =
+          product.isListed !== false &&
+          categoryDoc?.isListed !== false &&
+          product.stock > 0;
 
+        const regularPrice = product.regularPrice;
+        const now = new Date();
+
+        let productDiscount = 0;
+        if (product.offer?.isOffer) {
+          const { startDate, endDate } = product.offer;
           const valid =
-            (!start || now >= new Date(start)) &&
-            (!end || now <= new Date(end));
+            (!startDate || now >= new Date(startDate)) &&
+            (!endDate || now <= new Date(endDate));
+          if (valid) productDiscount = product.offer.discountValue;
+        }
 
+        let categoryDiscount = 0;
+        if (categoryDoc?.offer?.isOffer) {
+          const { startDate, endDate } = categoryDoc.offer;
+          const valid =
+            (!startDate || now >= new Date(startDate)) &&
+            (!endDate || now <= new Date(endDate));
           if (valid) categoryDiscount = categoryDoc.offer.discountValue;
         }
 
         const bestDiscount = Math.max(productDiscount, categoryDiscount);
 
-        let offerPrice = null;
-
-        if (bestDiscount > 0) {
-          offerPrice = Math.round(
-            regularPrice - (regularPrice * bestDiscount) / 100
-          );
-        }
+        const offerPrice =
+          bestDiscount > 0
+            ? Math.round(
+                regularPrice - (regularPrice * bestDiscount) / 100
+              )
+            : null;
 
         return {
           _id: product._id,
-          productName: product.productName, // 👈 matches EJS
-          productImage: product.productImage, // 👈 full array for [0]
+          productName: product.productName,
+          productImage: product.productImage,
           regularPrice,
           offerPrice,
           discount: bestDiscount,
           price: offerPrice || regularPrice,
           stock: product.stock,
+          isAvailable,
         };
       })
     );
@@ -135,38 +129,76 @@ export const loadWishlist = async (req, res) => {
   }
 };
 
+
 export const moveSingleToCart = async (req, res) => {
   try {
     const userId = req.session.user?._id;
     const { productId } = req.body;
+
     if (!userId) return res.redirect("/login");
+
     const product = await Product.findById(productId);
-    if (!product) return res.redirect("/wishlist");
+    if (!product) {
+      return res.redirect("/wishlist?error=not-found");
+    }
+
+    const categoryDoc = await Category.findOne({
+      categoryName: product.category,
+    });
+
+    if (
+      product.isListed === false ||
+      categoryDoc?.isListed === false ||
+      product.stock <= 0
+    ) {
+      return res.redirect("/wishlist?error=product-unavailable");
+    }
+
     let cart = await Cart.findOne({ userId });
     if (!cart) {
       cart = new Cart({ userId, items: [] });
     }
+
     const itemExists = cart.items.find(
-      (i) => i.productId.toString() === productId
+      (i) => i.productId.toString() === productId.toString()
     );
+
     if (itemExists) {
       itemExists.quantity += 1;
     } else {
       cart.items.push({ productId, quantity: 1 });
     }
+
     await cart.save();
+    const freshProduct = await Product.findById(productId);
+    const freshCategory = await Category.findOne({
+      categoryName: freshProduct.category,
+    });
+
+    if (
+      freshProduct.isListed === false ||
+      freshCategory?.isListed === false ||
+      freshProduct.stock <= 0
+    ) {
+      // 🔄 Rollback cart insert
+      await Cart.updateOne({ userId }, { $pull: { items: { productId } } });
+
+      return res.redirect("/wishlist?error=product-unavailable");
+    }
+
+    // ✅ Remove from wishlist ONLY NOW
     await Wishlist.updateOne({ userId }, { $pull: { products: productId } });
+
     return res.redirect("/cart");
   } catch (error) {
     console.log("Move single wishlist item error:", error);
-    return res.redirect("/wishlist");
+    return res.redirect("/wishlist?error=server");
   }
 };
 
 export const moveAllToCart = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-
     if (!userId) return res.redirect("/login");
 
     const wishlist = await Wishlist.findOne({ userId }).lean();
@@ -174,13 +206,29 @@ export const moveAllToCart = async (req, res) => {
       return res.redirect("/wishlist");
     }
 
-    let cart = await Cart.findOne({ userId });
+    for (let productId of wishlist.products) {
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.redirect("/wishlist?error=product-unavailable");
+      }
 
-    if (!cart) {
-      cart = new Cart({
-        userId,
-        items: [],
+      const categoryDoc = await Category.findOne({
+        categoryName: product.category,
       });
+
+      if (
+        product.isListed === false ||
+        categoryDoc?.isListed === false ||
+        product.stock <= 0
+      ) {
+        return res.redirect("/wishlist?error=product-unavailable");
+      }
+    }
+
+    // 🟢 STEP 2: Add all items to cart
+    let cart = await Cart.findOne({ userId });
+    if (!cart) {
+      cart = new Cart({ userId, items: [] });
     }
 
     for (let productId of wishlist.products) {
@@ -191,21 +239,38 @@ export const moveAllToCart = async (req, res) => {
       if (itemExists) {
         itemExists.quantity += 1;
       } else {
-        cart.items.push({
-          productId,
-          quantity: 1,
-        });
+        cart.items.push({ productId, quantity: 1 });
       }
     }
 
     await cart.save();
+
+    for (let productId of wishlist.products) {
+      const product = await Product.findById(productId);
+      const categoryDoc = await Category.findOne({
+        categoryName: product.category,
+      });
+
+      if (
+        product.isListed === false ||
+        categoryDoc?.isListed === false ||
+        product.stock <= 0
+      ) {
+        await Cart.updateOne(
+          { userId },
+          { $pull: { items: { productId: { $in: wishlist.products } } } }
+        );
+
+        return res.redirect("/wishlist?error=product-unavailable");
+      }
+    }
 
     await Wishlist.updateOne({ userId }, { $set: { products: [] } });
 
     return res.redirect("/cart");
   } catch (error) {
     console.log("Move all wishlist items error:", error);
-    return res.redirect("/wishlist");
+    return res.redirect("/wishlist?error=server");
   }
 };
 

@@ -37,8 +37,8 @@ import {
 import nocache from "nocache";
 import upload from "../middlewares/multer.js";
 import { addAddress, deleteAddress, getAddress, getSingleAddress, selectedAddressSave, updateAddress } from "../controllers/user/addressController.js";
-import { buyNowUpdate, cartUpdate, getCart, postCart, removeCart } from "../controllers/user/cartController.js";
-import { addAddressNew, addresChoose, loadBuyNow, loadCheckout, postAddress } from "../controllers/user/checkout.js";
+import { buyNowUpdate, cartUpdate, getCart, postCart, removeCart, validateCart } from "../controllers/user/cartController.js";
+import { addAddressNew, addresChoose, buyNowValidation, loadBuyNow, loadCheckout, postAddress } from "../controllers/user/checkout.js";
 
 import { applyCoupon, getPayment, loadFailed, loadPlace, razorpay_order, razorpay_verify, removeCoupon } from "../controllers/user/payment.js";
 
@@ -47,6 +47,7 @@ import { getWishlist, moveAllCart, moveToCart, removeAll, removeItem, toggleWish
 import { createWalletRazorpayOrder, payWithWallet, verifyWalletRazorpayPayment, walletLoad } from "../controllers/user/walletController.js";
 import { blogComment, blogInsights, blogLike, blogList, blogSearch, deleteBlog, deleteComment, editBlog, editComment, getEditBlog, getSingleBlog, loadAddBlog, notificationGet, postCreateBlog, postEditBlog, readNotification, savedBlog, saveToggleBlog, stories, unReadNotification } from "../controllers/user/blogController.js";
 import { userAuth } from "../middlewares/auth.js";
+import { getProductStatus } from "../services/user/productService.js";
 
 export const router = express.Router();
 
@@ -92,6 +93,8 @@ router.post("/addcart", postCart)
 router.get("/remove-from-cart", removeCart)
 router.post("/update-cart-quantity", cartUpdate);
 router.post("/update-buyNow-qty", buyNowUpdate);
+router.post("/buy-now/validate", buyNowValidation);
+router.get("/cart/validate", validateCart)
 
 
 router.get("/checkout", loadCheckout)
@@ -136,6 +139,7 @@ router.post("/pay-with-wallet", payWithWallet);
 router.post("/forgot-verify-otp", forgotVerifyOtp);
 
 router.get("/product", getProductsDetails);
+router.get("/status/:productId", getProductStatus);
 router.get("/live-search", liveSearch);
 
 router.get("/blog", userAuth, blogList);

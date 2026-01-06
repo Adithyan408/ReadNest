@@ -2,6 +2,8 @@ import Product from "../../models/productsSchema.js";
 import Address from "../../models/addressSchema.js";
 import Cart from "../../models/cartSchema.js";
 import Category from "../../models/categorySchema.js";
+import { normalizeCart } from "../../helpers/cartNormal.js";
+
 
 export const loadCart = async (req, res) => {
   try {
@@ -9,22 +11,24 @@ export const loadCart = async (req, res) => {
 
     const cartDoc = await Cart.findOne({ userId }).populate("items.productId");
 
+    if (cartDoc) {
+      await normalizeCart(cartDoc);
+    }
+
     const cart = cartDoc
       ? await Promise.all(
           cartDoc.items.map(async (i) => {
             const product = i.productId;
+
             const now = new Date();
             const regularPrice = product.regularPrice;
 
             let productDiscount = 0;
             if (product.offer?.isOffer) {
-              const start = product.offer.startDate;
-              const end = product.offer.endDate;
-
+              const { startDate, endDate } = product.offer;
               const valid =
-                (!start || now >= new Date(start)) &&
-                (!end || now <= new Date(end));
-
+                (!startDate || now >= new Date(startDate)) &&
+                (!endDate || now <= new Date(endDate));
               if (valid) productDiscount = product.offer.discountValue;
             }
 
@@ -34,31 +38,26 @@ export const loadCart = async (req, res) => {
             });
 
             if (categoryDoc?.offer?.isOffer) {
-              const start = categoryDoc.offer.startDate;
-              const end = categoryDoc.offer.endDate;
-
+              const { startDate, endDate } = categoryDoc.offer;
               const valid =
-                (!start || now >= new Date(start)) &&
-                (!end || now <= new Date(end));
-
+                (!startDate || now >= new Date(startDate)) &&
+                (!endDate || now <= new Date(endDate));
               if (valid) categoryDiscount = categoryDoc.offer.discountValue;
             }
 
             const bestDiscount = Math.max(productDiscount, categoryDiscount);
 
-            let offerPrice =
+            const offerPrice =
               bestDiscount > 0
                 ? Math.round(regularPrice - (regularPrice * bestDiscount) / 100)
                 : null;
 
-            const finalPrice = offerPrice || regularPrice;
-
             return {
               _id: product._id,
               name: product.productName,
-              price: finalPrice,
-              offerPrice: offerPrice,
-              regularPrice: regularPrice,
+              price: offerPrice || regularPrice,
+              offerPrice,
+              regularPrice,
               discount: bestDiscount,
               image: product.productImage[0],
               quantity: i.quantity,
@@ -73,6 +72,7 @@ export const loadCart = async (req, res) => {
     res.render("cart", {
       cart,
       addresses,
+      inactiveCount: cartDoc?.inactiveItems?.length || 0,
       query: req.query,
     });
   } catch (error) {
@@ -87,7 +87,10 @@ export const addcart = async (req, res) => {
     const productId = req.body.productId;
 
     if (!userId) {
-      return res.redirect("/login");
+      return res.status(401).json({
+        success: false,
+        message: "Please login to continue",
+      });
     }
 
     const product = await Product.findById(productId);
@@ -95,12 +98,24 @@ export const addcart = async (req, res) => {
       return res.status(404).send("Product not found");
     }
 
-    if (!product || product.stock <= 0) {
+    const categoryDoc = await Category.findOne({
+      categoryName: product.category,
+    });
+
+    if (product.isListed === false || categoryDoc?.isListed === false) {
+      return res.status(403).json({
+        success: false,
+        message: "Product is no longer available",
+      });
+    }
+
+    if (product.stock <= 0) {
       return res.status(400).json({
         success: false,
         message: "Product is out of stock",
       });
     }
+
     let cart = await Cart.findOne({ userId });
 
     if (!cart) {
@@ -130,8 +145,10 @@ export const addcart = async (req, res) => {
     }
 
     await cart.save();
-
-    return res.redirect("/cart");
+    return res.status(200).json({
+      success: true,
+      message: "Added to cart",
+    });
   } catch (error) {
     console.log("Add to DB cart error:", error);
   }
@@ -162,6 +179,26 @@ export const updateCartQuantity = async (req, res) => {
       return res.json({ success: false, message: "Login required" });
     }
 
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.json({ success: false, message: "Product not found" });
+    }
+
+    const categoryDoc = await Category.findOne({
+      categoryName: product.category,
+    });
+
+    if (
+      product.isListed === false ||
+      categoryDoc?.isListed === false ||
+      product.stock <= 0
+    ) {
+      return res.json({
+        success: false,
+        message: "Product is no longer available",
+      });
+    }
+
     await Cart.updateOne(
       { userId, "items.productId": productId },
       { $set: { "items.$.quantity": quantity } }
@@ -187,11 +224,70 @@ export const updateBuyNowQty = async (req, res) => {
       return res.json({ success: false, message: "Buy Now product mismatch" });
     }
 
+    const product = await Product.findById(productId);
+    const categoryDoc = await Category.findOne({
+      categoryName: product.category,
+    });
+
+    if (
+      product.isListed === false ||
+      categoryDoc?.isListed === false ||
+      product.stock <= 0
+    ) {
+      return res.json({
+        success: false,
+        message: "Product is no longer available",
+      });
+    }
+
     req.session.buyNowQuantity = Number(quantity);
 
     return res.json({ success: true });
   } catch (error) {
     console.log("BuyNow Quantity update error:", error);
     return res.json({ success: false });
+  }
+};
+
+export const validateCartBeforeCheckout = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+    if (!userId) {
+      return res.status(401).json({ message: "Login required" });
+    }
+
+    const cart = await Cart.findOne({ userId }).lean();
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ message: "Cart is empty" });
+    }
+
+    for (const item of cart.items) {
+      const product = await Product.findById(item.productId).lean();
+      if (!product) {
+        return res.status(400).json({
+          message: "One or more products no longer exist",
+        });
+      }
+
+      const category = await Category.findOne({
+        categoryName: product.category,
+      }).lean();
+
+      if (
+        product.isListed === false ||
+        category?.isListed === false ||
+        product.stock <= 0
+      ) {
+        return res.status(400).json({
+          message:
+            "One or more items in your cart are no longer available. Please remove them to continue.",
+        });
+      }
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Cart validation error:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 };

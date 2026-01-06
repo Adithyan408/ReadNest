@@ -81,7 +81,11 @@
                   </h3>
 
                   <div class="mt-1">
-                    <% if (item.offerPrice !== null && item.offerPrice <
+                    <% if (!item.isAvailable) { %>
+                    <span class="text-sm font-semibold text-red-600">
+                      Unavailable
+                    </span>
+                    <% } else if (item.offerPrice !== null && item.offerPrice <
                     item.regularPrice) { %>
 
                     <span class="text-gray-500 line-through text-sm">
@@ -108,17 +112,19 @@
                   <div class="flex items-center gap-4">
                     <!-- BUY NOW BUTTON -->
                     <form action="/wishlist/move-to-cart" method="POST">
-                      <input
-                        type="hidden"
-                        name="productId"
-                        value="<%= item._id %>"
-                      />
-                      <button
-                        class="text-green-600 hover:text-green-800 font-medium"
-                      >
-                        Move to Cart
-                      </button>
-                    </form>
+  <input type="hidden" name="productId" value="<%= item._id %>" />
+
+  <button
+    <%= item.isAvailable ? "" : "disabled" %>
+    class="font-medium
+      <%= item.isAvailable
+        ? 'text-green-600 hover:text-green-800'
+        : 'text-gray-400 cursor-not-allowed' %>"
+  >
+    Move to Cart
+  </button>
+</form>
+
 
                     <!-- REMOVE BUTTON -->
                     <form
@@ -157,7 +163,7 @@
             </h2>
 
             <% let totalItems = wishlist.length; let grandTotal = 0;
-            wishlist.forEach(item => grandTotal += item.regularPrice); %>
+            wishlist.forEach(item => grandTotal += item.price); %>
 
             <div class="space-y-4 mb-6">
               <div class="flex justify-between text-gray-700">
@@ -280,6 +286,33 @@
           if (result.isConfirmed) {
             document.getElementById("move-all-form").submit();
           }
+        });
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const error = params.get("error");
+
+      if (error === "product-unavailable") {
+        Swal.fire({
+          icon: "warning",
+          title: "Unavailable",
+          text: "One or more products are no longer available.",
+        });
+      }
+
+      if (error === "not-found") {
+        Swal.fire({
+          icon: "error",
+          title: "Not Found",
+          text: "Product no longer exists.",
+        });
+      }
+
+      if (error === "server") {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Something went wrong. Please try again.",
         });
       }
     </script>

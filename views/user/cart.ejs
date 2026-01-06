@@ -196,13 +196,13 @@
               </div>
             </div>
 
-            <a href="/checkout"
-              ><button
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold text-lg"
-              >
-                Checkout
-              </button></a
-            >
+            <button
+            onclick="proceedToCheckout()"
+             class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold text-lg"
+>
+  Checkout
+</button>
+
           </div>
         </div>
         <% } %>
@@ -297,6 +297,34 @@
       updateTotals();
     });
 
+    async function proceedToCheckout() {
+  try {
+    const res = await fetch("/cart/validate");
+
+    if (res.status === 401) {
+      return (window.location.href = "/login");
+    }
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Checkout Blocked",
+        text: data.message,
+        confirmButtonColor: "#2563eb",
+      });
+    }
+
+    window.location.href = "/checkout";
+  } catch (err) {
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Something went wrong. Please try again.",
+    });
+  }
+}
 
    
 
