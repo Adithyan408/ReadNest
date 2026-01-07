@@ -34,9 +34,19 @@ export const getOrderDetailsPage = async (req, res) => {
     res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
     const FINAL_STATUSES = ["delivered", "returned", "cancelled"];
 
-    const isInvoiceAvailable = order.items.every((item) =>
-      FINAL_STATUSES.includes(item.status)
-    );
+    if (order.status === "cancelled") {
+      return false;
+    }
+
+    let isInvoiceAvailable = false;
+
+    if (order.paymentMethod === "COD") {
+      isInvoiceAvailable = order.items?.some(
+        (item) => item.status === "delivered"
+      );
+    } else {
+      isInvoiceAvailable = true;
+    }
 
     res.render("orderDetails", {
       order,
@@ -150,17 +160,33 @@ export const downloadInvoice = async (req, res) => {
       });
     }
 
+    if (order.status === "cancelled") {
+      return res.status(403).json({
+        success: false,
+        message: "Invoice not available for cancelled orders",
+      });
+    }
+
     // ---------------- INVOICE ELIGIBILITY ----------------
 
     // At least one item must be delivered
-    const isInvoiceAvailable = order.items.some(
-      (item) => item.status === "delivered"
-    );
+
+    let isInvoiceAvailable = false;
+
+    if (order.paymentMethod === "COD") {
+      // COD → after delivery
+      isInvoiceAvailable = order.items?.some(
+        (item) => item.status === "delivered"
+      );
+    } else {
+      // Razorpay / Wallet → immediately after order
+      isInvoiceAvailable = true;
+    }
 
     if (!isInvoiceAvailable) {
       return res.status(403).json({
         success: false,
-        message: "Invoice is available only for delivered items",
+        message: "Invoice is available only after delivery",
       });
     }
 
@@ -279,15 +305,39 @@ Phone: ${a.phone}`;
     let posY = tableTop + 30;
 
     order.items.forEach((item) => {
-      let statusLabel = "Delivered";
-      let statusColor = "#2e7d32";
+      let statusLabel = "";
+      let statusColor = "#555";
 
-      if (item.status === "cancelled") {
-        statusLabel = "Cancelled";
-        statusColor = "#c62828";
-      } else if (item.status === "returned") {
-        statusLabel = "Returned (Refunded)";
-        statusColor = "#ef6c00";
+      switch (item.status) {
+        case "ordered":
+        case "placed":
+          statusLabel = "Order Placed";
+          statusColor = "#1565c0"; // blue
+          break;
+
+        case "shipped":
+          statusLabel = "Shipped";
+          statusColor = "#6a1b9a"; // purple
+          break;
+
+        case "delivered":
+          statusLabel = "Delivered";
+          statusColor = "#2e7d32"; // green
+          break;
+
+        case "returned":
+          statusLabel = "Returned (Refunded)";
+          statusColor = "#ef6c00"; // orange
+          break;
+
+        case "cancelled":
+          statusLabel = "Cancelled";
+          statusColor = "#c62828"; // red
+          break;
+
+        default:
+          statusLabel = "Processing";
+          statusColor = "#555";
       }
 
       doc

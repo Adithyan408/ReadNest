@@ -290,8 +290,7 @@ export const validateCartBeforeCheckout = async (req, res) => {
         validItems.push(item);
       }
     }
-
-    // 🔄 Update cart to keep only valid items
+ 
     if (unavailableItems.length > 0) {
       await Cart.updateOne({ userId }, { $set: { items: validItems } });
     }

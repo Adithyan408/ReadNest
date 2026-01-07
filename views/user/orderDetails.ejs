@@ -88,22 +88,26 @@
 
         <% if (isInvoiceAvailable) { %>
   <button
-  type="button"
-  onclick="downloadInvoice('<%= order.orderId %>')"
-  class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition w-fit"
->
-  <i class="fa-solid fa-file-invoice"></i>
-  Download Invoice
-</button>
+    type="button"
+    onclick="downloadInvoice('<%= order.orderId %>')"
+    class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg
+           hover:bg-blue-700 transition w-fit cursor-pointer"
+  >
+    <i class="fa-solid fa-file-invoice"></i>
+    Download Invoice
+  </button>
 
 <% } else { %>
   <button
     type="button"
+    disabled
     onclick="showInvoiceInfo()"
-    class="inline-flex items-center gap-2 bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition w-fit"
+    class="inline-flex items-center gap-2 bg-gray-300 text-gray-600 px-4 py-2 rounded-lg
+           cursor-not-allowed w-fit"
+    title="Invoice will be available after delivery/payment"
   >
     <i class="fa-solid fa-file-invoice"></i>
-    Download Invoice
+    Invoice Not Available
   </button>
 <% } %>
 
