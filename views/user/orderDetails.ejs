@@ -51,9 +51,20 @@
         }
       %>
 
-      <span class="px-4 py-2 rounded-lg text-sm font-semibold <%= orderStatusClasses %>">
-        <%= order.status %>
-      </span>
+          <span
+  class="px-4 py-2 rounded-lg text-sm font-semibold <%= orderStatusClasses %>
+         <%= (order.couponCode && order.status !== 'cancelled')
+              ? 'cursor-pointer hover:opacity-80'
+              : 'cursor-default' %>"
+  <% if (order.couponCode && order.status !== "cancelled") { %>
+    onclick="confirmFullOrderCancel('<%= order.orderId %>')"
+    title="Cancel full order"
+  <% } %>
+>
+  <%= order.status %>
+</span>
+
+
     </div>
 
     <div class="grid md:grid-cols-3 gap-6 mt-4">
@@ -216,17 +227,26 @@
         <% if (!item.returnStatus || item.returnStatus === "none") { %>
 
 
-         <% if (item.status === "ordered" || item.status === "shipped") { %>
-
-            <!-- CANCEL -->
-            <button
-              type="button"
-              onclick="confirmCancel('<%= order.orderId %>', '<%= item._id %>')"
-              class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition"
+          <% if (
+            (item.status === "ordered" || item.status === "shipped") &&
+            canCancelIndividually
+            ) { %>
+          <button
+            type="button"
+           onclick="confirmCancel('<%= order.orderId %>', '<%= item._id %>')"
+            class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition"
             >
               Cancel Item
             </button>
           <% } %>
+
+            <% if (!canCancelIndividually) { %>
+              <p class="text-sm text-gray-500">
+                Item cannot be cancelled individually due to coupon conditions.
+                You may cancel the full order instead.
+              </p>
+            <% } %>
+
 
           <% if (item.status === "delivered") { %>
             <!-- RETURN -->
@@ -339,24 +359,119 @@
 }
     // CANCEL ITEM
     function confirmCancel(orderId, itemId) {
-      Swal.fire({
-        title: "Cancel this item?",
-        text: "This action cannot be undone.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-        confirmButtonText: "Yes, cancel it",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          const form = document.createElement("form");
-          form.method = "POST";
-          form.action = `/orders/${orderId}/items/${itemId}/cancel`;
-          document.body.appendChild(form);
-          form.submit();
+  Swal.fire({
+    title: "Cancel this item?",
+    text: "This action cannot be undone.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, cancel it",
+  }).then(async (result) => {
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await fetch(
+        `/orders/${orderId}/items/${itemId}/cancel`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
+      );
+
+      const data = await res.json();
+
+      // ❌ Cannot cancel due to coupon
+      if (!res.ok && data.reason === "COUPON_MIN_BREAK") {
+        return Swal.fire({
+          icon: "info",
+          title: "Cannot cancel item",
+          text: data.message,
+          confirmButtonColor: "#2563eb",
+        });
+      }
+
+      // ❌ Other failure
+      if (!res.ok) {
+        return Swal.fire({
+          icon: "error",
+          title: "Unable to cancel item",
+          text: "Please try again later.",
+        });
+      }
+
+      // ✅ Success
+      Swal.fire({
+        icon: "success",
+        title: "Item cancelled",
+        text: "The item has been cancelled successfully.",
+        timer: 1500,
+        showConfirmButton: false,
+      }).then(() => {
+        window.location.reload();
+      });
+
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Something went wrong",
+        text: "Please try again later.",
       });
     }
+  });
+}
+
+function confirmFullOrderCancel(orderId) {
+  Swal.fire({
+    title: "Cancel entire order?",
+    text: "Items cannot be cancelled individually due to coupon conditions. Cancelling the full order will cancel all remaining items.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, cancel full order",
+  }).then(async (result) => {
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await fetch(`/orders/${orderId}/cancel`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return Swal.fire({
+          icon: "error",
+          title: "Cannot cancel order",
+          text: data.message || "Please try again later.",
+        });
+      }
+
+      Swal.fire({
+        icon: "success",
+        title: "Order cancelled",
+        text: "Your order has been cancelled successfully.",
+        timer: 1500,
+        showConfirmButton: false,
+      }).then(() => {
+        window.location.reload();
+      });
+
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Something went wrong",
+        text: "Please try again later.",
+      });
+    }
+  });
+}
 
     // RETURN ITEM WITH REASON
     function confirmReturn(orderId, itemId) {

@@ -1,5 +1,6 @@
 import Order from "../../models/orderSchema.js";
 import Product from "../../models/productsSchema.js";
+import Coupon from "../../models/couponSchema.js";
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
@@ -19,59 +20,143 @@ export const getOrderDetailsPage = async (req, res) => {
 
     if (!order) return res.render("notFound");
 
-    order.items = order.items.map((item) => {
-      const canCancel =
-        item.status === "processing" || item.status === "ordered";
-
-      const canReturn = item.status === "delivered";
-
-      return {
-        ...item,
-        canCancel,
-        canReturn,
-      };
-    });
+    order.items = order.items.map((item) => ({
+      ...item,
+      canCancel: item.status === "ordered" || item.status === "shipped",
+      canReturn: item.status === "delivered",
+    }));
 
     res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
-    const FINAL_STATUSES = ["delivered", "returned", "cancelled"];
-
-    if (order.status === "cancelled") {
-      return false;
-    }
 
     let isInvoiceAvailable = false;
 
     if (order.paymentMethod === "COD") {
-      isInvoiceAvailable = order.items?.some(
+      isInvoiceAvailable = order.items.some(
         (item) => item.status === "delivered"
       );
     } else {
       isInvoiceAvailable = true;
     }
 
-    res.render("orderDetails", {
+    let canCancelIndividually = true;
+
+    if (order.couponCode) {
+      const coupon = await Coupon.findOne({
+        code: order.couponCode,
+      });
+
+      if (coupon) {
+        const activeSubtotal = order.items
+          .filter((i) => !["cancelled", "returned"].includes(i.status))
+          .reduce((sum, i) => sum + i.finalAmount, 0);
+
+        if (activeSubtotal < coupon.minPurchase) {
+          canCancelIndividually = false;
+        }
+      }
+    }
+
+    return res.render("orderDetails", {
       order,
       selectedAddress: order.address,
       isInvoiceAvailable,
+      canCancelIndividually,
     });
   } catch (err) {
-    res.render("notFound");
+    console.error("Order Details Error:", err);
+    return res.render("notFound");
   }
+};
+
+const calculateDiscount = (amount, coupon) => {
+  if (!coupon) return 0;
+
+  if (amount < coupon.minPurchase) return 0;
+
+  let discountAmount = Math.floor((amount * coupon.discount) / 100);
+
+  if (coupon.maxDiscount !== null && discountAmount > coupon.maxDiscount) {
+    discountAmount = coupon.maxDiscount;
+  }
+
+  return discountAmount;
 };
 
 export const cancelOrderItem = async (req, res) => {
   try {
+    const safeNumber = (val) => {
+      const num = Number(val);
+      return Number.isFinite(num) ? num : 0;
+    };
+
     const { orderId, itemId } = req.params;
 
     const order = await Order.findOne({ orderId });
-    if (!order) return res.render("notFound");
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
 
     const item = order.items.id(itemId);
-    if (!item) return res.render("notFound");
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Item not found",
+      });
+    }
 
     if (!["ordered", "shipped"].includes(item.status)) {
-      return res.render("notFound");
+      return res.status(400).json({
+        success: false,
+        message: "Item cannot be cancelled at this stage",
+      });
     }
+
+    const activeItems = order.items.filter(
+      (i) => !["cancelled", "returned"].includes(i.status)
+    );
+
+    const subtotalBefore = activeItems.reduce(
+      (sum, i) => sum + safeNumber(i.finalAmount || i.subtotal),
+      0
+    );
+
+    const itemAmount = safeNumber(item.finalAmount || item.subtotal);
+    const subtotalAfter = subtotalBefore - itemAmount;
+
+    if (order.couponCode) {
+      const coupon = await Coupon.findOne({ code: order.couponCode });
+
+      if (
+        coupon &&
+        subtotalAfter < coupon.minPurchase &&
+        activeItems.length > 1
+      ) {
+        return res.status(400).json({
+          success: false,
+          reason: "COUPON_MIN_BREAK",
+          message:
+            "This item cannot be cancelled individually due to coupon conditions. Please cancel the full order.",
+        });
+      }
+    }
+
+    const discountBefore = safeNumber(order.discount);
+    let discountAfter = discountBefore;
+
+    if (order.couponCode) {
+      const coupon = await Coupon.findOne({ code: order.couponCode });
+      if (coupon) {
+        discountAfter = calculateDiscount(subtotalAfter, coupon);
+      }
+    }
+
+    const discountDifference = Math.max(
+      discountBefore - safeNumber(discountAfter),
+      0
+    );
 
     await Product.updateOne(
       { _id: item.product },
@@ -81,44 +166,131 @@ export const cancelOrderItem = async (req, res) => {
     item.status = "cancelled";
     item.cancelledAt = new Date();
 
-    let refundAmount = item.finalAmount;
-    let note = "Refund for cancelled item";
-
-    const activeItems = order.items.filter(
-      (i) => !["cancelled", "returned"].includes(i.status)
-    );
-
-    const anyDelivered = order.items.some((i) => i.status === "delivered");
-
-    if (activeItems.length === 0 && !anyDelivered) {
-      refundAmount += Number(order.shippingCharge || 0);
-      note += " + shipping refunded";
-    }
-
+    let refundAmount = Math.max(itemAmount - discountDifference, 0);
     item.refundAmount = refundAmount;
 
+    order.discount = safeNumber(discountAfter);
+    order.payableAmount = safeNumber(order.payableAmount) - refundAmount;
+
+    const remainingItems = activeItems.filter(
+      (i) => i._id.toString() !== itemId
+    );
+
     order.status =
-      activeItems.length === 0 ? "cancelled" : "partially_cancelled";
+      remainingItems.length === 0 ? "cancelled" : "partially_cancelled";
 
     await order.save();
 
+    /* -------- WALLET REFUND -------- */
     if (["Razorpay", "WALLET"].includes(order.paymentMethod)) {
       await creditWallet({
         userId: order.user,
         amount: refundAmount,
-        note,
+        note: "Refund after item cancellation (coupon adjusted)",
         orderId: order.orderId,
         paymentId: order.paymentId || null,
         source: "cancel_refund",
       });
     }
 
-    return res.redirect(`/orders/${orderId}`);
+    return res.status(200).json({
+      success: true,
+      message: "Item cancelled successfully",
+    });
   } catch (err) {
-    console.log("Cancel Order Error:", err);
-    return res.render("notFound");
+    console.error("Cancel Order Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
+
+export const cancelFullOrder = async (req, res) => {
+  try {
+    const safeNumber = (val) => {
+      const num = Number(val);
+      return Number.isFinite(num) ? num : 0;
+    };
+
+    const { orderId } = req.params;
+
+    const order = await Order.findOne({ orderId });
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (order.status === "cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: "Order is already cancelled",
+      });
+    }
+
+    if (!order.couponCode) {
+      return res.status(403).json({
+        success: false,
+        message: "Full order cancellation is allowed only for coupon orders",
+      });
+    }
+
+
+    let refundAmount = safeNumber(
+      order.payableAmount ?? order.finalPayable
+    );
+
+    for (const item of order.items) {
+      if (!["cancelled", "returned"].includes(item.status)) {
+        item.status = "cancelled";
+        item.cancelledAt = new Date();
+
+        const itemAmount = safeNumber(
+          item.finalAmount || item.subtotal
+        );
+        item.refundAmount = itemAmount;
+
+        await Product.updateOne(
+          { _id: item.product },
+          { $inc: { stock: item.quantity } }
+        );
+      }
+    }
+
+    order.discount = 0;
+    order.payableAmount = 0;
+    order.status = "cancelled";
+
+    await order.save();
+
+
+    if (["Razorpay", "WALLET"].includes(order.paymentMethod)) {
+      await creditWallet({
+        userId: order.user,
+        amount: refundAmount,
+        note: "Full order cancellation refund",
+        orderId: order.orderId,
+        paymentId: order.paymentId || null,
+        source: "full_order_cancel",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+    });
+  } catch (err) {
+    console.error("Full Order Cancel Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
 
 export const returnOrderItem = async (req, res) => {
   try {
@@ -168,19 +340,16 @@ export const downloadInvoice = async (req, res) => {
       });
     }
 
-    // ---------------- INVOICE ELIGIBILITY ----------------
 
-    // At least one item must be delivered
 
     let isInvoiceAvailable = false;
 
     if (order.paymentMethod === "COD") {
-      // COD → after delivery
+  
       isInvoiceAvailable = order.items?.some(
         (item) => item.status === "delivered"
       );
     } else {
-      // Razorpay / Wallet → immediately after order
       isInvoiceAvailable = true;
     }
 
@@ -191,7 +360,6 @@ export const downloadInvoice = async (req, res) => {
       });
     }
 
-    // ✅ If eligible → continue invoice generation below
 
     // ---------------- PDF SETUP ----------------
     const invoiceName = `invoice-${orderId}.pdf`;

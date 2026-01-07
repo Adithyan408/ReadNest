@@ -42,7 +42,7 @@ import { addAddressNew, addresChoose, buyNowValidation, loadBuyNow, loadCheckout
 
 import { applyCoupon, getPayment, loadFailed, loadPlace, razorpay_order, razorpay_verify, removeCoupon } from "../controllers/user/payment.js";
 
-import { cancelOrder, invoicedownload, listOrders, loadOrderDetails,  returnOrder } from "../controllers/user/orderController.js";
+import { cancelOrder, fullOrderCancel, invoicedownload, listOrders, loadOrderDetails,  returnOrder } from "../controllers/user/orderController.js";
 import { getWishlist, moveAllCart, moveToCart, removeAll, removeItem, toggleWishlist } from "../controllers/user/wishlistController.js";
 import { createWalletRazorpayOrder, payWithWallet, verifyWalletRazorpayPayment, walletLoad } from "../controllers/user/walletController.js";
 import { blogComment, blogInsights, blogLike, blogList, blogSearch, deleteBlog, deleteComment, editBlog, editComment, getEditBlog, getSingleBlog, loadAddBlog, notificationGet, postCreateBlog, postEditBlog, readNotification, savedBlog, saveToggleBlog, stories, unReadNotification } from "../controllers/user/blogController.js";
@@ -122,6 +122,7 @@ router.get("/orders",  listOrders);
 
 router.post("/orders/:orderId/items/:itemId/cancel", nocache(), cancelOrder);
 router.post("/orders/:orderId/items/:itemId/return",returnOrder);
+router.post("/orders/:orderId/cancel", fullOrderCancel);
 
 router.get("/forgot-password", getForgotPassword);
 router.post("/forgot-password", forgotEmailValid);
