@@ -1,3 +1,4 @@
+import { ERROR_MESSAGES } from "../../helpers/errorMessages.js";
 import Banner from "../../models/bannerSchema.js";
 
 export const loadBanner = async (req, res) => {
@@ -114,7 +115,7 @@ export const postEditBanner = async (req, res) => {
     if (updateBanner) {
       res.redirect("/admin/banner?status=updated");
     } else {
-      res.json({ message: "Something went wrong when editing" });
+      res.json({ message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR });
     }
   } catch (error) {
     res.redirect("/pageerror");

@@ -17,6 +17,7 @@ import {
 } from "../../helpers/paymentCache.js";
 import { normalizeCoupons } from "../../helpers/couponNormal.js";
 import { generateOrderId } from "../../middlewares/orderId.js";
+import { ERROR_MESSAGES } from "../../helpers/errorMessages.js";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZO_API_KEY,
@@ -283,7 +284,7 @@ export const postCoupon = async (req, res) => {
     const userId = req.session.user?._id;
 
     if (!userId) {
-      return res.json({ success: false, message: "Unauthorized" });
+      return res.json({ success: false, message: ERROR_MESSAGES.AUTH.UNAUTHORIZED });
     }
 
     const cached = await getPaymentState(userId);
@@ -359,7 +360,7 @@ export const postCoupon = async (req, res) => {
     });
   } catch (error) {
     console.error("Apply Coupon Error:", error);
-    return res.json({ success: false, message: "Server error" });
+    return res.json({ success: false, message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR });
   }
 };
 
@@ -613,7 +614,7 @@ export const createRazorpayOrder = async (req, res) => {
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized",
+        message: ERROR_MESSAGES.AUTH.UNAUTHORIZED,
       });
     }
 

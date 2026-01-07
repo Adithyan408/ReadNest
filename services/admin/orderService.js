@@ -4,6 +4,7 @@ import {
   creditWallet,
   calculateRefundAmount,
 } from "../../middlewares/walletHandler.js";
+import { ERROR_MESSAGES } from "../../helpers/errorMessages.js";
 
 export const loadOrders = async (req, res) => {
   try {
@@ -122,7 +123,7 @@ export const updateOrderStatus = async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.log("Order Status Update Error:", error);
-    res.json({ success: false, message: "Server error" });
+    res.json({ success: false, message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR });
   }
 };
 
@@ -133,7 +134,7 @@ export const updateItemStatus = async (req, res) => {
 
     const order = await Order.findOne({ orderId });
     if (!order) {
-      return res.json({ success: false, message: "Order not found" });
+      return res.json({ success: false, message: ERROR_MESSAGES.ORDER.NOT_FOUND });
     }
 
     const item = order.items.id(itemId);
@@ -192,7 +193,7 @@ export const updateItemStatus = async (req, res) => {
     return res.json({ success: true });
   } catch (err) {
     console.log("Update item status error:", err);
-    return res.json({ success: false, message: "Server error" });
+    return res.json({ success: false, message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR });
   }
 };
 
@@ -204,7 +205,7 @@ export const approveReturn = async (req, res) => {
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: "Order not found",
+        message: ERROR_MESSAGES.ORDER.NOT_FOUND,
       });
     }
 
@@ -274,7 +275,7 @@ export const rejectReturn = async (req, res) => {
     const { note } = req.body;
 
     const order = await Order.findOne({ orderId });
-    if (!order) return res.json({ success: false, message: "Order not found" });
+    if (!order) return res.json({ success: false, message: ERROR_MESSAGES.ORDER.NOT_FOUND });
 
     const item = order.items.id(itemId);
     if (!item) return res.json({ success: false, message: "Item not found" });
@@ -294,6 +295,6 @@ export const rejectReturn = async (req, res) => {
     res.json({ success: true, message: "Return rejected" });
   } catch (err) {
     console.log("Reject Return Error:", err);
-    res.json({ success: false, message: "Server error" });
+    res.json({ success: false, message: ERROR_MESSAGES.SERVER.NOT_FOUND });
   }
 };

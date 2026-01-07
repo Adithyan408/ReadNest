@@ -1,3 +1,4 @@
+import { ERROR_MESSAGES } from "../../helpers/errorMessages.js";
 import Category from "../../models/categorySchema.js";
 
 export const categoryLoad = async (req, res) => {
@@ -184,7 +185,7 @@ export const postEditCategory = async (req, res) => {
     if (updatedCategory) {
       return res.redirect("/admin/category?status=updated");
     } else {
-      return res.json({ message: "Something went wrong when editing" });
+      return res.json({ message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR });
     }
   } catch (error) {
     console.error(error);

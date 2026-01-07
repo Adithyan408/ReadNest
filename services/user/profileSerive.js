@@ -10,6 +10,7 @@ import {
   securePassword,
   sendVerificationEmail,
 } from "../../helpers/verify.js";
+import { ERROR_MESSAGES } from "../../helpers/errorMessages.js";
 
 
 export const forgotPassword = async(req, res) => {
@@ -304,7 +305,7 @@ export const passwordChange = async (req, res) => {
 
     return res.json({ success: true });
   } catch (error) {
-    return res.json({ success: false, message: "Server Error" });
+    return res.json({ success: false, message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR });
   }
 };
 
@@ -314,7 +315,7 @@ export const profileImage = async (req, res) => {
 
     if (!userId) {
       req.session.status = "error";
-      req.session.message = "User session expired. Please log in again.";
+      req.session.message = ERROR_MESSAGES.AUTH.SESSION_EXPIRED;
       return res.redirect("/account");
     }
 

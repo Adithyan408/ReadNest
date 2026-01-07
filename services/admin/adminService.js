@@ -3,6 +3,7 @@ import Order from "../../models/orderSchema.js";
 import PDFDocument from "pdfkit";
 import bcrypt from "bcrypt";
 import ExcelJS from "exceljs";
+import { ERROR_MESSAGES } from "../../helpers/errorMessages.js";
 
 export const pageError = async (req, res) => {
   res.render("admin-error");
@@ -22,14 +23,14 @@ export const postLogin = async (req, res) => {
     const admin = await User.findOne({ email, isAdmin: true });
 
     if (!admin) {
-      return res.render("admin-login", { message: "Admin not found" });
+      return res.render("admin-login", { message: ERROR_MESSAGES.AUTH.ADMIN_NOT_FOUND });
     }
 
     const passwordMatch = await bcrypt.compare(password, admin.password);
     if (!passwordMatch) {
       return res.status(401).json({
         success: false,
-        message: "Invalid email or password",
+        message: ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS ,
       });
     }
 
@@ -50,7 +51,6 @@ export const getDashboard = async (req, res) => {
 
     const { filter, start, end } = req.query;
 
-    /* -------------------- DATE RANGE -------------------- */
     const now = new Date();
     let fromDate, toDate;
 
@@ -89,7 +89,6 @@ export const getDashboard = async (req, res) => {
         toDate = new Date();
     }
 
-    /* -------------------- COMMON SALES CONDITION -------------------- */
     const salesMatch = {
       $or: [
         { paymentMethod: "COD", "items.status": "delivered" },
@@ -97,7 +96,7 @@ export const getDashboard = async (req, res) => {
       ],
     };
 
-    /* -------------------- BASIC STATS -------------------- */
+
     const totalCustomers = await User.countDocuments({ isBlocked: false });
 
     const completedOrdersAgg = await Order.aggregate([
@@ -115,7 +114,6 @@ export const getDashboard = async (req, res) => {
     
     const completedOrdersCount = completedOrdersAgg[0]?.count || 0;
 
-    /* -------------------- LIFETIME SALES -------------------- */
     const lifetimeAgg = await Order.aggregate([
       { $match: { createdAt: { $lte: toDate } } },
       { $unwind: "$items" },

@@ -7,6 +7,7 @@ import {
   creditWallet,
   calculateRefundAmount,
 } from "../../middlewares/walletHandler.js";
+import { ERROR_MESSAGES } from "../../helpers/errorMessages.js";
 
 export const getOrderDetailsPage = async (req, res) => {
   try {
@@ -156,7 +157,7 @@ export const downloadInvoice = async (req, res) => {
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: "Order not found",
+        message: ERROR_MESSAGES.ORDER.NOT_FOUND,
       });
     }
 
