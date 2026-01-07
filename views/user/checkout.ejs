@@ -832,22 +832,67 @@
             }
           });
       }
-      function proceedToPayment(isBuyNow, productId = null) {
-        if (ALL_ADDRESSES.length === 0) {
-          Swal.fire({
-            icon: "warning",
-            title: "No Address Found",
-            text: "Please add a delivery address before proceeding to payment.",
-          });
-          return;
-        }
 
-        if (isBuyNow && productId) {
-          window.location.href = `/checkout/payment?buyNow=${productId}`;
-        } else {
-          window.location.href = "/checkout/payment";
-        }
-      }
+      
+      async function proceedToPayment(isBuyNow, productId = null) {
+  // 1️⃣ Address validation
+  if (ALL_ADDRESSES.length === 0) {
+    Swal.fire({
+      icon: "warning",
+      title: "No Address Found",
+      text: "Please add a delivery address before proceeding to payment.",
+      confirmButtonColor: "#2563eb",
+    });
+    return;
+  }
+
+  try {
+    // 2️⃣ Validate cart with backend
+    const res = await fetch("/cart/validate");
+    const data = await res.json();
+
+    // ❌ Hard stop if backend blocks checkout
+    if (!res.ok) {
+      Swal.fire({
+        icon: "warning",
+        title: "Checkout blocked",
+        text: data.message || "Unable to proceed",
+        confirmButtonColor: "#2563eb",
+      });
+      return;
+    }
+
+    // ⚠️ Items were removed → INFORM + REFRESH
+    if (data.removedCount > 0) {
+      Swal.fire({
+        icon: "info",
+        title: "Items removed from cart",
+        text: `${data.removedCount} item(s) were unavailable and removed from your cart.`,
+        confirmButtonColor: "#2563eb",
+      }).then(() => {
+        window.location.reload(); // 🔄 STOP here
+      });
+      return; // ⛔ VERY IMPORTANT
+    }
+
+    // ✅ All good → proceed
+    if (isBuyNow && productId) {
+      window.location.href = `/checkout/payment?buyNow=${productId}`;
+    } else {
+      window.location.href = "/checkout/payment";
+    }
+  } catch (error) {
+    console.error("Checkout validation error:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Something went wrong",
+      text: "Unable to proceed to payment. Please try again.",
+      confirmButtonColor: "#2563eb",
+    });
+  }
+}
+
+
     </script>
   </body>
 </html>

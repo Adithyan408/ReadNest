@@ -74,48 +74,41 @@
 
           <!-- ORDER SUMMARY -->
           <div class="bg-white p-6 rounded-lg shadow">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Order Summary</h2>
+  <h2 class="text-xl font-bold text-gray-800 mb-4">Order Summary</h2>
 
-            <% if (isBuyNow && cart.length === 1) { %>
+  <!-- PRODUCT LIST -->
+  <div class="space-y-4">
 
-            <!-- BUY NOW -->
-            <p class="text-gray-700 font-medium">
-              Product:
-              <span class="font-bold"><%= cart[0].name %></span>
-            </p>
+    <% cart.forEach(item => { %>
+      <div class="flex justify-between items-start border-b pb-3">
+        <div>
+          <p class="text-gray-800 font-medium">
+            <%= item.name %>
+            <span class="text-gray-500 font-normal">
+              × <%= item.quantity %>
+            </span>
+          </p>
 
-            <p class="text-gray-700 font-medium mt-2">
-              Quantity: <span class="font-bold"><%= cart[0].quantity %></span>
-            </p>
+          <p class="text-sm text-gray-500 mt-1">
+            ₹ <%= item.price %> each
+          </p>
+        </div>
 
-            <p class="text-gray-700 font-medium mt-2">
-              Price:
-              <span class="font-bold" id="singlePrice"
-                >₹ <%= cart[0].price * cart[0].quantity %></span
-              >
-            </p>
+        <p class="text-gray-800 font-semibold">
+          ₹ <%= item.price * item.quantity %>
+        </p>
+      </div>
+    <% }) %>
 
-            <p class="text-gray-700 font-medium mt-2">
-              Total Amount:
-              <span class="font-bold">₹ <%= totalAmount %></span>
-            </p>
+  </div>
 
-            <% } else { %>
+  <!-- TOTAL -->
+  <div class="flex justify-between items-center mt-6 text-lg font-bold text-gray-800">
+    <span>Total Amount</span>
+    <span>₹ <%= totalAmount %></span>
+  </div>
+</div>
 
-            <!-- NORMAL CART -->
-            <p class="text-gray-700 font-medium">
-              Total Products:
-              <span class="font-bold"><%= cart.length %></span>
-            </p>
-
-            <p class="text-gray-700 font-medium mt-2">
-              Total Amount:
-              <span class="font-bold" id="singleTotal"
-                >₹ <%= totalAmount %></span
-              >
-            </p>
-            <% } %>
-          </div>
         </div>
 
         <!-- RIGHT SIDE: PAYMENT + COUPON SECTION -->
@@ -393,10 +386,60 @@
   /* =====================================================
      PROCESS PAYMENT
   ===================================================== */
-  async function processPayment() {
-    if (paymentInProgress) return;
-    paymentInProgress = true;
+ async function processPayment() {
+  if (paymentInProgress) return;
+  paymentInProgress = true;
 
+  try {
+    /* ===============================
+       1️⃣ AVAILABILITY VALIDATION
+    =============================== */
+    const validationRes = await fetch("/cart/validate");
+    const validationData = await validationRes.json();
+
+    if (!validationRes.ok) {
+      paymentInProgress = false;
+      Swal.fire("Error", validationData.message || "Validation failed", "error");
+      return;
+    }
+
+    if (
+      validationData.unavailableItems &&
+      validationData.unavailableItems.length > 0
+    ) {
+      const listHtml = validationData.unavailableItems
+        .map(
+          (item) => `• <b>${item.name}</b> (${item.reason})`
+        )
+        .join("<br>");
+
+      Swal.fire({
+        icon: "warning",
+        title: "Some items are unavailable",
+        html: `
+          <p>The following items cannot be purchased:</p>
+          <div style="text-align:left;margin-top:8px">${listHtml}</div>
+          <p style="margin-top:12px">
+            Do you want to continue with the remaining items?
+          </p>
+        `,
+        showCancelButton: true,
+        confirmButtonText: "Yes, continue",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#2563eb",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.reload(); // 🔄 cart is already fixed server-side
+        }
+      });
+
+      paymentInProgress = false;
+      return;
+    }
+
+    /* ===============================
+       2️⃣ PAYMENT METHOD VALIDATION
+    =============================== */
     const method = document.getElementById("paymentMethod").value;
 
     if (!method) {
@@ -407,110 +450,119 @@
 
     if (!couponValid) {
       paymentInProgress = false;
-      Swal.fire("Coupon Error", "Cannot continue due to invalid coupon", "error");
+      Swal.fire(
+        "Coupon Error",
+        "Cannot continue due to invalid coupon",
+        "error"
+      );
       return;
     }
 
-    /* SAVE METHOD TO REDIS (ONCE) */
+    /* ===============================
+       3️⃣ SAVE PAYMENT METHOD
+    =============================== */
     await fetch("/save-payment-method", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ method }),
     });
 
-    /* COD */
+    /* ===============================
+       4️⃣ COD
+    =============================== */
     if (method === "COD") {
-        const total = Number(
-      document.getElementById("totalAmount").textContent.replace("₹", "").trim()
+      const total = Number(
+        document.getElementById("totalAmount").textContent.replace("₹", "").trim()
       );
 
       if (total > 1000) {
         paymentInProgress = false;
         Swal.fire(
-      "COD Not Available",
-      "Cash on Delivery is not allowed for orders above ₹1000",
-      "warning"
-          );
-      return;
-     }
+          "COD Not Available",
+          "Cash on Delivery is not allowed for orders above ₹1000",
+          "warning"
+        );
+        return;
+      }
+
       window.location.href = "/place-order?payment=COD";
       return;
     }
 
-    /* WALLET */
+    /* ===============================
+       5️⃣ WALLET
+    =============================== */
     if (method === "WALLET") {
-      try {
-        const res = await fetch("/pay-with-wallet", { method: "POST" });
-        const data = await res.json();
+      const res = await fetch("/pay-with-wallet", { method: "POST" });
+      const data = await res.json();
 
-        if (!data.success) {
-          paymentInProgress = false;
-          return Swal.fire("Wallet Error", data.message, "error");
-        }
-
-        window.location.href = "/place-order?payment=WALLET";
-      } catch {
+      if (!data.success) {
         paymentInProgress = false;
-        Swal.fire("Error", "Wallet payment failed", "error");
+        Swal.fire("Wallet Error", data.message, "error");
+        return;
       }
+
+      window.location.href = "/place-order?payment=WALLET";
       return;
     }
 
-    /* RAZORPAY */
+    /* ===============================
+       6️⃣ RAZORPAY
+    =============================== */
     if (method === "Razorpay") {
-      try {
-        const res = await fetch("/create-razorpay-order", { method: "POST" });
-        const { success, order, message } = await res.json();
+      const res = await fetch("/create-razorpay-order", { method: "POST" });
+      const { success, order, message } = await res.json();
 
-        if (!success) {
-          paymentInProgress = false;
-          return Swal.fire("Error", message || "Payment expired", "error");
-        }
-
-        const options = {
-          key: "<%= process.env.RAZO_API_KEY %>",
-          amount: order.amount,
-          currency: "INR",
-          name: "ReadNest",
-          description: "Order Payment",
-          order_id: order.id,
-
-          handler: async function (response) {
-            try {
-              const verify = await fetch("/verify-razorpay-payment", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(response),
-              });
-
-              const result = await verify.json();
-              window.location.href = result.success
-                ? "/place-order?payment=Razorpay"
-                : "/payment-failed?reason=Payment cancelled&paymentMethod=Razorpay";
-            } catch {
-              window.location.href =
-                "/payment-failed?reason=Verification error&paymentMethod=Razorpay";
-            }
-          },
-
-          modal: {
-            ondismiss: function () {
-              window.location.href =
-                "/payment-failed?reason=Payment cancelled&paymentMethod=Razorpay";
-            },
-          },
-
-          theme: { color: "#2563eb" },
-        };
-
-        new Razorpay(options).open();
-      } catch {
+      if (!success) {
         paymentInProgress = false;
-        window.location.href =
-          "/payment-failed?reason=Payment initialization failed&paymentMethod=Razorpay";
+        Swal.fire("Error", message || "Payment expired", "error");
+        return;
       }
+
+      const options = {
+        key: "<%= process.env.RAZO_API_KEY %>",
+        amount: order.amount,
+        currency: "INR",
+        name: "ReadNest",
+        description: "Order Payment",
+        order_id: order.id,
+
+        handler: async function (response) {
+          try {
+            const verify = await fetch("/verify-razorpay-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(response),
+            });
+
+            const result = await verify.json();
+            window.location.href = result.success
+              ? "/place-order?payment=Razorpay"
+              : "/payment-failed?reason=Payment cancelled&paymentMethod=Razorpay";
+          } catch {
+            window.location.href =
+              "/payment-failed?reason=Verification error&paymentMethod=Razorpay";
+          }
+        },
+
+        modal: {
+          ondismiss: function () {
+            window.location.href =
+              "/payment-failed?reason=Payment cancelled&paymentMethod=Razorpay";
+          },
+        },
+
+        theme: { color: "#2563eb" },
+      };
+
+      new Razorpay(options).open();
     }
+  } catch (err) {
+    console.error("Payment error:", err);
+    paymentInProgress = false;
+    Swal.fire("Error", "Something went wrong. Please try again.", "error");
   }
+}
 
   /* =====================================================
      RESTORE STATE ON RETRY

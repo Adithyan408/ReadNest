@@ -4,7 +4,6 @@ import Cart from "../../models/cartSchema.js";
 import Category from "../../models/categorySchema.js";
 import { normalizeCart } from "../../helpers/cartNormal.js";
 
-
 export const loadCart = async (req, res) => {
   try {
     const userId = req.session.user?._id;
@@ -261,12 +260,17 @@ export const validateCartBeforeCheckout = async (req, res) => {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
+    const unavailableItems = [];
+    const validItems = [];
+
     for (const item of cart.items) {
       const product = await Product.findById(item.productId).lean();
       if (!product) {
-        return res.status(400).json({
-          message: "One or more products no longer exist",
+        unavailableItems.push({
+          name: "Unknown product",
+          reason: "Product no longer exists",
         });
+        continue;
       }
 
       const category = await Category.findOne({
@@ -278,14 +282,25 @@ export const validateCartBeforeCheckout = async (req, res) => {
         category?.isListed === false ||
         product.stock <= 0
       ) {
-        return res.status(400).json({
-          message:
-            "One or more items in your cart are no longer available. Please remove them to continue.",
+        unavailableItems.push({
+          name: product.productName,
+          reason: product.stock <= 0 ? "Out of stock" : "No longer available",
         });
+      } else {
+        validItems.push(item);
       }
     }
 
-    return res.json({ success: true });
+    // 🔄 Update cart to keep only valid items
+    if (unavailableItems.length > 0) {
+      await Cart.updateOne({ userId }, { $set: { items: validItems } });
+    }
+
+    return res.json({
+      success: true,
+      unavailableItems,
+      removedCount: unavailableItems.length,
+    });
   } catch (err) {
     console.error("Cart validation error:", err);
     return res.status(500).json({ message: "Server error" });
