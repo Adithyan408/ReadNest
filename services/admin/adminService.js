@@ -50,54 +50,7 @@ export const getDashboard = async (req, res) => {
 
     const { filter, start, end } = req.query;
 
-    const totalCustomers = await User.countDocuments({ isBlocked: false });
-
-    const completedOrdersCount = await Order.countDocuments({
-      status: "completed",
-    });
-
-    const lifetimeSalesAgg = await Order.aggregate([
-      {
-        $match: {
-          status: "completed",
-          paymentStatus: "paid",
-        },
-      },
-      { $unwind: "$items" },
-      {
-        $match: {
-          "items.status": "delivered",
-        },
-      },
-      {
-        $group: {
-          _id: null,
-
-          totalSales: { $sum: "$items.subtotal" },
-
-          itemDiscount: {
-            $sum: {
-              $subtract: ["$items.regularPrice", "$items.unitPrice"],
-            },
-          },
-
-          couponDiscount: { $sum: { $ifNull: ["$discount", 0] } },
-        },
-      },
-      {
-        $project: {
-          totalSales: 1,
-          totalDiscount: { $add: ["$itemDiscount", "$couponDiscount"] },
-        },
-      },
-    ]);
-
-    const lifetime = {
-      totalOrders: completedOrdersCount,
-      totalSales: lifetimeSalesAgg[0]?.totalSales || 0,
-      totalDiscount: lifetimeSalesAgg[0]?.totalDiscount || 0,
-    };
-
+    /* -------------------- DATE RANGE -------------------- */
     const now = new Date();
     let fromDate, toDate;
 
@@ -136,17 +89,61 @@ export const getDashboard = async (req, res) => {
         toDate = new Date();
     }
 
-    const filteredAgg = await Order.aggregate([
+    /* -------------------- COMMON SALES CONDITION -------------------- */
+    const salesMatch = {
+      $or: [
+        { paymentMethod: "COD", "items.status": "delivered" },
+        { paymentMethod: { $in: ["Razorpay", "WALLET"] } },
+      ],
+    };
+
+    /* -------------------- BASIC STATS -------------------- */
+    const totalCustomers = await User.countDocuments({ isBlocked: false });
+
+    const completedOrdersAgg = await Order.aggregate([
+      { $unwind: "$items" },
+      { $match: salesMatch },
       {
-        $match: {
-          paymentStatus: "paid",
-          createdAt: { $gte: fromDate, $lte: toDate },
+        $group: {
+          _id: "$_id",
         },
       },
-      { $unwind: "$items" },
       {
-        $match: { "items.status": "delivered" },
+        $count: "count",
       },
+    ]);
+    
+    const completedOrdersCount = completedOrdersAgg[0]?.count || 0;
+
+    /* -------------------- LIFETIME SALES -------------------- */
+    const lifetimeAgg = await Order.aggregate([
+      { $match: { createdAt: { $lte: toDate } } },
+      { $unwind: "$items" },
+      { $match: salesMatch },
+      {
+        $group: {
+          _id: null,
+          totalSales: { $sum: "$items.subtotal" },
+          discount: {
+            $sum: {
+              $subtract: ["$items.regularPrice", "$items.unitPrice"],
+            },
+          },
+        },
+      },
+    ]);
+
+    const lifetime = {
+      totalOrders: completedOrdersCount,
+      totalSales: lifetimeAgg[0]?.totalSales || 0,
+      totalDiscount: lifetimeAgg[0]?.discount || 0,
+    };
+
+    /* -------------------- FILTERED SALES -------------------- */
+    const filteredAgg = await Order.aggregate([
+      { $match: { createdAt: { $gte: fromDate, $lte: toDate } } },
+      { $unwind: "$items" },
+      { $match: salesMatch },
       {
         $group: {
           _id: null,
@@ -177,24 +174,15 @@ export const getDashboard = async (req, res) => {
       netSales: 0,
     };
 
+    /* -------------------- SALES CHART -------------------- */
     const salesByDate = await Order.aggregate([
-      {
-        $match: {
-          paymentStatus: "paid",
-          createdAt: { $gte: fromDate, $lte: toDate },
-        },
-      },
+      { $match: { createdAt: { $gte: fromDate, $lte: toDate } } },
       { $unwind: "$items" },
-      {
-        $match: { "items.status": "delivered" },
-      },
+      { $match: salesMatch },
       {
         $group: {
           _id: {
-            $dateToString: {
-              format: "%Y-%m",
-              date: "$createdAt",
-            },
+            $dateToString: { format: "%Y-%m", date: "$createdAt" },
           },
           total: { $sum: "$items.subtotal" },
         },
@@ -205,11 +193,10 @@ export const getDashboard = async (req, res) => {
     const chartLabels = salesByDate.map((d) => d._id);
     const chartValues = salesByDate.map((d) => d.total);
 
+    /* -------------------- TOP PRODUCTS -------------------- */
     const topProducts = await Order.aggregate([
       { $unwind: "$items" },
-
-      { $match: { "items.status": "delivered" } },
-
+      { $match: salesMatch },
       {
         $group: {
           _id: "$items.product",
@@ -217,14 +204,14 @@ export const getDashboard = async (req, res) => {
           sold: { $sum: "$items.quantity" },
         },
       },
-
       { $sort: { sold: -1 } },
       { $limit: 5 },
     ]);
 
+    /* -------------------- TOP CATEGORIES -------------------- */
     const topCategories = await Order.aggregate([
       { $unwind: "$items" },
-      { $match: { "items.status": "delivered" } },
+      { $match: salesMatch },
       {
         $group: {
           _id: "$items.category",
@@ -233,32 +220,18 @@ export const getDashboard = async (req, res) => {
       },
       { $sort: { sold: -1 } },
       { $limit: 3 },
-    ]).then((data) =>
-      data.map((c) => ({
-        name: c._id,
-        sold: c.sold,
-      }))
-    );
+    ]).then((data) => data.map((c) => ({ name: c._id, sold: c.sold })));
 
+    /* -------------------- TOP PAYMENT METHOD -------------------- */
     const topPaymentAgg = await Order.aggregate([
-      {
-        $group: {
-          _id: "$paymentMethod",
-          count: { $sum: 1 },
-        },
-      },
-
+      { $group: { _id: "$paymentMethod", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 1 },
     ]);
 
-    const topPaymentMethod = topPaymentAgg[0]
-      ? {
-          method: topPaymentAgg[0]._id,
-          count: topPaymentAgg[0].count,
-        }
-      : null;
+    const topPaymentMethod = topPaymentAgg[0] || null;
 
+    /* -------------------- RENDER -------------------- */
     res.render("dashboard", {
       totalCustomers,
       lifetime,
@@ -292,7 +265,9 @@ export const postLogout = async (req, res) => {
 
 export const salesReport = async (req, res) => {
   try {
-    let { filter, start, end } = req.query;
+    const { filter, start, end } = req.query;
+
+    /* -------------------- DATE RANGE -------------------- */
     const now = new Date();
     let fromDate, toDate;
 
@@ -331,16 +306,19 @@ export const salesReport = async (req, res) => {
         toDate = new Date();
     }
 
+    /* -------------------- SALES CONDITION -------------------- */
+    const salesMatch = {
+      $or: [
+        { paymentMethod: "COD", "items.status": "delivered" },
+        { paymentMethod: { $in: ["Razorpay", "WALLET"] } },
+      ],
+    };
+
+    /* -------------------- FETCH SALES DATA -------------------- */
     const salesData = await Order.aggregate([
-      {
-        $match: {
-          paymentStatus: "paid",
-          createdAt: { $gte: fromDate, $lte: toDate },
-          status: "completed",
-        },
-      },
+      { $match: { createdAt: { $gte: fromDate, $lte: toDate } } },
       { $unwind: "$items" },
-      { $match: { "items.status": "delivered" } },
+      { $match: salesMatch },
 
       {
         $lookup: {
@@ -354,72 +332,103 @@ export const salesReport = async (req, res) => {
 
       {
         $project: {
+          orderId: 1,
           username: "$user.name",
-          orderId: "$_id",
           date: "$createdAt",
           product: "$items.productName",
           quantity: "$items.quantity",
-          amount: "$items.subtotal",
+          status: "$items.status",
+
+          amount: {
+            $cond: [
+              { $in: ["$items.status", ["cancelled", "returned"]] },
+              { $multiply: ["$items.subtotal", -1] },
+              "$items.subtotal",
+            ],
+          },
+
           discount: {
             $subtract: ["$items.regularPrice", "$items.unitPrice"],
           },
         },
       },
+
       { $sort: { date: -1 } },
     ]);
 
-    const totalOrders = new Set(salesData.map((s) => s.orderId.toString()))
-      .size;
+    /* -------------------- CALCULATIONS -------------------- */
+    const uniqueOrders = new Set(salesData.map((s) => s.orderId)).size;
 
-    const totalSales = salesData.reduce((sum, s) => sum + s.amount, 0);
+    const totalSales = salesData
+      .filter((s) => s.amount > 0)
+      .reduce((sum, s) => sum + s.amount, 0);
+
+    const refundAmount = salesData
+      .filter((s) => s.amount < 0)
+      .reduce((sum, s) => sum + Math.abs(s.amount), 0);
+
+    const cancelledCount = salesData.filter(
+      (s) => s.status === "cancelled"
+    ).length;
+
+    const returnedCount = salesData.filter(
+      (s) => s.status === "returned"
+    ).length;
 
     const totalDiscount = salesData.reduce(
       (sum, s) => sum + (s.discount || 0),
       0
     );
 
+    const totalRevenue = totalSales - refundAmount;
+
+    /* -------------------- PDF SETUP -------------------- */
     const doc = new PDFDocument({ margin: 40, size: "A4" });
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename=sales-report.pdf`
+      "attachment; filename=sales-report.pdf"
     );
 
     doc.pipe(res);
 
-    /* -------------------- TITLE -------------------- */
+    /* -------------------- HEADER -------------------- */
     doc.fontSize(18).text("ReadNest Sales Report", { align: "center" });
-
     doc
       .fontSize(10)
       .text(`Period: ${fromDate.toDateString()} - ${toDate.toDateString()}`, {
         align: "center",
       });
-
     doc.fontSize(10).text(`Generated on: ${new Date().toDateString()}`, {
       align: "center",
     });
 
     doc.moveDown(1.5);
 
-    /* ---------- SUMMARY ---------- */
-    doc.font("Helvetica-Bold").fontSize(12).text("Summary (Selected Period)");
+    /* -------------------- SUMMARY -------------------- */
+    doc.font("Helvetica-Bold").fontSize(12).text("Sales Summary");
+    doc.moveDown(0.5);
+    doc.font("Helvetica").fontSize(10);
+
+    doc.text(`Total Orders        : ${uniqueOrders}`);
+    doc.text(`Total Sales         : ₹${totalSales.toFixed(2)}`);
+    doc.text(
+      `Total Discount      : ₹${totalDiscount.toFixed(
+        2
+      )} (Already exclueded from sales)`
+    );
+    doc.text(`Cancelled Products  : ${cancelledCount}`);
+    doc.text(`Returned Products   : ${returnedCount}`);
+    doc.text(`Refund Amount       : -₹${refundAmount.toFixed(2)}`);
 
     doc.moveDown(0.5);
-
-    doc.font("Helvetica").fontSize(10);
-    doc.text(`Total Orders   : ${totalOrders}`);
-    doc.text(`Total Sales    : ₹${totalSales.toFixed(2)}`);
-    doc.text(`Total Discount : ₹${totalDiscount.toFixed(2)}`);
+    doc.font("Helvetica-Bold");
+    doc.text(`TOTAL REVENUE       : ₹${totalRevenue.toFixed(2)}`);
 
     doc.moveDown(2);
 
-    /* -------------------- TABLE CONFIG -------------------- */
-    const tableTop = doc.y;
-    const rowHeight = 22;
-
-    // Column positions
+    /* -------------------- TABLE -------------------- */
     const col = {
       no: 40,
       user: 70,
@@ -428,29 +437,42 @@ export const salesReport = async (req, res) => {
       date: 380,
       amount: 460,
     };
+    const rowHeight = 22;
+    let y = doc.y;
 
-    // Table Header
-    doc.fontSize(10).font("Helvetica-Bold");
-    drawRow(tableTop, "No", "Customer", "Product", "Qty", "Date", "Amount");
+    const drawRow = (y, no, user, product, qty, date, amount) => {
+      doc
+        .fontSize(10)
+        .text(no, col.no, y, { width: 25 })
+        .text(user, col.user, y, { width: 100 })
+        .text(product, col.product, y, { width: 140 })
+        .text(qty, col.qty, y, { width: 30, align: "center" })
+        .text(date, col.date, y, { width: 80 })
+        .text(amount, col.amount, y, { width: 80, align: "right" });
+    };
 
-    drawLine(tableTop + rowHeight);
+    const drawLine = (y) => {
+      doc
+        .strokeColor("#aaa")
+        .lineWidth(0.5)
+        .moveTo(40, y)
+        .lineTo(555, y)
+        .stroke();
+    };
 
-    /* -------------------- TABLE DATA -------------------- */
+    doc.font("Helvetica-Bold");
+    drawRow(y, "No", "Customer", "Product", "Qty", "Date", "Amount");
+    drawLine(y + rowHeight);
+    y += rowHeight;
     doc.font("Helvetica");
-    let y = tableTop + rowHeight;
-    let totalRevenue = 0;
 
     if (!salesData.length) {
       doc.moveDown(2).fontSize(12).text("No sales found for selected period.");
     } else {
       salesData.forEach((item, index) => {
-        totalRevenue += item.amount;
-
-        // Page break handling
         if (y > doc.page.height - 50) {
           doc.addPage();
           y = 50;
-
           doc.font("Helvetica-Bold");
           drawRow(y, "No", "Customer", "Product", "Qty", "Date", "Amount");
           drawLine(y + rowHeight);
@@ -473,26 +495,6 @@ export const salesReport = async (req, res) => {
       });
     }
 
-    /* -------------------- HELPERS -------------------- */
-    function drawRow(y, no, user, product, qty, date, amount) {
-      doc
-        .fontSize(10)
-        .text(no, col.no, y, { width: 25 })
-        .text(user, col.user, y, { width: 100 })
-        .text(product, col.product, y, { width: 140 })
-        .text(qty, col.qty, y, { width: 30, align: "center" })
-        .text(date, col.date, y, { width: 80 })
-        .text(amount, col.amount, y, { width: 80, align: "right" });
-    }
-
-    function drawLine(y) {
-      doc
-        .strokeColor("#aaa")
-        .lineWidth(0.5)
-        .moveTo(40, y)
-        .lineTo(555, y)
-        .stroke();
-    }
     doc.end();
   } catch (error) {
     console.error("PDF Error:", error);
@@ -502,7 +504,9 @@ export const salesReport = async (req, res) => {
 
 export const downloadSalesExcel = async (req, res) => {
   try {
-    let { filter, start, end } = req.query;
+    const { filter, start, end } = req.query;
+
+    /* -------------------- DATE RANGE -------------------- */
     const now = new Date();
     let fromDate, toDate;
 
@@ -541,16 +545,19 @@ export const downloadSalesExcel = async (req, res) => {
         toDate = new Date();
     }
 
+    /* -------------------- SALES CONDITION -------------------- */
+    const salesMatch = {
+      $or: [
+        { paymentMethod: "COD", "items.status": "delivered" },
+        { paymentMethod: { $in: ["Razorpay", "WALLET"] } },
+      ],
+    };
+
+    /* -------------------- FETCH SALES DATA -------------------- */
     const salesData = await Order.aggregate([
-      {
-        $match: {
-          paymentStatus: "paid",
-          createdAt: { $gte: fromDate, $lte: toDate },
-          status: "completed",
-        },
-      },
+      { $match: { createdAt: { $gte: fromDate, $lte: toDate } } },
       { $unwind: "$items" },
-      { $match: { "items.status": "delivered" } },
+      { $match: salesMatch },
 
       {
         $lookup: {
@@ -564,10 +571,11 @@ export const downloadSalesExcel = async (req, res) => {
 
       {
         $project: {
-          orderId: "$orderId",
+          orderId: 1,
           username: "$user.name",
           date: "$createdAt",
           product: "$items.productName",
+          status: "$items.status",
           quantity: "$items.quantity",
           amount: "$items.subtotal",
           discount: {
@@ -575,30 +583,39 @@ export const downloadSalesExcel = async (req, res) => {
           },
         },
       },
+
+      { $sort: { date: -1 } },
     ]);
 
+    /* -------------------- EXCEL SETUP -------------------- */
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Sales Report");
 
     sheet.columns = [
-      { header: "User Name", key: "username", width: 25 },
+      { header: "Order ID", key: "orderId", width: 18 },
+      { header: "Customer", key: "username", width: 25 },
       { header: "Date", key: "date", width: 15 },
       { header: "Product", key: "product", width: 30 },
+      { header: "Status", key: "status", width: 15 },
       { header: "Quantity", key: "quantity", width: 10 },
-      { header: "Amount", key: "amount", width: 15 },
+      { header: "Amount (₹)", key: "amount", width: 15 },
+      { header: "Discount (₹)", key: "discount", width: 15 },
     ];
 
-  salesData.forEach((row) => {
-  sheet.addRow({
-    username: row.username, 
-    date: new Date(row.date).toDateString(),
-    product: row.product,
-    quantity: row.quantity,
-    amount: row.amount,
-  });
-});
+    salesData.forEach((row) => {
+      sheet.addRow({
+        orderId: row.orderId,
+        username: row.username,
+        date: new Date(row.date).toDateString(),
+        product: row.product,
+        status: row.status,
+        quantity: row.quantity,
+        amount: row.amount,
+        discount: row.discount,
+      });
+    });
 
-
+    /* -------------------- RESPONSE -------------------- */
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
