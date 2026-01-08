@@ -6,8 +6,10 @@ export const creditWallet = async ({
   note,
   orderId = null,
   paymentId = null,
-  source = "refund", // refund | topup
+  itemId = null,      // ✅ NEW
+  source = "refund",  // refund | return_refund | cancel_refund | webhook_refund
 }) => {
+  // 1️⃣ Validate amount
   if (!Number.isFinite(amount) || amount <= 0) {
     console.log("Invalid wallet credit amount:", amount);
     return;
@@ -15,14 +17,37 @@ export const creditWallet = async ({
 
   const wallet = await Wallet.findOne({ user: userId });
 
-  // 🔐 Prevent duplicate Razorpay credits
-  if (
-    paymentId &&
-    wallet?.transactions?.some((tx) => tx.paymentId === paymentId)
-  ) {
-    return;
+  // 2️⃣ DUPLICATE PROTECTION (correct logic)
+  if (wallet && wallet.transactions?.length) {
+    const isDuplicate = wallet.transactions.some((tx) => {
+      // 🔐 Razorpay / webhook protection
+      if (paymentId && source === "webhook_refund") {
+        return tx.paymentId === paymentId && tx.source === source;
+      }
+
+      // 🔁 Item-wise refund protection
+      if (paymentId && itemId) {
+        return (
+          tx.paymentId === paymentId &&
+          tx.itemId?.toString() === itemId &&
+          tx.source === source
+        );
+      }
+
+      return false;
+    });
+
+    if (isDuplicate) {
+      console.log("Duplicate wallet credit prevented:", {
+        paymentId,
+        itemId,
+        source,
+      });
+      return;
+    }
   }
 
+  // 3️⃣ CREDIT WALLET
   await Wallet.findOneAndUpdate(
     { user: userId },
     {
@@ -30,11 +55,12 @@ export const creditWallet = async ({
       $push: {
         transactions: {
           type: "credit",
-          source, // ✅ NEW
+          source,
           amount,
           note,
           orderId,
           paymentId,
+          itemId,         
           date: new Date(),
         },
       },

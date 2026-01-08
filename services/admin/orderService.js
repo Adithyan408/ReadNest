@@ -1,5 +1,6 @@
 import Order from "../../models/orderSchema.js";
 import Product from "../../models/productsSchema.js";
+import Coupon from "../../models/couponSchema.js";
 import {
   creditWallet,
   calculateRefundAmount,
@@ -134,7 +135,10 @@ export const updateItemStatus = async (req, res) => {
 
     const order = await Order.findOne({ orderId });
     if (!order) {
-      return res.json({ success: false, message: ERROR_MESSAGES.ORDER.NOT_FOUND });
+      return res.json({
+        success: false,
+        message: ERROR_MESSAGES.ORDER.NOT_FOUND,
+      });
     }
 
     const item = order.items.id(itemId);
@@ -193,12 +197,31 @@ export const updateItemStatus = async (req, res) => {
     return res.json({ success: true });
   } catch (err) {
     console.log("Update item status error:", err);
-    return res.json({ success: false, message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR });
+    return res.json({
+      success: false,
+      message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
+    });
   }
+};
+
+const calculateDiscount = (amount, coupon) => {
+  if (!coupon) return 0;
+
+  if (amount < coupon.minPurchase) return 0;
+
+  let discountAmount = Math.floor((amount * coupon.discount) / 100);
+
+  if (coupon.maxDiscount !== null && discountAmount > coupon.maxDiscount) {
+    discountAmount = coupon.maxDiscount;
+  }
+
+  return discountAmount;
 };
 
 export const approveReturn = async (req, res) => {
   try {
+    const safeNumber = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+
     const { orderId, itemId } = req.params;
 
     const order = await Order.findOne({ orderId });
@@ -217,21 +240,53 @@ export const approveReturn = async (req, res) => {
       });
     }
 
-    if (item.refundAmount && item.refundAmount > 0) {
+    if (item.refundAmount > 0) {
       return res.status(400).json({
         success: false,
         message: "Refund already processed",
       });
     }
 
+
+    const shippingCharge = safeNumber(order.shippingCharge);
+    const totalPaid = safeNumber(order.finalPayable ?? order.payableAmount);
+
+ 
+    const refundablePool = Math.max(totalPaid - shippingCharge, 0);
+
+
+
+    
+    const refundBaseItems = order.items.filter((i) => i.status !== "cancelled");
+
+    const totalItemsValue = refundBaseItems.reduce(
+      (sum, i) => sum + safeNumber(i.finalAmount || i.subtotal),
+      0
+    );
+
+    if (totalItemsValue === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No refundable amount left",
+      });
+    }
+
+  
+
+    const itemValue = safeNumber(item.finalAmount || item.subtotal);
+
+    let refundAmount = (itemValue / totalItemsValue) * refundablePool;
+
+    refundAmount = Math.round(refundAmount);
+    refundAmount = Math.max(refundAmount, 0);
+
+
     item.returnStatus = "approved";
     item.status = "returned";
     item.returnedAt = new Date();
-
-    const refundAmount = item.finalAmount;
-    const note = "Refund for returned item";
-
     item.refundAmount = refundAmount;
+
+ 
 
     const activeItems = order.items.filter(
       (i) => !["cancelled", "returned"].includes(i.status)
@@ -240,25 +295,30 @@ export const approveReturn = async (req, res) => {
     order.status =
       activeItems.length === 0 ? "cancelled" : "partially_cancelled";
 
+    await order.save();
+
+ 
+
     await creditWallet({
       userId: order.user,
       amount: refundAmount,
-      note,
+      note: "Refund for returned item (shipping excluded)",
       orderId: order.orderId,
       paymentId: order.paymentId || null,
+      itemId: item._id.toString(),
       source: "return_refund",
     });
+
+   
 
     await Product.updateOne(
       { _id: item.product },
       { $inc: { stock: item.quantity } }
     );
 
-    await order.save();
-
     return res.json({
       success: true,
-      message: `Return approved. ₹${refundAmount} credited to wallet and item restocked.`,
+      message: `Return approved. ₹${refundAmount} credited to wallet.`,
     });
   } catch (err) {
     console.error("Approve Return Error:", err);
@@ -275,7 +335,11 @@ export const rejectReturn = async (req, res) => {
     const { note } = req.body;
 
     const order = await Order.findOne({ orderId });
-    if (!order) return res.json({ success: false, message: ERROR_MESSAGES.ORDER.NOT_FOUND });
+    if (!order)
+      return res.json({
+        success: false,
+        message: ERROR_MESSAGES.ORDER.NOT_FOUND,
+      });
 
     const item = order.items.id(itemId);
     if (!item) return res.json({ success: false, message: "Item not found" });

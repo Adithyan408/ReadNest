@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Products - ReadNest</title>
+    <title>Order Details - ReadNest</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       rel="stylesheet"
@@ -28,87 +28,38 @@
       .sidebar-item.active {
         background-color: #d1d5db;
       }
-      #statusMessage {
-        opacity: 1;
-        transition: opacity 0.5s ease-in-out;
-      }
-      #statusMessage.hidden {
-        opacity: 0;
-      }
-      .badge {
-        padding: 6px 12px;
-        border-radius: 12px;
-        font-size: 14px;
-        font-weight: 600;
-        display: inline-block;
-        text-transform: capitalize;
-      }
-      .main-scroll-area {
-  height: calc(100vh - 80px);
-  overflow-y: auto;
-}
 
-      .badge.processing {
-        background: #fef3c7;
-        color: #92400e;
-      }
-
-      .badge.partially_cancelled {
-        background: #fde68a;
-        color: #b45309;
-      }
-
-      .badge.cancelled {
-        background: #fee2e2;
-        color: #991b1b;
-      }
-
-      .badge.completed {
-        background: #d1fae5;
-        color: #065f46;
-      }
-
-      html,
-      body {
+      html, body {
         height: 100%;
         overflow: hidden; /* disable full page scroll */
       }
 
       .main-scroll-area {
         height: calc(100vh - 80px); /* header height is ~80px */
-        overflow-y: auto; /* enable vertical scroll only on the right */
+        overflow-y: auto;           /* enable vertical scroll only on the right */
         overflow-x: hidden;
       }
     </style>
   </head>
   <body class="bg-gray-100">
-    <!-- Header -->
     <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
       <div class="flex items-center justify-between px-6 py-4">
-        <!-- Logo -->
         <a href="/admin">
           <div class="flex items-center space-x-3">
-            <div
-              class="w-14 h-14 bg-orange-900 rounded-full flex items-center justify-center"
-            >
+            <div class="w-14 h-14 bg-orange-900 rounded-full flex items-center justify-center">
               <i class="fas fa-book-open text-white text-2xl"></i>
             </div>
             <span class="text-2xl font-bold text-gray-800">ReadNest</span>
           </div>
         </a>
 
-        <!-- Right Side -->
         <div class="flex items-center space-x-6">
           <a href="/admin/blogs">
-            <button
-              class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
-            >
-            <i class="fas fa-blog text-gray-700"></i>
-            <span class="text-base font-semibold text-gray-900">Blog</span>
+            <button class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition">
+              <i class="fas fa-blog text-gray-700"></i>
+              <span class="text-base font-semibold text-gray-900">Blog</span>
             </button>
           </a>
-
-
           <div class="flex items-center space-x-3">
             <i class="fas fa-user-circle text-4xl text-gray-600"></i>
             <span class="text-base font-semibold text-gray-600">ADMIN</span>
@@ -117,485 +68,261 @@
       </div>
     </header>
 
-    <!-- Main Content -->
     <div class="flex">
-      <!-- Sidebar -->
-      <aside
-        class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col"
-      >
+      <aside class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col flex-shrink-0">
         <nav class="flex-1 overflow-y-auto py-4">
-          <a
-            href="/admin"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
+          <a href="/admin" class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400">
             <i class="fas fa-th-large text-xl mr-4"></i>
             <span class="text-lg font-semibold text-gray-900">DashBoard</span>
           </a>
-
-          <a
-            href="/admin/products"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
+          <a href="/admin/products" class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400">
             <i class="fas fa-box text-xl mr-4"></i>
             <span class="text-lg font-semibold text-gray-900">Products</span>
           </a>
-
-          <a
-            href="/admin/orders"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
+          <a href="/admin/orders" class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400">
             <i class="fas fa-shopping-bag text-xl mr-4"></i>
             <span class="text-lg font-semibold text-gray-900">Orders List</span>
           </a>
-
-          <a
-            href="/admin/users"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
+          <a href="/admin/users" class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400">
             <i class="fas fa-users text-xl mr-4"></i>
             <span class="text-lg font-semibold text-gray-900">Customers</span>
           </a>
-
-         
-
-          <a
-            href="/admin/category"
-            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
-          >
+          <a href="/admin/category" class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400">
             <i class="fas fa-th text-xl mr-4"></i>
             <span class="text-lg font-semibold text-gray-900">Category</span>
           </a>
-
-          <a
-            href="/admin/coupon"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
+          <a href="/admin/coupon" class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400">
             <i class="fas fa-ticket-alt text-xl mr-4"></i>
             <span class="text-lg font-semibold text-gray-900">Voucher</span>
           </a>
-
-          <a
-            href="/admin/banner"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
+          <a href="/admin/banner" class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400">
             <i class="fas fa-image text-xl mr-4"></i>
             <span class="text-lg font-semibold text-gray-900">Banner</span>
           </a>
         </nav>
 
-        <!-- Logout Button at Bottom -->
         <div class="border-t-2 border-gray-400 bg-gray-300">
           <a href="/admin/logout">
-            <button
-              class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
-            >
-              <i
-                class="fas fa-sign-out-alt text-xl mr-4 text-gray-700 group-hover:text-red-600"
-              ></i>
-              <span
-                class="text-lg font-semibold text-gray-900 group-hover:text-red-600"
-                >LOG OUT</span
-              >
+            <button class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group">
+              <i class="fas fa-sign-out-alt text-xl mr-4 text-gray-700 group-hover:text-red-600"></i>
+              <span class="text-lg font-semibold text-gray-900 group-hover:text-red-600">LOG OUT</span>
             </button>
           </a>
         </div>
       </aside>
 
-      <!-- MAIN CONTENT -->
-<main class="main-scroll-area flex-1 p-10 bg-gray-200">
-  <div class="max-w-5xl mx-auto px-6 py-10">
+      <main class="main-scroll-area flex-1 p-8 bg-gray-200">
+        <div class="max-w-5xl mx-auto">
+          
+          <%- include('../../views/partials/breadcrumb') %>
 
-  <h1 class="text-3xl font-bold text-gray-800 mb-10 text-center">
-    Admin — Order Details
-  </h1>
-<%- include('../../views/partials/breadcrumb') %>
-  <!-- ORDER SUMMARY -->
-  <div class="bg-white shadow-xl rounded-2xl p-8 mb-10">
-    
-    <!-- Top Row: Order ID + Status -->
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-bold text-gray-800">
-        Order ID:
-        <span class="text-blue-600"><%= order.orderId %></span>
-      </h2>
+          <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="p-6 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <h2 class="text-3xl font-bold text-gray-900">Order Details</h2>
+                
+                <% 
+                  let statusClass = "";
+                  if (order.status === "processing") statusClass = "bg-yellow-100 text-yellow-700";
+                  else if (order.status === "cancelled") statusClass = "bg-red-100 text-red-700";
+                  else if (order.status === "partially_cancelled") statusClass = "bg-orange-100 text-orange-700";
+                  else if (order.status === "completed") statusClass = "bg-green-100 text-green-700";
+                %>
+                <span class="px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wide <%= statusClass %>">
+                  <%= order.status %>
+                </span>
+              </div>
+            </div>
 
-      <% 
-        let statusClass = "";
-        if (order.status === "processing") statusClass = "bg-yellow-100 text-yellow-700";
-        else if (order.status === "cancelled") statusClass = "bg-red-100 text-red-700";
-        else if (order.status === "partially_cancelled") statusClass = "bg-orange-100 text-orange-700";
-        else if (order.status === "completed") statusClass = "bg-green-100 text-green-700";
-      %>
+            <div class="p-8">
+              <div class="grid md:grid-cols-3 gap-8 mb-10 border-b border-gray-100 pb-10">
+                <div>
+                  <h4 class="text-gray-400 uppercase text-xs font-bold mb-3 tracking-widest">Order Info</h4>
+                  <p class="text-gray-900 font-semibold mb-1">ID: <span class="text-indigo-600">#<%= order.orderId %></span></p>
+                  <p class="text-sm text-gray-600">Placed: <%= new Date(order.createdAt).toLocaleString() %></p>
+                  <% let d = new Date(order.createdAt); d.setDate(d.getDate() + 5); %>
+                  <p class="text-sm text-gray-600 mt-1 italic">Est. Delivery: <%= d.toDateString() %></p>
+                </div>
 
-      <span class="px-4 py-2 rounded-lg text-sm font-semibold <%= statusClass %>">
-        <%= order.status %>
-      </span>
+                <div>
+                  <h4 class="text-gray-400 uppercase text-xs font-bold mb-3 tracking-widest">Shipping To</h4>
+                  <p class="text-gray-900 font-bold"><%= order.user?.name %></p>
+                  <p class="text-sm text-gray-600 mb-2"><%= order.user?.email %></p>
+                  
+                  <% if (order.address) { %>
+                    <address class="text-sm text-gray-600 not-italic leading-relaxed">
+                      <%= order.address.houseName %>, <%= order.address.street %><br>
+                      <%= order.address.post %>, <%= order.address.district %><br>
+                      <%= order.address.state %> - <%= order.address.pincode %><br>
+                      <span class="font-medium text-gray-800">Phone:</span> <%= order.address.phone %>
+                    </address>
+                  <% } else { %>
+                    <p class="text-red-500 text-sm italic">Address details unavailable</p>
+                  <% } %>
+                </div>
+
+                <div>
+                  <h4 class="text-gray-400 uppercase text-xs font-bold mb-3 tracking-widest">Payment Details</h4>
+                  <p class="text-sm text-gray-700 mb-1">
+                    <span class="font-semibold">Method:</span> 
+                    <%= order.paymentId ? "Online Payment" : "Cash on Delivery" %>
+                  </p>
+                  <p class="text-2xl font-bold text-gray-900 mt-2">₹ <%= order.finalPayable ?? order.total %></p>
+                  <p class="text-xs text-gray-500">Total Items: <%= order.items.length %></p>
+                </div>
+              </div>
+
+              <h3 class="text-xl font-bold text-gray-800 mb-6">Order Items</h3>
+              <div class="space-y-4">
+                <% order.items.forEach(item => { %>
+                  <% 
+                    let itemBadge = "";
+                    if (item.status === "ordered") itemBadge = "bg-yellow-100 text-yellow-700";
+                    else if (item.status === "shipped") itemBadge = "bg-blue-100 text-blue-700";
+                    else if (item.status === "cancelled") itemBadge = "bg-red-100 text-red-700";
+                    else if (item.status === "delivered") itemBadge = "bg-green-100 text-green-700";
+                    else if (item.status === "returned") itemBadge = "bg-orange-100 text-orange-700";
+
+                    let imgSrc = "/images/placeholder.png";
+                    if (item.productImage?.length) imgSrc = item.productImage[0];
+                    else if (item.product?.productImage?.length) imgSrc = item.product.productImage[0];
+                  %>
+
+                  <div class="flex flex-col md:flex-row items-center gap-6 p-6 bg-gray-50 rounded-xl border border-gray-200">
+                    <img src="<%= imgSrc %>" class="w-24 h-24 object-cover rounded-lg shadow-sm border bg-white" />
+                    
+                    <div class="flex-1 text-center md:text-left">
+                      <h4 class="text-lg font-bold text-gray-900"><%= item.productName %></h4>
+                      <div class="mt-1 text-sm text-gray-600 flex flex-wrap justify-center md:justify-start gap-x-4">
+                        <span>Price: ₹<%= item.unitPrice %></span>
+                        <span>Qty: <%= item.quantity %></span>
+                        <span class="font-bold text-gray-800">Subtotal: ₹<%= item.subtotal %></span>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-col items-center md:items-end gap-3">
+                      <div class="relative">
+                        <span id="item-badge-<%= item._id %>" 
+                              class="px-4 py-1.5 rounded-lg text-xs font-bold uppercase cursor-pointer <%= itemBadge %> <%= ['cancelled','returned'].includes(item.status) ? 'opacity-70 cursor-not-allowed' : '' %>"
+                              <% if (!['cancelled','returned'].includes(item.status)) { %> onclick="toggleItemStatusMenu('<%= item._id %>')" <% } %>>
+                          <%= item.status %>
+                        </span>
+
+                        <% if (!['cancelled','returned'].includes(item.status)) { %>
+                          <div id="item-menu-<%= item._id %>" class="hidden absolute right-0 bg-white shadow-2xl border border-gray-200 rounded-xl w-40 mt-2 z-50 overflow-hidden">
+                            <div onclick="updateItemStatus('<%= order.orderId %>', '<%= item._id %>', 'ordered')" class="px-4 py-2 text-sm hover:bg-indigo-50 cursor-pointer transition">Ordered</div>
+                            <div onclick="updateItemStatus('<%= order.orderId %>', '<%= item._id %>', 'shipped')" class="px-4 py-2 text-sm hover:bg-indigo-50 cursor-pointer transition">Shipped</div>
+                            <div onclick="updateItemStatus('<%= order.orderId %>', '<%= item._id %>', 'delivered')" class="px-4 py-2 text-sm hover:bg-indigo-50 cursor-pointer transition">Delivered</div>
+                            <div onclick="updateItemStatus('<%= order.orderId %>', '<%= item._id %>', 'cancelled')" class="px-4 py-2 text-sm hover:bg-red-50 text-red-600 cursor-pointer transition">Cancelled</div>
+                          </div>
+                        <% } %>
+                      </div>
+
+                      <% if (item.returnStatus === "requested") { %>
+                        <div class="flex gap-2">
+                          <button onclick="approveReturn('<%= order.orderId %>', '<%= item._id %>')" class="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition">Approve</button>
+                          <button onclick="rejectReturn('<%= order.orderId %>', '<%= item._id %>')" class="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition">Reject</button>
+                        </div>
+                      <% } else if (item.returnStatus === "approved") { %>
+                        <span class="text-xs text-green-600 font-bold">✔ Refunded ₹<%= item.refundAmount %></span>
+                      <% } else if (item.returnStatus === "rejected") { %>
+                        <span class="text-xs text-red-600 font-bold">❌ Return Rejected</span>
+                      <% } %>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+
+              <div class="mt-12 flex justify-center">
+                <a href="/admin/orders" class="px-10 py-3 bg-gray-800 text-white font-semibold rounded-lg hover:bg-black transition shadow-lg">
+                  Back to Orders List
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
 
-    <!-- GRID: USER + ADDRESS + TOTAL + PAYMENT -->
-    <div class="grid md:grid-cols-3 gap-6">
-
-      <!-- USER & ORDER INFO -->
-      <div>
-        <p class="text-gray-700"><span class="font-semibold">Customer:</span><br>
-          <%= order.user?.name %> <br>
-          <%= order.user?.email %>
-        </p>
-
-        <p class="text-gray-700 mt-3">
-          <span class="font-semibold">Placed On:</span><br>
-          <%= new Date(order.createdAt).toLocaleString() %>
-        </p>
-
-        <% let d = new Date(order.createdAt); d.setDate(d.getDate() + 5); %>
-        <p class="text-gray-700 mt-3">
-          <span class="font-semibold">Expected Delivery:</span><br>
-          <%= d.toDateString() %>
-        </p>
-      </div>
-
-      <!-- DELIVERY ADDRESS -->
-    <div>
-  <p class="text-gray-700 font-semibold mb-1">Delivery Address:</p>
-
-  <% if (order.address) { %>
-    <p class="text-gray-700">
-      <%= order.address.addressLabel || "Delivery" %> Address <br>
-
-      <%= order.address.houseName %>
-      <% if (order.address.houseNumber) { %>
-        , <%= order.address.houseNumber %>
-      <% } %>
-      <br>
-
-      <%= order.address.street %><br>
-      <%= order.address.post %>, <%= order.address.district %><br>
-      <%= order.address.state %> - <%= order.address.pincode %><br>
-
-      Phone: <%= order.address.phone %><br>
-
-      <% if (order.address.altPhone) { %>
-        Alternate: <%= order.address.altPhone %>
-      <% } %>
-    </p>
-  <% } else { %>
-    <p class="text-red-500">
-      Address not available for this order
-    </p>
-  <% } %>
-</div>
-
-
-      <!-- PAYMENTS & TOTAL -->
-      <div>
-        <p class="text-gray-700">
-          <span class="font-semibold">Payment Type:</span>
-          <%= order.paymentId ? "Online Payment" : "Cash on Delivery" %>
-        </p>
-
-        <p class="text-gray-700 mt-3">
-          <span class="font-semibold">Total Amount:</span>
-          ₹ <%= order.finalPayable ?? order.total %>
-        </p>
-
-        <p class="text-gray-700 mt-3">
-          <span class="font-semibold">Total Items:</span>
-          <%= order.items.length %>
-        </p>
-      </div>
-
-    </div>
-  </div>
-
-
-  <!-- ORDER ITEMS -->
-  <h2 class="text-2xl font-bold text-gray-800 mb-6">Order Items</h2>
-
-<div class="space-y-6">
-  <% order.items.forEach(item => { %>
-
-    <% 
-      // Compute badge class for item status
-      let itemBadge = "";
-      if (item.status === "ordered") {
-        itemBadge = "bg-yellow-100 text-yellow-700";
-      } else if (item.status === "shipped") {
-        itemBadge = "bg-blue-100 text-blue-700";
-      } else if (item.status === "cancelled") {
-        itemBadge = "bg-red-100 text-red-700";
-      } else if (item.status === "delivered") {
-        itemBadge = "bg-green-100 text-green-700";
-      } else if (item.status === "returned") {
-        itemBadge = "bg-orange-100 text-orange-700";
+    <script>
+      function toggleItemStatusMenu(itemId) {
+        document.querySelectorAll("[id^='item-menu-']").forEach(menu => {
+          if (menu.id !== `item-menu-${itemId}`) menu.classList.add("hidden");
+        });
+        document.getElementById(`item-menu-${itemId}`).classList.toggle("hidden");
       }
 
-      // Compute product image
-      let imgSrc = "/images/placeholder.png";
-      if (item.productImage?.length) imgSrc = item.productImage[0];
-      else if (item.product?.productImage?.length) imgSrc = item.product.productImage[0];
-    %>
-
-    <div class="bg-white shadow-md rounded-xl p-6 border border-gray-100">
-
-      <!-- ITEM HEADER -->
-      <div class="flex justify-between items-center">
-
-        <!-- IMAGE + NAME -->
-        <div class="flex items-center gap-4">
-          <img src="<%= imgSrc %>" class="w-20 h-20 object-cover rounded-lg border" />
-          <h3 class="text-lg font-bold text-gray-800"><%= item.productName %></h3>
-        </div>
-
-        <!-- STATUS BADGE + DROPDOWN -->
-        <div class="relative">
-
-          <!-- BADGE -->
-          <span
-          id="item-badge-<%= item._id %>"
-          class="px-3 py-1 rounded-md text-xs font-semibold 
-          <%= itemBadge %> 
-          <%= ['cancelled','returned'].includes(item.status) ? 'cursor-not-allowed opacity-70' : 'cursor-pointer' %>"
-          <% if (!['cancelled','returned'].includes(item.status)) { %>
-          onclick="toggleItemStatusMenu('<%= item._id %>')"
-          <% } %>
-          >
-          <%= item.status %>
-          </span>
-
-
-          <!-- DROPDOWN MENU -->
-          <% if (!['cancelled','returned'].includes(item.status)) { %>
-          <div
-            id="item-menu-<%= item._id %>"
-            class="hidden absolute right-0 bg-white shadow-lg border rounded-lg w-40 mt-2 z-50"
-          >
-
-            <div
-              onclick="updateItemStatus('<%= order.orderId %>', '<%= item._id %>', 'ordered')"
-              class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-            >
-              Ordered
-            </div>
-
-             <div
-              onclick="updateItemStatus('<%= order.orderId %>', '<%= item._id %>', 'shipped')"
-              class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-            >
-              Shipped
-            </div>
-
-            <div
-              onclick="updateItemStatus('<%= order.orderId %>', '<%= item._id %>', 'delivered')"
-              class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-            >
-              Delivered
-            </div>
-
-            
-
-            <div
-              onclick="updateItemStatus('<%= order.orderId %>', '<%= item._id %>', 'cancelled')"
-              class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-700"
-            >
-              Cancelled
-            </div>
-            </div>
-<% } %>
-
-
-        </div>
-      </div>
-
-
-        <!-- ITEM DETAILS -->
-        <div class="mt-4 text-gray-700">
-          <p><span class="font-semibold">Price:</span> ₹ <%= item.regularPrice %></p>
-          <p><span class="font-semibold">Quantity:</span> <%= item.quantity %></p>
-          <p><span class="font-semibold">Subtotal:</span> ₹ <%= item.subtotal %></p>
-        </div>
-
-        <!-- RETURN REQUESTED BY CUSTOMER -->
-<% if (item.returnStatus === "requested") { %>
-  <div class="mt-4 bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg">
-    <p><span class="font-semibold">Return Requested:</span> <%= item.returnReason %></p>
-
-    <div class="flex gap-4 mt-3">
-      <!-- APPROVE BUTTON -->
-      <button 
-        onclick="approveReturn('<%= order.orderId %>', '<%= item._id %>')" 
-        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-        Approve Return
-      </button>
-
-      <!-- REJECT BUTTON -->
-      <button 
-        onclick="rejectReturn('<%= order.orderId %>', '<%= item._id %>')" 
-        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-        Reject Return
-      </button>
-    </div>
-  </div>
-<% } %>
-
-<!-- SHOW APPROVED RETURN -->
-<% if (item.returnStatus === "approved") { %>
-  <p class="mt-4 bg-green-100 text-green-800 px-4 py-2 rounded-lg">
-    ✔ Return Approved — Refund: ₹ <%= item.refundAmount %>
-  </p>
-<% } %>
-
-<!-- SHOW REJECTED RETURN -->
-<% if (item.returnStatus === "rejected") { %>
-  <p class="mt-4 bg-red-100 text-red-800 px-4 py-2 rounded-lg">
-    ❌ Return Rejected<br>
-    <span class="font-semibold">Reason:</span> <%= item.adminReturnNote %>
-  </p>
-<% } %>
-
-</div>
-      </div>
-    <% }) %>
-  </div>
-
-  <!-- BACK -->
-  <div class="text-center mt-12">
-    <a
-      href="/admin/orders"
-      class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-gray-300 transition">
-      Back to Orders
-    </a>
-  </div>
-  </div>
-</main>
-
-
-
-<!-- UPDATE ITEM STATUS JS -->
-<script>
-  function toggleItemStatusMenu(itemId) {
-  document.querySelectorAll("[id^='item-menu-']").forEach(menu => menu.classList.add("hidden"));
-  document.getElementById(`item-menu-${itemId}`).classList.toggle("hidden");
-}
-
-function updateItemStatus(orderId, itemId, newStatus) {
-  const finalStates = ["cancelled", "returned"];
-
-if (finalStates.includes(document.getElementById(`item-badge-${itemId}`).textContent.trim())) {
-  Swal.fire("Not Allowed", "This item is already finalized.", "info");
-  return;
-}
-
-  Swal.fire({
-    title: "Confirm Status Change",
-    text: `Update item status to "${newStatus}"?`,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#2563eb",
-    cancelButtonColor: "#6b7280",
-    confirmButtonText: "Yes, Update"
-  }).then((result) => {
-    if (!result.isConfirmed) return;
-
-    fetch(`/admin/orders/${orderId}/items/${itemId}/status`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-
-        // Update badge color
-        const badge = document.getElementById(`item-badge-${itemId}`);
-        badge.textContent = newStatus;
-
-        badge.className = "px-3 py-1 rounded-md text-xs font-semibold"; // reset
-
-        if (newStatus === "ordered") {
-          badge.classList.add("bg-yellow-100", "text-yellow-700");
-        } else if (newStatus === "cancelled") {
-          badge.classList.add("bg-red-100", "text-red-700");
-        } else if (newStatus === "delivered") {
-          badge.classList.add("bg-green-100", "text-green-700");
-        } else if (newStatus === "returned") {
-          badge.classList.add("bg-orange-100", "text-orange-700");
-        }
-
-        document.getElementById(`item-menu-${itemId}`).classList.add("hidden");
-
-        Swal.fire("Updated!", "Item status updated.", "success");
-
-      } else {
-        Swal.fire("Error", data.message, "error");
-      }
-    });
-  });
-}
-  function approveReturn(orderId, itemId) {
-  Swal.fire({
-    title: "Approve Return?",
-    text: "This will restock the product and refund the user.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Approve",
-    confirmButtonColor: "#16a34a"
-  }).then(async (result) => {
-    if (!result.isConfirmed) return;
-
-    try {
-      const res = await fetch(
-        `/admin/orders/${orderId}/items/${itemId}/approve-return`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
+      function updateItemStatus(orderId, itemId, newStatus) {
+        Swal.fire({
+          title: "Update Status?",
+          text: `Change item status to ${newStatus}?`,
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonColor: "#4f46e5"
+        }).then((result) => {
+          if (result.isConfirmed) {
+            fetch(`/admin/orders/${orderId}/items/${itemId}/status`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: newStatus })
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                location.reload();
+              } else {
+                Swal.fire("Error", data.message, "error");
+              }
+            });
           }
+        });
+      }
+
+      function approveReturn(orderId, itemId) {
+        Swal.fire({
+          title: "Approve Return?",
+          text: "User will be refunded and stock will be updated.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#16a34a"
+        }).then(async (result) => {
+          if (!result.isConfirmed) return;
+          const res = await fetch(`/admin/orders/${orderId}/items/${itemId}/approve-return`, { method: "POST" });
+          const data = await res.json();
+          if (data.success) {
+            Swal.fire("Success", "Return Approved", "success").then(() => location.reload());
+          }
+        });
+      }
+
+      function rejectReturn(orderId, itemId) {
+        Swal.fire({
+          title: "Reject Return",
+          input: "text",
+          inputPlaceholder: "Reason for rejection...",
+          showCancelButton: true,
+          confirmButtonColor: "#dc2626"
+        }).then((result) => {
+          if (result.isConfirmed && result.value) {
+            fetch(`/admin/orders/${orderId}/items/${itemId}/reject-return`, {
+              method: "POST",
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify({ note: result.value })
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) location.reload();
+            });
+          }
+        });
+      }
+
+      // Close dropdowns on outside click
+      window.addEventListener('click', function(e){
+        if (!e.target.matches('[id^="item-badge-"]')) {
+          document.querySelectorAll("[id^='item-menu-']").forEach(menu => menu.classList.add("hidden"));
         }
-      );
-
-      const data = await res.json();
-
-      if (data.success) {
-        await Swal.fire("Approved!", data.message, "success");
-        location.reload();
-      } else {
-        Swal.fire("Error", data.message || "Something went wrong", "error");
-      }
-
-    } catch (err) {
-      console.error("Approve return error:", err);
-      Swal.fire("Error", "Server error. Please try again.", "error");
-    }
-  });
-}
-
-function rejectReturn(orderId, itemId) {
-  Swal.fire({
-    title: "Reject Return",
-    input: "text",
-    inputPlaceholder: "Enter rejection note...",
-    showCancelButton: true,
-    confirmButtonText: "Reject",
-    confirmButtonColor: "#dc2626"
-  }).then((result) => {
-    if (!result.isConfirmed || !result.value) return;
-
-    fetch(`/admin/orders/${orderId}/items/${itemId}/reject-return`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ note: result.value })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        Swal.fire("Rejected!", data.message, "success")
-          .then(() => location.reload());
-      } else {
-        Swal.fire("Error", data.message, "error");
-      }
-    });
-  });
-}
-</script>
+      });
+    </script>
   </body>
 </html>
