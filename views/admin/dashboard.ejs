@@ -402,8 +402,76 @@
     <canvas id="monthlySalesChart" height="140"></canvas>
   </div>
 
-</div>
 
+ 
+
+
+</div>
+ <div class="bg-white rounded-2xl shadow p-6 border mt-10">
+
+  <!-- FIXED DETAILS -->
+  <div class="mb-6">
+    <h3 class="text-lg font-bold">Sales Summary</h3>
+    <p class="text-sm text-gray-500">
+      Period: <%= salesMeta.fromDate.toDateString() %> -
+      <%= salesMeta.toDate.toDateString() %>
+    </p>
+
+    <div class="grid grid-cols-5 gap-4 mt-4 text-sm">
+      <div>Total Orders: <b><%= salesSummary.orders %></b></div>
+      <div>Sales: ₹<%= salesSummary.totalSales.toFixed(2) %></div>
+      <div>Discount: ₹<%= salesSummary.totalDiscount.toFixed(2) %></div>
+      <div>Refunds: ₹<%= salesSummary.refundAmount.toFixed(2) %></div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="overflow-x-auto">
+    <table class="w-full border text-sm">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 border">No</th>
+          <th class="p-2 border">Customer</th>
+          <th class="p-2 border">Product</th>
+          <th class="p-2 border">Qty</th>
+          <th class="p-2 border">Date</th>
+          <th class="p-2 border text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% salesRows.forEach((row, i) => { %>
+          <tr>
+            <td class="p-2 border text-center">
+  <%= (pagination.current - 1) * pagination.limit + i + 1 %>
+</td>
+            <td class="p-2 border"><%= row.username %></td>
+            <td class="p-2 border"><%= row.product %></td>
+            <td class="p-2 border text-center"><%= row.quantity %></td>
+            <td class="p-2 border">
+              <%= new Date(row.date).toDateString() %>
+            </td>
+            <td class="p-2 border text-right">
+              ₹<%= row.amount.toFixed(2) %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGINATION -->
+  <div class="flex justify-end gap-2 mt-4">
+    <% for(let i = 1; i <= pagination.total; i++) { %>
+      <a
+        href="?page=<%= i %>&filter=<%= filter %>&start=<%= start || '' %>&end=<%= end || '' %>"
+        class="px-3 py-1 border rounded
+        <%= pagination.current === i ? 'bg-indigo-600 text-white' : '' %>"
+      >
+        <%= i %>
+      </a>
+    <% } %>
+  </div>
+</div>
 
 </main>
 

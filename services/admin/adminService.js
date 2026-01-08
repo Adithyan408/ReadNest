@@ -23,14 +23,16 @@ export const postLogin = async (req, res) => {
     const admin = await User.findOne({ email, isAdmin: true });
 
     if (!admin) {
-      return res.render("admin-login", { message: ERROR_MESSAGES.AUTH.ADMIN_NOT_FOUND });
+      return res.render("admin-login", {
+        message: ERROR_MESSAGES.AUTH.ADMIN_NOT_FOUND,
+      });
     }
 
     const passwordMatch = await bcrypt.compare(password, admin.password);
     if (!passwordMatch) {
       return res.status(401).json({
         success: false,
-        message: ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS ,
+        message: ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS,
       });
     }
 
@@ -49,7 +51,11 @@ export const getDashboard = async (req, res) => {
       return res.redirect("/admin/login");
     }
 
-    const { filter, start, end } = req.query;
+    const { filter, start, end, page = 1 } = req.query;
+
+    const limit = 10;
+    const currentPage = Number(page);
+    const skip = (currentPage - 1) * limit;
 
     const now = new Date();
     let fromDate, toDate;
@@ -96,7 +102,6 @@ export const getDashboard = async (req, res) => {
       ],
     };
 
-
     const totalCustomers = await User.countDocuments({ isBlocked: false });
 
     const completedOrdersAgg = await Order.aggregate([
@@ -111,7 +116,7 @@ export const getDashboard = async (req, res) => {
         $count: "count",
       },
     ]);
-    
+
     const completedOrdersCount = completedOrdersAgg[0]?.count || 0;
 
     const lifetimeAgg = await Order.aggregate([
@@ -229,6 +234,65 @@ export const getDashboard = async (req, res) => {
 
     const topPaymentMethod = topPaymentAgg[0] || null;
 
+    const salesTableAgg = await Order.aggregate([
+      { $match: { createdAt: { $gte: fromDate, $lte: toDate } } },
+      { $unwind: "$items" },
+      { $match: salesMatch },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+
+      {
+        $project: {
+          orderId: 1,
+          username: "$user.name",
+          date: "$createdAt",
+          product: "$items.productName",
+          quantity: "$items.quantity",
+          status: "$items.status",
+          amount: {
+            $cond: [
+              { $in: ["$items.status", ["cancelled", "returned"]] },
+              { $multiply: ["$items.subtotal", -1] },
+              "$items.subtotal",
+            ],
+          },
+        },
+      },
+
+      { $sort: { date: -1 } },
+    ]);
+    const totalRows = salesTableAgg.length;
+    const totalPages = Math.ceil(totalRows / limit);
+
+    const paginatedSales = salesTableAgg.slice(skip, skip + limit);
+
+    /* -------------------- REFUND AMOUNT -------------------- */
+const refundAgg = await Order.aggregate([
+  { $match: { createdAt: { $gte: fromDate, $lte: toDate } } },
+  { $unwind: "$items" },
+  {
+    $match: {
+      "items.status": { $in: ["cancelled", "returned"] },
+    },
+  },
+  {
+    $group: {
+      _id: null,
+      refundAmount: { $sum: "$items.subtotal" },
+    },
+  },
+]);
+
+const refundAmount = refundAgg[0]?.refundAmount || 0;
+
     /* -------------------- RENDER -------------------- */
     res.render("dashboard", {
       totalCustomers,
@@ -242,6 +306,25 @@ export const getDashboard = async (req, res) => {
       topProducts,
       topCategories,
       topPaymentMethod,
+
+      salesMeta: {
+        fromDate,
+        toDate,
+        generatedAt: new Date(),
+      },
+      salesSummary: {
+        orders: filtered.ordersCount,
+        totalSales: filtered.orderAmount,
+        totalDiscount: filtered.discountAmount,
+        refundAmount,
+        // revenue: filtered.netSales,
+      },
+      salesRows: paginatedSales,
+      pagination: {
+        current: currentPage,
+        total: totalPages,
+        limit
+      },
     });
   } catch (error) {
     console.error("Dashboard Error:", error);
@@ -265,7 +348,6 @@ export const salesReport = async (req, res) => {
   try {
     const { filter, start, end } = req.query;
 
-    /* -------------------- DATE RANGE -------------------- */
     const now = new Date();
     let fromDate, toDate;
 
@@ -414,7 +496,7 @@ export const salesReport = async (req, res) => {
     doc.text(
       `Total Discount      : ₹${totalDiscount.toFixed(
         2
-      )} (Already exclueded from sales)`
+      )} `
     );
     doc.text(`Cancelled Products  : ${cancelledCount}`);
     doc.text(`Returned Products   : ${returnedCount}`);
@@ -422,7 +504,7 @@ export const salesReport = async (req, res) => {
 
     doc.moveDown(0.5);
     doc.font("Helvetica-Bold");
-    doc.text(`TOTAL REVENUE       : ₹${totalRevenue.toFixed(2)}`);
+    // doc.text(`TOTAL REVENUE       : ₹${totalRevenue.toFixed(2)}`);
 
     doc.moveDown(2);
 
