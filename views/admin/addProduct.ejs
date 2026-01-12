@@ -356,30 +356,48 @@
 
               <!-- Row 4: Publisher, Year, Pages -->
               <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <input
-                  type="text"
-                  name="publisher"
-                  placeholder="Publisher"
-                  value="<%= oldInput?.publisher || '' %>"
-                  class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-                />
 
-                <input
-                  type="text"
-                  name="yearOfPublishing"
-                  placeholder="Year Of Publishing"
-                  value="<%= oldInput?.yearOfPublishing || '' %>"
-                  class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-                />
+  <!-- Publisher -->
+  <div>
+    <input
+      type="text"
+      name="publisher"
+      placeholder="Publisher"
+      value="<%= oldInput?.publisher || '' %>"
+      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+    />
+  </div>
 
-                <input
-                  type="number"
-                  name="pages"
-                  placeholder="Number of Pages"
-                  value="<%= oldInput?.pages || '' %>"
-                  class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
+  <!-- Year Of Publishing -->
+  <div>
+    <input 
+      type="text" 
+      name="yearOfPublishing" 
+      placeholder="Year Of Publishing" 
+      value="<%= oldInput?.yearOfPublishing || '' %>" 
+      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" 
+    />
+
+    <% if (errors?.yearOfPublishing) { %>
+      <p class="text-red-600 text-sm mt-1">
+        <%= errors.yearOfPublishing %>
+      </p>
+    <% } %>
+  </div>
+
+  <!-- Pages -->
+  <div>
+    <input
+      type="number"
+      name="pages"
+      placeholder="Number of Pages"
+      value="<%= oldInput?.pages || '' %>"
+      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+    />
+  </div>
+
+</div>
+
 
               <!-- Row 5: Translator -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

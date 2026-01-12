@@ -57,6 +57,12 @@ export const postProducts = async (req, res) => {
     if (!req.files || req.files.length < 1)
       errors.imageUrls = "Image is required";
 
+    const currentYear = new Date().getFullYear();
+
+    if (yearOfPublishing && Number(yearOfPublishing) > currentYear) {
+        errors.yearOfPublishing = "Publishing year cannot be in the future"
+    }
+
     if (Object.keys(errors).length > 0) {
       return res.render("addProduct", {
         errors,
@@ -64,6 +70,8 @@ export const postProducts = async (req, res) => {
         oldInput: req.body,
       });
     }
+
+    
 
     const offerEnabled = isOffer === "true";
 
