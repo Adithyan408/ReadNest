@@ -60,7 +60,7 @@ export const postProducts = async (req, res) => {
     const currentYear = new Date().getFullYear();
 
     if (yearOfPublishing && Number(yearOfPublishing) > currentYear) {
-        errors.yearOfPublishing = "Publishing year cannot be in the future"
+      errors.yearOfPublishing = "Publishing year cannot be in the future";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -70,8 +70,6 @@ export const postProducts = async (req, res) => {
         oldInput: req.body,
       });
     }
-
-    
 
     const offerEnabled = isOffer === "true";
 
@@ -123,7 +121,7 @@ export const loadEditProducts = async (req, res) => {
     const id = req.query.id;
     const categories = await Category.find({ isListed: true });
     const product = await Product.findOne({ _id: id });
-    res.render("editProduct", { data: product, categories });
+    res.render("editProduct", { data: product, categories, errors:{} });
   } catch (error) {
     res.redirect("/pageerror");
   }
@@ -156,6 +154,20 @@ export const postEditProducts = async (req, res) => {
       startDate,
       endDate,
     } = req.body;
+
+
+    const categories = await Category.find({ isListed: true });
+    const currentYear = new Date().getFullYear();
+
+    if (yearOfPublishing && Number(yearOfPublishing) > currentYear) {
+      return res.render("editProduct", {
+        data: existingProduct,
+        errors: {
+          yearOfPublishing: "Publishing year cannot be in the future",
+        },
+        categories
+      });
+    }
 
     const offerEnabled = isOffer === "true";
     const updatedFields = {
