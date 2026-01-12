@@ -45,8 +45,6 @@ export const postCategory = async (req, res) => {
         category: { categoryName },
       });
     }
-    console.log("offer:", isOffer);
-    console.log("offer:", discountValue);
     const existingCategory = await Category.findOne({ categoryName });
     if (existingCategory) {
       return res.status(400).render("addCategory", {
@@ -86,6 +84,7 @@ export const postCategory = async (req, res) => {
       totalCategories: totalCategories,
       status: "added",
       limit,
+      search:"",
     });
   } catch (error) {
     return res.status(500).json({ error: "Internal Server Error" });
