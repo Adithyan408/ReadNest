@@ -19,15 +19,14 @@ import {
   getResetPassword,
   postResetPassword,
   forgotVerifyOtp,
-  updateName,
-  updatePhone,
   setPassword,
   verifyPassword,
   changePassword,
   updateEmail,
   updateVerifyEmail,
   uploadProfileImage,
-  deleteProfileImage
+  deleteProfileImage,
+  profileUpdate
 } from "../controllers/user/profileController.js";
 import {
   getProductsDetails,
@@ -68,8 +67,7 @@ router.post("/signup", signup);
 router.post("/verify-otp", verifyOtp);
 router.post("/resend-otp", resendOtp);
 router.post("/login", login);
-router.post("/account/update-name", updateName);
-router.post("/account/update-phone", updatePhone);
+router.post("/account/update-profile", userAuth, profileUpdate);
 router.post("/account/set-password", setPassword);
 router.post("/account/verifypassword", verifyPassword);
 router.post("/account/change-password", changePassword);

@@ -134,39 +134,57 @@ export const resetPasswordPost = async (req, res) => {
   }
 };
 
-export const nameUpdate = async (req, res) => {
+export const updateProfile = async (req, res) => {
   try {
-    const { firstName, lastName } = req.body;
-    const fullName = `${firstName} ${lastName}`;
-    console.log(req.session.user._id);
-    console.log(req.body);
-    await User.findByIdAndUpdate(
-      req.session.user._id,
-      { name: fullName },
-      { new: true }
-    );
+    const { firstName, lastName, phone } = req.body;
+    const userId = req.session.user?._id;
+
+    if (!userId) {
+      return res.json({ success: false, message: "Unauthorized" });
+    }
+
+
+    if (!firstName || !firstName.trim()) {
+      return res.json({
+        success: false,
+        message: "First name is required",
+      });
+    }
+
+    if (phone && !/^[0-9]{10}$/.test(phone)) {
+      return res.json({
+        success: false,
+        message: "Invalid phone number",
+      });
+    }
+
+
+    const updateData = {
+      name: lastName?.trim()
+        ? `${firstName.trim()} ${lastName.trim()}`
+        : firstName.trim(),
+    };
+
+    if (phone) {
+      updateData.phone = phone;
+    }
+
+
+    await User.findByIdAndUpdate(userId, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     return res.json({ success: true });
   } catch (error) {
-    return res.json({ success: false });
+    console.error("Profile update error:", error);
+    return res.json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
-export const phoneUpdate = async (req, res) => {
-  try {
-    const { phone } = req.body;
-
-    await User.findByIdAndUpdate(
-      req.session.user._id,
-      { phone },
-      { new: true }
-    );
-
-    return res.json({ success: true });
-  } catch (error) {
-    return res.json({ success: false, message: "Server error" });
-  }
-};
 
 export const emailUpdate = async (req, res) => {
   try {
@@ -380,7 +398,6 @@ export const profileImageDelete = async (req, res) => {
       });
     }
 
-    // DELETE FROM CLOUDINARY
     try {
       const oldUrl = user.profileImage;
       const publicId = oldUrl.split("/").pop().split(".")[0];

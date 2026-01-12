@@ -83,44 +83,69 @@
           />
         </div>
 
-        <!-- PERSONAL INFO CARD -->
-        <div class="bg-white rounded-xl shadow p-6 mb-8">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">
-              Personal Information
-            </h2>
+        <!-- PERSONAL INFO + PHONE CARD -->
+<div class="bg-white rounded-xl shadow p-6 mb-8">
+  <!-- HEADER -->
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">
+      Personal Information
+    </h2>
 
-            <button
-              type="button"
-              id="nameEditBtn"
-              onclick="toggleNameEdit()"
-              class="text-blue-600 font-semibold hover:text-blue-700"
-            >
-              Edit
-            </button>
-          </div>
+    <button
+      type="button"
+      id="profileEditBtn"
+      onclick="toggleProfileEdit()"
+      class="text-blue-600 font-semibold hover:text-blue-700"
+    >
+      Edit
+    </button>
+  </div>
 
-          <% const nameParts = user.name.split(" "); const firstName =
-          nameParts[0]; const lastName = nameParts.slice(1).join(" "); %>
+  <% 
+    const nameParts = user.name.split(" ");
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(" ");
+  %>
 
-          <div class="grid grid-cols-2 gap-4">
-            <input
-              id="firstName"
-              type="text"
-              value="<%= firstName %>"
-              class="bg-gray-100 rounded-lg p-4 h-14 text-gray-700 font-medium"
-              disabled
-            />
+  <!-- NAME SECTION -->
+  <div class="grid grid-cols-2 gap-4 mb-6">
+    <!-- First Name -->
+    <input
+      id="firstName"
+      type="text"
+      value="<%= firstName %>"
+      class="bg-gray-100 rounded-lg p-4 h-14 text-gray-700 font-medium"
+      disabled
+    />
 
-            <input
-              id="lastName"
-              type="text"
-              value="<%= lastName %>"
-              class="bg-gray-100 rounded-lg p-4 h-14 text-gray-700 font-medium"
-              disabled
-            />
-          </div>
-        </div>
+    <!-- Last Name (hidden if empty) -->
+    <div id="lastNameWrapper" class="<%= lastName ? '' : 'hidden' %>">
+      <input
+        id="lastName"
+        type="text"
+        value="<%= lastName %>"
+        class="bg-gray-100 rounded-lg p-4 h-14 text-gray-700 font-medium"
+        disabled
+      />
+    </div>
+  </div>
+
+  <!-- MOBILE NUMBER -->
+  <div>
+    <h3 class="text-xl font-bold text-gray-900 mb-3">
+      Mobile Number
+    </h3>
+
+    <input
+      type="text"
+      id="phoneInput"
+      value="<%= user.phone %>"
+      class="bg-gray-100 rounded-lg p-4 h-14 max-w-md text-gray-700 font-medium"
+      disabled
+    />
+  </div>
+</div>
+
 
         <!-- EMAIL SECTION -->
         <div class="bg-white rounded-xl shadow p-6 mb-8">
@@ -203,29 +228,7 @@
           </div>
         </div>
 
-        <!-- MOBILE SECTION -->
-        <div class="bg-white rounded-xl shadow p-6 mb-8">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-xl font-bold text-gray-900">Mobile Number</h3>
-
-            <button
-              type="button"
-              id="phoneEditBtn"
-              onclick="togglePhoneEdit()"
-              class="text-blue-600 font-semibold hover:text-blue-700"
-            >
-              <% if(user.phone){ %> Edit <% } else { %> Add <% } %>
-            </button>
-          </div>
-
-          <input
-            type="text"
-            id="phoneInput"
-            value="<%= user.phone %>"
-            class="bg-gray-100 rounded-lg p-4 h-14 max-w-md text-gray-700 font-medium"
-            disabled
-          />
-        </div>
+       
 
         <!-- PASSWORD SECTION -->
         <div class="bg-white rounded-xl shadow p-6 mb-8">
@@ -545,143 +548,114 @@
       }
 
       /* ======================== NAME UPDATE ======================== */
-      function toggleNameEdit() {
-        const first = document.getElementById("firstName");
-        const last = document.getElementById("lastName");
-        const btn = document.getElementById("nameEditBtn");
+      function toggleProfileEdit() {
+      const first = document.getElementById("firstName");
+      const last = document.getElementById("lastName");
+      const lastWrapper = document.getElementById("lastNameWrapper");
+      const phone = document.getElementById("phoneInput");
+      const btn = document.getElementById("profileEditBtn");
 
-        // If entering edit mode
-        if (first.disabled) {
-          first.disabled = false;
-          last.disabled = false;
+      const isEditMode = first.disabled;
 
-          btn.textContent = "Save";
-          btn.classList.remove("text-blue-600");
-          btn.classList.add("text-green-600");
-          return;
-        }
+  /* ================= ENTER EDIT MODE ================= */
+  if (isEditMode) {
+    first.disabled = false;
+    phone.disabled = false;
 
-        // ✅ Validation before confirmation
-        if (!first.value.trim()) {
-          Swal.fire({
-            icon: "error",
-            title: "First Name Required",
-            text: "First name cannot be empty.",
-          });
-          return; // ❌ Stop immediately
-        }
+    // Show last name field when editing
+    lastWrapper.classList.remove("hidden");
+    last.disabled = false;
 
-        // Confirmation popup
-        Swal.fire({
-          title: "Confirm Changes?",
-          text: "Are you sure you want to update your name?",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#16a34a",
-          cancelButtonColor: "#6b7280",
-          confirmButtonText: "Yes, Save",
-        }).then((result) => {
-          if (!result.isConfirmed) return;
+    btn.textContent = "Save";
+    btn.classList.replace("text-blue-600", "text-green-600");
+    return;
+  }
 
-          fetch("/account/update-name", {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              firstName: first.value,
-              lastName: last.value,
-            }),
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              if (!data.success) {
-                Swal.fire("Error", data.message, "error");
-                return;
-              }
+  /* ================= VALIDATION ================= */
 
-              Swal.fire("Updated!", "Name updated successfully.", "success");
+if (!first.value.trim()) {
+  Swal.fire("Error", "First name cannot be empty", "error");
+  return;
+}
 
-              first.disabled = true;
-              last.disabled = true;
+const nameRegex = /^[A-Za-z ]+$/;
 
-              btn.textContent = "Edit";
-              btn.classList.remove("text-green-600");
-              btn.classList.add("text-blue-600");
-            });
-        });
-      }
+if (!nameRegex.test(first.value.trim())) {
+  Swal.fire(
+    "Invalid First Name",
+    "Only letters, spaces  are allowed",
+    "error"
+  );
+  return;
+}
 
-      /* ======================== PHONE UPDATE ======================== */
-      function togglePhoneEdit() {
-        const phoneInput = document.getElementById("phoneInput");
-        const phoneBtn = document.getElementById("phoneEditBtn");
+if (last.value.trim() && !nameRegex.test(last.value.trim())) {
+  Swal.fire(
+    "Invalid Last Name",
+    "Only letters, spaces  are allowed",
+    "error"
+  );
+  return;
+}
 
-        // ENTER EDIT MODE
-        if (phoneInput.disabled) {
-          phoneInput.disabled = false;
-          phoneBtn.textContent = "Save";
+const phoneVal = phone.value.trim();
+if (phoneVal && !/^[0-9]{10}$/.test(phoneVal)) {
+  Swal.fire(
+    "Invalid Phone",
+    "Enter a valid 10-digit mobile number",
+    "error"
+  );
+  return;
+}
 
-          phoneBtn.classList.remove("text-blue-600");
-          phoneBtn.classList.add("text-green-600");
-          return;
-        }
 
-        // ============================
-        // ✅ VALIDATION BEFORE CONFIRM
-        // ============================
+  /* ================= CONFIRM ================= */
 
-        const phone = phoneInput.value.trim();
+  Swal.fire({
+    title: "Confirm Changes?",
+    text: "Update profile information?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#16a34a",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Yes, Save",
+  }).then(async (result) => {
+    if (!result.isConfirmed) return;
 
-        // Only digits allowed → no spaces, no +91, no symbols
-        const phoneRegex = /^[0-9]{10}$/;
+    const res = await fetch("/account/update-profile", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstName: first.value,
+        lastName: last.value,
+        phone: phoneVal,
+      }),
+    });
 
-        if (!phoneRegex.test(phone)) {
-          Swal.fire({
-            icon: "error",
-            title: "Invalid Phone Number",
-            text: "Please enter a valid 10-digit mobile number without spaces or special characters.",
-          });
-          return;
-        }
+    const data = await res.json();
 
-        // ============================
-        // CONFIRMATION POPUP
-        // ============================
+    if (!data.success) {
+      Swal.fire("Error", data.message, "error");
+      return;
+    }
 
-        Swal.fire({
-          title: "Confirm Changes?",
-          text: "Update mobile number?",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#16a34a",
-          cancelButtonColor: "#6b7280",
-          confirmButtonText: "Yes, Save",
-        }).then((result) => {
-          if (!result.isConfirmed) return;
+    Swal.fire("Updated!", "Profile updated successfully", "success");
 
-          fetch("/account/update-phone", {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone }),
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              if (!data.success) {
-                Swal.fire("Error", data.message, "error");
-                return;
-              }
+    /* ================= EXIT EDIT MODE ================= */
+    first.disabled = true;
+    phone.disabled = true;
+    last.disabled = true;
 
-              Swal.fire("Updated!", "Mobile number updated!", "success");
+    // Hide last name again if still empty
+    if (!last.value.trim()) {
+      lastWrapper.classList.add("hidden");
+    }
 
-              phoneInput.disabled = true;
-              phoneBtn.textContent = "Edit";
-
-              phoneBtn.classList.remove("text-green-600");
-              phoneBtn.classList.add("text-blue-600");
-            });
-        });
-      }
+    btn.textContent = "Edit";
+    btn.classList.replace("text-green-600", "text-blue-600");
+  });
+}
 
       /* ======================== PASSWORD VISIBILITY ======================== */
       function toggleVisibility(inputId, eyeId) {

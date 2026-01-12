@@ -2,9 +2,7 @@ import {
   forgotEmail,
   forgotPassword,
   forgotVerify,
-  nameUpdate,
   passwordSet,
-  phoneUpdate,
   resetPassword,
   resetPasswordPost,
   passwordVerify,
@@ -12,7 +10,8 @@ import {
   emailUpdate,
   verifyEmailUpdate,
   profileImage,
-  profileImageDelete
+  profileImageDelete,
+  updateProfile
 } from "../../services/user/profileSerive.js";
 
 export const getForgotPassword = async (req, res) => {
@@ -35,14 +34,9 @@ export const postResetPassword = async (req, res) => {
   await resetPasswordPost(req, res);
 };
 
-export const updateName = async (req, res) => {
-  await nameUpdate(req, res);
-};
-
-export const updatePhone = async (req, res) => {
-  await phoneUpdate(req, res);
-};
-
+export const profileUpdate = async(req, res) => {
+  await updateProfile(req, res);
+}
 export const updateEmail = async (req, res) => {
   await emailUpdate(req, res);
 };
