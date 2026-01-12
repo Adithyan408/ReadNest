@@ -164,21 +164,25 @@
       <main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
         <%- include('../../views/partials/breadcrumb') %>
 
-        <!-- Status Message -->
-        <% if (status) { %>
-        <div
-          id="statusMessage"
-          class="mb-4 p-3 text-center font-semibold rounded-md <%= status.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' %>"
-        >
-          <%= status %>
-        </div>
+    <% if (status) { %>
+  <div
+    id="statusMessage"
+    class="mb-4 p-3 text-center font-semibold rounded-md
+    <%= status.type === 'success'
+      ? 'bg-green-100 text-green-700'
+      : 'bg-red-100 text-red-700' %>"
+  >
+    <%= status.message %>
+  </div>
 
-        <script>
-          setTimeout(() => {
-            document.getElementById("statusMessage").style.display = "none";
-          }, 3000);
-        </script>
-        <% } %>
+  <script>
+    setTimeout(() => {
+      const el = document.getElementById("statusMessage");
+      if (el) el.style.display = "none";
+    }, 3000);
+  </script>
+<% } %>
+
 
         <!-- Coupon Table -->
         <div class="bg-white rounded-2xl shadow-lg">
@@ -511,7 +515,6 @@
     return true;
   }
   
-
       </script>
     </div>
   </body>

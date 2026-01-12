@@ -48,7 +48,11 @@ export const postAddCoupon = async (req, res) => {
       req.body;
 
     if (!code || !discount || !expiry) {
-      req.session.status = "All fields are required";
+      req.session.status = {
+        type: "error",
+        message: "All fields are required",
+      };
+
       return res.redirect("/admin/coupon/addCoupon");
     }
 
@@ -60,7 +64,10 @@ export const postAddCoupon = async (req, res) => {
     startDate.setHours(0, 0, 0, 0);
 
     if (isNaN(expiryDate.getTime()) || expiryDate <= today) {
-      req.session.status = "Expiry date must be a future date!";
+      req.session.status = {
+        type: "error",
+        message: "Expiry date must be a future date!",
+      };
       return res.redirect("/admin/coupon/addCoupon");
     }
 
@@ -77,7 +84,7 @@ export const postAddCoupon = async (req, res) => {
       req.session.status = "Coupon code already exists!";
       return res.redirect("/admin/coupon/addCoupon");
     }
-    
+
     await Coupon.create({
       code: code.trim().toUpperCase(),
       discount: Number(discount),
@@ -90,7 +97,11 @@ export const postAddCoupon = async (req, res) => {
       type: "general",
     });
 
-    req.session.status = "Coupon created successfully!";
+    req.session.status = {
+      type: "success",
+      message: "Coupon updated successfully!",
+    };
+
     res.redirect("/admin/coupon");
   } catch (error) {
     console.error("Error adding coupon:", error);
@@ -157,18 +168,30 @@ export const deleteCoupon = async (req, res) => {
     const { id } = req.query;
 
     if (!id) {
-      req.session.message = "Invalid coupon ID";
+      req.session.status = {
+        type: "error",
+        message: "Invalid coupon ID",
+      };
+
       return res.redirect("/admin/coupon");
     }
 
     const deleted = await Coupon.findByIdAndDelete(id);
 
     if (!deleted) {
-      req.session.status = "Coupon not found!";
+      req.session.status = {
+        type: "error",
+        message: " coupon not Found",
+      };
+
       return res.redirect("/admin/coupon");
     }
 
-    req.session.status = "Coupon deleted successfully!";
+    req.session.status = {
+      type: "success",
+      message: "Coupon deleted successfully",
+    };
+
     return res.redirect("/admin/coupon");
   } catch (error) {
     console.log("Error deleting coupon:", error);
