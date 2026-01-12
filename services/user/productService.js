@@ -79,7 +79,7 @@ export const homeLoad = async (req, res) => {
 
     const products = await Product.find(filter)
       .populate("category")
-      .sort(sortQuery)
+      .sort(sort === "newest" || sort === "oldest" ? sortQuery : {})
       .skip(skip)
       .limit(limit);
 
@@ -127,10 +127,20 @@ export const homeLoad = async (req, res) => {
         } else {
           productObj.offerPrice = null;
         }
+        productObj.effectivePrice =
+          productObj.offerPrice !== null ? productObj.offerPrice : regularPrice;
 
         return productObj;
       })
     );
+
+    if (sort === "priceAsc") {
+      processedProducts.sort((a, b) => a.effectivePrice - b.effectivePrice);
+    }
+
+    if (sort === "priceDesc") {
+      processedProducts.sort((a, b) => b.effectivePrice - a.effectivePrice);
+    }
 
     const totalProducts = await Product.countDocuments(filter);
     const totalPages = Math.ceil(totalProducts / limit);
@@ -352,8 +362,8 @@ export const productDetails = async (req, res) => {
       baseQuery,
       wishlistProducts,
       user: req.session.user,
-      isProductListed, 
-      isCategoryListed
+      isProductListed,
+      isCategoryListed,
     });
   } catch (error) {
     console.log(error);
