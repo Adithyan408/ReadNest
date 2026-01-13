@@ -245,10 +245,11 @@
                     class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
                   />
                   <% if (errors?.productName) { %>
-                  <p class="text-red-600 text-sm mt-1">
+                  <p class="text-red-600 text-sm mt-1" data-error-for="productName">
                     <%= errors.productName %>
                   </p>
                   <% } %>
+                  <p id="error-productName" class="text-red-600 text-sm mt-1 hidden"></p>
                 </div>
 
                 <!-- Description -->
@@ -262,10 +263,11 @@
                   >
 
                   <% if (errors?.description) { %>
-                  <p class="text-red-600 text-sm mt-1">
+                  <p class="text-red-600 text-sm mt-1" data-error-for="description">
                     <%= errors.description %>
                   </p>
                   <% } %>
+                  <p id="error-description" class="text-red-600 text-sm mt-1 hidden"></p>
                 </div>
 
                 
@@ -292,10 +294,11 @@
                   </select>
 
                   <% if (errors?.category) { %>
-                  <p class="text-red-600 text-sm mt-1">
+                  <p class="text-red-600 text-sm mt-1" data-error-for="category">
                     <%= errors.category %>
                   </p>
                   <% } %>
+                  <p id="error-category" class="text-red-600 text-sm mt-1 hidden"></p>
                 </div>
 
                 <!-- Language -->
@@ -322,10 +325,11 @@
                   </select>
 
                   <% if (errors?.language) { %>
-                  <p class="text-red-600 text-sm mt-1">
+                  <p class="text-red-600 text-sm mt-1" data-error-for="language">
                     <%= errors.language %>
                   </p>
                   <% } %>
+                  <p id="error-language" class="text-red-600 text-sm mt-1 hidden"></p>
                 </div>
               </div>
 
@@ -340,8 +344,9 @@
                     class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
                   />
                   <% if (errors?.author) { %>
-                  <p class="text-red-600 text-sm mt-1"><%= errors.author %></p>
+                  <p class="text-red-600 text-sm mt-1" data-error-for="author"><%= errors.author %></p>
                   <% } %>
+                  <p id="error-author" class="text-red-600 text-sm mt-1 hidden"></p>
                 </div>
 
                 <div>
@@ -379,10 +384,11 @@
     />
 
     <% if (errors?.yearOfPublishing) { %>
-      <p class="text-red-600 text-sm mt-1">
+      <p class="text-red-600 text-sm mt-1" data-error-for="yearOfPublishing">
         <%= errors.yearOfPublishing %>
       </p>
     <% } %>
+    <p id="error-yearOfPublishing" class="text-red-600 text-sm mt-1 hidden"></p>
   </div>
 
   <!-- Pages -->
@@ -470,8 +476,9 @@
     />
 
     <% if (errors?.regularPrice) { %>
-      <p class="text-red-600 text-sm mt-1"><%= errors.regularPrice %></p>
+      <p class="text-red-600 text-sm mt-1" data-error-for="regularPrice"><%= errors.regularPrice %></p>
     <% } %>
+    <p id="error-regularPrice" class="text-red-600 text-sm mt-1 hidden"></p>
   </div>
 
   <!-- Stock Quantity -->
@@ -490,8 +497,9 @@
     />
 
     <% if (errors?.stock) { %>
-      <p class="text-red-600 text-sm mt-1"><%= errors.stock %></p>
+      <p class="text-red-600 text-sm mt-1" data-error-for="stock"><%= errors.stock %></p>
     <% } %>
+    <p id="error-stock" class="text-red-600 text-sm mt-1 hidden"></p>
   </div>
 
 </div>
@@ -520,12 +528,14 @@
     type="number"
     name="discountValue"
     placeholder="Enter discount percentage"
-    step="0.01"
-    min="0"
-    max="100"
+    step="1"
     value="<%= oldInput?.discountValue || '' %>"
     class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
   />
+  <% if (errors?.discountValue) { %>
+      <p class="text-red-600 text-sm mt-1" data-error-for="discountValue"><%= errors.discountValue %></p>
+    <% } %>
+    <p id="error-discountValue" class="text-red-600 text-sm mt-1 hidden"></p>
 </div>
 
 
@@ -538,6 +548,7 @@
       value="<%= oldInput?.startDate || '' %>"
       class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
     />
+    <p id="error-startDate" class="text-red-600 text-sm mt-1 hidden"></p>
   </div>
 
   <!-- Offer End Date -->
@@ -549,6 +560,7 @@
       value="<%= oldInput?.endDate || '' %>"
       class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
     />
+    <p id="error-endDate" class="text-red-600 text-sm mt-1 hidden"></p>
   </div>
 
 </div>
@@ -585,8 +597,9 @@
                   ></div>
                 
                 <% if (errors?.imageUrls) { %>
-                  <p class="text-red-600 text-sm"><%= errors.imageUrls %></p>
+                  <p class="text-red-600 text-sm" data-error-for="imageUrls"><%= errors.imageUrls %></p>
                   <% } %>
+                  <p id="error-imageUrls" class="text-red-600 text-sm mt-1 hidden"></p>
                   </div>
               </div>
 
@@ -851,7 +864,6 @@
         }
       }
 
-      // Before submitting → attach cropped files to actual file input
       const form = document.querySelector("form");
       form.addEventListener("submit", function (e) {
         const dataTransfer = new DataTransfer();
@@ -862,8 +874,149 @@
         fileInput.files = dataTransfer.files;
       });
 
-      // Expose cancel handler for modal close button
       window.handleCropCancel = handleCropCancel;
+    
+
+        const errorMap = {
+    productName: "Product name is required",
+    description: "Description is required",
+    category: "Please select a category",
+    language: "Please select a language",
+    regularPrice: "Enter a valid price",
+    stock: "Stock quantity is required",
+    discountValue: "Discount must be between 1 and 95",
+    imageUrls: "At least one product image is required",
+    yearOfPublishing: "Enter a valid publishing year"
+  };
+
+  function showError(field, message) {
+    const el = document.getElementById(`error-${field}`);
+    if (!el) return;
+    el.textContent = message;
+    el.classList.remove("hidden");
+  }
+
+  function hideError(field) {
+    const el = document.getElementById(`error-${field}`);
+    if (!el) return;
+    el.textContent = "";
+    el.classList.add("hidden");
+  }
+
+  function clearAllErrors() {
+    Object.keys(errorMap).forEach(hideError);
+  }
+
+  form.addEventListener("submit", function (e) {
+    clearAllErrors();
+    let hasError = false;
+
+    const productName = form.productName.value.trim();
+    const description = form.description.value.trim();
+    const category = form.category.value;
+    const language = form.language.value;
+    const regularPrice = Number(form.regularPrice.value);
+    const stock = Number(form.stock.value);
+    const discountValue = Number(form.discountValue.value);
+    const year = form.yearOfPublishing.value;
+    const startDate = form.startDate.value;
+    const endDate = form.endDate.value;
+
+    if (!productName) {
+      showError("productName", errorMap.productName);
+      hasError = true;
+    }
+
+    if (!description) {
+      showError("description", errorMap.description);
+      hasError = true;
+    }
+
+    if (!category) {
+      showError("category", errorMap.category);
+      hasError = true;
+    }
+
+    if (!language) {
+      showError("language", errorMap.language);
+      hasError = true;
+    }
+
+    if (!regularPrice || regularPrice <= 0) {
+      showError("regularPrice", errorMap.regularPrice);
+      hasError = true;
+    }
+
+    if (!stock || stock < 0) {
+      showError("stock", errorMap.stock);
+      hasError = true;
+    }
+
+    if (form.isOffer.value === "true") {
+      if (!discountValue || discountValue <= 1 || discountValue > 95) {
+        showError("discountValue", errorMap.discountValue);
+        hasError = true;
+      }
+
+      const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (!startDate) {
+    showError("startDate", "Offer start date is required");
+    hasError = true;
+  }
+
+  if (!endDate) {
+    showError("endDate", "Offer end date is required");
+    hasError = true;
+  }
+
+  if (startDate) {
+    const start = new Date(startDate);
+    if (start < today) {
+      showError("startDate", "Start date cannot be in the past");
+      hasError = true;
+    }
+  }
+
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (end <= start) {
+      showError("endDate", "End date must be after start date");
+      hasError = true;
+    }
+  }
+
+    }
+
+    if (year) {
+  const yearNum = Number(year);
+  const currentYear = new Date().getFullYear();
+
+  if (!/^\d{4}$/.test(year)) {
+    showError("yearOfPublishing", "Enter a valid 4-digit year");
+    hasError = true;
+  } 
+  else if (yearNum > currentYear) {
+    showError("yearOfPublishing", "Publishing year cannot be in the future");
+    hasError = true;
+  }
+}
+
+
+    if (croppedFiles.length === 0) {
+      showError("imageUrls", errorMap.imageUrls);
+      hasError = true;
+    }
+
+    if (hasError) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
+
     </script>
   </body>
 </html>

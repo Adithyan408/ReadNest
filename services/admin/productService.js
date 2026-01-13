@@ -63,6 +63,16 @@ export const postProducts = async (req, res) => {
       errors.yearOfPublishing = "Publishing year cannot be in the future";
     }
 
+    const offerEnabled = isOffer === "true";
+    const discountNum = Number(discountValue);
+    
+    if (offerEnabled) {
+      if (Number.isNaN(discountNum) || discountNum < 5 || discountNum > 95) {
+        errors.discountValue =
+          "Discount must be between 5% and 95% when offer is enabled";
+      }
+    }
+
     if (Object.keys(errors).length > 0) {
       return res.render("addProduct", {
         errors,
@@ -70,8 +80,6 @@ export const postProducts = async (req, res) => {
         oldInput: req.body,
       });
     }
-
-    const offerEnabled = isOffer === "true";
 
     const newProduct = new Product({
       productName,
@@ -121,7 +129,7 @@ export const loadEditProducts = async (req, res) => {
     const id = req.query.id;
     const categories = await Category.find({ isListed: true });
     const product = await Product.findOne({ _id: id });
-    res.render("editProduct", { data: product, categories, errors:{} });
+    res.render("editProduct", { data: product, categories, errors: {} });
   } catch (error) {
     res.redirect("/pageerror");
   }
@@ -155,7 +163,6 @@ export const postEditProducts = async (req, res) => {
       endDate,
     } = req.body;
 
-
     const categories = await Category.find({ isListed: true });
     const currentYear = new Date().getFullYear();
 
@@ -165,7 +172,7 @@ export const postEditProducts = async (req, res) => {
         errors: {
           yearOfPublishing: "Publishing year cannot be in the future",
         },
-        categories
+        categories,
       });
     }
 
