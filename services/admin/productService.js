@@ -65,7 +65,7 @@ export const postProducts = async (req, res) => {
 
     const offerEnabled = isOffer === "true";
     const discountNum = Number(discountValue);
-    
+
     if (offerEnabled) {
       if (Number.isNaN(discountNum) || discountNum < 5 || discountNum > 95) {
         errors.discountValue =
@@ -177,6 +177,63 @@ export const postEditProducts = async (req, res) => {
     }
 
     const offerEnabled = isOffer === "true";
+
+    /* ---------------- OFFER VALIDATION ---------------- */
+
+    if (offerEnabled) {
+      const discount = Number(discountValue);
+
+      if (
+        !discountValue ||
+        Number.isNaN(discount) ||
+        discount < 1 ||
+        discount > 95
+      ) {
+        return res.render("editProduct", {
+          data: existingProduct,
+          errors: {
+            discountValue: "Discount must be between 1 and 95%",
+          },
+          categories,
+        });
+      }
+
+      if (!startDate || !endDate) {
+        return res.render("editProduct", {
+          data: existingProduct,
+          errors: {
+            offerDates: "Offer start and end dates are required",
+          },
+          categories,
+        });
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (start < today) {
+        return res.render("editProduct", {
+          data: existingProduct,
+          errors: {
+            startDate: "Offer start date cannot be in the past",
+          },
+          categories,
+        });
+      }
+
+      if (end <= start) {
+        return res.render("editProduct", {
+          data: existingProduct,
+          errors: {
+            endDate: "Offer end date must be after start date",
+          },
+          categories,
+        });
+      }
+    }
+
     const updatedFields = {
       productName,
       productNumber,
