@@ -2,6 +2,7 @@ import Wishlist from "../../models/wishlistSchema.js";
 import Product from "../../models/productsSchema.js";
 import Cart from "../../models/cartSchema.js";
 import Category from "../../models/categorySchema.js";
+import User from "../../models/userSchema.js";
 
 export const WishlistToggle = async (req, res) => {
   try {
@@ -119,9 +120,10 @@ export const loadWishlist = async (req, res) => {
       })
     );
 
+    const user = await User.findById(userId)
     return res.render("wishlist", {
       wishlist: finalWishlist,
-      user: req.session.user,
+      user,
     });
   } catch (error) {
     console.error("Error loading wishlist:", error);
