@@ -182,13 +182,11 @@ export const moveSingleToCart = async (req, res) => {
       freshCategory?.isListed === false ||
       freshProduct.stock <= 0
     ) {
-      // 🔄 Rollback cart insert
       await Cart.updateOne({ userId }, { $pull: { items: { productId } } });
 
       return res.redirect("/wishlist?error=product-unavailable");
     }
 
-    // ✅ Remove from wishlist ONLY NOW
     await Wishlist.updateOne({ userId }, { $pull: { products: productId } });
 
     return res.redirect("/cart");
@@ -227,7 +225,6 @@ export const moveAllToCart = async (req, res) => {
       }
     }
 
-    // 🟢 STEP 2: Add all items to cart
     let cart = await Cart.findOne({ userId });
     if (!cart) {
       cart = new Cart({ userId, items: [] });
