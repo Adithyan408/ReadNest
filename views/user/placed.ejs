@@ -1,104 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Checkout - ReadNest</title>
+    <title>Order Success - ReadNest</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
-
-      * {
-        font-family: "Poppins", sans-serif;
-      }
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+        * { font-family: "Poppins", sans-serif; }
     </style>
-  </head>
+</head>
 
-  <body class="bg-gray-100">
-    <!-- Header -->
+<body class="bg-gray-100 min-h-screen flex flex-col">
     <%- include("../../views/partials/user/header") %>
 
-    <main class="max-w-4xl mx-auto px-6 py-16">
-      <!-- Success Card -->
-      <div class="bg-white shadow-xl rounded-2xl p-10 text-center space-y-6">
-        <!-- Success Icon -->
-        <div class="flex justify-center">
-          <div class="bg-green-100 p-5 rounded-full">
-            <i class="fa-solid fa-circle-check text-green-600 text-5xl"></i>
-          </div>
+    <main class="flex-grow flex items-center justify-center px-4 py-8 md:py-16">
+        <div class="bg-white shadow-xl rounded-2xl p-6 sm:p-10 w-full max-w-2xl text-center space-y-6">
+            
+            <div class="flex justify-center">
+                <div class="bg-green-100 p-4 sm:p-5 rounded-full">
+                    <i class="fa-solid fa-circle-check text-green-600 text-4xl sm:text-5xl"></i>
+                </div>
+            </div>
+
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-800 leading-tight px-2">
+                Order Placed Successfully!
+            </h1>
+
+            <p class="text-gray-500 text-sm sm:text-lg leading-relaxed max-w-md mx-auto">
+                Thank you for choosing <span class="font-bold text-blue-600">ReadNest</span>. 
+                Your books are being prepared for their journey to you!
+            </p>
+
+            <div class="bg-gray-50 border border-gray-100 rounded-2xl p-5 sm:p-6 text-left space-y-3">
+                <h2 class="text-base sm:text-lg font-bold text-gray-800 border-b border-gray-200 pb-2 mb-4">Summary</h2>
+
+                <div class="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4">
+                    <span class="text-gray-400 text-xs sm:text-sm font-medium uppercase tracking-wider">Order Amount</span>
+                    <span class="text-gray-800 font-bold text-sm sm:text-base">₹ <%= totalAmount %></span>
+                </div>
+
+                <% if (selectedAddress) { %>
+                <div class="pt-2 border-t border-dashed border-gray-200">
+                    <p class="text-gray-400 text-xs sm:text-sm font-medium uppercase tracking-wider mb-2">Delivery Address</p>
+                    <p class="text-gray-700 text-sm sm:text-base leading-snug">
+                        <span class="font-semibold text-gray-800"><%= selectedAddress.houseName %></span><br />
+                        <span class="text-gray-500"><%= selectedAddress.street %>, <%= selectedAddress.district %> - <%= selectedAddress.pincode %></span>
+                    </p>
+                    <p class="text-xs text-gray-400 mt-2 italic">Contact: <%= selectedAddress.phone %></p>
+                </div>
+                <% } %>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mt-8">
+                <a
+                    href="/orders/<%= orderId %>"
+                    class="w-full sm:w-auto bg-blue-600 text-white px-8 py-3.5 rounded-xl text-sm sm:text-base font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition active:scale-95 text-center"
+                >
+                    View My Order
+                </a>
+
+                <a
+                    href="/"
+                    class="w-full sm:w-auto bg-gray-100 text-gray-600 px-8 py-3.5 rounded-xl text-sm sm:text-base font-bold hover:bg-gray-200 transition active:scale-95 text-center"
+                >
+                    Keep Shopping
+                </a>
+            </div>
         </div>
-
-        <!-- Heading -->
-        <h1 class="text-3xl font-bold text-gray-800">
-          Your Order Has Been Successfully Placed!
-        </h1>
-
-        <!-- Message -->
-        <p class="text-gray-600 text-lg leading-relaxed">
-          Thank you for shopping with
-          <span class="font-semibold text-blue-600">ReadNest</span>. We’ve
-          received your order and it’s now being processed.
-        </p>
-
-        <!-- Order Details Summary -->
-        <div class="bg-gray-50 border rounded-xl p-6 text-left space-y-3">
-          <h2 class="text-xl font-bold text-gray-800 mb-3">Order Summary</h2>
-
-          <p class="text-gray-700">
-            <span class="font-semibold">Name:</span> <%= user.name %>
-          </p>
-
-          <p class="text-gray-700">
-            <span class="font-semibold">Order Amount:</span> ₹ <%= totalAmount
-            %>
-          </p>
-
-          <% if (selectedAddress) { %>
-          <p class="text-gray-700">
-            <span class="font-semibold">Delivery Address:</span><br />
-            <span class="text-gray-600 text-sm">
-              <%= selectedAddress.houseName %>, <%= selectedAddress.street %><br />
-              <%= selectedAddress.district %> - <%= selectedAddress.pincode
-              %><br />
-              Phone: <%= selectedAddress.phone %>
-            </span>
-          </p>
-          <% } %>
-        </div>
-
-        <!-- Buttons -->
-        <div class="flex justify-center gap-4 mt-8">
-          <a
-            href="/orders/<%= orderId %>"
-            class="bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition"
-          >
-            View My Orders
-          </a>
-
-          <a
-            href="/"
-            class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-gray-300 transition"
-          >
-            Continue Shopping
-          </a>
-        </div>
-      </div>
     </main>
 
     <%- include("../../views/partials/user/footer") %>
+
     <script>
-      // Prevent loading previous checkout page
-      window.history.pushState(null, "", window.location.href);
-      window.onpopstate = function () {
-        window.location.href = "/cart"; 
-      };
+        // Prevent back-navigation to the checkout session
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = function () {
+            window.location.href = "/"; 
+        };
     </script>
-  </body>
+</body>
 </html>

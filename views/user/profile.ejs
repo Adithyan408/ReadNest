@@ -1,1073 +1,293 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Account</title>
-
-    <!-- SweetAlert -->
+    <title>My Account | ReadNest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  </head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+        * { font-family: "Poppins", sans-serif; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  <body class="bg-gray-100">
-    <div>
-      <%- include("../../views/partials/user/account") %>
+        /* Smooth Sidebar Transitions */
+        .sidebar-link { transition: all 0.2s ease; }
+        .sidebar-link:hover { background-color: #f3f4f6; padding-left: 1.75rem; }
+        .sidebar-link.active { background-color: #eff6ff; border-right: 4px solid #2563eb; color: #2563eb; }
 
-      <main class="main-scroll-area flex-1 bg-gray-100 p-10">
-        <% if (message && status) { %> <% if (status === 'success') { %>
-        <div class="bg-green-100 text-green-700 p-3 rounded-lg mb-4">
-          <%= message %>
-        </div>
-        <% } else { %>
-        <div class="bg-red-100 text-red-700 p-3 rounded-lg mb-4">
-          <%= message %>
-        </div>
-        <% } %> <% } %>
+        /* Ensure smooth scrolling for the main content on desktop */
+        @media (min-width: 1024px) {
+            .desktop-scroll-area {
+                height: calc(100vh - 80px); /* Adjust based on header height */
+                overflow-y: auto;
+            }
+            .sidebar-fixed {
+                height: calc(100vh - 80px);
+                position: sticky;
+                top: 80px;
+            }
+        }
+    </style>
+</head>
 
-        <!-- PROFILE IMAGE SECTION -->
-        <div
-          class="bg-white rounded-xl shadow p-6 mb-8 flex flex-col items-center"
-        >
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">Profile Photo</h2>
+<body class="bg-gray-50">
+    <%- include("../../views/partials/user/header") %>
 
-          <!-- If image exists -->
-          <% if (user.profileImage) { %>
-          <div class="relative group">
-            <!-- Profile Image -->
-            <img
-              id="profileImagePreview"
-              src="<%= user.profileImage %>"
-              class="w-40 h-40 object-cover rounded-full border shadow transition-all duration-200 group-hover:opacity-80"
-            />
-
-            <!-- Hover overlay -->
-            <div
-              class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black bg-opacity-40 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
-            >
-              <!-- Edit -->
-              <button
-                onclick="document.getElementById('profileImageInput').click()"
-                class="p-3 bg-white text-blue-600 rounded-full shadow hover:bg-blue-600 hover:text-white transition"
-                title="Change photo"
-              >
-                <i class="fas fa-pen"></i>
-              </button>
-
-              <!-- Delete -->
-              <button
-                onclick="deleteProfileImage()"
-                class="p-3 bg-white text-red-600 rounded-full shadow hover:bg-red-600 hover:text-white transition"
-                title="Delete photo"
-              >
-                <i class="fas fa-trash"></i>
-              </button>
+    <div class="max-w-[1440px] mx-auto flex flex-col lg:flex-row">
+        
+        <aside class="w-full lg:w-72 bg-white border-b lg:border-b-0 lg:border-r border-gray-200 sidebar-fixed">
+            <div class="hidden lg:block p-8 border-b border-gray-100">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Welcome back,</p>
+                <h2 class="text-xl font-black text-gray-800 truncate"><%= user.name %></h2>
             </div>
-          </div>
 
-          <% } else { %>
-          <!-- If no image -->
-          <button
-            onclick="document.getElementById('profileImageInput').click()"
-            class="px-6 py-3 bg-blue-600 text-white rounded-lg shadow font-semibold hover:bg-blue-700"
-          >
-            Upload Profile Photo
-          </button>
-          <% } %>
+            <nav class="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible no-scrollbar p-2 lg:p-0">
+                <a href="/account" class="sidebar-link active flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm">
+                    <i class="fas fa-user-circle text-lg"></i> Profile Details
+                </a>
+                <a href="/address" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm">
+                    <i class="fas fa-map-marked-alt text-lg"></i> Addresses
+                </a>
+                <a href="/orders" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm">
+                    <i class="fas fa-shopping-bag text-lg"></i> My Orders
+                </a>
+                <a href="/wallet" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm">
+                    <i class="fas fa-wallet text-lg"></i> Wallet
+                </a>
+                <a href="/wishlist" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm">
+                    <i class="fas fa-heart text-lg"></i> Wishlist
+                </a>
+                <a href="/logout" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap font-semibold text-sm text-red-500 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt text-lg"></i> Logout
+                </a>
+            </nav>
+        </aside>
 
-          <input
-            type="file"
-            name="profileImage"
-            id="profileImageInput"
-            accept="image/*"
-            class="hidden"
-          />
-        </div>
+        <main class="flex-1 p-4 sm:p-8 lg:p-12 desktop-scroll-area no-scrollbar">
+            
+            <% if (message && status) { %>
+                <div class="<%= status === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' %> border p-4 rounded-2xl mb-8 flex items-center gap-3 animate-pulse">
+                    <i class="fas <%= status === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation' %>"></i>
+                    <span class="text-sm font-bold uppercase tracking-tight"><%= message %></span>
+                </div>
+            <% } %>
 
-        <!-- PERSONAL INFO + PHONE CARD -->
-<div class="bg-white rounded-xl shadow p-6 mb-8">
-  <!-- HEADER -->
-  <div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-bold text-gray-900">
-      Personal Information
-    </h2>
+            <section class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10 mb-8 flex flex-col items-center text-center">
+                <h2 class="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-8">Identity</h2>
+                
+                <div class="relative group">
+                    <div class="w-32 h-32 sm:w-44 sm:h-44 rounded-full p-1 border-4 border-blue-500/20 group-hover:border-blue-500 transition-all duration-500">
+                        <img id="profileImagePreview" src="<%= user.profileImage || '/images/default-avatar.png' %>" 
+                             class="w-full h-full object-cover rounded-full shadow-inner" />
+                    </div>
 
-    <button
-      type="button"
-      id="profileEditBtn"
-      onclick="toggleProfileEdit()"
-      class="text-blue-600 font-semibold hover:text-blue-700"
-    >
-      Edit
-    </button>
-  </div>
+                    <div class="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20 rounded-full backdrop-blur-[2px]">
+                        <button onclick="document.getElementById('profileImageInput').click()" class="bg-white text-blue-600 w-10 h-10 rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition"><i class="fas fa-pencil"></i></button>
+                        <button onclick="deleteProfileImage()" class="bg-white text-red-600 w-10 h-10 rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
 
-  <% 
-    const nameParts = user.name.split(" ");
-    const firstName = nameParts[0];
-    const lastName = nameParts.slice(1).join(" ");
-  %>
+                <input type="file" id="profileImageInput" class="hidden" accept="image/*" />
+                <p class="mt-6 text-gray-500 text-sm font-medium">Click image to change your profile photo</p>
+            </section>
 
-  <!-- NAME SECTION -->
-  <div class="grid grid-cols-2 gap-4 mb-6">
-    <!-- First Name -->
-    <input
-      id="firstName"
-      type="text"
-      value="<%= firstName %>"
-      class="bg-gray-100 rounded-lg p-4 h-14 text-gray-700 font-medium"
-      disabled
-    />
+            <section class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10 mb-8">
+                <div class="flex items-center justify-between mb-10">
+                    <h2 class="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Basic Info</h2>
+                    <button id="profileEditBtn" onclick="toggleProfileEdit()" 
+                            class="bg-blue-600 text-white px-6 py-2 rounded-xl text-xs font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition active:scale-95">
+                        EDIT PROFILE
+                    </button>
+                </div>
 
-    <!-- Last Name (hidden if empty) -->
-    <div id="lastNameWrapper" class="<%= lastName ? '' : 'hidden' %>">
-      <input
-        id="lastName"
-        type="text"
-        value="<%= lastName %>"
-        class="bg-gray-100 rounded-lg p-4 h-14 text-gray-700 font-medium"
-        disabled
-      />
+                <% 
+                    const nameParts = user.name.split(" ");
+                    const firstName = nameParts[0];
+                    const lastName = nameParts.slice(1).join(" ");
+                %>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1">First Name</label>
+                        <input id="firstName" type="text" value="<%= firstName %>" disabled 
+                               class="w-full bg-gray-50 border-2 border-transparent rounded-2xl p-4 text-gray-700 font-bold focus:bg-white focus:border-blue-500 outline-none transition-all disabled:opacity-60" />
+                    </div>
+                    <div id="lastNameWrapper" class="<%= lastName ? '' : 'sm:block' %> space-y-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Last Name</label>
+                        <input id="lastName" type="text" value="<%= lastName %>" disabled 
+                               class="w-full bg-gray-50 border-2 border-transparent rounded-2xl p-4 text-gray-700 font-bold focus:bg-white focus:border-blue-500 outline-none transition-all disabled:opacity-60" />
+                    </div>
+                    <div class="space-y-2 md:col-span-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Phone Connection</label>
+                        <div class="relative">
+                            <i class="fas fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                            <input id="phoneInput" type="text" value="<%= user.phone %>" disabled 
+                                   class="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-gray-700 font-bold focus:bg-white focus:border-blue-500 outline-none transition-all disabled:opacity-60" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest">Email Address</h3>
+                        <button onclick="openEmailModal()" class="text-blue-600 font-black text-[10px] uppercase hover:underline">Change</button>
+                    </div>
+                    <p class="text-gray-800 font-black truncate"><%= user.email %></p>
+                    <p class="text-gray-400 text-xs mt-1">Verified primary email</p>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10">
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Account Security</h3>
+                    <button onclick="<%= user.password ? 'openChangePasswordModal()' : 'openSetPasswordModal()' %>" 
+                            class="w-full py-4 rounded-2xl border-2 border-gray-100 font-black text-xs uppercase tracking-widest text-gray-700 hover:border-blue-500 hover:text-blue-600 transition">
+                        <%= user.password ? 'Change Password' : 'Set Account Password' %>
+                    </button>
+                </div>
+            </div>
+
+            <section class="bg-indigo-900 rounded-[2.5rem] shadow-2xl p-8 sm:p-12 text-white relative overflow-hidden">
+                <div class="relative z-10">
+                    <h3 class="text-xs font-black uppercase tracking-[0.3em] text-indigo-300 mb-4">The Referral Program</h3>
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div>
+                            <p class="text-3xl sm:text-4xl font-black mb-2 tracking-tighter"><%= user.referralCode %></p>
+                            <p class="text-indigo-200 text-sm font-medium">Share your code and get ₹50 for every friend who joins.</p>
+                        </div>
+                        <button onclick="copyReferral()" class="w-full md:w-auto bg-white text-indigo-900 px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-50 transition active:scale-95">
+                            Copy Code
+                        </button>
+                    </div>
+                </div>
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full"></div>
+            </section>
+
+        </main>
     </div>
-  </div>
 
-  <!-- MOBILE NUMBER -->
-  <div>
-    <h3 class="text-xl font-bold text-gray-900 mb-3">
-      Mobile Number
-    </h3>
-
-    <input
-      type="text"
-      id="phoneInput"
-      value="<%= user.phone %>"
-      class="bg-gray-100 rounded-lg p-4 h-14 max-w-md text-gray-700 font-medium"
-      disabled
-    />
-  </div>
-</div>
-
-
-        <!-- EMAIL SECTION -->
-        <div class="bg-white rounded-xl shadow p-6 mb-8">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-gray-900">E-mail Address</h3>
-            <button
-              type="button"
-              onclick="openEmailModal()"
-              class="text-blue-600 font-semibold hover:text-blue-700"
-            >
-              Edit
-            </button>
-          </div>
-
-          <input
-            type="email"
-            value="<%= user.email %>"
-            class="bg-gray-100 rounded-lg p-4 h-14 w-[400px] text-gray-700 font-medium"
-            disabled
-          />
+    <div id="cropperModal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden flex flex-col justify-center items-center z-[200] p-4">
+        <div class="bg-white rounded-[2rem] w-full max-w-2xl overflow-hidden shadow-2xl">
+            <div class="p-6 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="font-black text-gray-800 uppercase text-sm tracking-widest">Adjust Photo</h2>
+                <button onclick="cancelCrop()" class="text-gray-400 hover:text-black">✕</button>
+            </div>
+            <div class="p-4 bg-gray-100 flex justify-center items-center max-h-[60vh]">
+                <img id="cropperImage" class="max-w-full" />
+            </div>
+            <div class="p-6 flex flex-col sm:flex-row gap-3">
+                <button onclick="cancelCrop()" class="flex-1 py-4 rounded-2xl font-bold text-gray-500 bg-gray-50">Cancel</button>
+                <button onclick="applyCrop()" class="flex-1 py-4 rounded-2xl font-black text-xs uppercase tracking-widest bg-blue-600 text-white shadow-lg shadow-blue-200">Save Image</button>
+            </div>
         </div>
-
-        <!-- ================= EMAIL UPDATE MODAL ================= -->
-        <div
-          id="emailUpdateModal"
-          class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center hidden z-50"
-        >
-          <div class="bg-white w-[450px] p-6 rounded-xl shadow-lg">
-            <!-- Header -->
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-bold">Update Email</h2>
-
-              <button
-                onclick="closeEmailModal()"
-                class="text-gray-600 hover:text-gray-900"
-              >
-                <i class="fas fa-arrow-left text-xl"></i>
-              </button>
-            </div>
-
-            <!-- EMAIL INPUT -->
-            <label class="block font-medium text-gray-700 mb-1"
-              >New Email</label
-            >
-            <input
-              id="emailInputField"
-              type="email"
-              placeholder="Enter new email"
-              class="w-full bg-gray-100 p-3 rounded-lg mb-3"
-            />
-
-            <!-- SEND OTP BTN -->
-            <button
-              id="sendOtpEmailBtn"
-              onclick="sendOtpForEmailUpdate()"
-              class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold mb-4"
-            >
-              Send OTP
-            </button>
-
-            <!-- OTP + VERIFY SECTION (hidden until OTP sent) -->
-            <div id="emailOtpSection" class="hidden">
-              <label class="block font-medium text-gray-700 mb-1"
-                >Enter OTP</label
-              >
-              <input
-                id="emailOtpInput"
-                type="text"
-                placeholder="OTP"
-                class="w-full bg-gray-100 p-3 rounded-lg mb-4"
-              />
-
-              <button
-                onclick="verifyEmailOtp()"
-                class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold"
-              >
-                Verify & Update Email
-              </button>
-            </div>
-          </div>
-        </div>
-
-       
-
-        <!-- PASSWORD SECTION -->
-        <div class="bg-white rounded-xl shadow p-6 mb-8">
-          <h3 class="text-xl font-bold text-gray-900 mb-4">Password</h3>
-
-          <% if(!user.password){ %>
-          <!-- Google Auth user -->
-          <button
-            type="button"
-            onclick="openSetPasswordModal()"
-            class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-          >
-            SET PASSWORD
-          </button>
-          <% } else { %>
-          <!-- Normal user -->
-          <button
-            type="button"
-            onclick="openChangePasswordModal()"
-            class="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition"
-          >
-            CHANGE PASSWORD
-          </button>
-          <% } %>
-        </div>
-        <div class="mt-4 p-4 bg-gray-100 rounded-lg">
-          <h2 class="text-lg font-semibold text-gray-700">
-            Your Referral Code
-          </h2>
-
-          <p class="text-2xl font-bold text-indigo-600 mt-2">
-            <%= user.referralCode %>
-          </p>
-
-          <p class="text-gray-500 mt-1">Share this code with your friends.</p>
-
-          <button
-            onclick="navigator.clipboard.writeText('<%= user.referralCode %>')"
-            class="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded"
-          >
-            Copy Code
-          </button>
-        </div>
-
-        <!-- ================= SET PASSWORD MODAL ================= -->
-        <div
-          id="setPassModal"
-          class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center hidden z-50"
-        >
-          <div class="bg-white w-[450px] p-6 rounded-xl shadow-lg">
-            <!-- HEADER + BACK BUTTON -->
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-bold">Set Password</h2>
-
-              <button
-                onclick="closeSetPasswordModal()"
-                class="text-gray-600 hover:text-gray-900 transition"
-                title="Back"
-              >
-                <i class="fas fa-arrow-left text-xl"></i>
-              </button>
-            </div>
-
-            <label class="block font-medium text-gray-700">Email</label>
-            <input
-              id="setPassEmail"
-              type="email"
-              value="<%= user.email %>"
-              disabled
-              class="w-full bg-gray-100 p-3 rounded-lg mb-3"
-            />
-
-            <button
-              id="sendOtpBtn"
-              onclick="sendOtpForSetPassword()"
-              class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold mb-4"
-            >
-              Send OTP
-            </button>
-
-            <div id="setPassOtpArea" class="hidden">
-              <!-- (rest of your modal content remains same) -->
-
-              <label class="block font-medium text-gray-700">OTP</label>
-              <input
-                id="setPassOtp"
-                name="otp"
-                type="text"
-                class="w-full bg-gray-100 p-3 rounded-lg mb-3"
-              />
-
-              <!-- NEW PASSWORD -->
-              <label class="block font-medium text-gray-700"
-                >New Password</label
-              >
-              <div class="relative mb-3">
-                <input
-                  id="setNewPassword"
-                  name="password"
-                  type="password"
-                  class="w-full bg-gray-100 p-3 rounded-lg"
-                />
-                <button
-                  type="button"
-                  onclick="toggleSetPassVisibility('setNewPassword', 'eyeNewPass')"
-                  class="absolute right-3 top-3 text-gray-600 hover:text-gray-800"
-                >
-                  <i id="eyeNewPass" class="fas fa-eye"></i>
-                </button>
-              </div>
-
-              <!-- CONFIRM PASSWORD -->
-              <label class="block font-medium text-gray-700"
-                >Confirm Password</label
-              >
-              <div class="relative mb-5">
-                <input
-                  id="setConfirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  class="w-full bg-gray-100 p-3 rounded-lg"
-                />
-                <button
-                  type="button"
-                  onclick="toggleSetPassVisibility('setConfirmPassword', 'eyeConfirmPass')"
-                  class="absolute right-3 top-3 text-gray-600 hover:text-gray-800"
-                >
-                  <i id="eyeConfirmPass" class="fas fa-eye"></i>
-                </button>
-              </div>
-
-              <button
-                onclick="submitSetPassword()"
-                class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold"
-              >
-                Update Password
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- ================= CHANGE PASSWORD MODAL ================= -->
-        <div
-          id="changePassModal"
-          class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center hidden z-50"
-        >
-          <div class="bg-white w-[450px] p-6 rounded-xl shadow-lg relative">
-            <!-- HEADER -->
-            <div class="flex items-center justify-center mb-6 relative">
-              <!-- Back Button (Left Aligned) -->
-              <button
-                onclick="closeChangePasswordModal()"
-                class="absolute left-0 text-gray-600 hover:text-gray-900 transition"
-                title="Back"
-              >
-                <i class="fas fa-arrow-left text-xl"></i>
-              </button>
-
-              <!-- TITLE CENTERED -->
-              <h2 class="text-xl font-bold">Change Password</h2>
-            </div>
-
-            <!-- CURRENT PASSWORD -->
-            <label class="block font-medium text-gray-700"
-              >Current Password</label
-            >
-            <div class="relative mb-2">
-              <input
-                id="currentPass"
-                type="password"
-                class="w-full bg-gray-100 p-3 rounded-lg"
-              />
-              <button
-                type="button"
-                onclick="toggleVisibility('currentPass', 'eyeCurrentPass')"
-                class="absolute right-3 top-3 text-gray-600 hover:text-gray-800"
-              >
-                <i id="eyeCurrentPass" class="fas fa-eye"></i>
-              </button>
-            </div>
-
-            <!-- FORGOT PASSWORD LINK -->
-            <div class="mb-4">
-              <a
-                href="/forgot-password"
-                class="text-blue-600 text-sm hover:underline"
-              >
-                Forgot password?
-              </a>
-            </div>
-
-            <!-- NEW PASSWORD -->
-            <label class="block font-medium text-gray-700">New Password</label>
-            <div class="relative mb-3">
-              <input
-                id="newPass"
-                type="password"
-                class="w-full bg-gray-100 p-3 rounded-lg"
-              />
-              <button
-                type="button"
-                onclick="toggleVisibility('newPass', 'eyeNewPassChange')"
-                class="absolute right-3 top-3 text-gray-600 hover:text-gray-800"
-              >
-                <i id="eyeNewPassChange" class="fas fa-eye"></i>
-              </button>
-            </div>
-
-            <!-- CONFIRM PASSWORD -->
-            <label class="block font-medium text-gray-700"
-              >Confirm Password</label
-            >
-            <div class="relative mb-5">
-              <input
-                id="confirmPass"
-                type="password"
-                class="w-full bg-gray-100 p-3 rounded-lg"
-              />
-              <button
-                type="button"
-                onclick="toggleVisibility('confirmPass', 'eyeConfirmPassChange')"
-                class="absolute right-3 top-3 text-gray-600 hover:text-gray-800"
-              >
-                <i id="eyeConfirmPassChange" class="fas fa-eye"></i>
-              </button>
-            </div>
-
-            <!-- SUBMIT BUTTON -->
-            <button
-              id="updatePassBtn"
-              onclick="submitChangePassword()"
-              class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold"
-            >
-              Update Password
-            </button>
-          </div>
-        </div>
-
-        <form
-          id="profileImageForm"
-          action="/account/profile-image"
-          method="POST"
-          enctype="multipart/form-data"
-          class="hidden"
-        >
-          <input type="file" name="profileImage" id="hiddenProfileImageInput" />
-        </form>
-      </main>
     </div>
-    <!-- CROP IMAGE MODAL -->
-    <!-- PROFILE CROP MODAL -->
-    <div
-      id="cropperModal"
-      class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden justify-center items-center z-50"
-    >
-      <div
-        class="bg-white rounded-xl shadow-2xl p-4 w-[95%] max-w-xl animate-fadeIn"
-      >
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-semibold text-gray-800">Crop Image</h2>
-          <button
-            onclick="cancelCrop()"
-            class="text-gray-600 hover:text-gray-900 text-xl"
-          >
-            ✕
-          </button>
-        </div>
 
-        <div
-          class="h-[60vh] flex items-center justify-center bg-gray-100 rounded-lg overflow-hidden border"
-        >
-          <img id="cropperImage" class="max-w-full max-h-full select-none" />
-        </div>
-
-        <div class="flex justify-end gap-3 mt-5">
-          <button
-            onclick="cancelCrop()"
-            class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-200"
-          >
-            Cancel
-          </button>
-
-          <button
-            onclick="applyCrop()"
-            class="px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
-          >
-            Crop & Apply
-          </button>
-        </div>
-      </div>
-    </div>
+    <form id="profileImageForm" action="/account/profile-image" method="POST" enctype="multipart/form-data" class="hidden">
+        <input type="file" name="profileImage" id="hiddenProfileImageInput" />
+    </form>
 
     <%- include("../../views/partials/user/footer") %>
 
-    <!-- Include CropperJS CDN -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
-    <!-- ============================================= -->
-    <!--                 JAVASCRIPT FIXES              -->
-    <!-- ============================================= -->
-
     <script>
-      /* ======================== MODAL CONTROL ======================== */
-      function closeSetPasswordModal() {
-        document.getElementById("setPassModal").classList.add("hidden");
-      }
-      function closeChangePasswordModal() {
-        document.getElementById("changePassModal").classList.add("hidden");
-      }
-      function closeEmailModal() {
-        document.getElementById("emailUpdateModal").classList.add("hidden");
-        document.getElementById("emailOtpSection").classList.add("hidden");
-      }
+        /* PROFILE IMAGE LOGIC */
+        let cropperProfile = null;
+        const profileInput = document.getElementById("profileImageInput");
+        const cropModal = document.getElementById("cropperModal");
+        const cropImg = document.getElementById("cropperImage");
+        const hiddenFileInput = document.getElementById("hiddenProfileImageInput");
+        const profileForm = document.getElementById("profileImageForm");
 
-      /* ======================== NAME UPDATE ======================== */
-      function toggleProfileEdit() {
-      const first = document.getElementById("firstName");
-      const last = document.getElementById("lastName");
-      const lastWrapper = document.getElementById("lastNameWrapper");
-      const phone = document.getElementById("phoneInput");
-      const btn = document.getElementById("profileEditBtn");
-
-      const isEditMode = first.disabled;
-
-  /* ================= ENTER EDIT MODE ================= */
-  if (isEditMode) {
-    first.disabled = false;
-    phone.disabled = false;
-
-    // Show last name field when editing
-    lastWrapper.classList.remove("hidden");
-    last.disabled = false;
-
-    btn.textContent = "Save";
-    btn.classList.replace("text-blue-600", "text-green-600");
-    return;
-  }
-
-  /* ================= VALIDATION ================= */
-
-if (!first.value.trim()) {
-  Swal.fire("Error", "First name cannot be empty", "error");
-  return;
-}
-
-const nameRegex = /^[A-Za-z ]+$/;
-
-if (!nameRegex.test(first.value.trim())) {
-  Swal.fire(
-    "Invalid First Name",
-    "Only letters, spaces  are allowed",
-    "error"
-  );
-  return;
-}
-
-if (last.value.trim() && !nameRegex.test(last.value.trim())) {
-  Swal.fire(
-    "Invalid Last Name",
-    "Only letters, spaces  are allowed",
-    "error"
-  );
-  return;
-}
-
-const phoneVal = phone.value.trim();
-if (phoneVal && !/^[0-9]{10}$/.test(phoneVal)) {
-  Swal.fire(
-    "Invalid Phone",
-    "Enter a valid 10-digit mobile number",
-    "error"
-  );
-  return;
-}
-
-
-  /* ================= CONFIRM ================= */
-
-  Swal.fire({
-    title: "Confirm Changes?",
-    text: "Update profile information?",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#16a34a",
-    cancelButtonColor: "#6b7280",
-    confirmButtonText: "Yes, Save",
-  }).then(async (result) => {
-    if (!result.isConfirmed) return;
-
-    const res = await fetch("/account/update-profile", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        firstName: first.value,
-        lastName: last.value,
-        phone: phoneVal,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!data.success) {
-      Swal.fire("Error", data.message, "error");
-      return;
-    }
-
-    Swal.fire("Updated!", "Profile updated successfully", "success");
-
-    /* ================= EXIT EDIT MODE ================= */
-    first.disabled = true;
-    phone.disabled = true;
-    last.disabled = true;
-
-    // Hide last name again if still empty
-    if (!last.value.trim()) {
-      lastWrapper.classList.add("hidden");
-    }
-
-    btn.textContent = "Edit";
-    btn.classList.replace("text-green-600", "text-blue-600");
-  });
-}
-
-      /* ======================== PASSWORD VISIBILITY ======================== */
-      function toggleVisibility(inputId, eyeId) {
-        const input = document.getElementById(inputId);
-        const eye = document.getElementById(eyeId);
-
-        if (input.type === "password") {
-          input.type = "text";
-          eye.classList.remove("fa-eye");
-          eye.classList.add("fa-eye-slash");
-        } else {
-          input.type = "password";
-          eye.classList.remove("fa-eye-slash");
-          eye.classList.add("fa-eye");
-        }
-      }
-
-      /* ======================== OPEN PASSWORD MODALS ======================== */
-      function openSetPasswordModal() {
-        document.getElementById("setPassModal").classList.remove("hidden");
-      }
-      function openChangePasswordModal() {
-        document.getElementById("changePassModal").classList.remove("hidden");
-      }
-
-      /* ======================== SEND OTP FOR SET PASSWORD ======================== */
-      function isValidPassword(password) {
-        const regex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$/;
-        return regex.test(password);
-      }
-
-      function sendOtpForSetPassword() {
-        const email = document.getElementById("setPassEmail").value;
-        const btn = document.getElementById("sendOtpBtn");
-
-        if (!email.trim()) {
-          Swal.fire("Error", "Email missing!", "error");
-          return;
-        }
-
-        btn.disabled = true;
-        btn.innerText = "Sending...";
-
-        fetch("/account/set-password", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            btn.innerText = "Send OTP";
-
-            if (!data.success) {
-              btn.disabled = false;
-              Swal.fire("Error", data.message, "error");
-              return;
+        profileInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                cropImg.src = URL.createObjectURL(file);
+                cropModal.classList.remove("hidden");
+                cropModal.classList.add("flex");
+                if (cropperProfile) cropperProfile.destroy();
+                setTimeout(() => {
+                    cropperProfile = new Cropper(cropImg, { aspectRatio: 1, viewMode: 1 });
+                }, 100);
             }
-
-            Swal.fire("OTP Sent!", "Check your email.", "success");
-
-            btn.disabled = true;
-            btn.classList.add("opacity-50", "cursor-not-allowed");
-
-            document
-              .getElementById("setPassOtpArea")
-              .classList.remove("hidden");
-          })
-          .catch(() => {
-            btn.disabled = false;
-            btn.innerText = "Send OTP";
-            Swal.fire("Error", "Server failure.", "error");
-          });
-      }
-
-      /* ======================== SUBMIT SET PASSWORD ======================== */
-      function submitSetPassword() {
-        const email = document.getElementById("setPassEmail").value;
-        const otp = document.getElementById("setPassOtp").value;
-        const password = document.getElementById("setNewPassword").value;
-        const confirmPassword =
-          document.getElementById("setConfirmPassword").value;
-
-        if (!otp || !password || !confirmPassword) {
-          Swal.fire("Error", "All fields required!", "error");
-          return;
-        }
-        if(password.lenght < 6){
-          swal.fire(
-            "Password must have at least 6 characters"
-          );
-          return;
-        }
-
-        if (!isValidPassword(password)) {
-          Swal.fire(
-            "Weak Password!",
-            " Password should contail atleast 1 number, 1 uppercase and 1 lowercase letter.",
-            "error"
-          );
-          return;
-        }
-
-        if (password !== confirmPassword) {
-          Swal.fire("Error", "Passwords do not match!", "error");
-          return;
-        }
-
-        fetch("/account/verifypassword", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ email, otp, password, confirmPassword }),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (!data.success) {
-              Swal.fire("Error", data.message, "error");
-              return;
-            }
-
-            Swal.fire("Success!", "Password updated.", "success");
-            closeSetPasswordModal();
-          })
-          .catch(() => Swal.fire("Error", "Server error", "error"));
-      }
-
-      /* ======================== CHANGE PASSWORD ======================== */
-      function submitChangePassword() {
-        const currentPassword = document.getElementById("currentPass").value;
-        const newPassword = document.getElementById("newPass").value;
-        const confirmPassword = document.getElementById("confirmPass").value;
-        const updateBtn = document.getElementById("updatePassBtn");
-
-        if (!currentPassword || !newPassword || !confirmPassword) {
-          Swal.fire("Error", "All fields required!", "error");
-          return;
-        }
-        
-        if(currentPassword === newPassword){
-          Swal.fire("Error", "New Password should not be same as current Password", "error");
-          return;
-        }
-
-        if (newPassword !== confirmPassword) {
-          Swal.fire("Error", "Passwords do not match", "error");
-          return;
-        }
-
-        if(newPassword.lenght < 6){
-          swal.fire(
-            "Password must have at least 6 characters"
-          );
-          return;
-        }
-
-        if (!isValidPassword(newPassword)) {
-          Swal.fire(
-            "Weak Password!",
-            " Password should contail atleast 1 number, 1 uppercase and 1 lowercase letter.",
-            "error"
-          );
-          return;
-        }
-
-        updateBtn.disabled = true;
-        updateBtn.innerText = "Updating...";
-        
-        fetch("/account/change-password", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            currentPassword,
-            newPassword,
-            confirmPassword,
-          }),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            updateBtn.disabled = false;
-            updateBtn.innerText = "Update Password";
-
-            if (!data.success) {
-              Swal.fire("Error", data.message, "error");
-              return;
-            }
-
-            Swal.fire("Updated!", "Password changed!", "success");
-            closeChangePasswordModal();
-          })
-          .catch(() => {
-            updateBtn.disabled = false;
-            updateBtn.innerText = "Update Password";
-            Swal.fire("Error", "Server error", "error");
-          });
-      }
-
-      /* ======================== EMAIL UPDATE FLOW ======================== */
-      function openEmailModal() {
-        document.getElementById("emailUpdateModal").classList.remove("hidden");
-      }
-
-      function sendOtpForEmailUpdate() {
-        const email = document.getElementById("emailInputField").value.trim();
-        const btn = document.getElementById("sendOtpEmailBtn");
-
-        if (!email) {
-          Swal.fire("Missing", "Enter email", "warning");
-          return;
-        }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if (!emailRegex.test(email)) {
-          Swal.fire("Invalid Email", "Enter a valid email address", "error");
-          return;
-        }
-
-        btn.disabled = true;
-        btn.textContent = "Sending...";
-
-        fetch("/account/email-update", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            btn.textContent = "Send OTP";
-
-            if (!data.success) {
-              btn.disabled = false;
-              Swal.fire("Error", data.message, "error");
-              return;
-            }
-
-            Swal.fire("OTP sent!", "Check your inbox.", "success");
-
-            // Disable send OTP completely
-            btn.disabled = true;
-            btn.classList.add("opacity-50", "cursor-not-allowed");
-
-            document
-              .getElementById("emailOtpSection")
-              .classList.remove("hidden");
-          })
-          .catch(() => {
-            btn.disabled = false;
-            btn.textContent = "Send OTP";
-            Swal.fire("Error", "Server failure", "error");
-          });
-      }
-
-      function verifyEmailOtp() {
-        const otp = document.getElementById("emailOtpInput").value.trim();
-        const email = document.getElementById("emailInputField").value.trim();
-
-        if (!otp) {
-          Swal.fire("Error", "OTP required!", "error");
-          return;
-        }
-
-        fetch("/account/verify-email-update", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ otp, email }),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (!data.success) {
-              Swal.fire("Error", data.message, "error");
-              return;
-            }
-
-            Swal.fire("Success!", "Email updated!", "success");
-
-            closeEmailModal();
-            setTimeout(() => location.reload(), 1500);
-          })
-          .catch(() => Swal.fire("Error", "Server error", "error"));
-      }
-      /* ================= PROFILE IMAGE + CROPPER FIXED CODE ================= */
-      let cropperProfile = null;
-      let selectedProfileFile = null;
-
-      const profileInput = document.getElementById("profileImageInput");
-      const cropModal = document.getElementById("cropperModal");
-      const cropImg = document.getElementById("cropperImage");
-
-      const hiddenFileInput = document.getElementById(
-        "hiddenProfileImageInput"
-      );
-      const profileForm = document.getElementById("profileImageForm");
-
-      profileForm.addEventListener("submit", () => {
-        console.log("🔥 FORM SUBMITTED — Backend should receive the image");
-      });
-
-      /* When user selects image */
-      profileInput.addEventListener("change", (event) => {
-        selectedProfileFile = event.target.files[0];
-        if (!selectedProfileFile) return;
-
-        const allowedTypes = [
-          "image/jpeg",
-          "image/jpg",
-          "image/png",
-          "image/webp",
-        ];
-
-        // ❌ If file is not an image → show alert + do NOT open cropper
-        if (!allowedTypes.includes(selectedProfileFile.type)) {
-          Swal.fire({
-            icon: "error",
-            title: "Invalid File Type",
-            text: "Only JPG, JPEG, PNG, and WEBP images are allowed as profile photos.",
-          });
-          profileInput.value = ""; // clear invalid file
-          return; // stop here → do NOT open cropper
-        }
-
-        // ✔ If valid image → open cropper
-        cropImg.src = URL.createObjectURL(selectedProfileFile);
-        cropModal.classList.remove("hidden");
-
-        cropImg.onload = function () {
-          if (cropperProfile) cropperProfile.destroy();
-
-          cropperProfile = new Cropper(cropImg, {
-            aspectRatio: 1,
-            viewMode: 1,
-            autoCropArea: 1,
-            background: false,
-          });
-        };
-      });
-
-      /* Cancel crop */
-      function cancelCrop() {
-        cropModal.classList.add("hidden");
-
-        if (cropperProfile) {
-          cropperProfile.destroy();
-          cropperProfile = null;
-        }
-
-        profileInput.value = "";
-      }
-
-      /* Apply crop and submit to server */
-      function applyCrop() {
-        if (!cropperProfile) return;
-
-        const canvas = cropperProfile.getCroppedCanvas({
-          width: 500,
-          height: 500,
-          imageSmoothingQuality: "high",
         });
 
-        canvas.toBlob(
-          (blob) => {
-            const croppedFile = new File([blob], "profile.jpg", {
-              type: "image/jpeg",
-              lastModified: Date.now(),
+        function cancelCrop() { 
+            cropModal.classList.add("hidden"); 
+            cropModal.classList.remove("flex");
+            profileInput.value = "";
+        }
+
+        function applyCrop() {
+            const canvas = cropperProfile.getCroppedCanvas({ width: 400, height: 400 });
+            canvas.toBlob((blob) => {
+                const file = new File([blob], "profile.jpg", { type: "image/jpeg" });
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                hiddenFileInput.files = dt.files;
+                profileForm.submit();
+            }, "image/jpeg");
+        }
+
+        function deleteProfileImage() {
+            Swal.fire({
+                title: 'Delete Photo?',
+                text: "Your profile will return to default avatar.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Yes, delete it'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = "/account/delete-profile-image";
             });
+        }
 
-            const dt = new DataTransfer();
-            dt.items.add(croppedFile);
-            hiddenFileInput.files = dt.files;
+        /* PROFILE EDIT TOGGLE */
+        function toggleProfileEdit() {
+            const btn = document.getElementById("profileEditBtn");
+            const inputs = ["firstName", "lastName", "phoneInput"];
+            const isEditing = btn.textContent.trim() === "SAVE CHANGES";
 
-            // Submit form
-            profileForm.submit();
+            if (!isEditing) {
+                inputs.forEach(id => document.getElementById(id).disabled = false);
+                document.getElementById("lastNameWrapper").classList.remove("hidden");
+                btn.textContent = "SAVE CHANGES";
+                btn.className = "bg-green-600 text-white px-6 py-2 rounded-xl text-xs font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition";
+            } else {
+                saveProfileData();
+            }
+        }
 
-            // Close cropper modal
-            cropModal.classList.add("hidden");
-            cropperProfile.destroy();
-            cropperProfile = null;
-          },
-          "image/jpeg",
-          0.9
-        );
-      }
+        async function saveProfileData() {
+            const first = document.getElementById("firstName").value;
+            const last = document.getElementById("lastName").value;
+            const phone = document.getElementById("phoneInput").value;
 
-      /* DELETE PROFILE IMAGE */
-      function deleteProfileImage() {
-        Swal.fire({
-          title: "Delete Profile Photo?",
-          text: "This action cannot be undone.",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#dc2626",
-          cancelButtonColor: "#6b7280",
-          confirmButtonText: "Delete",
-        }).then(async (result) => {
-          if (!result.isConfirmed) return;
+            // Simple frontend validation
+            if (!first || phone.length < 10) return Swal.fire("Error", "Please fill required fields correctly", "error");
 
-          const res = await fetch("/account/delete-profile-image", {
-            method: "GET",
-            credentials: "include",
-          });
+            const res = await fetch("/account/update-profile", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ firstName: first, lastName: last, phone })
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire("Updated!", "Profile has been saved.", "success").then(() => location.reload());
+            } else {
+                Swal.fire("Failed", data.message, "error");
+            }
+        }
 
-          const data = await res.json();
-
-          if (!data.success) {
-            Swal.fire("Error", data.message, "error");
-            return;
-          }
-
-          Swal.fire("Deleted!", "Profile photo removed.", "success");
-          location.reload();
-        });
-      }
+        function copyReferral() {
+            navigator.clipboard.writeText('<%= user.referralCode %>');
+            Swal.fire({ icon: 'success', title: 'Code Copied', showConfirmButton: false, timer: 1000 });
+        }
     </script>
-  </body>
+</body>
 </html>

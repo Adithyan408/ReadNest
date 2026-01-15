@@ -1,401 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Categories - ReadNest</title>
+    <title>Categories | ReadNest Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+        * { font-family: "Poppins", sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-      * {
-        font-family: "Poppins", sans-serif;
-      }
-
-      .sidebar-item {
-        transition: all 0.3s ease;
-      }
-
-      .sidebar-item:hover {
-        background-color: #d1d5db;
-        border-left: 4px solid #667eea;
-      }
-
-      .sidebar-item.active {
-        background-color: #d1d5db;
-        border-left: 4px solid #667eea;
-      }
-      html,
-      body {
-        height: 100%;
-        overflow: hidden; /* disable full page scroll */
-      }
-
-      .main-scroll-area {
-        height: calc(100vh - 80px); /* header height is ~80px */
-        overflow-y: auto; /* enable vertical scroll only on the right */
-        overflow-x: hidden;
-      }
+        .sidebar-item.active { background: #f3f4f6; border-right: 4px solid #4f46e5; color: #4f46e5; }
+        #sidebar { transition: transform 0.3s ease-in-out; z-index: 60; }
+        
+        @media (min-width: 1024px) {
+            .main-content { height: calc(100vh - 80px); overflow-y: auto; }
+        }
     </style>
-  </head>
-  <body class="bg-gray-100">
-    <!-- Header -->
-    <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
-      <div class="flex items-center justify-between px-6 py-4">
-        <!-- Logo -->
-        <a href="/admin">
-          <div class="flex items-center space-x-3">
-            <div
-              class="w-14 h-14 bg-orange-900 rounded-full flex items-center justify-center"
-            >
-              <i class="fas fa-book-open text-white text-2xl"></i>
-            </div>
-            <span class="text-2xl font-bold text-gray-800">ReadNest</span>
-          </div>
-        </a>
+</head>
 
-        <!-- Right Side -->
-        <div class="flex items-center space-x-6">
-          <a href="/admin/blogs">
-            <button
-              class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
-            >
-              <i class="fas fa-blog text-gray-700"></i>
-              <span class="text-base font-semibold text-gray-900">Blog</span>
+<body class="bg-gray-100 min-h-screen lg:overflow-hidden">
+
+    <header class="bg-white shadow-md sticky top-0 z-50 px-4 sm:px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
             </button>
-          </a>
-
-          <div class="flex items-center space-x-3">
-            <i class="fas fa-user-circle text-4xl text-gray-600"></i>
-            <span class="text-base font-semibold text-gray-600">ADMIN</span>
-          </div>
+            <a href="/admin" class="flex items-center space-x-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-900 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-book-open text-white text-xl"></i>
+                </div>
+                <span class="text-xl sm:text-2xl font-black text-gray-800 tracking-tighter uppercase">ReadNest</span>
+            </a>
         </div>
-      </div>
+
+        <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+            <i class="fas fa-user-shield text-indigo-600"></i>
+            <span class="text-xs font-black text-gray-700 uppercase tracking-widest">Admin</span>
+        </div>
     </header>
 
-    <!-- Main Content -->
     <div class="flex">
-      <!-- Sidebar -->
-      <aside
-        class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col"
-      >
-        <nav class="flex-1 overflow-y-auto py-4">
-          <a
-            href="/admin"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th-large text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">DashBoard</span>
-          </a>
-
-          <a
-            href="/admin/products"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-box text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Products</span>
-          </a>
-
-          <a
-            href="/admin/orders"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-shopping-bag text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Orders List</span>
-          </a>
-
-          <a
-            href="/admin/users"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-users text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Customers</span>
-          </a>
-
-        
-
-          <a
-            href="/admin/category"
-            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Category</span>
-          </a>
-
-          <a
-            href="/admin/coupon"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-ticket-alt text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Voucher</span>
-          </a>
-
-          <a
-            href="/admin/banner"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-image text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Banner</span>
-          </a>
-        </nav>
-
-        <!-- Logout Button at Bottom -->
-
-        <div class="border-t-2 border-gray-400 bg-gray-300">
-          <a href="/admin/logout">
-            <button
-              class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
-            >
-              <i
-                class="fas fa-sign-out-alt text-xl mr-4 text-gray-700 group-hover:text-red-600"
-              ></i>
-              <span
-                class="text-lg font-semibold text-gray-900 group-hover:text-red-600"
-                >Log Out</span
-              >
-            </button>
-          </a>
-        </div>
-      </aside>
-
-      <!-- Main Content - Categories -->
-      <main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
-        <%- include('../../views/partials/breadCrumb') %>
-        <div class="bg-white rounded-2xl shadow-md border border-gray-200">
-          <!-- Header Section -->
-          <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-2xl font-bold text-gray-900">Categories</h2>
-              <a href="/admin/category/addCategory">
-                <button
-                  class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition"
-                >
-                  ADD Category
-                </button></a
-              >
-            </div>
-            <div class="relative max-w-md">
-              <input
-                type="text"
-                id="categorySearch"
-                placeholder="Search Category"
-                value="<%= search %>"
-                class="w-full px-4 py-3 pl-10 pr-10 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-gray-300"
-              />
-
-              <!-- Search Icon -->
-              <i class="fas fa-search absolute left-3 top-4 text-gray-400"></i>
-
-              <!-- Clear Button -->
-              <button
-                id="clearSearchBtn"
-                class="absolute right-3 top-3 text-gray-500 hover:text-black text-lg <%= search ? '' : 'hidden' %>"
-                type="button"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-          <div
-            id="statusMessage"
-            class="hidden text-center py-3 font-semibold rounded-md mb-4"
-          ></div>
-
-          <!-- Table Section -->
-          <div class="overflow-x-auto">
-            <div class="overflow-x-auto">
-              <table class="w-full border-collapse">
-                <thead>
-                  <tr class="bg-black text-white">
-                    <th class="px-6 py-4 text-left font-semibold border">SL</th>
-                    <th class="px-6 py-4 text-left font-semibold border">
-                      Category Name
-                    </th>
-                    <th class="px-6 py-4 text-left font-semibold border">
-                      List/Unlist
-                    </th>
-                    <th class="px-6 py-4 text-center font-semibold border">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody id="categoryTableBody">
-                  <% if (data.length === 0) { %>
-                  <tr>
-                    <td
-                      colspan="4"
-                      class="text-center py-10 text-gray-500 text-lg border"
-                    >
-                      <i
-                        class="fas fa-search-minus text-3xl mb-3 text-gray-400"
-                      ></i>
-                      <div>No matching results found.</div>
-                    </td>
-                  </tr>
-                  <% } else { %> <% for (let i = 0; i < data.length; i++) { %>
-                  <tr class="border-b hover:bg-gray-50">
-                    <td class="px-6 py-4 border">
-                      <%= i + 1 + ((currentPage - 1) * limit) %>
-                    </td>
-
-                    <td class="px-6 py-4 border font-medium">
-                      <%= data[i].categoryName %>
-                    </td>
-
-                    <td class="px-6 py-4 border">
-                      <% if (data[i].isListed) { %>
-                      <a
-                        href="/admin/unlistCategory?id=<%= data[i]._id %>&page=<%= currentPage %>&search=<%= search %>"
-                        class="inline-block px-6 py-1 rounded-full text-sm font-semibold bg-red-200 text-red-800 hover:bg-red-300"
-                      >
-                        UNLIST
-                      </a>
-                      <% } else { %>
-                      <a
-                        href="/admin/listCategory?id=<%= data[i]._id %>&page=<%= currentPage %>&search=<%= search %>"
-                        class="inline-block px-6 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800 hover:bg-green-300"
-                      >
-                        LIST
-                      </a>
-                      <% } %>
-                    </td>
-
-                    <td class="px-6 py-4 border text-center">
-                      <div class="flex justify-center items-center space-x-4">
-                        <a href="/admin/editCategory?id=<%= data[i]._id %>">
-                          <i
-                            class="fas fa-edit text-lg hover:text-yellow-500"
-                          ></i>
-                        </a>
-                        <button
-                          onclick="confirmDelete('<%= data[i]._id %>')"
-                          class="hover:text-red-600"
-                        >
-                          <i class="fas fa-trash-alt text-lg"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  <% } %> <% } %>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Pagination -->
-          <div
-            class="flex justify-end items-center gap-2 p-6 border-t border-gray-200"
-          >
-            <nav aria-label="Page navigation">
-              <ul class="flex items-center gap-2">
-                <% for(let i = 1; i <= totalPages; i++) { %>
-                <li>
-                  <a
-                    class="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 transition <%= (i === currentPage) ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700' : 'bg-white hover:bg-gray-100' %>"
-                    href="?page=<%= i %>"
-                  >
-                    <%= i %>
-                  </a>
-                </li>
-                <% } %>
-              </ul>
+       <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-100 -translate-x-full lg:translate-x-0 lg:static lg:h-[calc(100vh-80px)] flex flex-col transition-transform duration-300 shadow-2xl lg:shadow-none">
+            <nav class="flex-1 overflow-y-auto py-6 no-scrollbar space-y-1">
+                <a href="/admin" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-th-large w-8 text-lg"></i> Dashboard</a>
+                <a href="/admin/products" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-box w-8 text-lg"></i> Products</a>
+                <a href="/admin/orders" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-shopping-bag w-8 text-lg"></i> Orders</a>
+                <a href="/admin/users" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-users w-8 text-lg"></i> Customers</a>
+                <a href="/admin/category" class="sidebar-item active flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-th w-8 text-lg"></i> Category</a>
+                <a href="/admin/coupon" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-ticket-alt w-8 text-lg"></i> Voucher</a>
+                <a href="/admin/blogs" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-blog w-8 text-lg"></i> Blogs</a>
+                <a href="/admin/banner" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-image w-8 text-lg"></i> Banner</a>
+                <a href="/admin/logout" class="flex items-center px-8 py-4 text-rose-500 font-bold text-sm mt-10 border-t border-gray-50 pt-8 hover:bg-rose-50 transition-colors"><i class="fas fa-sign-out-alt w-8 text-lg"></i> LOG OUT</a>
             </nav>
-          </div>
-        </div>
-      </main>
+        </aside>
+
+        <main class="main-content flex-1 p-4 sm:p-8 lg:p-12 no-scrollbar bg-gray-50 w-full">
+            <div class="max-w-7xl mx-auto">
+                <div class="mb-6"><%- include('../../views/partials/breadCrumb') %></div>
+
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
+                    <div>
+                        <h1 class="text-2xl sm:text-4xl font-black text-gray-900 tracking-tight uppercase leading-tight">Categories</h1>
+                        <p class="text-gray-500 text-sm font-medium mt-1">Organize your bookstore inventory</p>
+                    </div>
+                    <a href="/admin/category/addCategory" class="w-full sm:w-auto">
+                        <button class="w-full bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition active:scale-95 flex items-center justify-center gap-2">
+                            <i class="fas fa-plus"></i> New Category
+                        </button>
+                    </a>
+                </div>
+
+                <div id="statusMessage" class="hidden animate-in slide-in-from-top duration-300 mb-6 p-4 rounded-2xl text-sm font-bold text-center border"></div>
+
+                <div class="bg-white p-4 rounded-t-[2rem] border border-gray-100 border-b-0">
+                    <div class="relative max-w-md">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                        <input type="text" id="categorySearch" placeholder="Search by name..." value="<%= search %>"
+                               class="w-full pl-12 pr-12 py-3.5 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-sm" />
+                        <button id="clearSearchBtn" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-rose-500 transition-colors <%= search ? '' : 'hidden' %>">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-b-[2rem] shadow-xl shadow-indigo-900/5 border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto no-scrollbar">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest">
+                                    <th class="px-8 py-5">Index</th>
+                                    <th class="px-8 py-5">Genre / Label</th>
+                                    <th class="px-8 py-5">Visibility Status</th>
+                                    <th class="px-8 py-5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryTableBody" class="divide-y divide-gray-50">
+                                <% if (data.length === 0) { %>
+                                <tr>
+                                    <td colspan="4" class="py-24 text-center">
+                                        <div class="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <i class="fas fa-folder-open text-gray-200 text-3xl"></i>
+                                        </div>
+                                        <p class="text-gray-400 font-black uppercase tracking-widest text-xs">No Categories matched</p>
+                                    </td>
+                                </tr>
+                                <% } else { %>
+                                    <% data.forEach((cat, i) => { %>
+                                    <tr class="hover:bg-indigo-50/30 transition-colors group">
+                                        <td class="px-8 py-6 text-gray-400 font-black text-xs">
+                                            <%= i + 1 + ((currentPage - 1) * limit) %>
+                                        </td>
+                                        <td class="px-8 py-6 font-black text-gray-800 tracking-tight">
+                                            <%= cat.categoryName %>
+                                        </td>
+                                        <td class="px-8 py-6">
+                                            <% if (cat.isListed) { %>
+                                                <a href="/admin/unlistCategory?id=<%= cat._id %>&page=<%= currentPage %>&search=<%= search %>" 
+                                                   class="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-rose-500 hover:text-white hover:border-rose-600 transition-all">
+                                                   Active
+                                                </a>
+                                            <% } else { %>
+                                                <a href="/admin/listCategory?id=<%= cat._id %>&page=<%= currentPage %>&search=<%= search %>" 
+                                                   class="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-rose-100 text-rose-700 border border-rose-200 hover:bg-emerald-500 hover:text-white hover:border-emerald-600 transition-all">
+                                                   Hidden
+                                                </a>
+                                            <% } %>
+                                        </td>
+                                        <td class="px-8 py-6 text-right">
+                                            <div class="flex justify-end items-center gap-3">
+                                                <a href="/admin/editCategory?id=<%= cat._id %>" class="w-10 h-10 flex items-center justify-center bg-gray-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                                                    <i class="fas fa-pen-to-square"></i>
+                                                </a>
+                                                <button onclick="confirmDelete('<%= cat._id %>')" class="w-10 h-10 flex items-center justify-center bg-gray-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm">
+                                                    <i class="fas fa-trash-can"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <% if (totalPages > 1) { %>
+                    <div class="flex justify-center sm:justify-end items-center gap-2 p-8 border-t border-gray-50 bg-gray-50/30">
+                        <% for(let i = 1; i <= totalPages; i++) { %>
+                            <a href="?page=<%= i %>&search=<%= search %>" 
+                               class="w-10 h-10 flex items-center justify-center rounded-xl font-bold text-xs transition-all <%= (i === currentPage) ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white text-gray-400 border border-gray-100 hover:bg-gray-50' %>">
+                                <%= i %>
+                            </a>
+                        <% } %>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+        </main>
     </div>
-  </body>
-  <script>
-    function confirmDelete(categoryId) {
-      Swal.fire({
-        title: "Are you sure?",
-        text: "This action cannot be undone!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#e3342f",
-        cancelButtonColor: "#6c757d",
-        confirmButtonText: "Yes, delete it!",
-        cancelButtonText: "Cancel",
-        reverseButtons: true,
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Redirect to delete route
-          window.location.href = `/admin/deleteCategory?id=${categoryId}`;
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
         }
-      });
-    }
 
-    const searchInput = document.getElementById("categorySearch");
-    const clearBtn = document.getElementById("clearSearchBtn");
+        // Search logic with Debounce
+        const searchInput = document.getElementById("categorySearch");
+        const clearBtn = document.getElementById("clearSearchBtn");
+        let searchTimeout;
 
-    // Trigger search when typing
-    searchInput.addEventListener("input", function () {
-      const search = searchInput.value.trim();
-      const params = new URLSearchParams(window.location.search);
+        searchInput.addEventListener("input", function () {
+            const query = this.value.trim();
+            clearBtn.classList.toggle("hidden", !query);
 
-      if (search) {
-        params.set("search", search);
-        clearBtn.classList.remove("hidden");
-      } else {
-        params.delete("search");
-        clearBtn.classList.add("hidden");
-      }
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const params = new URLSearchParams(window.location.search);
+                if (query) params.set("search", query);
+                else params.delete("search");
+                params.set("page", 1);
+                window.location.href = `${window.location.pathname}?${params.toString()}`;
+            }, 800);
+        });
 
-      params.set("page", 1);
-      window.location.href = `/admin/category?${params.toString()}`;
-    });
+        clearBtn.onclick = () => {
+            window.location.href = window.location.pathname;
+        };
 
-    // Clear search
-    clearBtn.addEventListener("click", () => {
-      searchInput.value = "";
-      clearBtn.classList.add("hidden");
+        function confirmDelete(id) {
+            Swal.fire({
+                title: "Delete Category?",
+                text: "Deleting this may affect products assigned to it.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#f43f5e",
+                cancelButtonColor: "#94a3b8",
+                confirmButtonText: "Yes, Remove It",
+                background: "#ffffff",
+                customClass: {
+                    title: 'font-black uppercase tracking-tight text-gray-800',
+                    confirmButton: 'rounded-xl font-bold uppercase tracking-widest text-xs py-4 px-8',
+                    cancelButton: 'rounded-xl font-bold uppercase tracking-widest text-xs py-4 px-8'
+                }
+            }).then((res) => {
+                if (res.isConfirmed) window.location.href = `/admin/deleteCategory?id=${id}`;
+            });
+        }
 
-      const params = new URLSearchParams(window.location.search);
-      params.delete("search");
-      params.set("page", 1);
+        // Status Handler
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const status = params.get("status");
+            const box = document.getElementById("statusMessage");
 
-      window.location.href = `/admin/category?${params.toString()}`;
-    });
+            if (status) {
+                const config = {
+                    added: ["Category Created", "bg-emerald-50 text-emerald-700 border-emerald-200"],
+                    deleted: ["Category Removed", "bg-rose-50 text-rose-700 border-rose-200"],
+                    updated: ["Category Updated", "bg-indigo-50 text-indigo-700 border-indigo-200"],
+                    error: ["Action Failed", "bg-amber-50 text-amber-700 border-amber-200"]
+                };
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const status = urlParams.get("status");
-    const messageBox = document.getElementById("statusMessage");
-
-    if (status) {
-      let messageText = "";
-      let bgColor = "";
-
-      if (status === "added") {
-        messageText = " Category added successfully!";
-        bgColor = "bg-green-100 text-green-800 border border-green-300";
-      } else if (status === "deleted") {
-        messageText = " Category deleted successfully!";
-        bgColor = "bg-red-100 text-red-800 border border-red-300";
-      } else if (status === "error") {
-        messageText = " Something went wrong. Please try again.";
-        bgColor = "bg-yellow-100 text-yellow-800 border border-yellow-300";
-      } else if (status === "updated") {
-        messageText = " Category updated successfully!";
-        bgColor = "bg-blue-100 text-blue-800 border border-blue-300";
-      }
-
-      messageBox.textContent = messageText;
-      messageBox.className = `${bgColor} text-center py-3 font-semibold rounded-md mb-4 transition-all duration-500`;
-
-      messageBox.classList.remove("hidden");
-
-      setTimeout(() => {
-        messageBox.classList.add("hidden");
-      }, 5000);
-
-      const newUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-    }
-  </script>
+                if (config[status]) {
+                    box.textContent = config[status][0].toUpperCase();
+                    box.className = `${config[status][1]} p-4 rounded-2xl mb-8 text-[10px] font-black tracking-[0.2em] text-center shadow-sm block`;
+                    setTimeout(() => box.style.display = 'none', 4000);
+                }
+                const cleanUrl = window.location.origin + window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            }
+        };
+    </script>
+</body>
 </html>

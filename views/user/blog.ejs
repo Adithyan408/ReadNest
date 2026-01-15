@@ -3,359 +3,163 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Blogs</title>
-    <meta name="description" content="Read and share blogs from the ReadNest community" />
-    
-
-    <!-- Tailwind CSS -->
+    <title>Blogs | ReadNest</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+      * { font-family: 'Poppins', sans-serif; }
+      .blog-card { transition: transform 0.2s ease, shadow 0.2s ease; }
+      .blog-card:hover { transform: translateY(-2px); }
+    </style>
   </head>
 
   <body class="bg-gray-100">
-    <!-- ================= GLOBAL HEADER ================= -->
     <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 py-3">
         <div class="flex items-center justify-between">
-          <!-- Logo -->
           <div class="flex items-center space-x-2">
-            <div class="w-14 h-14 rounded-full overflow-hidden">
-              <a href="/">
-                <img
-                  src="/images/logo2.png"
-                  class="w-full h-full object-cover"
-                />
-              </a>
+            <div class="w-10 h-10 lg:w-14 lg:h-14 rounded-full overflow-hidden shrink-0">
+              <a href="/"><img src="/images/logo2.png" class="w-full h-full object-cover" /></a>
             </div>
-            <a href="/" class="text-xl font-bold text-gray-800">ReadNest</a>
+            <a href="/" class="text-lg lg:text-xl font-bold text-gray-800">ReadNest</a>
           </div>
 
-          <!-- Right Menu -->
-          <div class="flex items-center space-x-6">
-            <button
-              onclick="openBlog()"
-              class="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-300 hover:bg-gray-50"
-            >
+          <div class="flex items-center space-x-3 lg:space-x-6">
+            <button onclick="openBlog()" class="flex items-center p-2 lg:px-4 lg:py-2 bg-white rounded-lg border border-gray-300">
               <i class="fas fa-bars text-gray-700"></i>
-              <span class="text-sm font-medium text-gray-700">BLOG</span>
+              <span class="hidden lg:inline text-sm font-medium ml-2">BLOG</span>
             </button>
-
-            <a href="/cart" class="flex items-center space-x-1">
-              <i class="fas fa-shopping-cart text-xl text-gray-700"></i>
-              <span class="text-sm text-gray-700">Cart</span>
-            </a>
-
-            <a href="/account" class="flex items-center space-x-2">
-              <i class="fas fa-user-circle text-2xl text-gray-700"></i>
-              <span class="text-sm font-medium text-gray-700"
-                ><%= user.name %></span
-              >
-            </a>
+            <a href="/cart" class="p-2"><i class="fas fa-shopping-cart text-xl text-gray-700"></i></a>
+            <a href="/account" class="p-2"><i class="fas fa-user-circle text-2xl text-gray-700"></i></a>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- ================= PAGE TOOLBAR ================= -->
-    <section
-      class="sticky top-[76px] z-40 bg-white/90 backdrop-blur border-b border-gray-200"
-    >
-      <div
-        class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between"
-      >
-        <!-- Left -->
-        <div class="flex items-center gap-3">
-          <div
-            class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center"
-          >
+    <section class="sticky top-[64px] lg:top-[76px] z-40 bg-white/90 backdrop-blur border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 lg:px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="hidden sm:flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
             <i class="fa-solid fa-book-open text-blue-600"></i>
           </div>
           <div>
-            <h2 class="text-lg font-semibold text-gray-800">Blogs</h2>
-            <p class="text-xs text-gray-500">
-              Read & share thoughts from the community
-            </p>
+            <h2 class="text-base lg:text-lg font-bold text-gray-800 leading-none">Blogs</h2>
+            <p class="text-[10px] lg:text-xs text-gray-500">Community Thoughts</p>
           </div>
         </div>
-        <!-- SEARCH BAR -->
-        <div class="relative">
-          <input
-            type="text"
-            id="blogSearch"
-            placeholder="Search blogs..."
-            class="w-64 pl-10 pr-10 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            oninput="searchBlogs(this.value)"
-          />
 
-          <!-- Search Icon -->
-          <i
-            class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"
-          ></i>
-
-          <!-- Clear Button -->
-          <button
-            id="clearSearchBtn"
-            onclick="clearSearch()"
-            class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
-            title="Clear"
-          >
+        <div class="relative w-full md:w-64 lg:w-96">
+          <input type="text" id="blogSearch" placeholder="Search blogs..." 
+                 class="w-full pl-10 pr-10 py-2 text-sm border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 outline-none"
+                 oninput="searchBlogs(this.value)" />
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
 
-        <!-- Right -->
-        <div class="flex items-center gap-4">
-          <button
-            onclick="window.location.href='/blog/addBlog'"
-            class="flex items-center gap-2 px-5 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition shadow-sm"
-          >
-            <i class="fa-solid fa-pen"></i>
-            Publish
+        <div class="flex items-center justify-between w-full md:w-auto gap-4">
+          <button onclick="window.location.href='/blog/addBlog'" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-full bg-blue-600 text-white text-sm font-bold shadow-md hover:bg-blue-700">
+            <i class="fa-solid fa-pen text-xs"></i> Publish
           </button>
-
-          <button
-            id="notificationBtn"
-            class="relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-blue-100 transition"
-          >
+          <button id="notificationBtn" class="relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
             <i class="fa-regular fa-bell text-blue-600"></i>
-
-            <!-- Count -->
-            <span
-              id="notifCount"
-              class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center"
-            ></span>
+            <span id="notifCount" class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white"></span>
           </button>
         </div>
       </div>
     </section>
 
-    <!-- ================= BLOG CONTENT ================= -->
     <%- include("../../views/partials/user/blogSidebar") %>
-    <main class="max-w-7xl mx-auto px-4 py-10">
-      <div class="max-w-3xl mx-auto px-8" id="blogsContainer">
+    
+    <main class="max-w-7xl mx-auto px-4 py-6 lg:py-10">
+      <div class="max-w-3xl mx-auto" id="blogsContainer">
         <% if (blogs.length === 0) { %>
-        <p class="text-center text-gray-500 mt-20 text-sm">
-          No blogs published yet
-        </p>
-        <% } %> <% blogs.forEach(blog => { %>
-        <div
-          class="bg-white rounded-2xl border border-gray-200 hover:shadow-sm transition p-8 mb-6"
-        >
-          <!-- TITLE -->
-          <h3
-            class="text-xl font-semibold text-gray-900 leading-snug mb-2 hover:text-blue-700 transition"
-          >
+          <div class="text-center py-20 text-gray-500">
+            <i class="fa-solid fa-cloud-moon text-4xl mb-4 block"></i>
+            <p>No blogs published yet</p>
+          </div>
+        <% } %> 
+        
+        <% blogs.forEach(blog => { %>
+        <div class="blog-card bg-white rounded-2xl border border-gray-200 shadow-sm p-5 lg:p-8 mb-6">
+          <h3 class="text-lg lg:text-xl font-bold text-gray-900 leading-tight mb-2 hover:text-blue-700 transition">
             <%= blog.title %>
           </h3>
-          <!-- META -->
-          <p class="text-sm text-gray-500 mb-4">
-            By
-            <span class="font-medium text-gray-700">
-              <%= blog.author?.name || "Unknown" %>
-            </span>
-            · <%= new Date(blog.createdAt).toDateString() %>
+          <p class="text-xs text-gray-500 mb-4 italic">
+            By <span class="font-bold text-gray-700"><%= blog.author?.name || "Unknown" %></span> · <%= new Date(blog.createdAt).toDateString() %>
           </p>
-          <!-- CTA -->
-          <a
-            href="/blogs/<%= blog._id %>"
-            class="inline-flex items-center gap-1 text-blue-600 text-sm font-medium hover:underline mb-5"
-          >
-            Read more
-            <i class="fa-solid fa-arrow-right text-xs"></i>
+          <a href="/blogs/<%= blog._id %>" class="inline-flex items-center gap-1 text-blue-600 text-sm font-bold hover:underline mb-6">
+            Read full story <i class="fa-solid fa-arrow-right text-[10px]"></i>
           </a>
-          <!-- ACTION BAR -->
-          <div
-            class="flex justify-between items-center border-t border-gray-100 pt-4 text-gray-600"
-          >
-            <!-- LEFT ACTIONS -->
-            <div class="flex gap-6">
-              <!-- LIKE -->
-              <button
-                onclick="toggleLike('<%= blog._id %>')"
-                class="flex items-center gap-2 hover:text-red-500 transition"
-              >
-                <i
-                  class="fa-heart <%= blog.userLiked ? 'fa-solid text-red-500' : 'fa-regular' %>"
-                ></i>
-                <span class="text-sm"><%= blog.likeCount %></span>
+          
+          <div class="flex justify-between items-center border-t border-gray-50 pt-4">
+            <div class="flex gap-4 lg:gap-8">
+              <button onclick="toggleLike('<%= blog._id %>')" class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition">
+                <i class="fa-heart <%= blog.userLiked ? 'fa-solid text-red-500' : 'fa-regular' %>"></i>
+                <span class="text-xs font-bold"><%= blog.likeCount %></span>
               </button>
-
-              <!-- COMMENT -->
-              <a
-                href="/blogs/<%= blog._id %>#comments"
-                class="flex items-center gap-2 hover:text-blue-600 transition"
-              >
+              <a href="/blogs/<%= blog._id %>#comments" class="flex items-center gap-2 text-gray-600 hover:text-blue-600">
                 <i class="fa-regular fa-comment"></i>
-                <span class="text-sm"><%= blog.commentCount %></span>
+                <span class="text-xs font-bold"><%= blog.commentCount %></span>
               </a>
             </div>
 
-            <!-- RIGHT ACTIONS -->
-            <div class="flex items-center gap-5">
-              <!-- SAVE -->
-              <button
-                onclick="toggleSave('<%= blog._id %>')"
-                class="transition"
-                title="Save"
-              >
-                <i
-                  class="fa-bookmark text-lg transition <%= blog.isSaved ? 'fa-solid text-blue-600' : 'fa-regular text-gray-500 hover:text-black' %>"
-                ></i>
+            <div class="flex items-center gap-4 lg:gap-6">
+              <button onclick="toggleSave('<%= blog._id %>')" class="p-2">
+                <i class="fa-bookmark text-lg <%= blog.isSaved ? 'fa-solid text-blue-600' : 'fa-regular text-gray-400 hover:text-black' %>"></i>
               </button>
-
-              <!-- SHARE -->
-              <button
-                class="text-gray-600 text-sm hover:text-indigo-600"
-                data-id="<%= blog._id %>"
-                data-title="<%= blog.title %>"
-                onclick="openShareModal(this)"
-              >
-                <i class="fa-solid fa-share-nodes"></i> Share
+              <button class="text-gray-500 text-xs font-bold flex items-center gap-1 hover:text-indigo-600" 
+                      data-id="<%= blog._id %>" data-title="<%= blog.title %>" onclick="openShareModal(this)">
+                <i class="fa-solid fa-share-nodes"></i> <span class="hidden sm:inline">Share</span>
               </button>
             </div>
           </div>
         </div>
         <% }) %>
       </div>
-      <div
-        id="notificationModal"
-        class="hidden absolute right-6 top-[132px] z-50 w-96"
-      >
-        <div
-          class="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden"
-        >
-          <!-- Header -->
-          <div class="flex justify-between items-center px-4 py-3 border-b">
-            <button
-              id="closeNotification"
-              class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
-            >
-              <i class="fa-solid fa-arrow-left"></i>
-              Back
-            </button>
 
-            <h3 class="font-semibold text-sm">Notifications</h3>
-
-            <button
-              id="markAllRead"
-              class="text-xs text-blue-600 hover:underline"
-            >
-              ✓ Mark all
+      <div id="notificationModal" class="hidden fixed lg:absolute right-4 left-4 lg:left-auto lg:right-6 top-[180px] lg:top-[132px] z-50 w-auto lg:w-96">
+        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
+          <div class="flex justify-between items-center px-4 py-3 border-b bg-gray-50">
+            <button id="closeNotification" class="text-xs text-gray-500 font-bold flex items-center gap-1">
+              <i class="fa-solid fa-chevron-left text-[10px]"></i> Close
             </button>
+            <h3 class="font-bold text-xs uppercase tracking-wider text-gray-400">Activity</h3>
+            <button id="markAllRead" class="text-xs text-blue-600 font-bold">Clear All</button>
           </div>
-
-          <!-- List -->
-          <div
-            id="notificationList"
-            class="max-h-80 overflow-y-auto divide-y"
-          ></div>
+          <div id="notificationList" class="max-h-80 overflow-y-auto divide-y divide-gray-50"></div>
         </div>
       </div>
 
-      <div
-        id="shareModal"
-        class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
-      >
-        <div class="bg-white rounded-xl w-80 p-6 relative">
-          <h3 class="text-lg font-semibold mb-4 text-center">
-            Share this blog
-          </h3>
-
-          <!-- Social Links -->
-          <div class="flex justify-around text-2xl">
-            <a id="whatsappShare" target="_blank" class="text-green-500">
-              <i class="fab fa-whatsapp"></i>
-            </a>
-
-            <a id="facebookShare" target="_blank" class="text-blue-600">
-              <i class="fab fa-facebook"></i>
-            </a>
-
-            <a id="twitterShare" target="_blank" class="text-sky-500">
-              <i class="fab fa-x-twitter"></i>
-            </a>
+      <div id="shareModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[60] p-4">
+        <div class="bg-white rounded-2xl w-full max-w-xs p-6 relative shadow-2xl animate-in zoom-in-95">
+          <h3 class="text-lg font-bold mb-6 text-center text-gray-900">Spread the word</h3>
+          <div class="flex justify-around text-3xl mb-6">
+            <a id="whatsappShare" target="_blank" class="text-green-500 hover:scale-110 transition"><i class="fab fa-whatsapp"></i></a>
+            <a id="facebookShare" target="_blank" class="text-blue-600 hover:scale-110 transition"><i class="fab fa-facebook"></i></a>
+            <a id="twitterShare" target="_blank" class="text-black hover:scale-110 transition"><i class="fab fa-x-twitter"></i></a>
           </div>
-
-          <!-- Copy -->
-          <button
-            onclick="copyLink()"
-            class="mt-4 w-full bg-gray-200 py-2 rounded-lg text-sm"
-          >
-            Copy Link
+          <button onclick="copyLink()" class="w-full bg-gray-100 py-3 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-200 active:bg-gray-300">
+            <i class="fa-solid fa-link mr-2"></i> Copy Link
           </button>
-
-          <!-- Close -->
-          <button
-            onclick="closeShareModal()"
-            class="absolute top-2 right-3 text-gray-500"
-          >
-            ✕
-          </button>
+          <button onclick="closeShareModal()" class="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full shadow-lg text-gray-400 hover:text-red-500 transition">✕</button>
         </div>
       </div>
     </main>
 
-    <!-- ================= SCRIPT ================= -->
-
     <script>
-      function openBlog() {
-        window.location.href = "/blog";
-      }
-
-      async function toggleLike(blogId) {
-        try {
-          const res = await fetch("/blog/like", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ blogId }),
-          });
-
-          const data = await res.json();
-          if (data.success !== false) {
-            location.reload(); // simple & safe
-          }
-        } catch (err) {
-          console.error("Like failed");
-        }
-      }
-
-      async function toggleSave(blogId) {
-        try {
-          const res = await fetch("/blogs/save", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ blogId }),
-          });
-
-          const data = await res.json();
-          if (data.success) location.reload();
-        } catch (err) {
-          console.error("Save failed");
-        }
-      }
+      /* --- NAV & SEARCH LOGIC --- */
+      function openBlog() { window.location.href = "/blog"; }
 
       let searchTimeout;
-
       function searchBlogs(query) {
-        const clearBtn = document.getElementById("clearSearchBtn");
-
-        // Toggle clear button
-        clearBtn.classList.toggle("hidden", !query);
-
-        // Debounce (prevents too many requests)
+        document.getElementById("clearSearchBtn").classList.toggle("hidden", !query);
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(async () => {
-          const res = await fetch(
-            `/blog/search?q=${encodeURIComponent(query)}`
-          );
+          const res = await fetch(`/blog/search?q=${encodeURIComponent(query)}`);
           const data = await res.text();
-
-          // Replace blog list HTML
           document.getElementById("blogsContainer").innerHTML = data;
         }, 300);
       }
@@ -366,122 +170,78 @@
         searchBlogs("");
       }
 
+      /* --- INTERACTIONS --- */
+      async function toggleLike(blogId) {
+        const res = await fetch("/blog/like", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ blogId }) });
+        location.reload();
+      }
+
+      async function toggleSave(blogId) {
+        const res = await fetch("/blogs/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ blogId }) });
+        location.reload();
+      }
+
+      /* --- NOTIFICATIONS --- */
       const notifBtn = document.getElementById("notificationBtn");
       const notifModal = document.getElementById("notificationModal");
 
       notifBtn.onclick = async () => {
         notifModal.classList.toggle("hidden");
-
         if (notifModal.classList.contains("hidden")) return;
 
         const res = await fetch("/notifications");
         const notifications = await res.json();
-
         const list = document.getElementById("notificationList");
-        list.innerHTML = "";
+        list.innerHTML = notifications.length === 0 ? '<p class="p-6 text-center text-gray-400 text-sm italic">No new alerts</p>' : '';
 
-        if (notifications.length === 0) {
-          list.innerHTML = `<p class="p-6 text-center text-gray-500 text-sm">No notifications</p>`;
-          return;
-        }
-
-        notifications.forEach((n) => {
+        notifications.forEach(n => {
           list.innerHTML += `
-      <div class="p-4 flex gap-3 ${n.isRead ? "bg-white" : "bg-blue-50"}">
-        <i class="fa-solid ${
-          n.type === "like"
-            ? "fa-heart text-red-500"
-            : "fa-comment text-blue-500"
-        } mt-1"></i>
-
-        <div class="text-sm">
-          <p>
-            <strong>${n.sender.name}</strong>
-            ${n.type === "like" ? "liked" : "commented on"}
-            <a href="/blogs/${
-              n.blog._id
-            }" class="text-blue-600 hover:underline">
-              ${n.blog.title}
-            </a>
-          </p>
-
-          <p class="text-xs text-gray-400">
-            ${new Date(n.createdAt).toLocaleString()}
-          </p>
-        </div>
-      </div>
-    `;
+            <div class="p-4 flex gap-3 ${n.isRead ? 'bg-white' : 'bg-blue-50'} border-l-4 ${n.isRead ? 'border-transparent' : 'border-blue-500'}">
+              <i class="fa-solid ${n.type === 'like' ? 'fa-heart text-red-500' : 'fa-comment text-blue-500'} mt-1"></i>
+              <div class="text-xs">
+                <p><span class="font-bold text-gray-900">${n.sender.name}</span> ${n.type === 'like' ? 'liked' : 'commented on'} 
+                   <a href="/blogs/${n.blog._id}" class="text-blue-600 font-bold hover:underline">"${n.blog.title}"</a></p>
+                <p class="text-[10px] text-gray-400 mt-1 uppercase">${new Date(n.createdAt).toLocaleString()}</p>
+              </div>
+            </div>`;
         });
       };
 
-      document.getElementById("closeNotification").onclick = () => {
-        document.getElementById("notificationModal").classList.add("hidden");
-      };
+      document.getElementById("closeNotification").onclick = () => notifModal.classList.add("hidden");
 
       document.getElementById("markAllRead").onclick = async () => {
         await fetch("/notifications/mark-all-read", { method: "POST" });
-
-        document.getElementById(
-          "notificationList"
-        ).innerHTML = `<p class="p-6 text-center text-gray-500">All caught up 🎉</p>`;
-
+        document.getElementById("notificationList").innerHTML = '<p class="p-6 text-center text-gray-500 text-sm">Cleared! 🎉</p>';
         document.getElementById("notifCount").classList.add("hidden");
       };
 
       async function loadUnreadCount() {
         const res = await fetch("/notifications/unread-count");
         const data = await res.json();
-
         const badge = document.getElementById("notifCount");
-        if (data.count > 0) {
-          badge.textContent = data.count;
-          badge.classList.remove("hidden");
-        } else {
-          badge.classList.add("hidden");
-        }
+        if (data.count > 0) { badge.textContent = data.count; badge.classList.remove("hidden"); }
       }
-
       loadUnreadCount();
 
-      const baseUrl = window.location.origin;
+      /* --- SHARING --- */
       let currentShareUrl = "";
-
       function openShareModal(btn) {
         const blogId = btn.dataset.id;
         const title = btn.dataset.title;
-
-        currentShareUrl = `${baseUrl}/blogs/${blogId}`;
-
-        document.getElementById(
-          "whatsappShare"
-        ).href = `https://wa.me/?text=${encodeURIComponent(
-          title + " - " + currentShareUrl
-        )}`;
-
-        document.getElementById(
-          "facebookShare"
-        ).href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-          currentShareUrl
-        )}`;
-
-        document.getElementById(
-          "twitterShare"
-        ).href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-          title
-        )}&url=${encodeURIComponent(currentShareUrl)}`;
-
-        document.getElementById("shareModal").classList.remove("hidden");
-        document.getElementById("shareModal").classList.add("flex");
+        currentShareUrl = `${window.location.origin}/blogs/${blogId}`;
+        
+        document.getElementById("whatsappShare").href = `https://wa.me/?text=${encodeURIComponent(title + " - " + currentShareUrl)}`;
+        document.getElementById("facebookShare").href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentShareUrl)}`;
+        document.getElementById("twitterShare").href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentShareUrl)}&text=${encodeURIComponent(title)}`;
+        
+        document.getElementById("shareModal").classList.replace("hidden", "flex");
       }
 
-      function closeShareModal() {
-        document.getElementById("shareModal").classList.add("hidden");
-        document.getElementById("shareModal").classList.remove("flex");
-      }
+      function closeShareModal() { document.getElementById("shareModal").classList.replace("flex", "hidden"); }
 
       function copyLink() {
         navigator.clipboard.writeText(currentShareUrl);
-        alert("Blog link copied!");
+        Swal.fire({ icon: 'success', title: 'Link Copied', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
       }
     </script>
   </body>

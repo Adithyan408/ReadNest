@@ -5,20 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Profile - ReadNest</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
-      * {
-        font-family: "Poppins", sans-serif;
-      }
+      * { font-family: "Poppins", sans-serif; }
 
-      .sidebar-item {
-        transition: all 0.3s ease;
-      }
+      .sidebar-item { transition: all 0.3s ease; }
 
       .sidebar-item:hover {
         background-color: #d1d5db;
@@ -29,134 +22,106 @@
         background-color: #e5e7eb;
         border-left: 4px solid #667eea;
       }
-      html,
-      body {
-        height: 100%;
+
+      html, body { height: 100%; }
+
+      body { overflow-y: scroll; }
+      body::-webkit-scrollbar { width: 0; }
+
+      /* Desktop-only Sticky Sidebar */
+      @media (min-width: 1024px) {
+        aside {
+          height: calc(100vh - 70px);
+          position: sticky;
+          top: 70px;
+        }
       }
 
-      /* BODY scrolls but scrollbar hidden */
-      body {
-        overflow-y: scroll;
-      }
-
-      body::-webkit-scrollbar {
-        width: 0;
-      }
-
-      /* Sidebar stays fixed */
-      aside {
-        height: calc(100vh - 70px);
-        overflow: hidden;
-        position: sticky;
-        top: 70px;
-      }
-
-      /* MAIN CONTENT scrolls but scrollbar hidden */
       .main-scroll-area {
-        height: calc(100vh - 70px);
+        height: auto;
         overflow-y: auto;
-        overflow-x: hidden;
       }
 
-      .main-scroll-area::-webkit-scrollbar {
-        width: 0;
+      @media (min-width: 1024px) {
+        .main-scroll-area {
+          height: calc(100vh - 70px);
+        }
       }
     </style>
   </head>
   <body class="bg-gray-100">
     <%- include("../../views/partials/user/header") %>
-    <!-- Main Content with Sidebar -->
-    <div class="flex min-h-screen">
-      <!-- Left Sidebar -->
-      <aside class="w-80 bg-gray-200 border-r border-gray-300">
-        <!-- User Greeting -->
-       <a href="/account"> <div class="px-6 py-6 border-b border-gray-300">
-          <p class="text-gray-600 text-sm mb-1">Hello,</p>
-          <h2 class="text-xl font-bold text-gray-900"><%= user.name%></h2>
-        </div></a>
 
-        <!-- Menu Items -->
-        <nav>
-          <!-- Manage Address (NEW OPTION) -->
-          <a
-            href="/address"
-            class="sidebar-item flex items-center justify-between px-6 py-5 border-b border-gray-300 cursor-pointer"
-          >
-            <div class="flex items-center space-x-4">
-              <i class="fas fa-map-marker-alt text-xl text-gray-800"></i>
-              <span class="text-base font-semibold text-gray-900">
-                Manage Address
-              </span>
+    <div class="flex flex-col lg:flex-row min-h-screen">
+      
+      <aside class="w-full lg:w-80 bg-gray-200 border-b lg:border-b-0 lg:border-r border-gray-300">
+        
+        <a href="/account">
+          <div class="px-6 py-4 lg:py-6 border-b border-gray-300">
+            <p class="text-gray-600 text-xs lg:text-sm mb-1">Hello,</p>
+            <h2 class="text-lg lg:text-xl font-bold text-gray-900"><%= user.name%></h2>
+          </div>
+        </a>
+
+        <nav class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1">
+          <a href="/address" class="sidebar-item flex items-center justify-between px-4 lg:px-6 py-4 lg:py-5 border-b border-r lg:border-r-0 border-gray-300 cursor-pointer">
+            <div class="flex items-center space-x-3 lg:space-x-4">
+              <i class="fas fa-map-marker-alt text-lg lg:text-xl text-gray-800"></i>
+              <span class="text-sm lg:text-base font-semibold text-gray-900">Address</span>
             </div>
-            <i class="fas fa-chevron-right text-gray-800"></i>
+            <i class="hidden lg:block fas fa-chevron-right text-gray-800"></i>
           </a>
 
-          <!-- My Orders -->
-          <a
-            href="/orders"
-            class="sidebar-item flex items-center justify-between px-6 py-5 border-b border-gray-300 cursor-pointer"
-          >
-            <div class="flex items-center space-x-4">
-              <i class="fas fa-box text-xl text-gray-800"></i>
-              <span class="text-base font-semibold text-gray-900"
-                >My Orders</span
-              >
+          <a href="/orders" class="sidebar-item flex items-center justify-between px-4 lg:px-6 py-4 lg:py-5 border-b border-r sm:border-r-0 lg:border-r-0 border-gray-300 cursor-pointer">
+            <div class="flex items-center space-x-3 lg:space-x-4">
+              <i class="fas fa-box text-lg lg:text-xl text-gray-800"></i>
+              <span class="text-sm lg:text-base font-semibold text-gray-900">Orders</span>
             </div>
-            <i class="fas fa-chevron-right text-gray-800"></i>
+            <i class="hidden lg:block fas fa-chevron-right text-gray-800"></i>
           </a>
 
-          <!-- Payment -->
-          <a
-            href="/wallet"
-            class="sidebar-item flex items-center justify-between px-6 py-5 border-b border-gray-300 cursor-pointer"
-          >
-            <div class="flex items-center space-x-4">
-              <i class="fas fa-credit-card text-xl text-gray-800"></i>
-              <span class="text-base font-semibold text-gray-900">Wallet</span>
+          <a href="/wallet" class="sidebar-item flex items-center justify-between px-4 lg:px-6 py-4 lg:py-5 border-b border-gray-300 cursor-pointer">
+            <div class="flex items-center space-x-3 lg:space-x-4">
+              <i class="fas fa-credit-card text-lg lg:text-xl text-gray-800"></i>
+              <span class="text-sm lg:text-base font-semibold text-gray-900">Wallet</span>
             </div>
-            <i class="fas fa-chevron-right text-gray-800"></i>
+            <i class="hidden lg:block fas fa-chevron-right text-gray-800"></i>
           </a>
 
-          <!-- Wishlist -->
-          <a
-            href="/wishlist"
-            class="sidebar-item flex items-center justify-between px-6 py-5 border-b border-gray-300 cursor-pointer"
-          >
-            <div class="flex items-center space-x-4">
-              <i class="fas fa-heart text-xl text-gray-800"></i>
-              <span class="text-base font-semibold text-gray-900"
-                >Wishlist</span
-              >
+          <a href="/wishlist" class="sidebar-item flex items-center justify-between px-4 lg:px-6 py-4 lg:py-5 border-b border-r lg:border-r-0 border-gray-300 cursor-pointer">
+            <div class="flex items-center space-x-3 lg:space-x-4">
+              <i class="fas fa-heart text-lg lg:text-xl text-gray-800"></i>
+              <span class="text-sm lg:text-base font-semibold text-gray-900">Wishlist</span>
             </div>
-            <i class="fas fa-chevron-right text-gray-800"></i>
+            <i class="hidden lg:block fas fa-chevron-right text-gray-800"></i>
           </a>
 
-          <!-- Reviews -->
-          <a
-            href="/reviews"
-            class="sidebar-item flex items-center justify-between px-6 py-5 border-b border-gray-300 cursor-pointer"
-          >
-            <div class="flex items-center space-x-4">
-              <i class="fas fa-star text-xl text-gray-800"></i>
-              <span class="text-base font-semibold text-gray-900"
-                >My Reviews</span
-              >
+          <a href="/reviews" class="sidebar-item flex items-center justify-between px-4 lg:px-6 py-4 lg:py-5 border-b border-gray-300 cursor-pointer">
+            <div class="flex items-center space-x-3 lg:space-x-4">
+              <i class="fas fa-star text-lg lg:text-xl text-gray-800"></i>
+              <span class="text-sm lg:text-base font-semibold text-gray-900">Reviews</span>
             </div>
-            <i class="fas fa-chevron-right text-gray-800"></i>
+            <i class="hidden lg:block fas fa-chevron-right text-gray-800"></i>
+          </a>
+
+          <a href="/logout" class="sidebar-item lg:hidden flex items-center px-4 py-4 border-b border-gray-300">
+            <i class="fas fa-sign-out-alt text-gray-800 text-lg mr-3"></i>
+            <span class="text-sm font-semibold text-gray-900">Log Out</span>
           </a>
         </nav>
 
-        <!-- Log Out at Bottom -->
-        <div
-          class="absolute bottom-0 w-80 bg-gray-200 border-t border-gray-300"
-        >
+        <div class="hidden lg:block absolute bottom-0 w-80 bg-gray-200 border-t border-gray-300">
           <a href="/logout">
-            <button
-              class="w-full flex items-center px-6 py-5 hover:bg-gray-300 transition-colors"
-            >
+            <button class="w-full flex items-center px-6 py-5 hover:bg-gray-300 transition-colors">
               <i class="fas fa-sign-out-alt text-gray-800 text-xl mr-3"></i>
               <span class="text-base font-semibold text-gray-900">Log Out</span>
             </button>
           </a>
         </div>
       </aside>
+
+      <main class="flex-1 main-scroll-area p-4 lg:p-8">
+         </main>
+    </div>
+  </body>
+</html>

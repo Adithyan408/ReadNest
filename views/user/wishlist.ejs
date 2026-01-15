@@ -1,320 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shopping Cart - ReadNest</title>
+    <title>My Wishlist | ReadNest</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
-      * {
-        font-family: "Poppins", sans-serif;
-      }
-    </style>
-  </head>
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+        * { font-family: "Poppins", sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  <body class="bg-gray-50">
-    <!-- Header -->
+        @media (min-width: 1024px) {
+            .desktop-scroll-area {
+                height: calc(100vh - 80px);
+                overflow-y: auto;
+            }
+            .sidebar-fixed {
+                height: calc(100vh - 80px);
+                position: sticky;
+                top: 80px;
+            }
+        }
+        .item-card { transition: all 0.3s ease; }
+        .item-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+
+<body class="bg-gray-50">
     <%- include("../../views/partials/user/header") %>
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
-      <!-- Breadcrumb -->
-      <%- include('../../views/partials/breadCrumb') %>
-
-      <div class="flex flex-col lg:flex-row gap-8">
-        <!-- LEFT SECTION -->
-        <div class="flex-1">
-          <div class="bg-white rounded-lg shadow-sm p-6 mb-4">
-            <h1 class="text-2xl font-bold mb-4">Your Wishlist</h1>
-
-            <% if (!wishlist || wishlist.length === 0) { %>
-
-            <!-- EMPTY WISHLIST -->
-            <div class="text-center py-10">
-              <img
-                src="https://cdn-icons-png.flaticon.com/512/4076/4076505.png"
-                class="w-28 mx-auto opacity-70 mb-4"
-              />
-
-              <h2 class="text-xl font-semibold text-gray-700">
-                Your wishlist is empty
-              </h2>
-              <p class="text-gray-500 mt-2">
-                Save items you love and buy them later.
-              </p>
-
-              <a
-                href="/"
-                class="inline-block mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
-              >
-                Continue Shopping
-              </a>
+    <div class="max-w-[1440px] mx-auto flex flex-col lg:flex-row">
+        
+        <aside class="w-full lg:w-72 bg-white border-b lg:border-b-0 lg:border-r border-gray-200 sidebar-fixed">
+            <div class="hidden lg:block p-8 border-b border-gray-100">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">My Account</p>
+                <h2 class="text-xl font-black text-gray-800 truncate"><%= user.name %></h2>
             </div>
 
-            <% } else { %>
+            <nav class="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible no-scrollbar p-2 lg:p-0">
+                <a href="/account" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm transition-all hover:bg-gray-50">
+                    <i class="fas fa-user-circle text-lg text-gray-400"></i> Profile Details
+                </a>
+                <a href="/address" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm transition-all hover:bg-gray-50">
+                    <i class="fas fa-map-marked-alt text-lg text-gray-400"></i> Addresses
+                </a>
+                <a href="/orders" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm transition-all hover:bg-gray-50">
+                    <i class="fas fa-shopping-bag text-lg text-gray-400"></i> My Orders
+                </a>
+                <a href="/wallet" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm transition-all hover:bg-gray-50">
+                    <i class="fas fa-wallet text-lg text-gray-400"></i> Wallet
+                </a>
+                <a href="/wishlist" class="sidebar-link active flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm bg-blue-50 text-blue-600 border-r-4 border-blue-600 lg:border-r-4 lg:border-b-0">
+                    <i class="fas fa-heart text-lg"></i> Wishlist
+                </a>
+                <a href="/logout" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap font-semibold text-sm text-red-500 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt text-lg"></i> Logout
+                </a>
+            </nav>
+        </aside>
 
-            <!-- WISHLIST ITEMS -->
-            <div class="space-y-4">
-              <% wishlist.forEach(item => { %>
-              <div
-                class="bg-white rounded-lg shadow-sm p-4 flex gap-6 items-center"
-              >
-                <!-- PRODUCT IMAGE -->
-                <div class="w-28 h-36">
-                  <img
-                    src="<%= item.productImage[0] %>"
-                    alt="<%= item.productName %>"
-                    class="w-full h-full object-contain"
-                  />
-                </div>
-
-                <!-- PRODUCT INFO -->
+        <main class="flex-1 p-4 sm:p-8 lg:p-12 desktop-scroll-area no-scrollbar">
+            
+            <div class="flex flex-col lg:flex-row gap-8">
                 <div class="flex-1">
-                  <h3 class="font-semibold text-lg text-gray-800 mb-1">
-                    <%= item.productName %>
-                  </h3>
+                    <div class="mb-8 flex items-center justify-between">
+                        <h1 class="text-2xl lg:text-3xl font-black text-gray-800 tracking-tight">Your Wishlist</h1>
+                        <span class="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest"><%= wishlist.length %> Items</span>
+                    </div>
 
-                  <div class="mt-1">
-                    <% if (!item.isAvailable) { %>
-                    <span class="text-sm font-semibold text-red-600">
-                      Unavailable
-                    </span>
-                    <% } else if (item.offerPrice !== null && item.offerPrice <
-                    item.regularPrice) { %>
-
-                    <span class="text-gray-500 line-through text-sm">
-                      ₹<%= item.regularPrice %>
-                    </span>
-
-                    <span class="text-lg font-bold text-red-600 ml-2">
-                      ₹<%= item.offerPrice %>
-                    </span>
-
-                    <span class="text-green-600 text-sm ml-2 font-semibold">
-                      <%= item.discount %>% OFF
-                    </span>
-
+                    <% if (!wishlist || wishlist.length === 0) { %>
+                    <div class="text-center py-20 bg-white rounded-[2.5rem] shadow-sm border border-gray-100 px-6">
+                        <div class="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fa-solid fa-heart-crack text-rose-300 text-4xl"></i>
+                        </div>
+                        <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter">Your list is lonely</h2>
+                        <p class="text-gray-400 mt-2 text-sm max-w-xs mx-auto">Save the books you love and they will wait for you here.</p>
+                        <a href="/" class="mt-8 inline-block bg-blue-600 text-white px-8 py-3.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 hover:bg-blue-700 transition active:scale-95">
+                            Start Exploring
+                        </a>
+                    </div>
                     <% } else { %>
 
-                    <span class="text-lg font-bold text-gray-800">
-                      ₹<%= item.regularPrice %>
-                    </span>
+                    <div class="space-y-4">
+                        <% wishlist.forEach(item => { %>
+                        <div class="item-card bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 flex flex-col sm:flex-row gap-6 items-center sm:items-start group">
+                            <div class="w-28 h-40 shrink-0 bg-gray-50 rounded-xl overflow-hidden p-2 flex items-center justify-center border border-gray-100">
+                                <img src="<%= item.productImage[0] %>" alt="<%= item.productName %>" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform" />
+                            </div>
 
+                            <div class="flex-1 text-center sm:text-left space-y-2">
+                                <h3 class="font-black text-gray-800 sm:text-lg leading-tight truncate max-w-[300px]"><%= item.productName %></h3>
+                                
+                                <div class="flex items-center justify-center sm:justify-start gap-2">
+                                    <% if (!item.isAvailable) { %>
+                                        <span class="text-[10px] font-black uppercase text-rose-600 bg-rose-50 px-2 py-0.5 rounded">Unavailable</span>
+                                    <% } else if (item.offerPrice < item.regularPrice) { %>
+                                        <span class="text-lg font-black text-gray-900">₹<%= item.offerPrice %></span>
+                                        <span class="text-xs text-gray-400 line-through">₹<%= item.regularPrice %></span>
+                                        <span class="text-emerald-600 text-[10px] font-black uppercase"><%= item.discount %>% OFF</span>
+                                    <% } else { %>
+                                        <span class="text-lg font-black text-gray-900">₹<%= item.regularPrice %></span>
+                                    <% } %>
+                                </div>
+
+                                <div class="flex items-center justify-center sm:justify-start gap-6 pt-4 border-t border-gray-50 mt-4">
+                                    <form action="/wishlist/move-to-cart" method="POST">
+                                        <input type="hidden" name="productId" value="<%= item._id %>" />
+                                        <button <%= item.isAvailable ? "" : "disabled" %> class="text-xs font-black uppercase tracking-widest <%= item.isAvailable ? 'text-emerald-600 hover:text-emerald-700' : 'text-gray-300 cursor-not-allowed' %> flex items-center gap-2">
+                                            <i class="fas fa-shopping-basket"></i> Move to Cart
+                                        </button>
+                                    </form>
+
+                                    <form id="remove-single-<%= item._id %>" action="/wishlist/remove" method="POST">
+                                        <input type="hidden" name="productId" value="<%= item._id %>" />
+                                        <button type="button" onclick="confirmRemoveSingle('<%= item._id %>')" class="text-xs font-black uppercase tracking-widest text-rose-500 hover:text-rose-700 flex items-center gap-2">
+                                            <i class="fas fa-trash-alt"></i> Remove
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <% }) %>
+                    </div>
                     <% } %>
-                  </div>
-
-                  <div class="flex items-center gap-4">
-                    <!-- BUY NOW BUTTON -->
-                    <form action="/wishlist/move-to-cart" method="POST">
-  <input type="hidden" name="productId" value="<%= item._id %>" />
-
-  <button
-    <%= item.isAvailable ? "" : "disabled" %>
-    class="font-medium
-      <%= item.isAvailable
-        ? 'text-green-600 hover:text-green-800'
-        : 'text-gray-400 cursor-not-allowed' %>"
-  >
-    Move to Cart
-  </button>
-</form>
-
-
-                    <!-- REMOVE BUTTON -->
-                    <form
-                      id="remove-single-<%= item._id %>"
-                      action="/wishlist/remove"
-                      method="POST"
-                      class="remove-single-form"
-                    >
-                      <input
-                        type="hidden"
-                        name="productId"
-                        value="<%= item._id %>"
-                      />
-                      <button
-                        type="button"
-                        onclick="confirmRemoveSingle('<%= item._id %>')"
-                        class="text-red-600 hover:text-red-800 font-medium"
-                      >
-                        Remove
-                      </button>
-                    </form>
-                  </div>
                 </div>
-              </div>
-              <% }) %>
+
+                <% if (wishlist && wishlist.length > 0) { %>
+                <div class="w-full lg:w-96 shrink-0">
+                    <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 lg:sticky lg:top-24">
+                        <h2 class="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6">Wishlist Summary</h2>
+
+                        <% let totalItems = wishlist.length; let grandTotal = 0;
+                        wishlist.forEach(item => grandTotal += item.price); %>
+
+                        <div class="space-y-4 mb-10">
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-500 font-medium">Total Items</span>
+                                <span class="font-black text-gray-800"><%= totalItems %></span>
+                            </div>
+                            <div class="flex justify-between items-center pt-4 border-t border-gray-50">
+                                <span class="text-gray-900 font-black uppercase tracking-tighter">Value</span>
+                                <span class="text-2xl font-black text-indigo-600">₹<%= grandTotal %></span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-3">
+                            <form id="move-all-form" action="/wishlist/move-all-to-cart" method="POST">
+                                <button type="button" onclick="confirmMoveAll('<%= wishlist.length %>')" 
+                                        class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition active:scale-95">
+                                    Move All to Cart
+                                </button>
+                            </form>
+                            <form id="remove-all-form" action="/wishlist/remove-all" method="POST">
+                                <button type="button" onclick="confirmRemoveAll('<%= wishlist.length %>')" 
+                                        class="w-full bg-gray-50 text-rose-500 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest border border-rose-50 hover:bg-rose-500 hover:text-white transition active:scale-95">
+                                    Clear Wishlist
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
             </div>
+        </main>
+    </div>
 
-            <% } %>
-          </div>
-        </div>
-        <!-- RIGHT SECTION: Wishlist Summary -->
-        <div class="w-full lg:w-96">
-          <div class="bg-white rounded-lg shadow-sm p-6 sticky top-24">
-            <h2 class="text-xl font-bold text-gray-700 mb-6">
-              Wishlist Summary
-            </h2>
-
-            <% let totalItems = wishlist.length; let grandTotal = 0;
-            wishlist.forEach(item => grandTotal += item.price); %>
-
-            <div class="space-y-4 mb-6">
-              <div class="flex justify-between text-gray-700">
-                <span>Total Products</span>
-                <span><%= totalItems %></span>
-              </div>
-
-              <div class="flex justify-between text-gray-700">
-                <span>Grand Total</span>
-                <span>₹ <%= grandTotal %></span>
-              </div>
-            </div>
-
-            <div class="flex flex-col gap-3">
-              <!-- BUY ALL BUTTON -->
-              <form
-                id="move-all-form"
-                action="/wishlist/move-all-to-cart"
-                method="POST"
-              >
-                <button
-                  type="button"
-                  data-count="<%= wishlist.length %>"
-                  onclick="confirmMoveAll(this.dataset.count)"
-                  class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold"
-                >
-                  Add All to Cart
-                </button>
-              </form>
-
-              <!-- REMOVE ALL BUTTON -->
-              <form
-                id="remove-all-form"
-                action="/wishlist/remove-all"
-                method="POST"
-              >
-                <button
-                  type="button"
-                  data-count="<%= wishlist.length %>"
-                  onclick="confirmRemoveAll(this.dataset.count)"
-                  class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-bold"
-                >
-                  Remove All
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- Footer -->
     <%- include("../../views/partials/user/footer") %>
+
     <script>
-      function confirmRemoveSingle(productId) {
-        Swal.fire({
-          title: "Are you sure?",
-          text: "This item will be removed from your wishlist.",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#d33",
-          cancelButtonColor: "#3085d6",
-          confirmButtonText: "Yes, remove it!",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            document.getElementById("remove-single-" + productId).submit();
-          }
-        });
-      }
-
-      function confirmRemoveAll(count) {
-        count = Number(count);
-        if (count === 0) {
-          Swal.fire({
-            title: "Wishlist is empty!",
-            text: "There are no items to remove.",
-            icon: "info",
-            confirmButtonColor: "#3085d6",
-          });
-          return;
+        // Core interaction handlers
+        function confirmRemoveSingle(productId) {
+            Swal.fire({
+                title: "Remove item?",
+                text: "You can always add it back later.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#f43f5e",
+                confirmButtonText: "Yes, Remove"
+            }).then((res) => { if (res.isConfirmed) document.getElementById("remove-single-" + productId).submit(); });
         }
 
-        Swal.fire({
-          title: "Are you sure?",
-          text: "All items will be removed from your wishlist.",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#d33",
-          cancelButtonColor: "#3085d6",
-          confirmButtonText: "Yes, remove all!",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            document.getElementById("remove-all-form").submit();
-          }
-        });
-      }
-
-      function confirmMoveAll(count) {
-        count = Number(count);
-
-        if (count === 0) {
-          Swal.fire({
-            title: "Wishlist is empty!",
-            text: "There are no items to move to cart.",
-            icon: "info",
-            confirmButtonColor: "#3085d6",
-          });
-          return;
+        function confirmRemoveAll(count) {
+            if (Number(count) === 0) return;
+            Swal.fire({
+                title: "Clear all items?",
+                text: "This will empty your entire wishlist.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#f43f5e",
+                confirmButtonText: "Yes, Clear All"
+            }).then((res) => { if (res.isConfirmed) document.getElementById("remove-all-form").submit(); });
         }
 
-        Swal.fire({
-          title: "Move all to cart?",
-          text: "All wishlist items will be added to your cart.",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#22c55e",
-          cancelButtonColor: "#3085d6",
-          confirmButtonText: "Yes, add all!",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            document.getElementById("move-all-form").submit();
-          }
-        });
-      }
+        function confirmMoveAll(count) {
+            if (Number(count) === 0) return;
+            Swal.fire({
+                title: "Add all to cart?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#10b981",
+                confirmButtonText: "Yes, Move All"
+            }).then((res) => { if (res.isConfirmed) document.getElementById("move-all-form").submit(); });
+        }
 
-      const params = new URLSearchParams(window.location.search);
-      const error = params.get("error");
-
-      if (error === "product-unavailable") {
-        Swal.fire({
-          icon: "warning",
-          title: "Unavailable",
-          text: "One or more products are no longer available.",
+        // Error message handling
+        document.addEventListener("DOMContentLoaded", () => {
+            const err = new URLSearchParams(window.location.search).get("error");
+            if (err) {
+                let msg = "Something went wrong.";
+                if(err === "product-unavailable") msg = "One or more products are no longer available.";
+                else if(err === "not-found") msg = "Product no longer exists.";
+                Swal.fire({ icon: "error", title: "Wait!", text: msg });
+            }
         });
-      }
-
-      if (error === "not-found") {
-        Swal.fire({
-          icon: "error",
-          title: "Not Found",
-          text: "Product no longer exists.",
-        });
-      }
-
-      if (error === "server") {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Something went wrong. Please try again.",
-        });
-      }
     </script>
-  </body>
+</body>
 </html>

@@ -1,161 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Orders - ReadNest</title>
-
+    <title>My Orders | ReadNest</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
-      * { font-family: "Poppins", sans-serif; }
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+        * { font-family: "Poppins", sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @media (min-width: 1024px) {
+            .desktop-scroll-area {
+                height: calc(100vh - 80px);
+                overflow-y: auto;
+            }
+            .sidebar-fixed {
+                height: calc(100vh - 80px);
+                position: sticky;
+                top: 80px;
+            }
+        }
+        .order-card { transition: all 0.3s ease; }
+        .order-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
     </style>
-  </head>
+</head>
 
-  <body class="bg-gray-100">
-
+<body class="bg-gray-50">
     <%- include("../../views/partials/user/header") %>
 
-    <main class="max-w-5xl mx-auto px-6 py-16">
-
-      <!-- SAFE VARIABLES -->
-      <% 
-        const searchValue = (typeof search !== 'undefined' && search) ? search : "";
-        const noResultsMessageSafe =
-          (typeof noResultsMessage !== 'undefined' && noResultsMessage) ? noResultsMessage : "";
-      %>
-
-      <h1 class="text-3xl font-bold text-gray-800 mb-10 text-center">My Orders</h1>
-
-      <!-- SEARCH BAR -->
-      <form id="orderSearchForm" class="max-w-lg mx-auto mb-10 relative" onsubmit="return false">
-        <input
-          type="text"
-          id="orderSearch"
-          placeholder="Search by Order ID..."
-          value="<%= searchValue %>"
-          class="w-full px-4 py-3 bg-white shadow rounded-lg focus:outline-none"
-        />
-
-        <button
-          id="orderClearBtn"
-          class="absolute right-3 top-3 text-gray-500 hover:text-black hidden"
-          type="button">✕</button>
-      </form>
-
-      <!-- SEARCH NO RESULT -->
-      <% if (noResultsMessageSafe) { %>
-      <div class="text-center py-10 bg-white rounded-xl shadow mb-6">
-        <i class="fa-solid fa-search text-gray-400 text-5xl mb-4"></i>
-        <p class="text-xl text-gray-700 font-semibold"><%= noResultsMessageSafe %></p>
-      </div>
-      <% } %>
-
-      <!-- NO ORDERS -->
-      <% if (!noResultsMessageSafe && orders.length === 0) { %>
-      <div class="text-center py-20 bg-white rounded-xl shadow">
-        <i class="fa-solid fa-box-open text-gray-400 text-6xl mb-4"></i>
-        <p class="text-xl text-gray-600">You have no orders yet.</p>
-        <a href="/" class="mt-6 inline-block bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition">
-          Start Shopping
-        </a>
-      </div>
-      <% } %>
-
-      <!-- ORDER LIST -->
-      <div class="space-y-6">
-        <% orders.forEach(order => { %>
-        <div class="bg-white shadow-md rounded-xl p-6 border border-gray-100">
-
-          <div class="flex justify-between items-center">
-            <h2 class="text-xl font-bold text-gray-800">
-              Order ID: <span class="text-blue-600"><%= order.orderId %></span>
-            </h2>
-
-            <span class="px-4 py-2 rounded-lg text-sm font-semibold 
-              <% if(order.status === 'processing'){ %> bg-yellow-100 text-yellow-700 
-              <% } else if(order.status === 'cancelled'){ %> bg-red-100 text-red-700 
-              <% } else if(order.status === 'partially_cancelled'){ %> bg-orange-100 text-orange-700 
-              <% } else { %> bg-green-100 text-green-700 <% } %>">
-              <%= order.status %>
-            </span>
-          </div>
-
-          <div class="mt-4 grid md:grid-cols-3 gap-6">
-            <div>
-              <p class="text-gray-700"><span class="font-semibold">Total:</span> ₹ <%= order.items.reduce((sum, i) => sum + i.subtotal, 0) %></p>
-              <p class="text-gray-700"><span class="font-semibold">Items:</span> <%= order.items.length %></p>
+    <div class="max-w-[1440px] mx-auto flex flex-col lg:flex-row">
+        
+        <aside class="w-full lg:w-72 bg-white border-b lg:border-b-0 lg:border-r border-gray-200 sidebar-fixed">
+            <div class="hidden lg:block p-8 border-b border-gray-100">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Customer Dashboard</p>
+                <h2 class="text-xl font-black text-gray-800 truncate"><%= user.name %></h2>
             </div>
 
-            <div>
-              <p class="text-gray-700">
-                <span class="font-semibold">Placed On:</span><br />
-                <%= new Date(order.createdAt).toLocaleString() %>
-              </p>
+            <nav class="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible no-scrollbar p-2 lg:p-0">
+                <a href="/account" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm transition-all hover:bg-gray-50">
+                    <i class="fas fa-user-circle text-lg text-gray-400"></i> Profile Details
+                </a>
+                <a href="/address" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm transition-all hover:bg-gray-50">
+                    <i class="fas fa-map-marked-alt text-lg text-gray-400"></i> Addresses
+                </a>
+                <a href="/orders" class="sidebar-link active flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm bg-blue-50 text-blue-600 border-r-4 border-blue-600 lg:border-r-4 lg:border-b-0">
+                    <i class="fas fa-shopping-bag text-lg"></i> My Orders
+                </a>
+                <a href="/wallet" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm transition-all hover:bg-gray-50">
+                    <i class="fas fa-wallet text-lg text-gray-400"></i> Wallet
+                </a>
+                <a href="/wishlist" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap lg:border-b border-gray-50 font-semibold text-sm transition-all hover:bg-gray-50">
+                    <i class="fas fa-heart text-lg text-gray-400"></i> Wishlist
+                </a>
+                <a href="/logout" class="sidebar-link flex items-center gap-3 px-6 py-4 whitespace-nowrap font-semibold text-sm text-red-500 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt text-lg"></i> Logout
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-4 sm:p-8 lg:p-12 desktop-scroll-area no-scrollbar">
+            
+            <% 
+                const searchValue = (typeof search !== 'undefined' && search) ? search : "";
+                const noResultsMessageSafe = (typeof noResultsMessage !== 'undefined' && noResultsMessage) ? noResultsMessage : "";
+            %>
+
+            <div class="mb-10 text-center lg:text-left">
+                <h1 class="text-2xl lg:text-4xl font-black text-gray-900 tracking-tight mb-2">Purchase History</h1>
+                <p class="text-gray-500 text-sm mb-8">Track and manage your book orders</p>
+
+                <div class="max-w-xl mx-auto lg:mx-0">
+                    <form id="orderSearchForm" class="relative group" onsubmit="return false">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors"></i>
+                        <input
+                            type="text"
+                            id="orderSearch"
+                            placeholder="Search by Order ID..."
+                            value="<%= searchValue %>"
+                            class="w-full pl-12 pr-12 py-4 bg-white border-2 border-transparent shadow-sm rounded-2xl focus:outline-none focus:border-blue-500 transition-all text-sm font-bold placeholder:text-gray-300"
+                        />
+                        <button
+                            id="orderClearBtn"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 hidden transition-colors"
+                            type="button">
+                            <i class="fas fa-times-circle text-lg"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
 
-            <div class="flex items-center md:justify-end">
-              <a href="/orders/<%= order.orderId %>" class="bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition">
-                View Details
-              </a>
+            <% if (noResultsMessageSafe) { %>
+            <div class="text-center py-16 bg-white rounded-[2rem] border-2 border-dashed border-gray-100 mb-8">
+                <div class="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-magnifying-glass text-gray-200 text-3xl"></i>
+                </div>
+                <p class="text-gray-800 font-black uppercase tracking-widest text-xs"><%= noResultsMessageSafe %></p>
+                <button onclick="window.location.href='/orders'" class="mt-6 text-blue-600 font-black text-xs uppercase tracking-widest hover:underline">Clear Filters</button>
             </div>
-          </div>
+            <% } %>
 
-        </div>
-        <% }) %>
-      </div>
+            <% if (!noResultsMessageSafe && orders.length === 0) { %>
+            <div class="text-center py-24 bg-white rounded-[2.5rem] shadow-sm border border-gray-100">
+                <div class="bg-blue-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa-solid fa-box-open text-blue-200 text-5xl"></i>
+                </div>
+                <h2 class="text-xl font-black text-gray-900 uppercase tracking-tighter">Your library is waiting</h2>
+                <p class="text-gray-400 mt-2 text-sm max-w-xs mx-auto">You haven't placed any orders yet. Start your collection today!</p>
+                <a href="/" class="mt-10 inline-block bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition active:scale-95">
+                    Browse Books
+                </a>
+            </div>
+            <% } %>
 
-    </main>
+            <div class="grid grid-cols-1 gap-6">
+                <% orders.forEach(order => { %>
+                <div class="order-card bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                    
+                    <div class="px-6 sm:px-8 py-5 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
+                        <div>
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Reference ID</p>
+                            <h2 class="text-sm sm:text-base font-black text-gray-900">
+                                #<span class="text-blue-600"><%= order.orderId %></span>
+                            </h2>
+                        </div>
+
+                        <%
+                            let badgeStyles = "bg-green-100 text-green-700 border-green-200";
+                            if(order.status === 'processing') badgeStyles = "bg-amber-100 text-amber-700 border-amber-200";
+                            else if(order.status === 'cancelled') badgeStyles = "bg-rose-100 text-rose-700 border-rose-200";
+                            else if(order.status === 'partially_cancelled') badgeStyles = "bg-orange-100 text-orange-700 border-orange-200";
+                        %>
+                        <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border <%= badgeStyles %> shadow-sm">
+                            <%= order.status %>
+                        </span>
+                    </div>
+
+                    <div class="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Financials</p>
+                            <p class="text-xl font-black text-gray-900">₹<%= order.items.reduce((sum, i) => sum + i.subtotal, 0) %></p>
+                            <p class="text-xs text-gray-500 font-medium"><%= order.items.length %> Item(s) in this shipment</p>
+                        </div>
+
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Date Placed</p>
+                            <p class="text-sm font-bold text-gray-800"><%= new Date(order.createdAt).toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'}) %></p>
+                            <p class="text-[10px] text-gray-400 font-medium tracking-tight"><%= new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %></p>
+                        </div>
+
+                        <div class="flex lg:justify-end">
+                            <a href="/orders/<%= order.orderId %>" class="w-full sm:w-auto text-center bg-white text-indigo-600 border-2 border-indigo-50 px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all active:scale-95 shadow-sm">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <% }) %>
+            </div>
+        </main>
+    </div>
 
     <%- include("../../views/partials/user/footer") %>
 
-    <!-- SEARCH SCRIPT -->
     <script>
-      const orderInput = document.getElementById("orderSearch");
-      const orderClear = document.getElementById("orderClearBtn");
+        const orderInput = document.getElementById("orderSearch");
+        const orderClear = document.getElementById("orderClearBtn");
 
-      if (orderInput.value.trim() !== "") {
-        orderClear.classList.remove("hidden");
-      }
+        if (orderInput.value.trim() !== "") orderClear.classList.remove("hidden");
 
-      function applyOrderSearch() {
-        const search = orderInput.value.trim();
-        const params = new URLSearchParams();
-        if (search) params.append("search", search);
-        window.location.href = `/orders?${params.toString()}`;
-      }
-
-      let typingTimer;
-      const debounceDelay = 600;
-
-      orderInput.addEventListener("input", () => {
-        clearTimeout(typingTimer);
-        orderClear.classList.toggle("hidden", orderInput.value.trim() === "");
-        typingTimer = setTimeout(applyOrderSearch, debounceDelay);
-      });
-
-      orderInput.addEventListener("keypress", e => {
-        if (e.key === "Enter") applyOrderSearch();
-      });
-
-      orderClear.addEventListener("click", () => {
-        window.location.href = "/orders";
-      });
-
-      /** 🔥 CLEAR URL WHEN PAGE IS REFRESHED */
-      const nav = performance.getEntriesByType("navigation")[0];
-      if (nav && nav.type === "reload") {
-        if (window.location.search.includes("search")) {
-          window.location.replace("/orders");
+        function applyOrderSearch() {
+            const search = orderInput.value.trim();
+            const params = new URLSearchParams();
+            if (search) params.append("search", search);
+            window.location.href = `/orders?${params.toString()}`;
         }
-      }
-    </script>
 
-  </body>
+        let typingTimer;
+        orderInput.addEventListener("input", () => {
+            clearTimeout(typingTimer);
+            orderClear.classList.toggle("hidden", orderInput.value.trim() === "");
+            typingTimer = setTimeout(applyOrderSearch, 800);
+        });
+
+        orderInput.addEventListener("keypress", e => { if (e.key === "Enter") applyOrderSearch(); });
+        orderClear.addEventListener("click", () => { window.location.href = "/orders"; });
+
+        if (performance.getEntriesByType("navigation")[0]?.type === "reload") {
+            if (window.location.search.includes("search")) window.location.replace("/orders");
+        }
+    </script>
+</body>
 </html>

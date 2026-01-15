@@ -1,304 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
-    <title>Create Blog</title>
+    <title>Create Blog | ReadNest</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- SweetAlert -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
     <style>
-      /* CKEditor Styling */
-      .cke {
-        border-radius: 12px !important;
-        border: 2px solid #e5e7eb !important;
-      }
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+        * { font-family: "Poppins", sans-serif; }
 
-      .cke_top {
-        background: #f9fafb !important;
-        border-bottom: 1px solid #e5e7eb !important;
-        padding: 10px !important;
-      }
-
-      .cke_button_icon {
-        transform: scale(1.25);
-      }
-
-      .cke_contents {
-        padding: 14px !important;
-      }
+        /* CKEditor Responsive Styling */
+        .cke {
+            border-radius: 12px !important;
+            border: 2px solid #e5e7eb !important;
+            width: 100% !important; /* Forces editor to stay inside parent container */
+        }
+        .cke_top {
+            background: #f9fafb !important;
+            border-bottom: 1px solid #e5e7eb !important;
+            padding: 8px !important;
+        }
+        .cke_contents { padding: 10px !important; }
+        
+        /* Hide scrollbar for cleaner UI */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
-  </head>
+</head>
 
-  <body class="bg-blue-50 min-h-screen">
-    <!-- ================= HEADER ================= -->
+<body class="bg-blue-50 min-h-screen">
     <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-4 py-3">
-        <div class="flex items-center justify-between">
-          <!-- Logo -->
-          <div class="flex items-center space-x-2">
-            <div class="w-14 h-14 rounded-full overflow-hidden">
-              <a href="/">
-                <img
-                  src="/images/logo2.png"
-                  class="w-full h-full object-cover"
-                />
-              </a>
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 shrink-0">
+                    <div class="w-10 h-10 lg:w-14 lg:h-14 rounded-full overflow-hidden">
+                        <a href="/"><img src="/images/logo2.png" class="w-full h-full object-cover" /></a>
+                    </div>
+                    <a href="/" class="text-lg lg:text-xl font-bold text-gray-800">ReadNest</a>
+                </div>
+
+                <div class="flex items-center space-x-3 lg:space-x-6">
+                    <button onclick="window.location.href='/blog'" class="flex items-center p-2 lg:px-4 lg:py-2 bg-white rounded-lg border border-gray-300">
+                        <i class="fas fa-bars text-gray-700"></i>
+                        <span class="hidden lg:inline text-sm font-medium ml-2">BLOG</span>
+                    </button>
+                    <a href="/cart" class="p-2"><i class="fas fa-shopping-cart text-xl text-gray-700"></i></a>
+                    <a href="/account" class="p-2"><i class="fas fa-user-circle text-2xl text-gray-700"></i></a>
+                </div>
             </div>
-            <a href="/" class="text-xl font-bold text-gray-800"> ReadNest </a>
-          </div>
-
-          <!-- Right Menu -->
-          <div class="flex items-center space-x-6">
-            <button
-              onclick="openBlog()"
-              class="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-300 hover:bg-gray-50"
-            >
-              <i class="fas fa-bars text-gray-700"></i>
-              <span class="text-sm font-medium text-gray-700">BLOG</span>
-            </button>
-
-            <a href="/cart" class="flex items-center space-x-1">
-              <i class="fas fa-shopping-cart text-xl text-gray-700"></i>
-              <span class="text-sm text-gray-700">Cart</span>
-            </a>
-
-            <a href="/account" class="flex items-center space-x-2">
-              <i class="fas fa-user-circle text-2xl text-gray-700"></i>
-              <span class="text-sm font-medium text-gray-700">Account</span>
-            </a>
-          </div>
         </div>
-      </div>
     </header>
 
-    <!-- ================= PAGE TOOLBAR ================= -->
-    <section
-  class="sticky top-[76px] z-40 bg-white border-b border-blue-100"
->
+    <section class="sticky top-[64px] lg:top-[76px] z-40 bg-white border-b border-blue-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <button onclick="window.history.back()" class="flex items-center gap-2 text-blue-600 font-bold text-sm lg:text-base hover:text-blue-700">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
 
-      <div
-        class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between"
-      >
-        <!-- Back -->
-        <button
-          onclick="window.history.back()"
-          class="flex items-center gap-2 text-blue-600 font-medium hover:text-blue-700"
-        >
-          <i class="fa-solid fa-arrow-left"></i>
-          Back
-        </button>
-
-        <!-- Notification -->
-        <button
-            id="notificationBtn"
-            class="relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-blue-100 transition"
-          >
-            <i class="fa-regular fa-bell text-blue-600"></i>
-
-            <!-- Count -->
-            <span
-              id="notifCount"
-              class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center"
-            ></span>
-          </button>
-      </div>
+            <button id="notificationBtn" class="relative w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-blue-100 transition">
+                <i class="fa-regular fa-bell text-blue-600"></i>
+                <span id="notifCount" class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white"></span>
+            </button>
+        </div>
     </section>
 
-    <!-- ================= MAIN ================= -->
-    <main class="max-w-4xl mx-auto mt-10 bg-white p-6 rounded-xl shadow">
-      <h1 class="text-2xl font-bold text-center text-blue-700 mb-6">
-        Create New Blog
-      </h1>
+    <main class="max-w-4xl mx-auto mt-6 lg:mt-10 px-4 mb-10">
+        <div class="bg-white p-5 lg:p-8 rounded-2xl shadow-md border border-blue-100">
+            <div class="mb-8 text-center">
+                <h1 class="text-2xl lg:text-3xl font-extrabold text-blue-800">Create New Story</h1>
+                <p class="text-gray-500 text-xs lg:text-sm mt-1">Share your literary thoughts with the ReadNest community</p>
+            </div>
 
-      <form action="/blog/addBlog" method="POST" class="space-y-5">
-        <input
-          type="text"
-          name="title"
-          placeholder="Blog title"
-          required
-          class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-400"
-        />
+            <form action="/blog/addBlog" method="POST" class="space-y-6">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Title</label>
+                    <input
+                        type="text"
+                        name="title"
+                        placeholder="Enter a catchy title..."
+                        required
+                        class="w-full px-4 py-4 border-2 border-gray-100 rounded-xl focus:border-blue-400 outline-none transition text-lg font-bold text-gray-800 placeholder:text-gray-300"
+                    />
+                </div>
 
-        <textarea id="editor" name="content"></textarea>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Story Content</label>
+                    <textarea id="editor" name="content"></textarea>
+                </div>
 
-        <div class="flex justify-end">
-          <button
-            type="submit"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium"
-          >
-            Publish Blog
-          </button>
+                <div class="flex justify-center lg:justify-end pt-4">
+                    <button
+                        type="submit"
+                        class="w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-xl font-black text-lg shadow-lg shadow-blue-100 transition transform active:scale-95"
+                    >
+                        Publish Story
+                    </button>
+                </div>
+            </form>
         </div>
-      </form>
     </main>
-    <div
-        id="notificationModal"
-        class="hidden absolute right-6 top-[132px] z-50 w-96"
-      >
-        <div
-          class="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden"
-        >
-          <!-- Header -->
-          <div class="flex justify-between items-center px-4 py-3 border-b">
-            <button
-              id="closeNotification"
-              class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
-            >
-              <i class="fa-solid fa-arrow-left"></i>
-              Back
-            </button>
 
-            <h3 class="font-semibold text-sm">Notifications</h3>
-
-            <button
-              id="markAllRead"
-              class="text-xs text-blue-600 hover:underline"
-            >
-              ✓ Mark all
-            </button>
-          </div>
-
-          <!-- List -->
-          <div
-            id="notificationList"
-            class="max-h-80 overflow-y-auto divide-y"
-          ></div>
+    <div id="notificationModal" class="hidden fixed lg:absolute right-4 left-4 lg:left-auto lg:right-6 top-[120px] lg:top-[132px] z-50 w-auto lg:w-96">
+        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
+            <div class="flex justify-between items-center px-4 py-3 border-b bg-gray-50">
+                <button id="closeNotification" class="text-xs text-gray-500 font-bold flex items-center gap-1">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i> Back
+                </button>
+                <h3 class="font-bold text-sm">Notifications</h3>
+                <button id="markAllRead" class="text-xs text-blue-600 font-bold">Mark all read</button>
+            </div>
+            <div id="notificationList" class="max-h-80 overflow-y-auto divide-y divide-gray-50 no-scrollbar"></div>
         </div>
-      </div>
+    </div>
 
-    
-
-    <!-- ================= SCRIPTS ================= -->
     <script src="https://cdn.ckeditor.com/4.22.1/full/ckeditor.js"></script>
 
     <script>
-      let activeEditor = null;
-
-      /* ================= CKEDITOR ================= */
-      CKEDITOR.plugins.add("customimage", {
-        init(editor) {
-          editor.addCommand("openImageUpload", {
-            exec() {
-              activeEditor = editor;
-              openModal();
-            },
-          });
-
-          editor.ui.addButton("CustomImage", {
-            label: "Insert Image",
-            command: "openImageUpload",
-            toolbar: "insert",
-            icon: "https://cdn-icons-png.flaticon.com/512/337/337940.png",
-          });
-        },
-      });
-
-      CKEDITOR.replace("editor", {
-        height: 360,
-        extraPlugins: "customimage",
-        toolbar: [
-          { name: "styles", items: ["Font", "FontSize"] },
-          {
-            name: "basicstyles",
-            items: ["Bold", "Italic", "Underline", "Strike"],
-          },
-          { name: "colors", items: ["TextColor", "BGColor"] },
-          { name: "paragraph", items: ["NumberedList", "BulletedList"] },
-          { name: "links", items: ["Link", "Unlink"] },
-          { name: "cleanup", items: ["RemoveFormat"] },
-        ],
-        removePlugins: "resize,elementspath",
-      });
-
-     
-      const notifBtn = document.getElementById("notificationBtn");
-      const notifModal = document.getElementById("notificationModal");
-
-      notifBtn.onclick = async () => {
-        notifModal.classList.toggle("hidden");
-
-        if (notifModal.classList.contains("hidden")) return;
-
-        const res = await fetch("/notifications");
-        const notifications = await res.json();
-
-        const list = document.getElementById("notificationList");
-        list.innerHTML = "";
-
-        if (notifications.length === 0) {
-          list.innerHTML = `<p class="p-6 text-center text-gray-500 text-sm">No notifications</p>`;
-          return;
-        }
-
-        notifications.forEach((n) => {
-          list.innerHTML += `
-      <div class="p-4 flex gap-3 ${n.isRead ? "bg-white" : "bg-blue-50"}">
-        <i class="fa-solid ${
-          n.type === "like"
-            ? "fa-heart text-red-500"
-            : "fa-comment text-blue-500"
-        } mt-1"></i>
-
-        <div class="text-sm">
-          <p>
-            <strong>${n.sender.name}</strong>
-            ${n.type === "like" ? "liked" : "commented on"}
-            <a href="/blogs/${
-              n.blog._id
-            }" class="text-blue-600 hover:underline">
-              ${n.blog.title}
-            </a>
-          </p>
-
-          <p class="text-xs text-gray-400">
-            ${new Date(n.createdAt).toLocaleString()}
-          </p>
-        </div>
-      </div>
-    `;
+        /* ================= CKEDITOR SETUP ================= */
+        CKEDITOR.replace("editor", {
+            height: 400,
+            // Optimization for mobile toolbars
+            toolbar: [
+                { name: "styles", items: ["Format", "FontSize"] },
+                { name: "basicstyles", items: ["Bold", "Italic", "Underline"] },
+                { name: "paragraph", items: ["NumberedList", "BulletedList", "Blockquote"] },
+                { name: "insert", items: ["Link", "HorizontalRule"] },
+                { name: "tools", items: ["Maximize"] }
+            ],
+            removePlugins: "resize,elementspath",
+            placeholder: 'Start writing your amazing story here...'
         });
-      };
 
-      document.getElementById("closeNotification").onclick = () => {
-        document.getElementById("notificationModal").classList.add("hidden");
-      };
+        /* ================= NOTIFICATIONS ================= */
+        const notifBtn = document.getElementById("notificationBtn");
+        const notifModal = document.getElementById("notificationModal");
+        const notifList = document.getElementById("notificationList");
 
-      document.getElementById("markAllRead").onclick = async () => {
-        await fetch("/notifications/mark-all-read", { method: "POST" });
+        notifBtn.onclick = async (e) => {
+            e.stopPropagation();
+            notifModal.classList.toggle("hidden");
+            if (notifModal.classList.contains("hidden")) return;
 
-        document.getElementById(
-          "notificationList"
-        ).innerHTML = `<p class="p-6 text-center text-gray-500">All caught up 🎉</p>`;
+            const res = await fetch("/notifications");
+            const notifications = await res.json();
+            notifList.innerHTML = notifications.length === 0 ? '<p class="p-8 text-center text-gray-400 text-sm">No new alerts</p>' : '';
 
-        document.getElementById("notifCount").classList.add("hidden");
-      };
+            notifications.forEach(n => {
+                notifList.innerHTML += `
+                    <div class="p-4 flex gap-3 ${n.isRead ? 'bg-white' : 'bg-blue-50'} transition border-b border-gray-100">
+                        <i class="fa-solid ${n.type === 'like' ? 'fa-heart text-red-500' : 'fa-comment text-blue-500'} mt-1"></i>
+                        <div class="text-xs">
+                            <p class="text-gray-800 font-medium">
+                                <span class="font-bold">${n.sender.name}</span> ${n.type === 'like' ? 'liked' : 'commented on'} 
+                                <a href="/blogs/${n.blog._id}" class="text-blue-600 font-bold hover:underline">"${n.blog.title}"</a>
+                            </p>
+                            <p class="text-[10px] text-gray-400 mt-1 uppercase">${new Date(n.createdAt).toLocaleString()}</p>
+                        </div>
+                    </div>`;
+            });
+        };
 
-      async function loadUnreadCount() {
-        const res = await fetch("/notifications/unread-count");
-        const data = await res.json();
+        document.getElementById("closeNotification").onclick = () => notifModal.classList.add("hidden");
 
-        const badge = document.getElementById("notifCount");
-        if (data.count > 0) {
-          badge.textContent = data.count;
-          badge.classList.remove("hidden");
-        } else {
-          badge.classList.add("hidden");
+        document.getElementById("markAllRead").onclick = async () => {
+            await fetch("/notifications/mark-all-read", { method: "POST" });
+            notifList.innerHTML = '<p class="p-6 text-center text-gray-500">Cleared 🎉</p>';
+            document.getElementById("notifCount").classList.add("hidden");
+        };
+
+        async function loadUnreadCount() {
+            const res = await fetch("/notifications/unread-count");
+            const data = await res.json();
+            const badge = document.getElementById("notifCount");
+            if (data.count > 0) {
+                badge.textContent = data.count;
+                badge.classList.remove("hidden");
+            }
         }
-      }
+        
+        loadUnreadCount();
 
-      loadUnreadCount();
-      
+        function openBlog() { window.location.href = "/blog"; }
+        
+        // Close modal when clicking outside
+        window.onclick = (e) => {
+            if (!notifModal.contains(e.target) && e.target !== notifBtn) {
+                notifModal.classList.add("hidden");
+            }
+        };
     </script>
-  </body>
+</body>
 </html>

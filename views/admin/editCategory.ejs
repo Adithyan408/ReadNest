@@ -1,328 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Edit Category - ReadNest</title>
+    <title>Edit Category | ReadNest Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
-     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
-      * {
-        font-family: "Poppins", sans-serif;
-      }
-      .sidebar-item {
-        transition: all 0.3s ease;
-      }
-      .sidebar-item:hover {
-        background-color: #d1d5db;
-        border-left: 4px solid #667eea;
-      }
-      .sidebar-item.active {
-        background-color: #d1d5db;
-        border-left: 4px solid #667eea;
-      }
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+        * { font-family: "Poppins", sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .sidebar-item.active { background: #f3f4f6; border-right: 4px solid #4f46e5; color: #4f46e5; }
+        #sidebar { transition: transform 0.3s ease-in-out; z-index: 60; }
+        
+        @media (min-width: 1024px) {
+            .main-content { height: calc(100vh - 80px); overflow-y: auto; }
+        }
     </style>
-  </head>
-  <body class="bg-gray-100">
-    <!-- Header -->
-    <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
-      <div class="flex items-center justify-between px-6 py-4">
-        <a href="/admin">
-          <div class="flex items-center space-x-3">
-            <div
-              class="w-14 h-14 bg-orange-900 rounded-full flex items-center justify-center"
-            >
-              <i class="fas fa-book-open text-white text-2xl"></i>
-            </div>
-            <span class="text-2xl font-bold text-gray-800">ReadNest</span>
-          </div>
-        </a>
-        <div class="flex items-center space-x-6">
-          <a href="/admin/blogs">
-            <button
-            class=" flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
-            >
-          <i class="fas fa-blog text-gray-700"></i>
-          <span class="text-base font-semibold text-gray-900">Blog</span>
-          </button>
-        </a>
+</head>
 
-          <div class="flex items-center space-x-3">
-            <i class="fas fa-user-circle text-4xl text-gray-600"></i>
-            <span class="text-base font-semibold text-gray-600">ADMIN</span>
-          </div>
+<body class="bg-gray-100 min-h-screen lg:overflow-hidden">
+
+    <header class="bg-white shadow-md sticky top-0 z-50 px-4 sm:px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+            <a href="/admin" class="flex items-center space-x-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-900 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-book-open text-white text-xl"></i>
+                </div>
+                <span class="text-xl sm:text-2xl font-black text-gray-800 tracking-tighter uppercase">ReadNest</span>
+            </a>
         </div>
-      </div>
+
+        <div class="flex items-center space-x-3 sm:space-x-6">
+            <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                <i class="fas fa-user-shield text-indigo-600"></i>
+                <span class="text-xs font-black text-gray-700 uppercase tracking-widest">Admin</span>
+            </div>
+        </div>
     </header>
 
     <div class="flex">
-      <!-- Sidebar -->
-      <aside
-        class="w-80 bg-gray-300 min-h-screen border-r border-gray-400 relative"
-      >
-        <nav class="py-4 pb-24">
-          <a
-            href="/admin/dashboard"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th-large text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">DashBoard</span>
-          </a>
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-100 -translate-x-full lg:translate-x-0 lg:static lg:h-[calc(100vh-80px)] flex flex-col transition-transform duration-300 shadow-2xl lg:shadow-none">
+            <nav class="flex-1 overflow-y-auto py-6 no-scrollbar space-y-1">
+                <a href="/admin" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-th-large w-8 text-lg"></i> Dashboard</a>
+                <a href="/admin/products" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-box w-8 text-lg"></i> Products</a>
+                <a href="/admin/orders" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-shopping-bag w-8 text-lg"></i> Orders</a>
+                <a href="/admin/users" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-users w-8 text-lg"></i> Customers</a>
+                <a href="/admin/category" class="sidebar-item active flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-th w-8 text-lg"></i> Category</a>
+                <a href="/admin/coupon" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-ticket-alt w-8 text-lg"></i> Voucher</a>
+                <a href="/admin/blogs" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-blog w-8 text-lg"></i> Blogs</a>
+                <a href="/admin/banner" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-image w-8 text-lg"></i> Banner</a>
+                <a href="/admin/logout" class="flex items-center px-8 py-4 text-rose-500 font-bold text-sm mt-10 border-t border-gray-50 pt-8 hover:bg-rose-50 transition-colors"><i class="fas fa-sign-out-alt w-8 text-lg"></i> LOG OUT</a>
+            </nav>
+        </aside>
 
-          <a
-            href="/admin/products"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-box text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Products</span>
-          </a>
+        <main class="main-content flex-1 p-4 sm:p-8 lg:p-12 no-scrollbar bg-gray-50 w-full">
+            <div class="max-w-4xl mx-auto">
+                <div class="mb-6"><%- include('../../views/partials/breadCrumb') %></div>
 
-          <a
-            href="/admin/orders"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-shopping-bag text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Orders List</span>
-          </a>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
+                    <div class="flex items-center gap-4">
+                        <a href="/admin/category" class="w-10 h-10 flex items-center justify-center bg-white rounded-full text-gray-400 shadow-sm hover:text-gray-900 transition"><i class="fas fa-arrow-left"></i></a>
+                        <h1 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase leading-tight">Edit Category</h1>
+                    </div>
+                    <button onclick="confirmDelete('<%= category._id %>')" 
+                            class="w-full sm:w-auto bg-rose-50 text-rose-500 border-2 border-rose-100 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-500 hover:text-white transition active:scale-95">
+                        <i class="fas fa-trash-alt mr-2"></i> Delete Forever
+                    </button>
+                </div>
 
-          <a
-            href="/admin/users"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-users text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Customers</span>
-          </a>
+                <div class="bg-white rounded-[2.5rem] shadow-xl shadow-indigo-900/5 p-6 sm:p-10 border border-white">
+                    <form id="categoryForm" action="/admin/editCategory?id=<%= category._id %>" method="POST" class="space-y-10">
+                        
+                        <div>
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Identity</label>
+                            <input type="text" id="categoryName" name="categoryName" value="<%= category.categoryName %>" placeholder="Genre name" 
+                                   class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-gray-800 text-lg" />
+                        </div>
 
-         
+                        <div class="bg-indigo-50/30 rounded-[2rem] p-6 sm:p-10 border border-indigo-100">
+                            <div class="flex items-center gap-3 mb-8">
+                                <i class="fas fa-tag text-indigo-600"></i>
+                                <h3 class="text-xs font-black text-indigo-900 uppercase tracking-widest">Pricing Strategy</h3>
+                            </div>
 
-          <a
-            href="/admin/category"
-            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Category</span>
-          </a>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="md:col-span-2">
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-2 block">Activation Status</label>
+                                    <select name="isOffer" class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all">
+                                        <option value="false" <%= (!category.offer || category.offer.isOffer === false) ? "selected" : "" %>>Inactive (No Offer)</option>
+                                        <option value="true"  <%= (category.offer && category.offer.isOffer === true) ? "selected" : "" %>>Active (Enable Discount)</option>
+                                    </select>
+                                </div>
 
-          <a
-            href="/admin/coupon"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-ticket-alt text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Voucher</span>
-          </a>
+                                <div class="md:col-span-2">
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-2 block">Discount Value (%)</label>
+                                    <input type="number" name="discountValue" step="0.01" min="0" max="100" 
+                                           value="<%= (category.offer && category.offer.discountValue !== undefined) ? category.offer.discountValue : '' %>"
+                                           class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-black text-gray-800 outline-none focus:border-indigo-500 transition-all" />
+                                </div>
 
-          <a
-            href="/admin/banner"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-image text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Banner</span>
-          </a>
-        </nav>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-2 block">Start Date</label>
+                                    <input type="date" name="startDate" 
+                                           value="<%= (category.offer && category.offer.startDate) ? (typeof category.offer.startDate === 'string' ? category.offer.startDate : category.offer.startDate.toISOString().split('T')[0]) : '' %>"
+                                           class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all" />
+                                </div>
 
-        <div
-          class="absolute bottom-0 left-0 right-0 bg-gray-300 border-t-2 border-gray-400"
-        >
-          <a href="/admin/logout">
-            <button
-              class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
-            >
-              <i
-                class="fas fa-sign-out-alt text-xl mr-4 text-gray-700 group-hover:text-red-600"
-              ></i>
-              <span
-                class="text-lg font-semibold text-gray-900 group-hover:text-red-600"
-                >Log Out</span
-              >
-            </button>
-          </a>
-        </div>
-      </aside>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-2 block">Expiry Date</label>
+                                    <input type="date" name="endDate" 
+                                           value="<%= (category.offer && category.offer.endDate) ? (typeof category.offer.endDate === 'string' ? category.offer.endDate : category.offer.endDate.toISOString().split('T')[0]) : '' %>"
+                                           class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all" />
+                                </div>
+                            </div>
+                        </div>
 
-      <!-- Main Content -->
-      <main class="flex-1 p-8 bg-white">
-         <%- include('../../views/partials/breadCrumb') %>
-        <div class="max-w-2xl">
-          <div class="flex items-center justify-between mb-8">
-            <div class="flex items-center">
-              <a
-                href="/admin/category"
-                class="mr-4 text-gray-800 hover:text-gray-600"
-              >
-                <i class="fas fa-chevron-left text-2xl"></i>
-              </a>
-              <h2 class="text-3xl font-bold text-gray-900">Edit Category</h2>
+                        <div class="pt-6 border-t border-gray-50 flex flex-col sm:flex-row gap-4">
+                            <button type="submit" class="flex-1 bg-indigo-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition active:scale-[0.98]">
+                                Update Configuration
+                            </button>
+                            <button type="button" onclick="window.location.href='/admin/category'" 
+                                    class="px-10 py-5 bg-gray-100 text-gray-500 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-200 transition">
+                                Discard
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <button
-                  type="button"
-                  onclick="confirmDelete('<%= category._id %>')"
-                  class="px-12 py-4 bg-red-600 text-white font-bold text-lg rounded-lg hover:bg-red-700 transition shadow-lg"
-                >
-                  <i class="fas fa-trash-alt mr-2"></i>DELETE
-                </button>
-            >
-          </div>
-
-          <form
-            id="categoryForm"
-            class="space-y-6"
-            action="/admin/editCategory?id=<%= category._id %>"
-            method="POST"
-          >
-            
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Category Name</label
-              >
-              <input
-                type="text"
-                id="categoryName"
-                name="categoryName"
-                value="<%= category.categoryName %>"
-                class="w-full px-6 py-4 bg-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 border-none text-lg"
-              />
-            </div>
-            <!-- Offer Section -->
-<div class="mt-6 p-4 border border-gray-300 rounded-lg bg-gray-50">
-
-  <h3 class="text-lg font-bold text-gray-900 mb-4">Category Offer Details</h3>
-
-  <!-- Enable Offer -->
-<!-- Enable Offer -->
-<div class="mb-4">
-  <label class="block text-lg font-bold text-gray-900 mb-2">
-    Enable Offer
-  </label>
-  <select
-    name="isOffer"
-    class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-base"
-  >
-    <option value="false" <%= (!category || !category.offer || category.offer.isOffer === false) ? "selected" : "" %>>No</option>
-    <option value="true"  <%= (category && category.offer && category.offer.isOffer === true) ? "selected" : "" %>>Yes</option>
-  </select>
-</div>
-
-<!-- Discount Percentage -->
-<div class="mb-4">
-  <label class="block text-lg font-bold text-gray-900 mb-2">
-    Discount (%)
-  </label>
-  <input
-    type="number"
-    name="discountValue"
-    placeholder="Enter discount percentage"
-    step="0.01"
-    min="0"
-    max="100"
-    value="<%= (category && category.offer && category.offer.discountValue !== undefined) ? category.offer.discountValue : '' %>"
-    class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-  />
-</div>
-
-<!-- Offer Start Date -->
-<div class="mb-4">
-  <label class="block text-lg font-bold text-gray-900 mb-2">Offer Start Date</label>
-  <input
-    type="date"
-    name="startDate"
-    value="<%= (() => {
-      if (!category || !category.offer || !category.offer.startDate) return '';
-      const d = category.offer.startDate;
-      return (typeof d === 'string') ? d : d.toISOString().split('T')[0];
-    })() %>"
-    class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-base"
-  />
-</div>
-
-<!-- Offer End Date -->
-<div class="mb-4">
-  <label class="block text-lg font-bold text-gray-900 mb-2">Offer End Date</label>
-  <input
-    type="date"
-    name="endDate"
-    value="<%= (() => {
-      if (!category || !category.offer || !category.offer.endDate) return '';
-      const d = category.offer.endDate;
-      return (typeof d === 'string') ? d : d.toISOString().split('T')[0];
-    })() %>"
-    class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-base"
-  />
-</div>
-
-
-</div>
-
-
-            <!-- <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Sales</label
-              >
-              <input
-                type="number"
-                id="sales"
-                name="sales"
-                value="<%= category.sales %>"
-                class="w-full px-6 py-4 bg-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 border-none text-lg"
-              />
-            </div> -->
-
-            <!-- <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Stock</label
-              >
-              <input
-                type="number"
-                id="stock"
-                name="stock"
-                value="<%= category.stock %>"
-                class="w-full px-6 py-4 bg-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 border-none text-lg"
-              />
-            </div> -->
-
-            <div class="flex items-center space-x-4 pt-4">
-              <button
-                type="submit"
-                class="px-12 py-3 bg-indigo-600 text-white font-bold text-lg rounded-lg hover:bg-indigo-700 transition shadow-md"
-              >
-                Update Category
-              </button>
-              <a
-                href="/admin/category"
-                class="px-12 py-3 bg-gray-300 text-gray-700 font-bold text-lg rounded-lg hover:bg-gray-400 transition text-center"
-              >
-                Cancel
-              </a>
-            </div>
-          </form>
-        </div>
-      </main>
+        </main>
     </div>
-  </body>
-  <script>
-    function confirmDelete(categoryId) {
-        Swal.fire({
-          title: "Are you sure?",
-          text: "This action cannot be undone!",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#d33", // Red for delete
-          cancelButtonColor: "#6b7280", // Gray
-          confirmButtonText: "Yes, delete it!",
-          cancelButtonText: "Cancel",
-          reverseButtons: true,
-          focusCancel: true,
-        }).then((result) => {
-          if (result.isConfirmed) {
-            // Redirect to your delete route
-            window.location.href = `/admin/deleteCategory?id=${categoryId}`;
-          }
-        });
-      }
-  </script>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        }
+
+        function confirmDelete(id) {
+            Swal.fire({
+                title: "Remove Category?",
+                text: "This action will affect all products within this genre and cannot be undone.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#f43f5e",
+                cancelButtonColor: "#94a3b8",
+                confirmButtonText: "Yes, Delete It",
+                background: "#ffffff",
+                customClass: {
+                    title: 'font-black uppercase tracking-tight text-gray-800',
+                    confirmButton: 'rounded-xl font-bold uppercase tracking-widest text-xs py-4 px-8',
+                    cancelButton: 'rounded-xl font-bold uppercase tracking-widest text-xs py-4 px-8'
+                }
+            }).then((res) => { if (res.isConfirmed) window.location.href = `/admin/deleteCategory?id=${id}`; });
+        }
+    </script>
+</body>
 </html>

@@ -8,293 +8,150 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+        * { font-family: 'Poppins', sans-serif; }
         
-        * {
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        .floating-book {
-            animation: float 3s ease-in-out infinite;
-        }
-        
+        .floating-book { animation: float 3s ease-in-out infinite; }
         @keyframes float {
-            0%, 100% {
-                transform: translateY(0px);
-            }
-            50% {
-                transform: translateY(-20px);
-            }
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
         }
         
-        .book-stack {
-            animation: stack 2s ease-in-out infinite;
-        }
-        
+        .book-stack { animation: stack 2s ease-in-out infinite; }
         @keyframes stack {
-            0%, 100% {
-                transform: rotate(-5deg);
-            }
-            50% {
-                transform: rotate(5deg);
-            }
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
         }
         
-        .glitch {
-            position: relative;
-            animation: glitch 1s linear infinite;
-        }
-        
+        .glitch { position: relative; animation: glitch 1s linear infinite; }
         @keyframes glitch {
-            2%, 64% {
-                transform: translate(2px, 0) skew(0deg);
-            }
-            4%, 60% {
-                transform: translate(-2px, 0) skew(0deg);
-            }
-            62% {
-                transform: translate(0, 0) skew(5deg);
-            }
+            2%, 64% { transform: translate(2px, 0) skew(0deg); }
+            4%, 60% { transform: translate(-2px, 0) skew(0deg); }
+            62% { transform: translate(0, 0) skew(5deg); }
         }
-        
-        .fade-in {
-            animation: fadeIn 0.8s ease-in;
-        }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
+
         .particles {
-            position: absolute;
+            position: fixed; /* Fixed prevents scroll issues */
+            inset: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
+            pointer-events: none;
         }
         
         .particle {
             position: absolute;
-            width: 10px;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.3);
+            width: 8px;
+            height: 8px;
+            background: rgba(249, 115, 22, 0.2);
             border-radius: 50%;
             animation: rise 10s infinite ease-in;
         }
         
         @keyframes rise {
-            0% {
-                bottom: -10%;
-                opacity: 0;
-            }
-            50% {
-                opacity: 1;
-            }
-            100% {
-                bottom: 110%;
-                opacity: 0;
-            }
+            0% { bottom: -10%; opacity: 0; }
+            50% { opacity: 1; }
+            100% { bottom: 110%; opacity: 0; }
         }
     </style>
 </head>
 
-<body class="bg-gray-100 overflow-hidden">
-    <!-- Animated Background -->
+<body class="bg-gray-100 min-h-screen overflow-x-hidden relative flex flex-col">
     <div class="particles" id="particles"></div>
     
-    <!-- Main Container -->
-    <div class="min-h-screen flex items-center justify-center px-4 relative">
-        <div class="max-w-5xl w-full">
-            <div class="flex flex-col lg:flex-row items-center justify-between gap-12">
-                <!-- Left Side - Illustration -->
-                <div class="lg:w-1/2 relative">
-                    <!-- Large 404 Number -->
-                    <div class="text-center mb-8">
-                        <h1 class="text-9xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-purple-600 glitch">
+    <main class="flex-grow flex items-center justify-center px-4 py-12 relative z-10">
+        <div class="max-w-6xl w-full">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-16">
+                
+                <div class="w-full lg:w-1/2 text-center">
+                    <div class="mb-4 sm:mb-8">
+                        <h1 class="text-7xl sm:text-8xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-purple-600 glitch tracking-tighter">
                             404
                         </h1>
                     </div>
                     
-                    <!-- Book Illustration -->
-                    <div class="relative h-80 flex items-center justify-center">
-                        <!-- Background Books -->
-                        <div class="absolute left-0 book-stack">
-                            <div class="w-20 h-28 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-2xl transform -rotate-12"></div>
+                    <div class="relative h-64 sm:h-80 flex items-center justify-center">
+                        <div class="absolute left-4 sm:left-10 book-stack">
+                            <div class="w-16 h-24 sm:w-20 sm:h-28 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-xl transform -rotate-12"></div>
                         </div>
-                        <div class="absolute right-0 book-stack" style="animation-delay: 0.5s;">
-                            <div class="w-20 h-28 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg shadow-2xl transform rotate-12"></div>
+                        <div class="absolute right-4 sm:right-10 book-stack" style="animation-delay: 0.5s;">
+                            <div class="w-16 h-24 sm:w-20 sm:h-28 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg shadow-xl transform rotate-12"></div>
                         </div>
                         
-                        <!-- Center Book with Icon -->
                         <div class="floating-book relative z-10">
-                            <div class="w-48 h-64 bg-gradient-to-br from-gray-700 to-gray-900 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
-                                <div class="text-center">
-                                    <i class="fas fa-book-open text-6xl text-orange-500 mb-4"></i>
+                            <div class="w-40 h-56 sm:w-48 sm:h-64 bg-gray-800 rounded-2xl shadow-2xl flex items-center justify-center border-4 border-gray-700">
+                                <div class="text-center px-2">
+                                    <i class="fas fa-book-open text-4xl sm:text-5xl text-orange-500 mb-3"></i>
                                     <div class="text-white font-bold">
-                                        <div class="text-2xl">ReadNest</div>
-                                        <div class="text-sm text-gray-400 mt-2">Page Lost</div>
+                                        <div class="text-xl sm:text-2xl">ReadNest</div>
+                                        <div class="text-[10px] sm:text-xs text-gray-400 mt-1 uppercase tracking-widest">Missing Page</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Floating Elements -->
-                        <div class="absolute top-10 left-20 floating-book" style="animation-delay: 1s;">
-                            <i class="fas fa-bookmark text-4xl text-orange-400 opacity-50"></i>
-                        </div>
-                        <div class="absolute bottom-10 right-20 floating-book" style="animation-delay: 1.5s;">
-                            <i class="fas fa-feather-alt text-3xl text-purple-400 opacity-50"></i>
-                        </div>
-                        <div class="absolute top-20 right-10 floating-book" style="animation-delay: 0.5s;">
-                            <i class="fas fa-glasses text-3xl text-orange-300 opacity-40"></i>
-                        </div>
+
+                        <i class="hidden sm:block fas fa-bookmark absolute top-0 left-20 text-3xl text-orange-400 opacity-30 floating-book" style="animation-delay: 1s;"></i>
+                        <i class="hidden sm:block fas fa-feather-alt absolute bottom-0 right-20 text-2xl text-purple-400 opacity-30 floating-book" style="animation-delay: 1.5s;"></i>
                     </div>
                 </div>
                 
-                <!-- Right Side - Content -->
-                <div class="lg:w-1/2 text-center lg:text-left fade-in">
-                    <div class="mb-6">
-                        <div class="inline-block px-4 py-2 bg-orange-100 rounded-full mb-4">
-                            <span class="text-orange-600 font-semibold text-sm">
-                                <i class="fas fa-exclamation-circle mr-2"></i>Error 404
-                            </span>
+                <div class="w-full lg:w-1/2 text-center lg:text-left space-y-6">
+                    <div>
+                        <div class="inline-flex items-center px-3 py-1 bg-red-100 rounded-full text-red-600 font-bold text-xs uppercase tracking-tighter mb-4">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Lost in the Stacks
                         </div>
+                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 leading-tight">
+                            Oops! This page is out of print.
+                        </h2>
                     </div>
                     
-                    <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-                        Oops! Page Not Found
-                    </h2>
-                    
-                    <p class="text-lg text-gray-600 mb-8 leading-relaxed">
-                        It seems the page you're looking for has gone missing from our library. 
-                        Don't worry, there are plenty of other stories to discover!
+                    <p class="text-base sm:text-lg text-gray-600 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                        The chapter you're looking for doesn't exist or has been moved to another section of our library.
                     </p>
                     
-                    <!-- Error Details -->
-                    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-                        <div class="flex items-start space-x-4">
-                            <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-search text-orange-600 text-xl"></i>
-                                </div>
-                            </div>
-                            <div class="text-left">
-                                <h3 class="font-semibold text-gray-800 mb-2">Why did this happen?</h3>
-                                <ul class="text-sm text-gray-600 space-y-1">
-                                    <li>• The page may have been moved or deleted</li>
-                                    <li>• The link you followed might be broken</li>
-                                    <li>• You may have typed the URL incorrectly</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Action Buttons -->
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                        <button onclick="goHome()" class="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-lg shadow-lg hover:from-orange-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-300">
-                            <i class="fas fa-home mr-2"></i>
-                            Back to Home
+                    <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                        <button onclick="goHome()" class="w-full sm:w-auto px-10 py-4 bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-100 hover:bg-orange-700 active:scale-95 transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-home text-sm"></i> Back to Home
                         </button>
-                        <button onclick="goBack()" class="px-8 py-4 bg-white text-gray-700 font-semibold rounded-lg shadow-lg hover:bg-gray-50 transform hover:scale-105 transition-all duration-300 border-2 border-gray-200">
-                            <i class="fas fa-arrow-left mr-2"></i>
-                            Go Back
+                        <button onclick="goBack()" class="w-full sm:w-auto px-10 py-4 bg-white text-gray-700 font-bold rounded-xl shadow-md border-2 border-gray-100 hover:bg-gray-50 active:scale-95 transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-arrow-left text-sm"></i> Go Back
                         </button>
                     </div>
                     
-                    <!-- Popular Links -->
-                    <div class="mt-12">
-                        <p class="text-sm text-gray-500 mb-4 font-semibold">Quick Links:</p>
-                        <div class="flex flex-wrap gap-3 justify-center lg:justify-start">
-                            <a href="/books" class="px-4 py-2 bg-purple-50 text-purple-600 rounded-full text-sm font-medium hover:bg-purple-100 transition-colors">
-                                <i class="fas fa-book mr-1"></i> Browse Books
-                            </a>
-                            <a href="/categories" class="px-4 py-2 bg-orange-50 text-orange-600 rounded-full text-sm font-medium hover:bg-orange-100 transition-colors">
-                                <i class="fas fa-th-large mr-1"></i> Categories
-                            </a>
-                            <a href="/contact" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-sm font-medium hover:bg-blue-100 transition-colors">
-                                <i class="fas fa-envelope mr-1"></i> Contact Us
-                            </a>
+                    <div class="mt-10">
+                        <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-4">Popular Sections</p>
+                        <div class="flex flex-wrap gap-2 justify-center lg:justify-start">
+                            <a href="/books" class="px-4 py-2 bg-white rounded-lg text-xs font-bold text-gray-600 border border-gray-100 hover:text-orange-600 transition-colors">Bestsellers</a>
+                            <a href="/categories" class="px-4 py-2 bg-white rounded-lg text-xs font-bold text-gray-600 border border-gray-100 hover:text-orange-600 transition-colors">Categories</a>
+                            <a href="/blog" class="px-4 py-2 bg-white rounded-lg text-xs font-bold text-gray-600 border border-gray-100 hover:text-orange-600 transition-colors">Read Blog</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Footer Mini -->
-    <div class="absolute bottom-6 left-0 right-0 text-center">
-        <p class="text-gray-500 text-sm">
-            <i class="fas fa-book-open text-orange-500 mr-2"></i>
-            <span class="font-semibold">ReadNest</span> - Your Digital Library
-        </p>
-    </div>
+    </main>
+
+    <footer class="p-6 text-center text-gray-400 text-xs mt-auto">
+        <p>&copy; 2026 ReadNest. All rights reserved.</p>
+    </footer>
 
     <script>
-        // Create floating particles
         function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            const particleCount = 15;
-            
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 10 + 's';
-                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
-                particlesContainer.appendChild(particle);
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 12; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDelay = Math.random() * 10 + 's';
+                p.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                container.appendChild(p);
             }
         }
-        
-        // Navigation functions
-        function goHome() {
-            window.location.href = '/';
+        function goHome() { window.location.href = '/'; }
+        function goBack() { 
+            if (window.history.length > 1) window.history.back(); 
+            else window.location.href = '/';
         }
-        
-        function goBack() {
-            if (window.history.length > 1) {
-                window.history.back();
-            } else {
-                window.location.href = '/';
-            }
-        }
-        
-        // Search functionality
-        function handleSearch(event) {
-            event.preventDefault();
-            const searchTerm = document.getElementById('searchInput').value;
-            if (searchTerm.trim()) {
-                window.location.href = `/search?q=${encodeURIComponent(searchTerm)}`;
-            }
-        }
-        
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Press 'H' to go home
-            if (e.key === 'h' || e.key === 'H') {
-                goHome();
-            }
-            // Press 'Escape' or 'B' to go back
-            if (e.key === 'Escape' || e.key === 'b' || e.key === 'B') {
-                goBack();
-            }
-        });
-        
-        // Initialize particles on load
         window.addEventListener('load', createParticles);
-        
-        // Add console Easter egg
-        console.log('%c404 Page Not Found', 'color: #f97316; font-size: 24px; font-weight: bold;');
-        console.log('%cPress "H" to go Home or "B" to go Back', 'color: #9333ea; font-size: 14px;');
-        console.log('%c📚 ReadNest - Happy Reading!', 'color: #f97316; font-size: 12px;');
     </script>
 </body>
 </html>

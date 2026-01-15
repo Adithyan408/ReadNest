@@ -1,332 +1,204 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shopping Cart - ReadNest</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
-      * {
-        font-family: "Poppins", sans-serif;
-      }
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+        * { font-family: "Poppins", sans-serif; }
+        .cart-item { transition: all 0.2s ease; }
     </style>
-  </head>
+</head>
 
-  <body class="bg-gray-50">
-    <!-- Header -->
+<body class="bg-gray-50">
     <%- include("../../views/partials/user/header") %>
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
-      <!-- Breadcrumb -->
-      <%- include('../../views/partials/breadCrumb') %>
+    <main class="max-w-7xl mx-auto px-4 py-6 lg:py-8">
+        <%- include('../../views/partials/breadCrumb') %>
 
-      <div class="flex flex-col lg:flex-row gap-8">
-        <!-- LEFT SECTION -->
-        <div class="flex-1">
-          <!-- CART BOX -->
-          <div class="bg-white rounded-lg shadow-sm p-6 mb-4">
-            <h1 class="text-2xl font-bold mb-4">Your Cart</h1>
-            <% if (query?.error === 'max-products') { %>
-<script>
-  Swal.fire({
-    icon: "warning",
-    title: "Cart Limit Reached",
-    text: "You can only add up to 10 different products to your cart.",
-    confirmButtonColor: "#2563eb"
-  });
-</script>
-<% } %>
+        <div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
+            <div class="flex-1">
+                <div class="bg-white rounded-xl shadow-sm p-4 lg:p-6 mb-4">
+                    <h1 class="text-xl lg:text-2xl font-bold mb-6 text-gray-800">Your Cart</h1>
 
-            <% if (!cart || cart.length === 0) { %>
-
-            <!-- EMPTY CART MESSAGE -->
-            <div class="text-center py-10">
-              <img
-                src="https://cdn-icons-png.flaticon.com/512/2038/2038854.png"
-                class="w-32 mx-auto opacity-70 mb-4"
-              />
-              <h2 class="text-xl font-semibold text-gray-700">
-                Your cart is empty
-              </h2>
-              <p class="text-gray-500 mt-2">
-                Add items to your cart to continue shopping.
-              </p>
-
-              <a
-                href="/"
-                class="inline-block mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
-              >
-                Continue Shopping
-              </a>
-            </div>
-
-            <% } else { %>
-
-            <!-- CART ITEMS -->
-            <div class="space-y-4">
-              <% cart.forEach(item => { %>
-
-              <div class="bg-white rounded-lg shadow-sm p-6 mb-4 cart-item">
-                <div class="flex gap-6">
-                  <!-- Book Image -->
-                  <div class="w-32 h-48 flex-shrink-0">
-                    <img
-                      src="<%= item.image %>"
-                      alt="<%= item.name %>"
-                      class="w-full h-full object-contain"
-                    />
-                  </div>
-
-                  <!-- Book Details -->
-                  <div class="flex-1">
-                    <!-- Title -->
-                    <h3 class="font-semibold text-gray-800 mb-2">
-                      <%= item.name %>
-                    </h3>
-
-                    <!-- Price + Rating -->
-                    <div class="flex items-center gap-2 mb-3">
-                      <span class="text-2xl font-bold text-gray-800"
-                        >₹ <%= item.price %></span
-                      >
-
-                      <!-- Rating tag -->
-                      <span
-                        class="bg-green-600 text-white px-2 py-0.5 rounded text-xs font-semibold"
-                      >
-                        <%= item.rating || 4.5 %> ★
-                      </span>
+                    <% if (!cart || cart.length === 0) { %>
+                    <div class="text-center py-12">
+                        <img src="https://cdn-icons-png.flaticon.com/512/2038/2038854.png" class="w-24 lg:w-32 mx-auto opacity-50 mb-6" />
+                        <h2 class="text-lg lg:text-xl font-semibold text-gray-700">Your cart is empty</h2>
+                        <a href="/" class="inline-block mt-6 bg-blue-600 text-white px-8 py-3 rounded-lg font-bold shadow-md hover:bg-blue-700 transition">
+                            Continue Shopping
+                        </a>
                     </div>
-                    <input
-                      type="hidden"
-                      id="stock-<%= item._id %>"
-                      value="<%= item.stock %>"
-                    />
+                    <% } else { %>
 
-                    <!-- Offers -->
-                    <div class="mb-3">
-                      <p class="text-sm font-semibold text-gray-700">
-                        Available Offers
-                      </p>
-                      <p class="text-xs text-gray-600">
-                        Bank Offer — 5% cashback on Axis Bank Debit Card up to
-                        ₹750
-                      </p>
+                    <div class="space-y-6">
+                        <% cart.forEach(item => { %>
+                        <div class="cart-item border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+                            <div class="flex flex-col sm:flex-row gap-4 lg:gap-6">
+                                
+                                <div class="flex sm:block gap-4">
+                                    <div class="w-24 h-36 lg:w-32 lg:h-48 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
+                                        <img src="<%= item.image %>" alt="<%= item.name %>" class="w-full h-full object-contain p-2" />
+                                    </div>
+                                    <button onclick="removeItem('<%= item._id %>')" class="sm:hidden text-red-500 font-bold text-sm h-fit mt-2">
+                                        <i class="fas fa-trash-can mr-1"></i> Remove
+                                    </button>
+                                </div>
+
+                                <div class="flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex justify-between items-start">
+                                            <h3 class="font-bold text-gray-900 lg:text-lg leading-tight"><%= item.name %></h3>
+                                            <button onclick="removeItem('<%= item._id %>')" class="hidden sm:block text-gray-400 hover:text-red-600 transition">
+                                                <i class="fas fa-trash-can"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="flex items-center gap-3 mt-2">
+                                            <span class="text-xl lg:text-2xl font-black text-gray-900">₹<%= item.price %></span>
+                                            <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] lg:text-xs font-bold uppercase tracking-wider">
+                                                <%= item.rating || 4.5 %> <i class="fas fa-star text-[8px]"></i>
+                                            </span>
+                                        </div>
+
+                                        <div class="mt-3 space-y-1">
+                                            <p class="text-[10px] lg:text-xs font-bold text-orange-600 uppercase tracking-tighter">Available Offers</p>
+                                            <p class="text-[10px] lg:text-xs text-gray-500">Bank Offer — 5% cashback on Axis Bank Debit Card</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 flex items-center justify-between">
+                                        <div class="flex items-center border border-gray-300 rounded-lg bg-white overflow-hidden shadow-sm">
+                                            <button class="px-3 lg:px-4 py-2 hover:bg-gray-50 active:bg-gray-100 text-gray-600" onclick="updateQuantity('<%= item._id %>', -1)">
+                                                <i class="fas fa-minus text-xs"></i>
+                                            </button>
+                                            <input type="text" id="quantity-<%= item._id %>" value="<%= item.quantity %>" readonly 
+                                                   class="w-10 lg:w-12 text-center text-sm lg:text-base font-bold text-gray-800 pointer-events-none" />
+                                            <button class="px-3 lg:px-4 py-2 hover:bg-gray-50 active:bg-gray-100 text-gray-600" onclick="updateQuantity('<%= item._id %>', 1)">
+                                                <i class="fas fa-plus text-xs"></i>
+                                            </button>
+                                        </div>
+                                        <input type="hidden" id="stock-<%= item._id %>" value="<%= item.stock %>" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <% }) %>
                     </div>
-
-                    <!-- Quantity Controls -->
-                    <div
-                      class="flex items-center gap-0 border-2 border-gray-300 rounded w-fit"
-                    >
-                      <button
-                        class="quantity-btn px-4 py-2 text-xl font-bold text-gray-700 hover:bg-gray-100"
-                        onclick="updateQuantity('<%= item._id %>', -1)"
-                      >
-                        -
-                      </button>
-
-                      <input
-                        type="text"
-                        id="quantity-<%= item._id %>"
-                        value="<%= item.quantity %>"
-                        readonly
-                        class="w-12 text-center border-x-2 border-gray-300 py-2 font-semibold"
-                      />
-
-                      <button
-                        class="quantity-btn px-4 py-2 text-xl font-bold text-gray-700 hover:bg-gray-100"
-                        onclick="updateQuantity('<%= item._id %>', 1)"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Remove Button -->
-                  <form
-                    action="/remove-from-cart"
-                    method="GET"
-                    class="flex items-start"
-                  >
-                    <input type="hidden" name="id" value="<%= item._id %>" />
-                    <button
-                      class="text-red-600 hover:text-red-800 font-medium ml-4 mt-1"
-                    >
-                      Remove
-                    </button>
-                  </form>
+                    <% } %>
                 </div>
-              </div>
-
-              <% }) %>
             </div>
 
+            <% if (cart && cart.length > 0) { %>
+            <div class="w-full lg:w-96">
+                <div class="bg-white rounded-xl shadow-sm p-6 lg:sticky lg:top-24 border border-gray-100">
+                    <h2 class="text-lg font-bold text-gray-900 border-b border-gray-50 pb-4 mb-4">Order Summary</h2>
+
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between text-gray-600 text-sm">
+                            <span>Price (<span id="total-items"><%= cart.length %></span> items)</span>
+                            <span class="font-bold text-gray-900">₹<span id="subtotal">0</span></span>
+                        </div>
+                        <div class="flex justify-between text-gray-600 text-sm">
+                            <span>Delivery Charges</span>
+                            <span class="text-green-600 font-bold uppercase text-[10px]">Free</span>
+                        </div>
+                        <div class="border-t border-gray-50 pt-3 flex justify-between items-center">
+                            <span class="font-bold text-gray-900">Total Amount</span>
+                            <span class="text-xl font-black text-blue-600">₹<span id="total">0</span></span>
+                        </div>
+                    </div>
+
+                    <button onclick="proceedToCheckout()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] transition">
+                        Proceed to Checkout
+                    </button>
+                </div>
+            </div>
             <% } %>
-          </div>
         </div>
-
-        <!-- RIGHT SECTION: Price Summary -->
-        <% if (cart && cart.length > 0) { %>
-        <div class="w-full lg:w-96">
-          <div class="bg-white rounded-lg shadow-sm p-6 sticky top-24">
-            <h2 class="text-xl font-bold text-gray-700 mb-6">Price Details</h2>
-
-            <div class="space-y-4 mb-6">
-              <div class="flex justify-between text-gray-700">
-                <span
-                  >Price (<span id="total-items"><%= cart.length %></span>
-                  items)</span
-                >
-                <span>₹ <span id="subtotal">0</span></span>
-              </div>
-
-              
-
-            <div class="border-t pt-4 mb-6">
-              <div class="flex justify-between text-lg font-bold text-gray-800">
-                <span>Total</span>
-                <span>₹ <span id="total">0</span></span>
-              </div>
-            </div>
-
-            <button
-            onclick="proceedToCheckout()"
-             class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold text-lg"
->
-  Checkout
-</button>
-
-          </div>
-        </div>
-        <% } %>
-      </div>
     </main>
 
-    <!-- Footer -->
     <%- include("../../views/partials/user/footer") %>
-  </body>
 
-  <!-- Inject cart as JSON -->
-  <script type="application/json" id="cart-data">
-    <%- JSON.stringify(cart) %>
-  </script>
+    <script type="application/json" id="cart-data"><%- JSON.stringify(cart) %></script>
 
-  <!-- WORKING JS -->
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const CART_ITEMS = JSON.parse(
-        document.getElementById("cart-data").textContent
-      );
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const CART_DATA = JSON.parse(document.getElementById("cart-data").textContent);
 
-      window.updateQuantity = function (productId, change) {
-      const qtyField = document.getElementById("quantity-" + productId);
-      const stock = document.getElementById("stock-" + productId).value;
+            window.updateQuantity = function (productId, change) {
+                const qtyField = document.getElementById("quantity-" + productId);
+                const stock = parseInt(document.getElementById("stock-" + productId).value);
+                let qty = parseInt(qtyField.value);
 
-      let qty = parseInt(qtyField.value);
-      let maxStock = parseInt(stock);
+                if (change === 1 && qty >= stock) {
+                    return Swal.fire("Out of Stock", `Only ${stock} units available.`, "warning");
+                }
+                if (change === 1 && qty >= 10) {
+                    return Swal.fire("Limit Reached", "Max 10 units per order.", "warning");
+                }
+                
+                qty += change;
+                if (qty < 1) return;
 
-      // STOCK LIMIT
-      if (change === 1 && qty >= maxStock) {
-      Swal.fire("Stock Limit", `Only ${maxStock} item(s) available.`, "warning");
-      return;
-        }
+                qtyField.value = qty;
 
-      // CART LIMIT (10)
-      if (change === 1 && qty >= 10) {
-    Swal.fire(
-      "Limit Reached",
-      "You can only add up to 10 units of this product.",
-      "warning"
-    );
-    return;
-  }
+                fetch("/update-cart-quantity", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ productId, quantity: qty }),
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) {
+                        Swal.fire("Error", data.message, "error");
+                        qtyField.value = qty - change; 
+                    } else {
+                        updateTotals();
+                    }
+                });
+            };
 
-  qty += change;
-  if (qty < 1) return;
+            function updateTotals() {
+                let subtotal = 0;
+                let totalItemsCount = 0;
+                CART_DATA.forEach((item) => {
+                    const field = document.getElementById("quantity-" + item._id);
+                    if (field) {
+                        const q = parseInt(field.value);
+                        subtotal += item.price * q;
+                        totalItemsCount += q;
+                    }
+                });
+                document.getElementById("total-items").textContent = totalItemsCount;
+                document.getElementById("subtotal").textContent = subtotal.toLocaleString('en-IN');
+                document.getElementById("total").textContent = subtotal.toLocaleString('en-IN');
+            }
 
-  qtyField.value = qty;
+            window.removeItem = function(id) {
+                window.location.href = `/remove-from-cart?id=${id}`;
+            };
 
-  fetch("/update-cart-quantity", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ productId, quantity: qty }),
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.success) {
-        Swal.fire("Error", data.message, "error");
-        qtyField.value = qty - change; // rollback
-        return;
-      }
-      updateTotals();
-    })
-    .catch(() => {
-      Swal.fire("Error", "Update failed", "error");
-      qtyField.value = qty - change;
-    });
-};
-
-
-      function updateTotals() {
-        let subtotal = 0;
-        let totalItems = 0;
-
-        CART_ITEMS.forEach((item) => {
-          const qtyField = document.getElementById("quantity-" + item._id);
-          if (!qtyField) return;
-
-          const qty = parseInt(qtyField.value);
-          subtotal += item.price * qty;
-          totalItems += qty;
+            updateTotals();
         });
 
-       
-
-        document.getElementById("total-items").textContent = totalItems;
-        document.getElementById("subtotal").textContent = subtotal;
-        document.getElementById("total").textContent = subtotal;
-      }
-
-      updateTotals();
-    });
-
-    async function proceedToCheckout() {
-  try {
-    const res = await fetch("/cart/validate");
-
-    if (res.status === 401) {
-      return (window.location.href = "/login");
-    }
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      return Swal.fire({
-        icon: "warning",
-        title: "Checkout Blocked",
-        text: data.message,
-        confirmButtonColor: "#2563eb",
-      });
-    }
-
-    window.location.href = "/checkout";
-  } catch (err) {
-    Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: "Something went wrong. Please try again.",
-    });
-  }
-}
-
-   
-
-  </script>
+        async function proceedToCheckout() {
+            try {
+                const res = await fetch("/cart/validate");
+                if (res.status === 401) return (window.location.href = "/login");
+                const data = await res.json();
+                if (!res.ok) {
+                    return Swal.fire({ icon: "warning", title: "Wait!", text: data.message });
+                }
+                window.location.href = "/checkout";
+            } catch (err) {
+                Swal.fire("Error", "Validation failed. Please try again.", "error");
+            }
+        }
+    </script>
+</body>
 </html>

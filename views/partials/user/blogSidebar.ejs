@@ -4,77 +4,30 @@
     <meta charset="UTF-8" />
     <title>Blogs | ReadNest</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-    />
-  </head>
-
-  <body class="bg-gray-100">
-    <!-- ================= BLOG SIDEBAR ================= -->
-    <aside
-      class="fixed top-[140px] left-0 w-60 h-[calc(100vh-140px)] bg-white/80 backdrop-blur border-r border-gray-100 px-6 py-8 z-30"
-    >
-      <h3
-        class="text-xs font-semibold text-gray-400 uppercase mb-6 tracking-wider"
-      >
-        Explore
-      </h3>
-
-      <nav class="space-y-1">
-        <a href="/blog" class="sidebar-link active">
-          <i class="fa-solid fa-house"></i>
-          Home
-        </a>
-
-        <a href="/blog/library" class="sidebar-link">
-          <i class="fa-solid fa-book"></i>
-          Library
-        </a>
-
-        <a href="/blog/stories" class="sidebar-link ">
-          <i class="fa-solid fa-pen-nib"></i>
-          Stories
-        </a>
-
-        <a href="/insights" class="sidebar-link">
-          <i class="fa-solid fa-chart-line"></i>
-          Insights
-        </a>
-
-      </nav>
-
-      <!-- Divider -->
-      <div class="my-8 border-t border-gray-100"></div>
-
-      <!-- Footer note -->
-      <p class="text-xs text-gray-400 leading-relaxed">
-        ReadNest Stories — thoughts, ideas & experiences from readers like you.
-      </p>
-    </aside>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    
     <style>
       .sidebar-link {
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 10px; /* Slightly tighter for mobile */
         padding: 10px 12px;
         border-radius: 999px;
         font-size: 14px;
         font-weight: 500;
         color: #374151;
         transition: all 0.25s ease;
+        white-space: nowrap; /* Prevents text wrapping in horizontal scroll */
       }
 
-      .sidebar-link:hover {
-        background: #f9fafb;
-        color: #111827;
-        transform: translateX(2px);
+      @media (min-width: 1024px) {
+        .sidebar-link { gap: 14px; }
+        .sidebar-link:hover {
+          background: #f9fafb;
+          color: #111827;
+          transform: translateX(2px);
+        }
       }
 
       .sidebar-link.active {
@@ -87,20 +40,64 @@
         text-align: center;
       }
     </style>
+  </head>
 
- <script>
-  const links = document.querySelectorAll(".sidebar-link");
-  const currentPath = window.location.pathname;
+  <body class="bg-gray-100">
+    
+    <aside
+      class="
+        /* Mobile Styles (Default) */
+        sticky top-0 w-full bg-white/80 backdrop-blur border-b border-gray-200 px-4 py-3 z-30
+        /* Desktop Styles (lg) */
+        lg:fixed lg:top-[140px] lg:left-0 lg:w-60 lg:h-[calc(100vh-140px)] lg:border-r lg:border-b-0 lg:px-6 lg:py-8
+      "
+    >
+      <h3 class="hidden lg:block text-xs font-semibold text-gray-400 uppercase mb-6 tracking-wider">
+        Explore
+      </h3>
 
-  links.forEach(link => {
-    link.classList.remove("active"); 
+      <nav class="flex flex-row lg:flex-col space-x-2 lg:space-x-0 lg:space-y-1 overflow-x-auto lg:overflow-x-hidden no-scrollbar">
+        <a href="/blog" class="sidebar-link active">
+          <i class="fa-solid fa-house"></i>
+          <span>Home</span>
+        </a>
 
-    const href = link.getAttribute("href");
-    if (currentPath === href || currentPath.startsWith(href + "/blogs")) {
-      link.classList.add("active");
-    }
-  });
-</script>
+        <a href="/blog/library" class="sidebar-link">
+          <i class="fa-solid fa-book"></i>
+          <span>Library</span>
+        </a>
 
+        <a href="/blog/stories" class="sidebar-link">
+          <i class="fa-solid fa-pen-nib"></i>
+          <span>Stories</span>
+        </a>
+
+        <a href="/insights" class="sidebar-link">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Insights</span>
+        </a>
+      </nav>
+
+      <div class="hidden lg:block my-8 border-t border-gray-100"></div>
+      <p class="hidden lg:block text-xs text-gray-400 leading-relaxed">
+        ReadNest Stories — thoughts, ideas & experiences from readers like you.
+      </p>
+    </aside>
+
+    <main class="p-4 lg:ml-60">
+      </main>
+
+    <script>
+      const links = document.querySelectorAll(".sidebar-link");
+      const currentPath = window.location.pathname;
+
+      links.forEach(link => {
+        link.classList.remove("active");
+        const href = link.getAttribute("href");
+        if (currentPath === href || (href !== '/blog' && currentPath.startsWith(href))) {
+          link.classList.add("active");
+        }
+      });
+    </script>
   </body>
 </html>

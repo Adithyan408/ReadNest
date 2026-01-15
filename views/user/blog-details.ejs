@@ -4,25 +4,15 @@
     <meta charset="UTF-8" />
     <title><%= blog.title %> | ReadNest</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
+
     <meta property="og:type" content="article" />
     <meta property="og:title" content="<%= blog.title %>" />
-
     <meta
       property="og:description"
       content="<%= blog.content.replace(/<[^>]+>/g, '').slice(0, 150) %>"
     />
-
     <meta property="og:url" content="<%= blogUrl %>" />
     <meta property="og:site_name" content="ReadNest" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="<%= blog.title %>" />
-    <meta
-      name="twitter:description"
-      content="<%= blog.content.replace(/<[^>]+>/g, '').slice(0, 150) %>"
-    />
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link
@@ -31,564 +21,615 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.ckeditor.com/4.22.1/full/ckeditor.js"></script>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+      * {
+        font-family: "Poppins", sans-serif;
+      }
+
+      /* Ensure CKEditor content is responsive */
+      article img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+      }
+      article {
+        line-height: 1.8;
+        color: #374151;
+      }
+
+      /* Custom scrollbar for notifications */
+      #notificationList::-webkit-scrollbar {
+        width: 4px;
+      }
+      #notificationList::-webkit-scrollbar-thumb {
+        background: #e5e7eb;
+        border-radius: 10px;
+      }
+    </style>
   </head>
 
   <body class="bg-gray-50">
     <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 py-3">
         <div class="flex items-center justify-between">
-          <!-- Logo -->
           <div class="flex items-center space-x-2">
-            <div class="w-14 h-14 rounded-full overflow-hidden">
-              <a href="/">
-                <img
+            <div
+              class="w-10 h-10 lg:w-14 lg:h-14 rounded-full overflow-hidden shrink-0"
+            >
+              <a href="/"
+                ><img
                   src="/images/logo2.png"
                   class="w-full h-full object-cover"
-                />
-              </a>
+              /></a>
             </div>
-            <a href="/" class="text-xl font-bold text-gray-800"> ReadNest </a>
+            <a href="/" class="text-lg lg:text-xl font-bold text-gray-800"
+              >ReadNest</a
+            >
           </div>
 
-          <!-- Right Menu -->
-          <div class="flex items-center space-x-6">
+          <div class="flex items-center space-x-3 lg:space-x-6">
             <button
               onclick="openBlog()"
-              class="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-300 hover:bg-gray-50"
+              class="flex items-center p-2 lg:px-4 lg:py-2 bg-white rounded-lg border border-gray-300"
             >
               <i class="fas fa-bars text-gray-700"></i>
-              <span class="text-sm font-medium text-gray-700">BLOG</span>
-            </button>
-
-            <a href="/cart" class="flex items-center space-x-1">
-              <i class="fas fa-shopping-cart text-xl text-gray-700"></i>
-              <span class="text-sm text-gray-700">Cart</span>
-            </a>
-
-            <a href="/account" class="flex items-center space-x-2">
-              <i class="fas fa-user-circle text-2xl text-gray-700"></i>
-              <span class="text-sm font-medium text-gray-700"
-                ><%= user.name %></span
+              <span class="hidden lg:inline text-sm font-medium ml-2"
+                >BLOG</span
               >
-            </a>
+            </button>
+            <a href="/cart" class="flex items-center p-2"
+              ><i class="fas fa-shopping-cart text-xl text-gray-700"></i
+            ></a>
+            <a href="/account" class="flex items-center p-2"
+              ><i class="fas fa-user-circle text-2xl text-gray-700"></i
+            ></a>
           </div>
         </div>
       </div>
     </header>
-    <section class="sticky top-[76px] z-40 bg-white border-b border-blue-100">
+
+    <section
+      class="sticky top-[64px] lg:top-[76px] z-40 bg-white border-b border-blue-100 shadow-sm"
+    >
       <div
-        class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between"
+        class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between"
       >
-        <!-- Back -->
         <button
           onclick="window.history.back()"
-          class="flex items-center gap-2 text-blue-600 font-medium hover:text-blue-700"
+          class="flex items-center gap-2 text-blue-600 font-medium hover:text-blue-700 text-sm lg:text-base"
         >
-          <i class="fa-solid fa-arrow-left"></i>
-          Back
+          <i class="fa-solid fa-arrow-left"></i> Back
         </button>
 
-        <!-- Notification -->
         <button
           id="notificationBtn"
-          class="relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-blue-100 transition"
+          class="relative w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-blue-100 transition"
         >
           <i class="fa-regular fa-bell text-blue-600"></i>
-
-          <!-- Count -->
           <span
             id="notifCount"
-            class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center"
+            class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white"
           ></span>
         </button>
       </div>
     </section>
-    <%- include("../../views/partials/user/blogSidebar") %>
-    <main class="max-w-3xl mx-auto px-4 py-10 bg-white shadow rounded-lg mt-10">
-      <!-- Title -->
-      <p class="text-sm text-gray-500 mb-4">
-        By
-        <span class="font-medium text-gray-700">
-          <%= blog.author?.name || "Unknown" %>
-        </span>
-        · <%= new Date(blog.createdAt).toDateString() %>
-      </p>
-      <div class="flex items-start justify-between mb-4">
-        <h1 class="text-3xl font-bold text-gray-900"><%= blog.title %></h1>
 
-        <% if (user && blog.author && blog.author._id.toString() ===
-        user._id.toString()) { %>
-
-        <div class="flex flex-col items-end gap-2">
-          <!-- STATUS BADGE -->
-          <% if (blog.isBlocked) { %>
-          <span
-            class="text-xs px-3 py-1 rounded-full bg-red-100 text-red-700 font-medium"
-          >
-            Blocked
-          </span>
-          <% } else { %>
-          <span
-            class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium"
-          >
-            Published
-          </span>
-          <% } %>
-
-          <!-- ACTION BUTTONS -->
-          <div class="flex gap-3">
-            <!-- EDIT BLOG -->
-            <button
-              onclick="openEditModal()"
-              class="text-blue-600 hover:text-blue-800 text-sm font-medium"
-            >
-              <i class="fa-solid fa-pen"></i> Edit
-            </button>
-
-            <!-- DELETE BLOG -->
-            <button
-              onclick="deleteBlog('<%= blog._id %>')"
-              class="text-red-600 hover:text-red-800 text-sm font-medium"
-            >
-              <i class="fa-solid fa-trash"></i> Delete
-            </button>
-          </div>
-        </div>
-
-        <% } %>
-      </div>
-
-      <!-- Blog Content -->
-      <article class="prose max-w-none"><%- blog.content %></article>
-
-      <!-- Divider -->
-      <hr class="my-8" />
-
-      <!-- LIKE BUTTON -->
-      <button
-        id="likeBtn"
-        class="flex items-center gap-2 <%= userLiked ? 'text-red-500' : 'text-gray-600' %>"
-        onclick="toggleLike('<%= blog._id %>')"
-      >
-        <i class="fa-heart <%= userLiked ? 'fa-solid' : 'fa-regular' %>"></i>
-        <span id="likeCount"><%= likeCount %></span>
-      </button>
-
-      <!-- COMMENTS -->
-      <h3 id="comments" class="mt-8 font-semibold text-lg">
-        Comments (<%= comments.length %>)
-      </h3>
-
-      <% comments.forEach(c => { %>
-      <div class="border-b py-3 flex justify-between items-start">
-        <div>
-          <p class="text-grey-100"><%= c.user.name %></p>
-          <p class="text font-medium"><%= c.comment %></p>
-        </div>
-
-        <% if (user && c.user._id.toString() === user._id.toString()) { %>
-        <div class="flex gap-3">
-          <!-- EDIT COMMENT -->
-          <button
-            onclick="openEditCommentModal('<%= c._id %>', `<%- c.comment %>`)"
-            class="text-blue-500 hover:text-blue-700 text-sm"
-            title="Edit comment"
-          >
-            <i class="fa-solid fa-pen"></i>
-          </button>
-
-          <!-- DELETE COMMENT -->
-          <button
-            onclick="deleteComment('<%= c._id %>')"
-            class="text-red-500 hover:text-red-700 text-sm"
-            title="Delete comment"
-          >
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </div>
-        <% } %>
-      </div>
-      <% }) %>
-
-      <!-- ADD COMMENT -->
-      <textarea
-        id="commentText"
-        class="w-full border rounded p-2 mt-4"
-      ></textarea>
-      <button
-        onclick="addComment('<%= blog._id %>')"
-        class="bg-blue-600 text-white px-4 py-2 rounded mt-2"
-      >
-        Post Comment
-      </button>
-    </main>
-    <!-- EDIT BLOG MODAL -->
-    <div
-      id="editModal"
-      class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
-    >
-      <div class="bg-white w-full max-w-3xl rounded-lg shadow-lg p-6 relative">
-        <!-- Close -->
-        <button
-          onclick="closeEditModal()"
-          class="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
-        >
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-
-        <h2 class="text-xl font-semibold mb-4">Edit Blog</h2>
-
-        <!-- TITLE -->
-        <input
-          id="editTitle"
-          class="w-full border rounded p-3 mb-4"
-          value="<%= blog.title %>"
-        />
-
-        <!-- CONTENT -->
-        <textarea id="editContent"><%- blog.content %></textarea>
-
-        <!-- ACTIONS -->
-        <div class="flex justify-end gap-3 mt-4">
-          <button onclick="closeEditModal()" class="px-4 py-2 border rounded">
-            Cancel
-          </button>
-
-          <button
-            onclick="updateBlog('<%= blog._id %>')"
-            class="px-5 py-2 bg-blue-600 text-white rounded"
-          >
-            Update
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- EDIT COMMENT MODAL -->
-    <div
-      id="editCommentModal"
-      class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
-    >
-      <div class="bg-white w-full max-w-md rounded-lg shadow-lg p-6 relative">
-        <!-- Close -->
-        <button
-          onclick="closeEditCommentModal()"
-          class="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
-        >
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-
-        <h3 class="text-lg font-semibold mb-4">Edit Comment</h3>
-
-        <textarea
-          id="editCommentText"
-          class="w-full border rounded p-3"
-          rows="4"
-        ></textarea>
-
-        <div class="flex justify-end gap-3 mt-4">
-          <button
-            onclick="closeEditCommentModal()"
-            class="px-4 py-2 border rounded"
-          >
-            Cancel
-          </button>
-
-          <button
-            onclick="updateComment()"
-            class="px-4 py-2 bg-blue-600 text-white rounded"
-          >
-            Update
-          </button>
-        </div>
-      </div>
-    </div>
     <div
       id="notificationModal"
-      class="hidden absolute right-6 top-[132px] z-50 w-96"
+      class="hidden fixed lg:absolute right-4 left-4 lg:left-auto top-[120px] lg:top-[132px] z-50 w-auto lg:w-96"
     >
       <div
         class="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden"
       >
-        <!-- Header -->
-        <div class="flex justify-between items-center px-4 py-3 border-b">
-          <button
-            id="closeNotification"
-            class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
-          >
-            <i class="fa-solid fa-arrow-left"></i>
-            Back
-          </button>
-
-          <h3 class="font-semibold text-sm">Notifications</h3>
-
-          <button
-            id="markAllRead"
-            class="text-xs text-blue-600 hover:underline"
-          >
-            ✓ Mark all
+        <div
+          class="flex justify-between items-center px-4 py-3 border-b bg-gray-50"
+        >
+          <h3 class="font-bold text-sm text-gray-700">Notifications</h3>
+          <button id="markAllRead" class="text-xs text-blue-600 font-semibold">
+            Mark all read
           </button>
         </div>
-
-        <!-- List -->
         <div
           id="notificationList"
-          class="max-h-80 overflow-y-auto divide-y"
+          class="max-h-80 lg:max-h-96 overflow-y-auto divide-y"
         ></div>
       </div>
     </div>
 
+    <div class="flex flex-col lg:flex-row">
+      <%- include("../../views/partials/user/blogSidebar") %>
+
+      <main class="flex-1 max-w-3xl mx-auto px-4 lg:px-0 py-6 lg:py-10">
+        <div
+          class="bg-white p-5 lg:p-10 shadow-sm rounded-xl border border-gray-100"
+        >
+          <p
+            class="text-xs lg:text-sm text-gray-500 mb-4 flex items-center gap-2"
+          >
+            <i class="fa-regular fa-calendar"></i>
+            <%= new Date(blog.createdAt).toDateString() %> ·
+            <span class="font-medium text-gray-700"
+              >By <%= blog.author?.name || "Unknown" %></span
+            >
+          </p>
+
+          <div
+            class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6"
+          >
+            <h1
+              class="text-2xl lg:text-4xl font-extrabold text-gray-900 leading-tight"
+            >
+              <%= blog.title %>
+            </h1>
+
+            <% if (user && blog.author && blog.author._id.toString() ===
+            user._id.toString()) { %>
+            <div
+              class="flex flex-row md:flex-col items-center md:items-end gap-3 shrink-0"
+            >
+              <span
+                class="text-[10px] uppercase tracking-widest px-3 py-1 rounded-full <%= blog.isBlocked ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' %> font-bold"
+              >
+                <%= blog.isBlocked ? 'Blocked' : 'Published' %>
+              </span>
+              <div class="flex gap-4">
+                <button
+                  onclick="openEditModal()"
+                  class="text-blue-600 hover:text-blue-800 text-sm font-bold flex items-center gap-1"
+                >
+                  <i class="fa-solid fa-pen"></i> Edit
+                </button>
+                <button
+                  onclick="deleteBlog('<%= blog._id %>')"
+                  class="text-red-600 hover:text-red-800 text-sm font-bold flex items-center gap-1"
+                >
+                  <i class="fa-solid fa-trash"></i> Delete
+                </button>
+              </div>
+            </div>
+            <% } %>
+          </div>
+
+          <article class="prose prose-blue max-w-none text-gray-800">
+            <%- blog.content %>
+          </article>
+
+          <hr class="my-8 border-gray-100" />
+
+          <div class="flex items-center justify-between">
+            <button
+              id="likeBtn"
+              class="flex items-center gap-2 px-4 py-2 rounded-full transition <%= userLiked ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-gray-600' %>"
+              onclick="toggleLike('<%= blog._id %>')"
+            >
+              <i
+                class="fa-heart <%= userLiked ? 'fa-solid' : 'fa-regular' %>"
+              ></i>
+              <span id="likeCount" class="font-bold"><%= likeCount %></span>
+            </button>
+
+            <a
+              href="#commentText"
+              class="text-gray-500 text-sm hover:underline"
+            >
+              <i class="fa-regular fa-comment mr-1"></i> <%= comments.length %>
+              Comments
+            </a>
+          </div>
+
+          <div class="mt-10">
+            <h3 class="font-bold text-xl text-gray-900 mb-6">Conversation</h3>
+
+            <div class="space-y-6">
+              <% comments.forEach(c => { %>
+              <div
+                class="flex gap-4 p-4 rounded-lg bg-gray-50 border border-gray-100"
+              >
+                <div
+                  class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0"
+                >
+                  <span class="text-blue-600 font-bold uppercase text-xs"
+                    ><%= c.user.name.charAt(0) %></span
+                  >
+                </div>
+                <div class="flex-1">
+                  <div class="flex justify-between items-start">
+                    <p class="font-bold text-sm text-gray-900">
+                      <%= c.user.name %>
+                    </p>
+                    <% if (user && c.user._id.toString() ===
+                    user._id.toString()) { %>
+                    <div class="flex gap-2">
+                      <button
+                        onclick="openEditCommentModal('<%= c._id %>', `<%- c.comment %>`)"
+                        class="text-blue-500 text-xs hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onclick="deleteComment('<%= c._id %>')"
+                        class="text-red-500 text-xs hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <% } %>
+                  </div>
+                  <p class="text-gray-700 text-sm mt-1"><%= c.comment %></p>
+                </div>
+              </div>
+              <% }) %>
+            </div>
+
+            <div
+              class="mt-8 bg-white border-2 border-gray-100 rounded-xl p-2 focus-within:border-blue-400 transition"
+            >
+              <textarea
+                id="commentText"
+                placeholder="Write a thoughtful comment..."
+                class="w-full p-3 outline-none resize-none text-sm h-24 lg:h-32"
+              ></textarea>
+              <div class="flex justify-end p-2">
+                <button
+                  onclick="addComment('<%= blog._id %>')"
+                  class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow-md"
+                >
+                  Post Comment
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div
+      id="editModal"
+      class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[100] p-4"
+    >
+      <div
+        class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl p-6 lg:p-8 relative max-h-[90vh] overflow-y-auto"
+      >
+        <h2 class="text-xl font-bold mb-4">Edit Your Story</h2>
+        <input
+          id="editTitle"
+          class="w-full border-2 border-gray-100 rounded-xl p-4 mb-4 focus:border-blue-500 outline-none font-bold"
+          value="<%= blog.title %>"
+        />
+        <textarea id="editContent"><%- blog.content %></textarea>
+        <div class="flex justify-end gap-3 mt-6">
+          <button
+            onclick="closeEditModal()"
+            class="px-6 py-2 border-2 border-gray-100 rounded-xl font-bold"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="updateBlog('<%= blog._id %>')"
+            class="px-8 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700"
+          >
+            Update Story
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script>
-      async function toggleLike(blogId) {
-        const res = await fetch("/blog/like", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ blogId }),
+      /* ... existing toggleLike, addComment, deleteBlog, deleteComment, updateBlog, updateComment logic ... */
+
+      /* ============================================================
+       1. GLOBAL SEARCH LOGIC (Works for Desktop & Mobile)
+    ============================================================ */
+      const searchInputs = ["globalSearchInput", "mobileSearchInput"];
+      const globalResults = document.getElementById("globalSearchResults");
+      const globalClear = document.getElementById("globalClearSearch");
+      let searchTimer;
+
+      searchInputs.forEach((id) => {
+        const inputElement = document.getElementById(id);
+        if (!inputElement) return;
+
+        inputElement.addEventListener("input", () => {
+          const query = inputElement.value.trim();
+
+          // Show/Hide clear button only for desktop
+          if (globalClear) globalClear.classList.toggle("hidden", query === "");
+
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(() => {
+            if (!query) {
+              globalResults.innerHTML = "";
+              globalResults.classList.add("hidden");
+              return;
+            }
+
+            fetch(`/live-search?q=${encodeURIComponent(query)}`)
+              .then((r) => r.json())
+              .then((items) => {
+                if (!items.length) {
+                  globalResults.innerHTML = `<p class="p-3 text-gray-500 text-sm italic">No books found</p>`;
+                } else {
+                  globalResults.innerHTML = items
+                    .map(
+                      (p) => `
+                                <a href="/product?id=${p._id}" class="block p-3 hover:bg-gray-50 border-b last:border-none transition">
+                                    <div class="flex items-center gap-3">
+                                        <img src="${p.productImage[0]}" class="w-10 h-14 object-cover rounded shadow-sm">
+                                        <div>
+                                            <p class="font-bold text-gray-900 text-sm">${p.productName}</p>
+                                            <p class="text-xs text-gray-500">${p.author}</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            `
+                    )
+                    .join("");
+                }
+                globalResults.classList.remove("hidden");
+              });
+          }, 300);
+        });
+      });
+
+      // Close search results when clicking outside
+      document.addEventListener("click", (e) => {
+        if (
+          !e.target.closest("#globalSearchResults") &&
+          !searchInputs.some((id) => e.target.closest(`#${id}`))
+        ) {
+          globalResults?.classList.add("hidden");
+        }
+      });
+
+      if (globalClear) {
+        globalClear.onclick = () => {
+          searchInputs.forEach(
+            (id) => (document.getElementById(id).value = "")
+          );
+          globalResults.innerHTML = "";
+          globalResults.classList.add("hidden");
+          globalClear.classList.add("hidden");
+        };
+      }
+
+      /* ============================================================
+       2. NOTIFICATION SYSTEM
+    ============================================================ */
+      const notifBtn = document.getElementById("notificationBtn");
+      const notifModal = document.getElementById("notificationModal");
+      const notifList = document.getElementById("notificationList");
+      const notifBadge = document.getElementById("notifCount");
+
+      if (notifBtn) {
+        notifBtn.onclick = async (e) => {
+          e.stopPropagation();
+          notifModal.classList.toggle("hidden");
+          if (notifModal.classList.contains("hidden")) return;
+
+          const res = await fetch("/notifications");
+          const notifications = await res.json();
+          notifList.innerHTML = "";
+
+          if (notifications.length === 0) {
+            notifList.innerHTML = `<div class="p-8 text-center"><i class="fa-solid fa-bell-slash text-gray-300 text-3xl mb-2 block"></i><p class="text-gray-500 text-sm">No new notifications</p></div>`;
+            return;
+          }
+
+          notifications.forEach((n) => {
+            const icon =
+              n.type === "like"
+                ? "fa-heart text-red-500"
+                : "fa-comment text-blue-500";
+            const actionText =
+              n.type === "like" ? "liked your post" : "commented on";
+
+            notifList.innerHTML += `
+                    <div class="p-4 flex gap-3 ${
+                      n.isRead ? "bg-white" : "bg-blue-50"
+                    } hover:bg-gray-50 transition border-b border-gray-100">
+                        <i class="fa-solid ${icon} mt-1"></i>
+                        <div class="text-sm">
+                            <p class="text-gray-800">
+                                <span class="font-bold">${
+                                  n.sender.name
+                                }</span> ${actionText} 
+                                <a href="/blogs/${
+                                  n.blog._id
+                                }" class="text-blue-600 font-medium hover:underline">"${
+              n.blog.title
+            }"</a>
+                            </p>
+                            <p class="text-[10px] text-gray-400 mt-1 uppercase font-semibold">${new Date(
+                              n.createdAt
+                            ).toLocaleString()}</p>
+                        </div>
+                    </div>
+                `;
+          });
+        };
+      }
+
+      document
+        .getElementById("markAllRead")
+        ?.addEventListener("click", async () => {
+          await fetch("/notifications/mark-all-read", { method: "POST" });
+          notifList.innerHTML = `<p class="p-6 text-center text-gray-500 text-sm">All caught up! 🎉</p>`;
+          notifBadge?.classList.add("hidden");
         });
 
-        const data = await res.json();
-        location.reload();
+      /* ============================================================
+       3. BLOG INTERACTIONS (LIKE / COMMENT / DELETE)
+    ============================================================ */
+      async function toggleLike(blogId) {
+        try {
+          const res = await fetch("/blog/like", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ blogId }),
+          });
+          if (res.ok) location.reload();
+        } catch (err) {
+          console.error("Like failed", err);
+        }
       }
 
       async function addComment(blogId) {
-        const text = document.getElementById("commentText").value;
+        const text = document.getElementById("commentText").value.trim();
+        if (!text)
+          return Swal.fire(
+            "Empty Comment",
+            "Please type something first.",
+            "warning"
+          );
 
         const res = await fetch("/blog/comment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ blogId, comment: text }),
         });
-
         const data = await res.json();
         if (data.success) location.reload();
       }
 
       function deleteBlog(blogId) {
         Swal.fire({
-          title: "Delete this blog?",
-          text: "This action cannot be undone!",
+          title: "Delete Blog?",
+          text: "This will permanently remove your story.",
           icon: "warning",
           showCancelButton: true,
-          confirmButtonColor: "#d33",
+          confirmButtonColor: "#ef4444",
           confirmButtonText: "Yes, delete",
         }).then(async (result) => {
           if (result.isConfirmed) {
             const res = await fetch(`/blog/delete/${blogId}`, {
               method: "DELETE",
-              headers: { "Content-Type": "application/json" },
             });
-
-            if (!res.ok) {
-              Swal.fire("Error", "Something went wrong", "error");
-              return;
-            }
-
             const data = await res.json();
-            if (data.success) {
-              Swal.fire("Deleted!", "Blog removed.", "success").then(() => {
-                window.location.href = "/blog";
-              });
-            }
+            if (data.success) window.location.href = "/blog";
           }
         });
       }
 
-      function deleteComment(commentId) {
-        Swal.fire({
-          title: "Delete comment?",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#d33",
-          confirmButtonText: "Delete",
-        }).then(async (result) => {
-          if (result.isConfirmed) {
-            const res = await fetch(`/blog/comment/${commentId}`, {
-              method: "DELETE",
-            });
-
-            const data = await res.json();
-            if (data.success) location.reload();
-          }
-        });
-      }
-      let editor;
+      /* ============================================================
+       4. MODAL MANAGEMENT (EDIT BLOG & COMMENT)
+    ============================================================ */
+      let blogEditor;
+      let activeCommentId = null;
 
       function openEditModal() {
         const modal = document.getElementById("editModal");
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
-
-        if (!editor) {
-          editor = CKEDITOR.replace("editContent", {
-            height: 300,
-            toolbar: [
-              { name: "styles", items: ["Font", "FontSize"] },
-              {
-                name: "basicstyles",
-                items: ["Bold", "Italic", "Underline", "Strike"],
-              },
-              { name: "colors", items: ["TextColor", "BGColor"] },
-              { name: "paragraph", items: ["NumberedList", "BulletedList"] },
-              { name: "links", items: ["Link", "Unlink"] },
-              { name: "cleanup", items: ["RemoveFormat"] },
-            ],
-            removePlugins: "resize,elementspath",
-          });
+        modal.classList.replace("hidden", "flex");
+        if (!blogEditor) {
+          blogEditor = CKEDITOR.replace("editContent", { height: 300 });
         }
       }
 
       function closeEditModal() {
-        const modal = document.getElementById("editModal");
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
+        document
+          .getElementById("editModal")
+          .classList.replace("flex", "hidden");
       }
 
       async function updateBlog(blogId) {
         const title = document.getElementById("editTitle").value;
-        const content = editor.getData();
-
-        if (!title.trim() || !content.trim()) {
-          Swal.fire("Error", "Title and content required", "error");
-          return;
-        }
+        const content = blogEditor.getData();
+        if (!title || !content)
+          return Swal.fire(
+            "Required",
+            "Title and content cannot be empty",
+            "error"
+          );
 
         const res = await fetch(`/blog/edit/${blogId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title, content }),
         });
-
         const data = await res.json();
-
         if (data.success) {
-          Swal.fire("Updated!", "Blog updated successfully", "success").then(
-            () => location.reload()
+          Swal.fire("Success", "Blog updated!", "success").then(() =>
+            location.reload()
           );
-        } else {
-          Swal.fire("Error", data.message || "Update failed", "error");
         }
       }
-      let currentCommentId = null;
 
-      function openEditCommentModal(commentId, commentText) {
-        currentCommentId = commentId;
-
-        document.getElementById("editCommentText").value = commentText;
-
+      function openEditCommentModal(id, text) {
+        activeCommentId = id;
+        document.getElementById("editCommentText").value = text;
         const modal = document.getElementById("editCommentModal");
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
+        modal.classList.replace("hidden", "flex");
       }
 
       function closeEditCommentModal() {
-        const modal = document.getElementById("editCommentModal");
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-
-        currentCommentId = null;
+        document
+          .getElementById("editCommentModal")
+          .classList.replace("flex", "hidden");
+        activeCommentId = null;
       }
 
       async function updateComment() {
         const text = document.getElementById("editCommentText").value.trim();
-
-        if (!text) {
-          Swal.fire("Error", "Comment cannot be empty", "error");
-          return;
-        }
-
-        const res = await fetch(`/blog/comment/${currentCommentId}`, {
+        if (!text) return;
+        const res = await fetch(`/blog/comment/${activeCommentId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ comment: text }),
         });
-
         const data = await res.json();
-
-        if (data.success) {
-          Swal.fire("Updated!", "Comment updated", "success").then(() =>
-            location.reload()
-          );
-        } else {
-          Swal.fire("Error", data.message || "Update failed", "error");
-        }
+        if (data.success) location.reload();
       }
 
-      const notifBtn = document.getElementById("notificationBtn");
-      const notifModal = document.getElementById("notificationModal");
-
-      notifBtn.onclick = async () => {
-        notifModal.classList.toggle("hidden");
-
-        if (notifModal.classList.contains("hidden")) return;
-
-        const res = await fetch("/notifications");
-        const notifications = await res.json();
-
-        const list = document.getElementById("notificationList");
-        list.innerHTML = "";
-
-        if (notifications.length === 0) {
-          list.innerHTML = `<p class="p-6 text-center text-gray-500 text-sm">No notifications</p>`;
-          return;
-        }
-
-        notifications.forEach((n) => {
-          list.innerHTML += `
-      <div class="p-4 flex gap-3 ${n.isRead ? "bg-white" : "bg-blue-50"}">
-        <i class="fa-solid ${
-          n.type === "like"
-            ? "fa-heart text-red-500"
-            : "fa-comment text-blue-500"
-        } mt-1"></i>
-
-        <div class="text-sm">
-          <p>
-            <strong>${n.sender.name}</strong>
-            ${n.type === "like" ? "liked" : "commented on"}
-            <a href="/blogs/${
-              n.blog._id
-            }" class="text-blue-600 hover:underline">
-              ${n.blog.title}
-            </a>
-          </p>
-
-          <p class="text-xs text-gray-400">
-            ${new Date(n.createdAt).toLocaleString()}
-          </p>
-        </div>
-      </div>
-    `;
+      function deleteComment(id) {
+        Swal.fire({
+          title: "Delete comment?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Delete",
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            const res = await fetch(`/blog/comment/${id}`, {
+              method: "DELETE",
+            });
+            const data = await res.json();
+            if (data.success) location.reload();
+          }
         });
-      };
+      }
 
-      document.getElementById("closeNotification").onclick = () => {
-        document.getElementById("notificationModal").classList.add("hidden");
-      };
-
-      document.getElementById("markAllRead").onclick = async () => {
-        await fetch("/notifications/mark-all-read", { method: "POST" });
-
-        document.getElementById(
-          "notificationList"
-        ).innerHTML = `<p class="p-6 text-center text-gray-500">All caught up 🎉</p>`;
-
-        document.getElementById("notifCount").classList.add("hidden");
-      };
-
-      async function loadUnreadCount() {
+      /* ============================================================
+       5. INITIALIZATION
+    ============================================================ */
+      async function init() {
         const res = await fetch("/notifications/unread-count");
         const data = await res.json();
-
-        const badge = document.getElementById("notifCount");
         if (data.count > 0) {
-          badge.textContent = data.count;
-          badge.classList.remove("hidden");
-        } else {
-          badge.classList.add("hidden");
+          notifBadge.textContent = data.count;
+          notifBadge.classList.remove("hidden");
         }
       }
 
-      loadUnreadCount();
+      function openBlog() {
+        window.location.href = "/blog";
+      }
+
+      document.addEventListener("DOMContentLoaded", init);
+
+      // Modal helpers for Flex display
+      function openEditModal() {
+        const m = document.getElementById("editModal");
+        m.classList.remove("hidden");
+        m.classList.add("flex");
+        if (!editor) {
+          editor = CKEDITOR.replace("editContent", { height: 350 });
+        }
+      }
+      function closeEditModal() {
+        const m = document.getElementById("editModal");
+        m.classList.add("hidden");
+        m.classList.remove("flex");
+      }
     </script>
   </body>
 </html>

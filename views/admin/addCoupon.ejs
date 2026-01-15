@@ -1,411 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Banners - ReadNest</title>
+    <title>Create Voucher | ReadNest Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
-
-      * {
-        font-family: "Poppins", sans-serif;
-      }
-
-      .sidebar-item {
-        transition: all 0.3s ease;
-      }
-
-      .sidebar-item:hover {
-        background-color: #d1d5db;
-      }
-
-      .sidebar-item.active {
-        background-color: #d1d5db;
-      }
-      html,
-      body {
-        height: 100%;
-        overflow: hidden; /* disable full page scroll */
-      }
-
-      .main-scroll-area {
-        height: calc(100vh - 80px); /* header height is ~80px */
-        overflow-y: auto; /* enable vertical scroll only on the right */
-        overflow-x: hidden;
-      }
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+        * { font-family: "Poppins", sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .sidebar-item.active { background: #f3f4f6; border-right: 4px solid #4f46e5; color: #4f46e5; }
+        #sidebar { transition: transform 0.3s ease-in-out; z-index: 60; }
+        
+        @media (min-width: 1024px) {
+            .main-content { height: calc(100vh - 80px); overflow-y: auto; }
+        }
     </style>
-  </head>
-  <body class="bg-gray-100">
-    <!-- Header -->
-    <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
-      <div class="flex items-center justify-between px-6 py-4">
-        <!-- Logo -->
-        <a href="/admin">
-          <div class="flex items-center space-x-3">
-            <div
-              class="w-14 h-14 bg-orange-900 rounded-full flex items-center justify-center"
-            >
-              <i class="fas fa-book-open text-white text-2xl"></i>
-            </div>
-            <span class="text-2xl font-bold text-gray-800">ReadNest</span>
-          </div>
-        </a>
+</head>
 
-        <!-- Right Side -->
-        <div class="flex items-center space-x-6">
-          <a href="/admin/blogs">
-          <button
-          class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
-          >
-          <i class="fas fa-blog text-gray-700"></i>
-          <span class="text-base font-semibold text-gray-900">Blog</span>
-          </button>
-        </a>
+<body class="bg-gray-100 min-h-screen lg:overflow-hidden">
 
-
-          <div class="flex items-center space-x-3">
-            <i class="fas fa-user-circle text-4xl text-gray-600"></i>
-            <span class="text-base font-semibold text-gray-600">ADMIN</span>
-          </div>
+    <header class="bg-white shadow-md sticky top-0 z-50 px-4 sm:px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+            <a href="/admin" class="flex items-center space-x-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-900 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-book-open text-white text-xl"></i>
+                </div>
+                <span class="text-xl sm:text-2xl font-black text-gray-800 tracking-tighter uppercase">ReadNest</span>
+            </a>
         </div>
-      </div>
+
+        <div class="flex items-center space-x-3 sm:space-x-6">
+            <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                <i class="fas fa-ticket-alt text-indigo-600"></i>
+                <span class="text-xs font-black text-gray-700 uppercase tracking-widest">Coupons</span>
+            </div>
+        </div>
     </header>
 
-    <!-- Main Content -->
     <div class="flex">
-      <!-- Sidebar -->
-      <aside
-        class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col"
-      >
-        <nav class="flex-1 overflow-y-auto py-4">
-          <a
-            href="/admin"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th-large text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">DashBoard</span>
-          </a>
+       <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-100 -translate-x-full lg:translate-x-0 lg:static lg:h-[calc(100vh-80px)] flex flex-col transition-transform duration-300 shadow-2xl lg:shadow-none">
+            <nav class="flex-1 overflow-y-auto py-6 no-scrollbar space-y-1">
+                <a href="/admin" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-th-large w-8 text-lg"></i> Dashboard</a>
+                <a href="/admin/products" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-box w-8 text-lg"></i> Products</a>
+                <a href="/admin/orders" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-shopping-bag w-8 text-lg"></i> Orders</a>
+                <a href="/admin/users" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-users w-8 text-lg"></i> Customers</a>
+                <a href="/admin/category" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-th w-8 text-lg"></i> Category</a>
+                <a href="/admin/coupon" class="sidebar-item active flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-ticket-alt w-8 text-lg"></i> Voucher</a>
+                <a href="/admin/blogs" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-blog w-8 text-lg"></i> Blogs</a>
+                <a href="/admin/banner" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-image w-8 text-lg"></i> Banner</a>
+                <a href="/admin/logout" class="flex items-center px-8 py-4 text-rose-500 font-bold text-sm mt-10 border-t border-gray-50 pt-8 hover:bg-rose-50 transition-colors"><i class="fas fa-sign-out-alt w-8 text-lg"></i> LOG OUT</a>
+            </nav>
+        </aside>
 
-          <a
-            href="/admin/products"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-box text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Products</span>
-          </a>
-
-          <a
-            href="/admin/orders"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-shopping-bag text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Orders List</span>
-          </a>
-
-          <a
-            href="/admin/users"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-users text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Customers</span>
-          </a>
-
-          
-
-          <a
-            href="/admin/category"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Category</span>
-          </a>
-
-          <a
-            href="/admin/coupon"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-ticket-alt text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Voucher</span>
-          </a>
-
-          <a
-            href="/admin/banner"
-            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-image text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Banner</span>
-          </a>
-        </nav>
-
-        <!-- Logout Button at Bottom -->
-
-        <div class="border-t-2 border-gray-400 bg-gray-300">
-          <a href="/admin/logout">
-            <button
-              class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
-            >
-              <i
-                class="fas fa-sign-out-alt text-xl mr-4 text-gray-700 group-hover:text-red-600"
-              ></i>
-              <span
-                class="text-lg font-semibold text-gray-900 group-hover:text-red-600"
-                >LOG OUT</span
-              >
-            </button>
-          </a>
-        </div>
-      </aside>
-
-      <!-- Main Content - Banners -->
-      <main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
-        <%- include('../../views/partials/breadCrumb') %>
-
-        <div class="max-w-2xl mx-auto">
-          <!-- Page Header -->
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-3xl font-bold text-gray-900">Add New Coupon</h2>
-
-            <a href="/admin/coupon">
-              <button
-                class="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition shadow"
-              >
-                Back
-              </button>
-            </a>
-          </div>
-
-          <!-- Card -->
-          <div
-            class="bg-white rounded-2xl shadow-xl p-8 border border-gray-200"
-          >
-            <form
-             id="couponForm"
-              action="/admin/coupon/addCoupon"
-              method="POST"
-              class="space-y-6"
-            >
-              <!-- Coupon Code -->
-              <div>
-                <label class="block text-gray-700 font-semibold mb-2">
-                  Coupon Code <span class="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="code"
-                  placeholder="E.g., SAVE10, FIRST50"
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-                <p class="text-xs text-gray-500 mt-1">
-                  Use uppercase letters or numbers.
-                </p>
-              </div>
-
-              <!-- Discount -->
-              <div>
-                <label class="block text-gray-700 font-semibold mb-2">
-                  Discount (%) <span class="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="discount"
-                  placeholder="Enter discount percentage"
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-                <p class="text-xs text-gray-500 mt-1">Recommended: 5% - 50%</p>
-              </div>
-
-              <!--  Minimum Purchase (NEW FIELD) -->
-              <div>
-                <label class="block text-gray-700 font-semibold mb-2">
-                  Minimum Purchase (₹)
-                </label>
-                <input
-                  type="number"
-                  name="minPurchase"
-                  placeholder="Enter minimum purchase amount"
-                  min="0"
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-                <p class="text-xs text-gray-500 mt-1">
-                  Leave as 0 if no minimum purchase is required.
-                </p>
-              </div>
-               <!--  Maximum Discount (NEW FIELD) -->
-              <div>
-                <label class="block text-gray-700 font-semibold mb-2">
-                  Maximum Discount (₹)
-                </label>
-                <input
-                  type="number"
-                  name="maxDiscount"
-                  placeholder="Enter maximum Discount amount"
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
+        <main class="main-content flex-1 p-4 sm:p-8 lg:p-12 no-scrollbar bg-gray-50 w-full">
+            <div class="max-w-4xl mx-auto">
                 
-              </div>
+                <div class="mb-6"><%- include('../../views/partials/breadCrumb') %></div>
 
-               <div>
-                <label class="block text-gray-700 font-semibold mb-2">
-                  Start Date <span class="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="start"
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-                <p class="text-xs text-gray-500 mt-1">
-                  Today is Automatically choosen.
-                </p>
-              </div>
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-4">
+                        <a href="/admin/coupon" class="w-10 h-10 flex items-center justify-center bg-white rounded-full text-gray-400 shadow-sm hover:text-gray-900 transition"><i class="fas fa-arrow-left"></i></a>
+                        <h1 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">Create Coupon</h1>
+                    </div>
+                </div>
 
-              <!-- Expiry Date -->
-              <div>
-                <label class="block text-gray-700 font-semibold mb-2">
-                  Expiry Date <span class="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="expiry"
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-              </div>
+                <div class="bg-white rounded-[2.5rem] shadow-xl shadow-indigo-900/5 border border-white overflow-hidden">
+                    <form id="couponForm" action="/admin/coupon/addCoupon" method="POST" class="p-6 sm:p-10 space-y-8">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Voucher Code</label>
+                                <input type="text" name="code" placeholder="e.g. READNEST50" 
+                                       class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-gray-800 uppercase" />
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Discount Percentage (%)</label>
+                                <input type="number" name="discount" placeholder="0" min="1" max="90"
+                                       class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-gray-800" />
+                            </div>
+                        </div>
 
-              <!-- Submit Button -->
-              <div class="flex justify-end">
-                <button
-                  type="submit"
-                  class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-lg"
-                >
-                  CREATE COUPON
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </main>
+                        <div class="bg-indigo-50/30 rounded-[2rem] p-6 sm:p-8 border border-indigo-100">
+                            <div class="flex items-center gap-3 mb-6">
+                                <i class="fas fa-sliders-h text-indigo-600"></i>
+                                <h3 class="text-xs font-black text-indigo-900 uppercase tracking-widest">Redemption Rules</h3>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-2 block">Minimum Purchase (₹)</label>
+                                    <input type="number" name="minPurchase" placeholder="0" min="0"
+                                           class="w-full px-5 py-3.5 bg-white border border-gray-200 rounded-xl font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-2 block">Max Discount Cap (₹)</label>
+                                    <input type="number" name="maxDiscount" placeholder="No limit" min="0"
+                                           class="w-full px-5 py-3.5 bg-white border border-gray-200 rounded-xl font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Activation Date</label>
+                                <input type="date" name="start" 
+                                       class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all" />
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Expiry Date</label>
+                                <input type="date" name="expiry" 
+                                       class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all" />
+                            </div>
+                        </div>
+
+                        <div class="pt-6 border-t border-gray-50">
+                            <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition active:scale-[0.98]">
+                                Generate Coupon
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
     </div>
+
     <script>
-      document
-        .getElementById("couponForm")
-        .addEventListener("submit", function (e) {
-          e.preventDefault(); // stop normal submit
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
 
-          const code = document
-            .querySelector('input[name="code"]')
-            .value.trim();
-          const discount = document.querySelector(
-            'input[name="discount"]'
-          ).value;
-          const minPurchase = document.querySelector(
-            'input[name="minPurchase"]'
-          ).value;
-          const maxDiscount = document.querySelector(
-            'input[name="maxDiscount"]'
-          ).value;
-          const start = document.querySelector('input[name="start"]').value;
-          const expiry = document.querySelector('input[name="expiry"]').value;
+        document.getElementById("couponForm").addEventListener("submit", function (e) {
+            e.preventDefault();
 
-          if (!code) {
-            Swal.fire(
-              "Validation Error",
-              "Coupon code is required.",
-              "warning"
-            );
-            return;
-          }
+            const form = e.target;
+            const code = form.code.value.trim();
+            const discount = form.discount.value;
+            const minPurchase = form.minPurchase.value;
+            const maxDiscount = form.maxDiscount.value;
+            const expiry = form.expiry.value;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-          if (!/^[A-Z0-9]{3,20}$/.test(code)) {
-            Swal.fire(
-              "Invalid Coupon Code",
-              "Coupon code must be uppercase letters and numbers only (3–20 chars).",
-              "warning"
-            );
-            return;
-          }
+            if (!code || !/^[A-Z0-9]{3,20}$/.test(code)) {
+                return Swal.fire("Error", "Valid code required (3-20 uppercase/numbers)", "warning");
+            }
+            if (!discount || discount < 1 || discount > 90) {
+                return Swal.fire("Error", "Discount must be between 1% and 90%", "warning");
+            }
+            if (!maxDiscount || maxDiscount < 0) {
+                return Swal.fire("Error", "Please set a valid Maximum Discount cap", "warning");
+            }
+            if (!expiry || new Date(expiry) <= today) {
+                return Swal.fire("Error", "Expiry must be a future date", "warning");
+            }
 
-          if (!discount) {
-            Swal.fire(
-              "Validation Error",
-              "Discount percentage is required.",
-              "warning"
-            );
-            return;
-          }
-
-          if (discount < 1 || discount > 90) {
-            Swal.fire(
-              "Invalid Discount",
-              "Discount must be between 1% and 90%.",
-              "warning"
-            );
-            return;
-          }
-
-          if (minPurchase && minPurchase < 0) {
-            Swal.fire(
-              "Invalid Amount",
-              "Minimum purchase cannot be negative.",
-              "warning"
-            );
-            return;
-          }
-
-          if(!maxDiscount){
-            Swal.fire(
-              "Validation Error",
-              "Maximum Discount field is Required",
-              "warning"
-            );
-            return;
-          }
-
-          if( maxDiscount && maxDiscount < 0){
-            Swal.fire(
-              "Validation Error",
-              "Maximum Discount should be a positive Number",
-              "warning"
-            );
-            return;
-          }
-
-          if (!start) {
-            const todayISO = new Date().toISOString().split("T")[0];
-            document.querySelector('input[name="start"]').value = todayISO;
-            start = todayISO;
-             }
-
-          if (!expiry) {
-            Swal.fire(
-              "Validation Error",
-              "Expiry date is required.",
-              "warning"
-            );
-            return;
-          }
-
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const expiryDate = new Date(expiry);
-
-          
-
-          if (expiryDate <= today) {
-            Swal.fire(
-              "Invalid Expiry Date",
-              "Expiry date must be a future date.",
-              "warning"
-            );
-            return;
-          }
-
-          this.submit();
+            form.submit();
         });
     </script>
-  </body>
+</body>
 </html>

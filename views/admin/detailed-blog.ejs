@@ -1,325 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Blogs - ReadNest</title>
+    <title><%= blog.title %> | Blog Admin | ReadNest</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+        * { font-family: "Poppins", sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-      * {
-        font-family: "Poppins", sans-serif;
-      }
-
-      .sidebar-item {
-        transition: all 0.3s ease;
-      }
-
-      .sidebar-item:hover {
-        background-color: #d1d5db;
-        border-left: 4px solid #667eea;
-      }
-
-      .sidebar-item.active {
-        background-color: #d1d5db;
-        border-left: 4px solid #667eea;
-      }
-      html,
-      body {
-        height: 100%;
-        overflow: hidden; /* disable full page scroll */
-      }
-
-      .main-scroll-area {
-        height: calc(100vh - 80px); /* header height is ~80px */
-        overflow-y: auto; /* enable vertical scroll only on the right */
-        overflow-x: hidden;
-      }
+        .sidebar-item.active { background: #f3f4f6; border-right: 4px solid #4f46e5; color: #4f46e5; }
+        #sidebar { transition: transform 0.3s ease-in-out; z-index: 60; }
+        
+        @media (min-width: 1024px) {
+            .main-content { height: calc(100vh - 80px); overflow-y: auto; }
+        }
+        
+        /* Prose customization to match Admin UI */
+        .prose blockquote { border-left-color: #4f46e5; font-style: italic; color: #4b5563; }
+        .prose img { border-radius: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
     </style>
-  </head>
-  <body class="bg-gray-100">
-    <!-- Header -->
-    <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
-      <div class="flex items-center justify-between px-6 py-4">
-        <!-- Logo -->
-        <a href="/admin">
-          <div class="flex items-center space-x-3">
-            <div
-              class="w-14 h-14 bg-orange-900 rounded-full flex items-center justify-center"
-            >
-              <i class="fas fa-book-open text-white text-2xl"></i>
-            </div>
-            <span class="text-2xl font-bold text-gray-800">ReadNest</span>
-          </div>
-        </a>
+</head>
 
-        <!-- Right Side -->
-        <div class="flex items-center space-x-6">
-          <a href="/admin/blogs">
-            <button
-              class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
-            >
-              <i class="fas fa-blog text-gray-700"></i>
-              <span class="text-base font-semibold text-gray-900">Blog</span>
+<body class="bg-gray-50 min-h-screen lg:overflow-hidden">
+
+    <header class="bg-white shadow-md sticky top-0 z-50 px-4 sm:px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
             </button>
-          </a>
-
-          <div class="flex items-center space-x-3">
-            <i class="fas fa-user-circle text-4xl text-gray-600"></i>
-            <span class="text-base font-semibold text-gray-600">ADMIN</span>
-          </div>
+            <a href="/admin" class="flex items-center space-x-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-900 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-book-open text-white text-xl"></i>
+                </div>
+                <span class="text-xl sm:text-2xl font-black text-gray-800 tracking-tighter uppercase">ReadNest</span>
+            </a>
         </div>
-      </div>
+
+        <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+            <i class="fas fa-user-shield text-indigo-600"></i>
+            <span class="text-xs font-black text-gray-700 uppercase tracking-widest">Admin</span>
+        </div>
     </header>
 
-    <!-- Main Content -->
     <div class="flex">
-      <!-- Sidebar -->
-      <aside
-        class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col"
-      >
-        <nav class="flex-1 overflow-y-auto py-4">
-          <a
-            href="/admin"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th-large text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">DashBoard</span>
-          </a>
+       <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-100 -translate-x-full lg:translate-x-0 lg:static lg:h-[calc(100vh-80px)] flex flex-col transition-transform duration-300 shadow-2xl lg:shadow-none">
+            <nav class="flex-1 overflow-y-auto py-6 no-scrollbar space-y-1">
+                <a href="/admin" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-th-large w-8 text-lg"></i> Dashboard</a>
+                <a href="/admin/products" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-box w-8 text-lg"></i> Products</a>
+                <a href="/admin/orders" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-shopping-bag w-8 text-lg"></i> Orders</a>
+                <a href="/admin/users" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-users w-8 text-lg"></i> Customers</a>
+                <a href="/admin/category" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-th w-8 text-lg"></i> Category</a>
+                <a href="/admin/coupon" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-ticket-alt w-8 text-lg"></i> Voucher</a>
+                <a href="/admin/blogs" class="sidebar-item active flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-blog w-8 text-lg"></i> Blogs</a>
+                <a href="/admin/banner" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-image w-8 text-lg"></i> Banner</a>
+                <a href="/admin/logout" class="flex items-center px-8 py-4 text-rose-500 font-bold text-sm mt-10 border-t border-gray-50 pt-8 hover:bg-rose-50 transition-colors"><i class="fas fa-sign-out-alt w-8 text-lg"></i> LOG OUT</a>
+            </nav>
+        </aside>
 
-          <a
-            href="/admin/products"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-box text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Products</span>
-          </a>
+        <main class="main-content flex-1 p-4 sm:p-8 lg:p-12 no-scrollbar bg-gray-50 w-full">
+            <div class="max-w-4xl mx-auto">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
+                    <button onclick="window.history.back()" class="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-indigo-600 transition-colors">
+                        <i class="fas fa-chevron-left"></i> Back to Feed
+                    </button>
 
-          <a
-            href="/admin/orders"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-shopping-bag text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Orders List</span>
-          </a>
+                    <div class="flex gap-3 w-full sm:w-auto">
+                        <button onclick="toggleBlockBlog('<%= blog._id %>')" 
+                                class="flex-1 sm:flex-none px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all active:scale-95 <%= blog.isBlocked ? 'bg-emerald-500 text-white shadow-emerald-100' : 'bg-rose-500 text-white shadow-rose-100' %>">
+                            <i class="fas <%= blog.isBlocked ? 'fa-check-circle' : 'fa-ban' %> mr-2"></i>
+                            <%= blog.isBlocked ? "Unblock Content" : "Restrict Blog" %>
+                        </button>
+                    </div>
+                </div>
 
-          <a
-            href="/admin/users"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-users text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Customers</span>
-          </a>
+                <article class="bg-white rounded-[2.5rem] shadow-xl shadow-indigo-900/5 border border-white overflow-hidden mb-12">
+                    <div class="p-8 sm:p-12 border-b border-gray-50 bg-gray-50/30">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black">
+                                <%= blog.author?.name ? blog.author.name.charAt(0) : '?' %>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Author Profile</p>
+                                <h2 class="text-sm font-bold text-gray-800 uppercase tracking-tight"><%= blog.author?.name || "Unknown User" %></h2>
+                            </div>
+                        </div>
+                        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 leading-[1.1] mb-6"><%= blog.title %></h1>
+                        <div class="flex flex-wrap gap-6 items-center text-gray-400">
+                            <div class="flex items-center gap-2">
+                                <i class="far fa-calendar-alt text-indigo-400"></i>
+                                <span class="text-xs font-bold uppercase tracking-widest"><%= new Date(blog.createdAt).toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'}) %></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-heart text-rose-500"></i>
+                                <span class="text-xs font-black text-gray-700"><%= likeCount %> Likes</span>
+                            </div>
+                        </div>
+                    </div>
 
-          
+                    <div class="p-8 sm:p-12 prose prose-indigo max-w-none prose-p:text-gray-600 prose-p:leading-relaxed prose-headings:font-black">
+                        <%- blog.content %>
+                    </div>
+                </article>
 
-          <a
-            href="/admin/category"
-            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Category</span>
-          </a>
+                <div class="bg-white rounded-[2.5rem] shadow-xl shadow-indigo-900/5 border border-white overflow-hidden">
+                    <div class="p-8 border-b border-gray-50 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-black text-gray-900 uppercase tracking-tight">User Discussions</h3>
+                            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-1"><%= comments.length %> total comments</p>
+                        </div>
+                        <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                    </div>
 
-          <a
-            href="/admin/coupon"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-ticket-alt text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Voucher</span>
-          </a>
+                    <div class="p-8 space-y-6">
+                        <% if (comments.length === 0) { %>
+                            <div class="text-center py-12">
+                                <p class="text-gray-400 font-bold italic">No comments have been posted yet.</p>
+                            </div>
+                        <% } else { %>
+                            <% comments.forEach(c => { %>
+                                <div class="bg-gray-50/50 border border-gray-100 p-6 rounded-3xl group transition-all hover:bg-white hover:shadow-lg hover:shadow-indigo-900/5">
+                                    <div class="flex justify-between items-start gap-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-400 font-black text-[10px]">
+                                                <%= c.user?.name ? c.user.name.charAt(0) : '?' %>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs font-black text-gray-800 uppercase tracking-tighter"><%= c.user?.name || "Deleted Account" %></p>
+                                                <p class="text-[9px] text-gray-400 font-bold uppercase"><%= new Date(c.createdAt).toLocaleString() %></p>
+                                            </div>
+                                        </div>
+                                        <button onclick="deleteComment('<%= c._id %>')" 
+                                                class="w-8 h-8 flex items-center justify-center rounded-lg text-rose-300 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                                                title="Delete this comment">
+                                            <i class="fas fa-trash-alt text-xs"></i>
+                                        </button>
+                                    </div>
+                                    <div class="mt-4 pl-11 text-sm text-gray-600 leading-relaxed font-medium">
+                                        <%= c.comment %>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } %>
+                    </div>
+                </div>
 
-          <a
-            href="/admin/banner"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-image text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Banner</span>
-          </a>
-        </nav>
-
-        <!-- Logout Button at Bottom -->
-
-        <div class="border-t-2 border-gray-400 bg-gray-300">
-          <a href="/admin/logout">
-            <button
-              class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
-            >
-              <i
-                class="fas fa-sign-out-alt text-xl mr-4 text-gray-700 group-hover:text-red-600"
-              ></i>
-              <span
-                class="text-lg font-semibold text-gray-900 group-hover:text-red-600"
-                >Log Out</span
-              >
-            </button>
-          </a>
-        </div>
-      </aside>
-
-      <!-- Main Content - Categories -->
-      <main class="flex-1 main-scroll-area px-6 py-6">
-        <div class="max-w-3xl mx-auto bg-white shadow rounded-lg p-6">
-          <!-- Title -->
-          <button
-            onclick="window.history.back()"
-            class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 mb-4"
-          >
-            <i class="fa-solid fa-arrow-left"></i>
-            Back
-          </button>
-          <!-- BLOG HEADER -->
-          <div class="border-b pb-4 mb-6">
-            <div class="flex justify-between items-start">
-              <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-1">
-                  <%= blog.title %>
-                </h1>
-
-                <p class="text-sm text-gray-500">
-                  By
-                  <span class="font-medium text-gray-700">
-                    <%= blog.author?.name || "Unknown" %>
-                  </span>
-                  · <%= new Date(blog.createdAt).toLocaleString() %>
-                </p>
-              </div>
-
-              <!-- ADMIN ACTIONS -->
-              <div class="flex gap-3">
-                <!-- BLOCK / UNBLOCK -->
-                <button
-                  onclick="toggleBlockBlog('<%= blog._id %>')"
-                  class="px-4 py-2 text-sm rounded <%= blog.isBlocked ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' %>"
-                >
-                  <i class="fa-solid fa-ban"></i>
-                  <%= blog.isBlocked ? "Unblock" : "Block" %>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Blog Content -->
-          <article class="prose max-w-none bg-gray-50 p-6 rounded-lg">
-            <%- blog.content %>
-          </article>
-
-          <!-- Divider -->
-          <hr class="my-8" />
-
-          <!-- LIKE BUTTON -->
-          <div class="flex items-center gap-2 text-gray-700 mb-6">
-            <i class="fa-solid fa-heart text-red-500"></i>
-            <span class="font-medium"><%= likeCount %></span>
-            <span class="text-sm text-gray-500">likes</span>
-          </div>
-
-          <!-- COMMENTS -->
-          <h3 class="mt-10 mb-4 font-semibold text-xl">
-            Comments (<%= comments.length %>)
-          </h3>
-
-          <% if (comments.length === 0) { %>
-          <p class="text-sm text-gray-500">No comments yet.</p>
-          <% } %> <% comments.forEach(c => { %>
-          <div class="border rounded-lg p-4 mb-4 bg-white">
-            <div class="flex justify-between items-start">
-              <div>
-                <p class="text-sm font-semibold text-gray-800">
-                  <%= c.user?.name || "Unknown User" %>
-                </p>
-                <p class="text-xs text-gray-400 mb-2">
-                  <%= new Date(c.createdAt).toLocaleString() %>
-                </p>
-                <p class="text-gray-700"><%= c.comment %></p>
-              </div>
-
-              <!-- ADMIN DELETE COMMENT -->
-              <button
-                onclick="deleteComment('<%= c._id %>')"
-                class="text-red-500 hover:text-red-700"
-                title="Delete comment"
-              >
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-          </div>
-          <% }) %>
-        </div>
-      </main>
+                <div class="h-20"></div> </div>
+        </main>
     </div>
 
     <script>
-      function toggleBlockBlog(blogId) {
-        Swal.fire({
-          title: "Change blog visibility?",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonText: "Yes",
-        }).then(async (result) => {
-          if (result.isConfirmed) {
-            const res = await fetch(`/admin/blog/block/${blogId}`, {
-              method: "PATCH",
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        }
+
+        async function toggleBlockBlog(blogId) {
+            const { isConfirmed } = await Swal.fire({
+                title: 'Confirm Visibility Change',
+                text: "Updating the status will reflect immediately for all users.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Yes, update status',
+                customClass: {
+                    container: 'rounded-3xl',
+                    popup: 'rounded-[2rem]'
+                }
             });
 
-            const data = await res.json();
-            if (data.success) location.reload();
-          }
-        });
-      }
-
-      function deleteComment(commentId) {
-        Swal.fire({
-          title: "Delete this comment?",
-          text: "This action cannot be undone",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#d33",
-          confirmButtonText: "Delete",
-        }).then(async (result) => {
-          if (result.isConfirmed) {
-            const res = await fetch(`/admin/blogs/comment/${commentId}`, {
-              method: "DELETE",
-            });
-
-            const data = await res.json();
-            if (data.success) {
-              Swal.fire("Deleted!", "Comment removed", "success").then(() =>
-                location.reload()
-              );
+            if (isConfirmed) {
+                try {
+                    const res = await fetch(`/admin/blogs/block/${blogId}`, { method: "PATCH" });
+                    const data = await res.json();
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: 'Status Updated', showConfirmButton: false, timer: 1500 })
+                            .then(() => location.reload());
+                    }
+                } catch (err) {
+                    Swal.fire('Error', 'Connection failed', 'error');
+                }
             }
-          }
-        });
-      }
+        }
 
-      function toggleBlockBlog(blogId) {
-        Swal.fire({
-          title: "Change blog visibility?",
-          text: "Blocked blogs will not be visible to users",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonText: "Yes",
-        }).then(async (result) => {
-          if (result.isConfirmed) {
-            const res = await fetch(`/admin/blogs/block/${blogId}`, {
-              method: "PATCH",
+        async function deleteComment(commentId) {
+            const { isConfirmed } = await Swal.fire({
+                title: 'Delete Comment?',
+                text: "This operation is permanent and cannot be reversed.",
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonColor: '#f43f5e',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Delete Permanently'
             });
 
-            const data = await res.json();
-            if (data.success) {
-              Swal.fire("Updated!", "Blog status changed", "success").then(() =>
-                location.reload()
-              );
+            if (isConfirmed) {
+                try {
+                    const res = await fetch(`/admin/blogs/comment/${commentId}`, { method: "DELETE" });
+                    const data = await res.json();
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: 'Deleted', showConfirmButton: false, timer: 1500 })
+                            .then(() => location.reload());
+                    }
+                } catch (err) {
+                    Swal.fire('Error', 'Action failed', 'error');
+                }
             }
-          }
-        });
-      }
+        }
     </script>
-  </body>
+</body>
 </html>

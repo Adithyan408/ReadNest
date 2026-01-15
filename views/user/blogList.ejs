@@ -1,84 +1,73 @@
 <% if (!blogs || blogs.length === 0) { %>
-  <p class="text-center text-gray-500 mt-20 text-sm">
-    No blogs found
-  </p>
+  <div class="flex flex-col items-center justify-center py-20 px-4">
+    <i class="fa-solid fa-magnifying-glass text-gray-300 text-4xl mb-4"></i>
+    <p class="text-center text-gray-500 text-sm italic">
+      No blogs found matching your criteria.
+    </p>
+  </div>
 <% } else { %>
 
   <% blogs.forEach(blog => { %>
-    <div
-      class="bg-white rounded-2xl border border-gray-200 hover:shadow-sm transition p-8 mb-6"
-    >
-      <!-- TITLE -->
-      <h3
-        class="text-xl font-semibold text-gray-900 leading-snug mb-2 hover:text-blue-700 transition"
-      >
-        <%= blog.title %>
-      </h3>
-
-      <!-- META -->
-      <p class="text-sm text-gray-500 mb-4">
-        By
-        <span class="font-medium text-gray-700">
-          <%= blog.author?.name || "Unknown" %>
-        </span>
-        · <%= new Date(blog.createdAt).toDateString() %>
-      </p>
-
-      <!-- CTA -->
-      <a
-        href="/blogs/<%= blog._id %>"
-        class="inline-flex items-center gap-1 text-blue-600 text-sm font-medium hover:underline mb-5"
-      >
-        Read more
-        <i class="fa-solid fa-arrow-right text-xs"></i>
+    <div class="bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-shadow p-5 lg:p-8 mb-6 shadow-sm">
+      
+      <a href="/blogs/<%= blog._id %>" class="block group">
+        <h3 class="text-lg lg:text-xl font-bold text-gray-900 leading-snug mb-2 group-hover:text-blue-700 transition-colors">
+          <%= blog.title %>
+        </h3>
       </a>
 
-      <!-- ACTION BAR -->
-      <div
-        class="flex justify-between items-center border-t border-gray-100 pt-4 text-gray-600"
+      <p class="text-xs lg:text-sm text-gray-500 mb-4 flex items-center flex-wrap gap-1">
+        <span>By</span>
+        <span class="font-semibold text-gray-700"><%= blog.author?.name || "Unknown" %></span>
+        <span class="mx-1 text-gray-300">•</span>
+        <span><%= new Date(blog.createdAt).toLocaleDateString() %></span>
+      </p>
+
+      <a
+        href="/blogs/<%= blog._id %>"
+        class="inline-flex items-center gap-1 text-blue-600 text-sm font-bold hover:underline mb-6"
       >
-        <!-- LEFT -->
-        <div class="flex gap-6">
-          <!-- LIKE -->
+        Read more
+        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+      </a>
+
+      <div class="flex justify-between items-center border-t border-gray-100 pt-4 text-gray-600">
+        
+        <div class="flex gap-5 lg:gap-8">
           <button
             onclick="toggleLike('<%= blog._id %>')"
-            class="flex items-center gap-2 hover:text-red-500 transition"
+            class="flex items-center gap-2 hover:text-red-500 transition-colors py-1"
           >
-            <i
-              class="fa-heart <%= blog.userLiked ? 'fa-solid text-red-500' : 'fa-regular' %>"
-            ></i>
-            <span class="text-sm"><%= blog.likeCount || 0 %></span>
+            <i class="fa-heart <%= blog.userLiked ? 'fa-solid text-red-500' : 'fa-regular' %> text-lg lg:text-base"></i>
+            <span class="text-xs lg:text-sm font-medium"><%= blog.likeCount || 0 %></span>
           </button>
 
-          <!-- COMMENT -->
           <a
             href="/blogs/<%= blog._id %>#comments"
-            class="flex items-center gap-2 hover:text-blue-600 transition"
+            class="flex items-center gap-2 hover:text-blue-600 transition-colors py-1"
           >
-            <i class="fa-regular fa-comment"></i>
-            <span class="text-sm"><%= blog.commentCount || 0 %></span>
+            <i class="fa-regular fa-comment text-lg lg:text-base"></i>
+            <span class="text-xs lg:text-sm font-medium"><%= blog.commentCount || 0 %></span>
           </a>
         </div>
 
-        <!-- RIGHT -->
-        <div class="flex items-center gap-5">
-          <!-- SAVE -->
+        <div class="flex items-center gap-4 lg:gap-6">
           <button
             onclick="toggleSave('<%= blog._id %>')"
-            class="transition"
+            class="p-1 transition-transform active:scale-90"
             title="Save"
           >
-            <i
-              class="fa-bookmark text-lg transition <%= blog.isSaved ? 'fa-solid text-blue-600' : 'fa-regular text-gray-500 hover:text-black' %>"
-            ></i>
+            <i class="fa-bookmark text-lg lg:text-xl transition-colors <%= blog.isSaved ? 'fa-solid text-blue-600' : 'fa-regular text-gray-400 hover:text-black' %>"></i>
           </button>
 
-          <!-- SHARE -->
           <button
-            class="flex items-center gap-2 hover:text-blue-600 transition text-sm"
+            data-id="<%= blog._id %>"
+            data-title="<%= blog.title %>"
+            onclick="openShareModal(this)"
+            class="flex items-center gap-2 hover:text-indigo-600 transition-colors text-xs lg:text-sm font-bold"
           >
-            <i class="fa-solid fa-share"></i>
-            Share
+            <i class="fa-solid fa-share-nodes text-base lg:text-sm"></i>
+            <span class="hidden sm:inline">Share</span>
           </button>
         </div>
       </div>

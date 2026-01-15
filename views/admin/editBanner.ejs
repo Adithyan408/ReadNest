@@ -1,372 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Update Banner - ReadNest</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Update Banner | ReadNest Admin</title>
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css" />
+    <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
 
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+        * { font-family: "Poppins", sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  <!-- Cropper -->
-  <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css" />
-  <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
+        .sidebar-item.active { background: #f3f4f6; border-right: 4px solid #4f46e5; color: #4f46e5; }
+        #sidebar { transition: transform 0.3s ease-in-out; z-index: 60; }
+        
+        @media (min-width: 1024px) {
+            .main-content { height: calc(100vh - 80px); overflow-y: auto; }
+        }
 
-  <style>
-    @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
-    * { font-family: "Poppins", sans-serif; }
-
-    .sidebar-item { transition: .3s ease; }
-    .sidebar-item:hover, .sidebar-item.active { background: #d1d5db; }
-
-    .upload-area {
-      border: 2px dashed #cbd5e0;
-      transition: .3s ease;
-    }
-    .upload-area:hover {
-      background:#f7fafc;
-      border-color:#667eea;
-    }
-                  html, body {
-    height: 100%;
-    overflow: hidden;  /* disable full page scroll */
-  }
-
-  .main-scroll-area {
-    height: calc(100vh - 80px); /* header height is ~80px */
-    overflow-y: auto;           /* enable vertical scroll only on the right */
-    overflow-x: hidden;
-  }
-  </style>
+        .upload-area { border: 2px dashed #e5e7eb; transition: all 0.3s ease; }
+        .upload-area:hover { border-color: #4f46e5; background: #f5f3ff; }
+    </style>
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-gray-100 min-h-screen lg:overflow-hidden">
 
-  <!-- HEADER -->
-  <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
-    <div class="flex items-center justify-between px-6 py-4">
-
-      <a href="/admin">
-        <div class="flex items-center space-x-3">
-          <div class="w-14 h-14 bg-orange-900 rounded-full flex items-center justify-center">
-            <i class="fas fa-book-open text-white text-2xl"></i>
-          </div>
-          <span class="text-2xl font-bold text-gray-800">ReadNest</span>
-        </div>
-      </a>
-
-      <div class="flex items-center space-x-6">
-
-       <a href="/admin/blogs">
-        <button
-          class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
-        >
-        <i class="fas fa-blog text-gray-700"></i>
-        <span class="text-base font-semibold text-gray-900">Blog</span>
-        </button>
-      </a>
-
-        <div class="flex items-center space-x-3">
-          <i class="fas fa-user-circle text-4xl text-gray-600"></i>
-          <span class="font-semibold text-gray-700">ADMIN</span>
-        </div>
-
-      </div>
-
-    </div>
-  </header>
-
-  <div class="flex">
-
-    <!-- SIDEBAR -->
-    <aside class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col">
-      <nav class="flex-1 overflow-y-auto py-4">
-
-        <a href="/admin" class="sidebar-item flex px-6 py-4 border-b border-gray-400">
-          <i class="fas fa-th-large text-xl mr-4"></i>
-          <span class="text-lg font-semibold text-gray-900">Dashboard</span>
-        </a>
-
-        <a href="/admin/products" class="sidebar-item flex px-6 py-4 border-b border-gray-400">
-          <i class="fas fa-box text-xl mr-4"></i>
-          <span class="text-lg font-semibold text-gray-900">Products</span>
-        </a>
-
-        <a href="/admin/orders" class="sidebar-item flex px-6 py-4 border-b border-gray-400">
-          <i class="fas fa-shopping-bag text-xl mr-4"></i>
-          <span class="text-lg font-semibold text-gray-900">Orders</span>
-        </a>
-
-        <a href="/admin/users" class="sidebar-item flex px-6 py-4 border-b border-gray-400">
-          <i class="fas fa-users text-xl mr-4"></i>
-          <span class="text-lg font-semibold text-gray-900">Customers</span>
-        </a>
-
-        
-
-        <a href="/admin/category" class="sidebar-item flex px-6 py-4 border-b border-gray-400">
-          <i class="fas fa-th text-xl mr-4"></i>
-          <span class="text-lg font-semibold text-gray-900">Category</span>
-        </a>
-
-        <a href="/admin/coupon" class="sidebar-item flex px-6 py-4 border-b border-gray-400">
-          <i class="fas fa-ticket-alt text-xl mr-4"></i>
-          <span class="text-lg font-semibold text-gray-900">Voucher</span>
-        </a>
-
-        <a href="/admin/banner" class="sidebar-item active flex px-6 py-4 border-b border-gray-400">
-          <i class="fas fa-image text-xl mr-4"></i>
-          <span class="text-lg font-semibold text-gray-900">Banner</span>
-        </a>
-
-      </nav>
-
-      <!-- Logout fixed bottom -->
-      <div class="border-t-2 border-gray-400 bg-gray-300">
-        <a href="/admin/logout">
-          <button class="w-full flex items-center px-6 py-5 hover:bg-red-50 group">
-            <i class="fas fa-sign-out-alt text-xl mr-4 text-gray-700 group-hover:text-red-600"></i>
-            <span class="text-lg font-semibold text-gray-900 group-hover:text-red-600">LOG OUT</span>
-          </button>
-        </a>
-      </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
-
-      <%- include('../../views/partials/breadCrumb') %>
-
-      <div class="max-w-6xl mx-auto">
-
-        <!-- Page Title -->
-        <div class="flex items-center mb-6">
-          <a href="/admin/banner" class="mr-4">
-            <i class="fas fa-chevron-left text-2xl text-gray-700 hover:text-gray-900"></i>
-          </a>
-          <h2 class="text-3xl font-bold text-gray-900">Update Banner</h2>
-        </div>
-
-        <!-- CARD -->
-        <div class="bg-white rounded-2xl p-10 shadow-xl">
-
-          <form action="/admin/banner/updateBanner?id=<%= data._id %>" method="POST" enctype="multipart/form-data">
-
-            <input type="hidden" name="existingImage" value="<%= data.bannerImage %>"/>
-
-            <div class="space-y-8">
-
-              <!-- TITLE -->
-              <input 
-                type="text" 
-                name="title" 
-                value="<%= data.title %>"
-                placeholder="Banner Title"
-                class="w-full px-5 py-4 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-                required
-              />
-
-              <!-- IMAGE UPLOAD -->
-              <div class="bg-gray-100 rounded-xl p-8">
-                <div class="upload-area rounded-xl p-10 text-center">
-
-                  <p class="text-gray-600 mb-4 font-medium">Current Image</p>
-
-                  <div id="bannerPreview" class="mb-6">
-                    <img 
-                      src="<%= data.bannerImage %>" 
-                      class="rounded-xl shadow-lg max-h-56 object-cover"
-                    />
-                  </div>
-
-                  <input 
-                    type="file"
-                    id="bannerImage"
-                    name="bannerImage"
-                    accept="image/*"
-                    class="hidden"
-                    onchange="startBannerCrop(event)"
-                  />
-
-                  <button type="button"
-                    onclick="document.getElementById('bannerImage').click()"
-                    class="px-8 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                    Change Image
-                  </button>
-
+    <header class="bg-white shadow-md sticky top-0 z-50 px-4 sm:px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+            <a href="/admin" class="flex items-center space-x-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-900 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-book-open text-white text-xl"></i>
                 </div>
-              </div>
-
-              <!-- STATUS + DATES -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-                <select name="status"
-                  class="px-5 py-4 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="ACTIVE" <%= data.status === 'ACTIVE' ? 'selected' : '' %>>ACTIVE</option>
-                  <option value="INACTIVE" <%= data.status === 'INACTIVE' ? 'selected' : '' %>>INACTIVE</option>
-                </select>
-
-                <input type="date" name="startDate"
-                  value="<%= data.startDate %>"
-                  class="px-5 py-4 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-                />
-
-                <input type="date" name="endDate"
-                  value="<%= data.endDate %>"
-                  class="px-5 py-4 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-
-              </div>
-
-              <!-- BUTTONS -->
-              <div class="flex justify-center gap-4 pt-6">
-
-                <button type="button"
-                  onclick="window.location.href='/admin/banner'"
-                  class="px-16 py-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
-                  CANCEL
-                </button>
-
-                <button type="button"
-                  onclick="confirmDelete('<%= data._id %>')"
-                  class="px-16 py-4 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                  DELETE
-                </button>
-
-                <button type="submit"
-                  class="px-16 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  UPDATE
-                </button>
-
-              </div>
-
-            </div>
-
-          </form>
-
+                <span class="text-xl sm:text-2xl font-black text-gray-800 tracking-tighter uppercase">ReadNest</span>
+            </a>
         </div>
 
-      </div>
+        <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+            <i class="fas fa-user-shield text-indigo-600"></i>
+            <span class="text-xs font-black text-gray-700 uppercase tracking-widest">Admin</span>
+        </div>
+    </header>
 
-    </main>
-  </div>
+    <div class="flex">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-100 -translate-x-full lg:translate-x-0 lg:static lg:h-[calc(100vh-80px)] flex flex-col transition-transform duration-300 shadow-2xl lg:shadow-none">
+            <nav class="flex-1 overflow-y-auto py-6 no-scrollbar space-y-1">
+                <a href="/admin" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-th-large w-8 text-lg"></i> Dashboard</a>
+                <a href="/admin/products" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-box w-8 text-lg"></i> Products</a>
+                <a href="/admin/orders" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-shopping-bag w-8 text-lg"></i> Orders</a>
+                <a href="/admin/users" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-users w-8 text-lg"></i> Customers</a>
+                <a href="/admin/category" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-th w-8 text-lg"></i> Category</a>
+                <a href="/admin/coupon" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-ticket-alt w-8 text-lg"></i> Voucher</a>
+                <a href="/admin/blogs" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-blog w-8 text-lg"></i> Blogs</a>
+                <a href="/admin/banner" class="sidebar-item active flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-image w-8 text-lg"></i> Banner</a>
+                <a href="/admin/logout" class="flex items-center px-8 py-4 text-rose-500 font-bold text-sm mt-10 border-t border-gray-50 pt-8 hover:bg-rose-50 transition-colors"><i class="fas fa-sign-out-alt w-8 text-lg"></i> LOG OUT</a>
+            </nav>
+        </aside>
 
-  <!-- CROP MODAL -->
-  <div id="cropperModal"
-    class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden justify-center items-center z-50">
+        <main class="main-content flex-1 p-4 sm:p-8 lg:p-12 no-scrollbar bg-gray-50 w-full">
+            <div class="max-w-4xl mx-auto">
+                <div class="mb-6"><%- include('../../views/partials/breadCrumb') %></div>
 
-    <div class="bg-white rounded-xl shadow-2xl p-4 w-[95%] max-w-xl animate-fadeIn">
+                <div class="flex items-center gap-4 mb-8">
+                    <a href="/admin/banner" class="w-10 h-10 flex items-center justify-center bg-white rounded-full text-gray-400 shadow-sm hover:text-gray-900 transition"><i class="fas fa-arrow-left"></i></a>
+                    <h1 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">Update Banner</h1>
+                </div>
 
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-lg font-semibold text-gray-800">Crop Banner</h2>
-        <button onclick="closeBannerCrop()" class="text-gray-600 hover:text-gray-900 text-xl">✕</button>
-      </div>
+                <div class="bg-white rounded-[2rem] shadow-xl shadow-indigo-900/5 p-6 sm:p-10 border border-white">
+                    <form id="updateForm" action="/admin/banner/updateBanner?id=<%= data._id %>" method="POST" enctype="multipart/form-data" class="space-y-8">
+                        <input type="hidden" name="existingImage" value="<%= data.bannerImage %>"/>
 
-      <div class="h-[60vh] overflow-hidden flex items-center justify-center bg-gray-100 rounded-lg border">
-        <img id="cropperImage" class="max-w-full max-h-full select-none" />
-      </div>
+                        <div>
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Promotion Title</label>
+                            <input type="text" name="title" value="<%= data.title %>" placeholder="Enter campaign name"
+                                   class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-gray-800" required />
+                        </div>
 
-      <div class="flex justify-end gap-3 mt-5">
-        <button onclick="closeBannerCrop()"
-          class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-200">
-          Cancel
-        </button>
+                        <div>
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Creative Asset</label>
+                            <div class="bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl p-8 sm:p-12 text-center group hover:border-indigo-400 transition-all">
+                                
+                                <div id="bannerPreview" class="mb-6 flex justify-center">
+                                    <div class="relative group">
+                                        <img src="<%= data.bannerImage %>" class="rounded-2xl shadow-xl border-4 border-white max-h-56 object-cover" alt="Current Banner" />
+                                        <div class="absolute inset-0 bg-black/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span class="text-white text-xs font-black uppercase tracking-widest bg-black/40 px-4 py-2 rounded-lg">Live Preview</span>
+                                        </div>
+                                    </div>
+                                </div>
 
-        <button onclick="applyBannerCrop()"
-          class="px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700">
-          Crop & Apply
-        </button>
-      </div>
+                                <input type="file" id="bannerImage" name="bannerImage" accept="image/*" class="hidden" onchange="startBannerCrop(event)" />
 
+                                <button type="button" onclick="document.getElementById('bannerImage').click()"
+                                        class="px-8 py-3 bg-white border-2 border-indigo-50 text-indigo-600 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                                    <i class="fas fa-sync-alt mr-2"></i> Swap Image
+                                </button>
+                                <p class="text-[9px] text-gray-400 mt-4 uppercase font-bold tracking-widest">Recommended: 16:9 Aspect Ratio</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Status</label>
+                                <select name="status" class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 focus:bg-white transition-all">
+                                    <option value="ACTIVE" <%= data.status === 'ACTIVE' ? 'selected' : '' %>>ACTIVE</option>
+                                    <option value="INACTIVE" <%= data.status === 'INACTIVE' ? 'selected' : '' %>>INACTIVE</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Starts On</label>
+                                <input type="date" name="startDate" value="<%= data.startDate %>"
+                                       class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all" />
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Expires On</label>
+                                <input type="date" name="endDate" value="<%= data.endDate %>"
+                                       class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all" required />
+                            </div>
+                        </div>
+
+                        <div class="pt-8 border-t border-gray-50 flex flex-col sm:flex-row justify-center gap-4">
+                            <button type="submit" class="flex-1 bg-indigo-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition active:scale-95">
+                                Commit Changes
+                            </button>
+                            <button type="button" onclick="confirmDelete('<%= data._id %>')"
+                                    class="px-10 py-5 bg-rose-50 text-rose-500 border-2 border-rose-100 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-500 hover:text-white transition active:scale-95">
+                                Delete
+                            </button>
+                            <a href="/admin/banner" class="flex-1">
+                                <button type="button" class="w-full py-5 bg-gray-100 text-gray-500 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-200 transition">
+                                    Discard
+                                </button>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
     </div>
 
-  </div>
+    <div id="cropperModal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex flex-col justify-center items-center z-[100] p-4">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h2 class="font-black text-gray-800 uppercase text-xs tracking-widest">Adjust Banner Frame</h2>
+                <button onclick="closeBannerCrop()" class="w-10 h-10 flex items-center justify-center bg-gray-200 rounded-full text-xs text-gray-500">✕</button>
+            </div>
+            <div class="p-4 bg-gray-900 flex justify-center items-center max-h-[60vh] overflow-hidden">
+                <img id="cropperImage" class="max-w-full block" />
+            </div>
+            <div class="p-6 bg-gray-50 flex flex-col sm:flex-row gap-3">
+                <button onclick="closeBannerCrop()" class="flex-1 py-4 rounded-xl font-bold text-gray-500 bg-white">Cancel</button>
+                <button onclick="applyBannerCrop()" class="flex-1 py-4 rounded-xl font-black text-xs uppercase tracking-widest bg-indigo-600 text-white shadow-lg shadow-indigo-100">Apply Crop</button>
+            </div>
+        </div>
+    </div>
 
-  <!-- CROP LOGIC -->
-  <script>
-    let cropper = null;
+    <script>
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
 
-    const bannerInput = document.getElementById("bannerImage");
-    const modal = document.getElementById("cropperModal");
-    const cropImg = document.getElementById("cropperImage");
-    const preview = document.getElementById("bannerPreview");
+        let cropper = null;
+        const bannerInput = document.getElementById("bannerImage");
+        const modal = document.getElementById("cropperModal");
+        const cropImg = document.getElementById("cropperImage");
+        const preview = document.getElementById("bannerPreview");
 
-    window.startBannerCrop = function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+        window.startBannerCrop = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            cropImg.src = URL.createObjectURL(file);
+            modal.classList.replace("hidden", "flex");
+            cropImg.onload = () => {
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(cropImg, { aspectRatio: 16/9, viewMode: 2, autoCropArea: 1 });
+            };
+        };
 
-      cropImg.src = URL.createObjectURL(file);
-      modal.classList.remove("hidden");
+        window.closeBannerCrop = function() {
+            modal.classList.replace("flex", "hidden");
+            if (cropper) cropper.destroy();
+            cropper = null;
+            bannerInput.value = "";
+        };
 
-      cropImg.onload = () => {
-        if (cropper) cropper.destroy();
+        window.applyBannerCrop = function() {
+            if (!cropper) return;
+            const canvas = cropper.getCroppedCanvas({ width: 1920, height: 1080 });
+            canvas.toBlob((blob) => {
+                const file = new File([blob], "banner_update.jpg", { type: "image/jpeg" });
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                bannerInput.files = dt.files;
+                preview.innerHTML = `<img src="${URL.createObjectURL(blob)}" class="rounded-2xl shadow-xl border-4 border-white max-h-56 object-cover"/>`;
+                modal.classList.replace("flex", "hidden");
+                cropper.destroy();
+                cropper = null;
+            }, "image/jpeg", 0.9);
+        };
 
-        cropper = new Cropper(cropImg, {
-          aspectRatio: NaN,
-          viewMode: 1,
-          autoCropArea: 1,
-          movable: true,
-          zoomable: true,
-          cropBoxResizable: true,
-          cropBoxMovable: true
-        });
-      };
-    };
-
-    window.closeBannerCrop = function() {
-      modal.classList.add("hidden");
-      if (cropper) cropper.destroy();
-      cropper = null;
-      bannerInput.value = "";
-    };
-
-    window.applyBannerCrop = function() {
-      if (!cropper) return;
-
-      const canvas = cropper.getCroppedCanvas();
-
-      canvas.toBlob((blob) => {
-        const file = new File([blob], "banner_cropped.jpg", { type: "image/jpeg" });
-
-        const dt = new DataTransfer();
-        dt.items.add(file);
-        bannerInput.files = dt.files;
-
-        preview.innerHTML = `
-          <img src="${URL.createObjectURL(blob)}"
-            class="rounded-xl shadow-lg max-h-56 object-cover"/>
-        `;
-
-        modal.classList.add("hidden");
-        cropper.destroy();
-        cropper = null;
-      }, "image/jpeg", 0.9);
-    };
-
-    function confirmDelete(bannerId) {
-        Swal.fire({
-          title: "Are you sure?",
-          text: "This action cannot be undone!",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#d33", 
-          cancelButtonColor: "#6b7280", 
-          confirmButtonText: "Yes, delete it!",
-          cancelButtonText: "Cancel",
-          reverseButtons: true,
-          focusCancel: true,
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = `/admin/deleteBanner?id=${bannerId}`;
-          }
-        });
-      }
-  </script>
-
+        function confirmDelete(id) {
+            Swal.fire({
+                title: "Delete this Banner?",
+                text: "This campaign will be permanently removed from the storefront.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#f43f5e",
+                cancelButtonColor: "#94a3b8",
+                confirmButtonText: "Yes, Delete",
+                background: "#ffffff",
+                customClass: {
+                    title: 'font-black uppercase tracking-tight text-gray-800',
+                    confirmButton: 'rounded-xl font-bold uppercase tracking-widest text-xs py-4 px-8',
+                    cancelButton: 'rounded-xl font-bold uppercase tracking-widest text-xs py-4 px-8'
+                }
+            }).then((res) => { if (res.isConfirmed) window.location.href = `/admin/deleteBanner?id=${id}`; });
+        }
+    </script>
 </body>
 </html>

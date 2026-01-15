@@ -1,89 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Checkout - ReadNest</title>
+    <title>Payment Failed - ReadNest</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
-
-      * {
-        font-family: "Poppins", sans-serif;
-      }
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+        * { font-family: "Poppins", sans-serif; }
     </style>
-  </head>
+</head>
 
-  <body class="bg-gray-100">
-    <!-- Header -->
+<body class="bg-gray-100 min-h-screen flex flex-col">
     <%- include("../../views/partials/user/header") %>
 
-    <main class="max-w-4xl mx-auto px-6 py-16">
-      <!-- Failed Card -->
-      <div class="bg-white shadow-xl rounded-2xl p-10 text-center space-y-6">
-        <!-- Failed Icon -->
-        <div class="flex justify-center">
-          <div class="bg-red-100 p-5 rounded-full">
-            <i class="fa-solid fa-circle-xmark text-red-600 text-5xl"></i>
-          </div>
+    <main class="flex-grow flex items-center justify-center px-4 py-8 md:py-16">
+        <div class="bg-white shadow-xl rounded-2xl p-6 md:p-10 w-full max-w-2xl text-center space-y-6">
+            
+            <div class="flex justify-center">
+                <div class="bg-red-100 p-4 md:p-5 rounded-full">
+                    <i class="fa-solid fa-circle-xmark text-red-600 text-4xl md:text-5xl"></i>
+                </div>
+            </div>
+
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Payment Failed</h1>
+
+            <p class="text-gray-600 text-base md:text-lg leading-relaxed">
+                Unfortunately, your payment could not be completed.
+                <br class="hidden md:block" />
+                <span class="font-semibold text-red-600 block mt-2">
+                    <%= reason || "Please check your details and try again." %>
+                </span>
+            </p>
+
+            <div class="bg-gray-50 border border-red-100 rounded-xl p-5 md:p-6 text-left">
+                <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-blue-500 text-sm"></i>
+                    What You Can Do
+                </h2>
+
+                <ul class="list-disc list-inside text-gray-700 text-sm md:text-base space-y-2">
+                    <li>Retry using a different payment method</li>
+                    <li>Check your bank balance or daily limits</li>
+                    <li>Ensure your internet connection is stable</li>
+                </ul>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 mt-8">
+                <a
+                    href="/checkout/payment?retry=true"
+                    class="w-full sm:w-auto bg-blue-600 text-white px-8 py-3.5 rounded-xl text-base md:text-lg font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100 active:scale-95 text-center"
+                >
+                    Retry Payment
+                </a>
+
+                <a
+                    href="/cart"
+                    class="w-full sm:w-auto bg-gray-200 text-gray-700 px-8 py-3.5 rounded-xl text-base md:text-lg font-bold hover:bg-gray-300 transition active:scale-95 text-center"
+                >
+                    Back to Cart
+                </a>
+            </div>
         </div>
-
-        <!-- Heading -->
-        <h1 class="text-3xl font-bold text-gray-800">Payment Failed</h1>
-
-        <!-- Message -->
-        <p class="text-gray-600 text-lg leading-relaxed">
-          Unfortunately, your payment could not be completed.
-          <br />
-          <span class="font-semibold text-red-600">
-            <%= reason || "Please try again." %>
-          </span>
-        </p>
-
-        <!-- Info Box -->
-        <div
-          class="bg-gray-50 border border-red-200 rounded-xl p-6 text-left space-y-3"
-        >
-          <h2 class="text-xl font-bold text-gray-800 mb-3">What You Can Do</h2>
-
-          <ul class="list-disc list-inside text-gray-700 space-y-2">
-            <li>Retry the payment using the same or a different method</li>
-            <li>Check your internet connection or bank balance</li>
-            <li>Contact your bank if the issue persists</li>
-          </ul>
-        </div>
-
-        <!-- Buttons -->
-        <div class="flex justify-center gap-4 mt-8">
-          <a
-            href="/checkout/payment?retry=true"
-            class="bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition"
-          >
-            Retry Payment
-          </a>
-
-          <a
-            href="/cart"
-            class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-gray-300 transition"
-          >
-            Back to Cart
-          </a>
-        </div>
-      </div>
     </main>
+
     <%- include("../../views/partials/user/footer") %>
+
     <script>
-      window.history.pushState(null, "", window.location.href);
-      window.onpopstate = function () {
-        window.location.href = "/cart";
-      };
+        // Prevent users from going back to a broken state
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = function () {
+            window.location.href = "/cart";
+        };
     </script>
-  </body>
+</body>
 </html>

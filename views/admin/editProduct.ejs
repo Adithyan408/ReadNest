@@ -1,1106 +1,337 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Edit Product - ReadNest</title>
+    <title>Edit Product | ReadNest Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <!-- Cropper CSS -->
-    <link
-      href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css"
-      rel="stylesheet"
-    />
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
-
-      * {
-        font-family: "Poppins", sans-serif;
-      }
-
-      .sidebar-item {
-        transition: all 0.3s ease;
-      }
-
-      .sidebar-item:hover {
-        background-color: #d1d5db;
-      }
-
-      .sidebar-item.active {
-        background-color: #d1d5db;
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: scale(0.95);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
-
-      .animate-fadeIn {
-        animation: fadeIn 0.2s ease-out;
-      }
-          html, body {
-    height: 100%;
-    overflow: hidden;  /* disable full page scroll */
-  }
-
-  .main-scroll-area {
-    height: calc(100vh - 80px); /* header height is ~80px */
-    overflow-y: auto;           /* enable vertical scroll only on the right */
-    overflow-x: hidden;
-  }
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+        * { font-family: "Poppins", sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .sidebar-item.active { background: #f3f4f6; border-right: 4px solid #4f46e5; color: #4f46e5; }
+        #sidebar { transition: transform 0.3s ease-in-out; z-index: 60; }
+        @media (min-width: 1024px) { .main-content { height: calc(100vh - 80px); overflow-y: auto; } }
+        .error-input { border-color: #f43f5e !important; background-color: #fff1f2 !important; }
     </style>
-  </head>
-  <body class="bg-gray-100">
-    <!-- Header -->
-    <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
-      <div class="flex items-center justify-between px-6 py-4">
-        <!-- Logo -->
-        <a href="/admin">
-          <div class="flex items-center space-x-3">
-            <div
-              class="w-14 h-14 bg-orange-900 rounded-full flex items-center justify-center"
-            >
-              <i class="fas fa-book-open text-white text-2xl"></i>
-            </div>
-            <span class="text-2xl font-bold text-gray-800">ReadNest</span>
-          </div>
-        </a>
+</head>
 
-        <!-- Right Side -->
-        <div class="flex items-center space-x-6">
-          <a href="/admin/blogs">
-            <button
-              class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
-            >
-            <i class="fas fa-blog text-gray-700"></i>
-            <span class="text-base font-semibold text-gray-900">Blog</span>
-            </button>
-      </a>
+<body class="bg-gray-100 min-h-screen lg:overflow-hidden">
 
-
-          <div class="flex items-center space-x-3">
-            <i class="fas fa-user-circle text-4xl text-gray-600"></i>
-            <span class="text-base font-semibold text-gray-600">ADMIN</span>
-          </div>
+    <header class="bg-white shadow-md sticky top-0 z-50 px-4 sm:px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 focus:outline-none"><i class="fas fa-bars text-2xl"></i></button>
+            <a href="/admin" class="flex items-center space-x-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-900 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-book-open text-white text-xl"></i>
+                </div>
+                <span class="text-xl sm:text-2xl font-black text-gray-800 tracking-tighter uppercase">ReadNest</span>
+            </a>
         </div>
-      </div>
+        <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+            <i class="fas fa-user-shield text-indigo-600"></i>
+            <span class="text-xs font-black text-gray-700 uppercase tracking-widest">Editor Mode</span>
+        </div>
     </header>
 
-    <!-- Main Content -->
     <div class="flex">
-      <!-- Sidebar -->
-      <aside class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col">
-        <nav class="flex-1 overflow-y-auto py-4">
-          <a
-            href="/admin"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th-large text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">DashBoard</span>
-          </a>
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-100 -translate-x-full lg:translate-x-0 lg:static lg:h-[calc(100vh-80px)] flex flex-col transition-transform duration-300 shadow-2xl lg:shadow-none">
+            <nav class="flex-1 overflow-y-auto py-6 no-scrollbar space-y-1">
+                <a href="/admin" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-th-large w-8 text-lg"></i> Dashboard</a>
+                <a href="/admin/products" class="sidebar-item active flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-box w-8 text-lg"></i> Products</a>
+                <a href="/admin/orders" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-shopping-bag w-8 text-lg"></i> Orders</a>
+                <a href="/admin/users" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-users w-8 text-lg"></i> Customers</a>
+                <a href="/admin/category" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-th w-8 text-lg"></i> Category</a>
+                <a href="/admin/coupon" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-ticket-alt w-8 text-lg"></i> Voucher</a>
+                <a href="/admin/blogs" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-blog w-8 text-lg"></i> Blogs</a>
+                <a href="/admin/banner" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-image w-8 text-lg"></i> Banner</a>
+                <a href="/admin/logout" class="flex items-center px-8 py-4 text-rose-500 font-bold text-sm mt-10 border-t border-gray-50 pt-8 hover:bg-rose-50 transition-colors"><i class="fas fa-sign-out-alt w-8 text-lg"></i> LOG OUT</a>
+            </nav>
+        </aside>
 
-          <a
-            href="/admin/products"
-            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-box text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Products</span>
-          </a>
+        <main class="main-content flex-1 p-4 sm:p-8 lg:p-12 no-scrollbar bg-gray-50 w-full">
+            <div class="max-w-6xl mx-auto">
+                <div class="mb-6"><%- include('../../views/partials/breadCrumb') %></div>
 
-          <a
-            href="/admin/orders"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-shopping-bag text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Orders List</span>
-          </a>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
+                    <div class="flex items-center gap-4">
+                        <a href="/admin/products" class="w-10 h-10 flex items-center justify-center bg-white rounded-full text-gray-400 shadow-sm hover:text-gray-900 transition"><i class="fas fa-arrow-left"></i></a>
+                        <h1 class="text-xl sm:text-2xl font-black text-gray-900 tracking-tight uppercase truncate max-w-[250px] sm:max-w-lg"><%= data.productName %></h1>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border <%= data.isListed ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100' %>">
+                            <%= data.isListed ? 'Listed' : 'Unlisted' %>
+                        </span>
+                    </div>
+                </div>
 
-          <a
-            href="/admin/users"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-users text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Customers</span>
-          </a>
+                <form id="productForm" action="/admin/updateProduct?id=<%= data._id %>" method="POST" enctype="multipart/form-data" class="space-y-8 pb-10">
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        
+                        <div class="space-y-8">
+                            <div class="bg-white rounded-[2rem] shadow-xl shadow-indigo-900/5 p-6 sm:p-10 border border-white">
+                                <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Gallery Management</h2>
+                                
+                                <div id="productImagePreviewContainer" class="grid grid-cols-2 gap-4 mb-8">
+                                    <% if (data.productImage && data.productImage.length > 0) { %>
+                                        <% data.productImage.forEach(image => { %>
+                                            <div class="relative group aspect-[3/4]" data-existing-image-url="<%= image %>">
+                                                <img src="<%= image %>" class="w-full h-full object-cover rounded-2xl border border-gray-100 shadow-sm" />
+                                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex flex-col items-center justify-center gap-2">
+                                                    <button type="button" onclick="startReplaceImage('<%= image %>')" class="bg-white text-indigo-600 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all">Replace</button>
+                                                    <button type="button" onclick="removeExistingImage('<%= image %>')" class="bg-rose-600 text-white px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all">Remove</button>
+                                                </div>
+                                            </div>
+                                        <% }) %>
+                                    <% } %>
+                                    <div id="newImagesPreviewContainer" class="contents"></div>
+                                </div>
 
-          
+                                <div id="oldImagesContainer">
+                                    <% if (data.productImage) { data.productImage.forEach(image => { %>
+                                        <input type="hidden" name="oldImages[]" value="<%= image %>" />
+                                    <% })} %>
+                                </div>
 
-          <a
-            href="/admin/category"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Category</span>
-          </a>
+                                <button type="button" onclick="document.getElementById('productImages').click()" class="w-full py-4 border-2 border-dashed border-indigo-100 rounded-2xl text-indigo-400 hover:border-indigo-500 hover:text-indigo-600 transition-all flex items-center justify-center gap-3 font-bold text-sm bg-indigo-50/30">
+                                    <i class="fas fa-plus-circle"></i> Add New Image
+                                </button>
+                                <input type="file" id="productImages" name="productImage" accept="image/*" multiple class="hidden" />
+                                <p id="err-images" class="text-rose-500 text-[10px] font-bold mt-2 text-center hidden uppercase">Min 1 image required</p>
+                            </div>
 
-          <a
-            href="/admin/coupon"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-ticket-alt text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Voucher</span>
-          </a>
+                            <div class="bg-white rounded-[2rem] shadow-xl shadow-indigo-900/5 p-6 sm:p-10 border border-white space-y-6">
+                                <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Metadata</h2>
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div class="col-span-2">
+                                        <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">ISBN</label>
+                                        <input type="text" name="isbnNumber" value="<%= data.isbnNumber %>" class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 font-bold text-gray-800" />
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Genre</label>
+                                        <select name="category" id="category" class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all">
+                                            <option value="<%= data.category %>"><%= data.category %></option>
+                                            <% categories.forEach(cat => { %><option value="<%= cat.categoryName %>"><%= cat.categoryName %></option><% }) %>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Language</label>
+                                        <select name="language" id="language" class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500">
+                                            <option value="<%= data.language %>"><%= data.language %></option>
+                                            <option value="English">English</option><option value="Malayalam">Malayalam</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-          <a
-            href="/admin/banner"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-image text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Banner</span>
-          </a>
-        </nav>
+                        <div class="space-y-8">
+                            <div class="bg-white rounded-[2rem] shadow-xl shadow-indigo-900/5 p-6 sm:p-10 border border-white space-y-6">
+                                <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Product Info</h2>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Title *</label>
+                                    <input type="text" name="productName" id="productName" value="<%= data.productName %>" class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 font-bold text-gray-800" />
+                                    <p id="err-productName" class="text-rose-500 text-[9px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Synopsis</label>
+                                    <textarea name="description" id="description" rows="4" class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 font-bold text-gray-800 resize-none"><%= data.description %></textarea>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Author *</label>
+                                        <input type="text" name="author" id="author" value="<%= data.author %>" class="w-full px-4 py-3.5 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-500 font-bold text-gray-800" />
+                                        <p id="err-author" class="text-rose-500 text-[9px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Publisher *</label>
+                                        <input type="text" name="publisher" id="publisher" value="<%= data.publisher %>" class="w-full px-4 py-3.5 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-500 font-bold text-gray-800" />
+                                    </div>
+                                </div>
+                            </div>
 
-        <!-- Logout Button at Bottom -->
-        <div class="border-t-2 border-gray-400 bg-gray-300">
-          <a href="/admin/logout">
-            <button
-              class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
-            >
-              <i
-                class="fas fa-sign-out-alt text-xl mr-4 text-gray-700 group-hover:text-red-600"
-              ></i>
-              <span
-                class="text-lg font-semibold text-gray-900 group-hover:text-red-600"
-                >LOG OUT</span
-              >
-            </button>
-          </a>
-        </div>
-      </aside>
+                            <div class="bg-white rounded-[2rem] shadow-xl shadow-indigo-900/5 p-6 sm:p-10 border border-white space-y-6">
+                                <div class="grid grid-cols-2 gap-8">
+                                    <div class="space-y-4">
+                                        <h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2"><i class="fas fa-coins"></i> Commerce</h3>
+                                        <div>
+                                            <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Price (INR) *</label>
+                                            <input type="number" name="regularPrice" id="regularPrice" step="0.01" value="<%= data.regularPrice %>" class="w-full px-5 py-4 bg-emerald-50/50 rounded-2xl border-2 border-transparent focus:border-emerald-500 font-black text-emerald-700 text-xl" />
+                                            <p id="err-regularPrice" class="text-rose-500 text-[9px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                                        </div>
+                                        <div>
+                                            <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Inventory *</label>
+                                            <input type="number" name="stock" id="stock" value="<%= data.stock %>" class="w-full px-5 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 font-black text-gray-800 text-xl" />
+                                            <p id="err-stock" class="text-rose-500 text-[9px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                                        </div>
+                                    </div>
 
-      <!-- Main Content - Edit Product -->
-      <main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
-        <%- include('../../views/partials/breadCrumb') %>
-        <div class="bg-white rounded-2xl shadow-lg">
-          <!-- Header Section -->
-          <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <h2 class="text-3xl font-bold text-gray-900">
-                Products >> <%= data.productName %>
-              </h2>
-              <a href="/admin/products">
-                <button
-                  class="px-6 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition shadow-md"
-                >
-                  <i class="fas fa-arrow-left mr-2"></i>Back to Products
-                </button>
-              </a>
+                                    <div class="bg-indigo-50/30 p-6 rounded-3xl border border-indigo-50 space-y-4">
+                                        <h3 class="text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2"><i class="fas fa-bolt"></i> Discount</h3>
+                                        <div>
+                                            <select name="isOffer" id="isOffer" class="w-full px-3 py-2.5 bg-white border-2 border-gray-100 rounded-xl font-bold text-xs text-gray-700">
+                                                <option value="false" <%= (!data.offer || !data.offer.isOffer) ? 'selected' : '' %>>No Promo</option>
+                                                <option value="true" <%= (data.offer && data.offer.isOffer) ? 'selected' : '' %>>Enabled</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1">Value (%)</label>
+                                            <input type="number" name="discountValue" id="discountValue" value="<%= data.offer ? data.offer.discountValue : '' %>" class="w-full px-3 py-2 bg-white border-2 border-gray-100 rounded-xl font-bold text-indigo-600" />
+                                            <p id="err-discountValue" class="text-rose-500 text-[9px] font-bold hidden"></p>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <input type="date" name="startDate" id="startDate" value="<%= data.offer && data.offer.startDate ? (typeof data.offer.startDate === 'string' ? data.offer.startDate : data.offer.startDate.toISOString().split('T')[0]) : '' %>" class="w-full px-1 py-2 bg-white border border-gray-100 rounded-lg text-[10px] font-bold" />
+                                            <input type="date" name="endDate" id="endDate" value="<%= data.offer && data.offer.endDate ? (typeof data.offer.endDate === 'string' ? data.offer.endDate : data.offer.endDate.toISOString().split('T')[0]) : '' %>" class="w-full px-1 py-2 bg-white border border-gray-100 rounded-lg text-[10px] font-bold" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-10 flex flex-col sm:flex-row gap-4">
+                        <button type="submit" class="flex-1 bg-indigo-600 text-white py-6 rounded-3xl font-black text-sm uppercase tracking-[0.3em] shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition active:scale-95">Update Product Listing</button>
+                        <button type="button" onclick="confirmDelete('<%= data._id %>')" class="px-12 py-6 bg-rose-50 text-rose-500 border-2 border-rose-100 rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-rose-500 hover:text-white transition active:scale-95">Delete</button>
+                        <button type="button" onclick="window.history.back()" class="px-12 py-6 bg-gray-100 text-gray-500 rounded-3xl font-bold text-sm uppercase tracking-widest hover:bg-gray-200 transition">Cancel</button>
+                    </div>
+                </form>
             </div>
-          </div>
-
-          <!-- Edit Form -->
-          <div class="p-8">
-            <form
-              action="/admin/updateProduct?id=<%= data._id %>"
-              method="POST"
-              enctype="multipart/form-data"
-            >
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Left Column - Product Image -->
-                <div class="space-y-6">
-                  <div class="space-y-6">
-                    <div class="bg-gray-100 rounded-2xl p-8">
-                      <div class="text-center">
-                        <% if (data.productImage && data.productImage.length >
-                        0) { %>
-                        <div
-                          id="productImagePreviewContainer"
-                          class="flex flex-wrap justify-center gap-4 mb-6"
-                        >
-                          <% data.productImage.forEach(image => { %>
-                          <div
-                            class="relative group w-40 h-56"
-                            data-existing-image-url="<%= image %>"
-                          >
-                            <img
-                              src="<%= image %>"
-                              class="w-full h-full object-cover rounded-lg shadow"
-                            />
-
-                            <!-- Replace Button -->
-                            <button
-                              type="button"
-                              onclick="startReplaceImage('<%= image %>')"
-                              class="absolute top-2 right-2 bg-blue-600 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition"
-                            >
-                              Replace
-                            </button>
-
-                            <!-- Remove Button -->
-                            <button
-                              type="button"
-                              onclick="removeExistingImage('<%= image %>')"
-                              class="absolute bottom-2 right-2 bg-red-600 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                          <% }) %>
-                        </div>
-                        <% } else { %>
-                        <div
-                          id="productImagePreviewContainer"
-                          class="w-64 h-80 bg-gray-300 rounded-lg flex items-center justify-center mx-auto mb-4"
-                        >
-                          <i class="fas fa-image text-gray-400 text-6xl"></i>
-                        </div>
-                        <% } %>
-
-                        <!-- Hidden Old Images -->
-                        <div id="oldImagesContainer">
-                          <% if (data.productImage && data.productImage.length >
-                          0) { %> <% data.productImage.forEach(image => { %>
-                          <input
-                            type="hidden"
-                            name="oldImages[]"
-                            value="<%= image %>"
-                          />
-                          <% }) %> <% } %>
-                        </div>
-
-                        <!-- Upload Button -->
-                        <label
-                          for="productImages"
-                          class="inline-block px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition cursor-pointer shadow-md"
-                        >
-                          <i class="fas fa-upload mr-2"></i>Upload / Change
-                          Images
-                        </label>
-                        <input
-                          type="file"
-                          id="productImages"
-                          name="productImage"
-                          accept="image/*"
-                          multiple
-                          class="hidden"
-                        />
-
-                        <!-- New Images Previews (Croppped) -->
-                        <div
-                          id="newImagesPreviewContainer"
-                          class="flex flex-wrap justify-center gap-4 mt-6"
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Listing Status -->
-                  <div class="bg-gray-50 rounded-xl p-6">
-                    <h3 class="text-xl font-bold text-gray-900 mb-4">
-                      Product Status
-                    </h3>
-                    <div class="flex items-center justify-between">
-                      <span class="text-lg font-semibold text-gray-700"
-                        >Listing Status:</span
-                      >
-                      <% if (data.isListed) { %>
-                      <span
-                        class="px-6 py-2 bg-green-200 text-green-800 rounded-full font-semibold"
-                      >
-                        <i class="fas fa-check-circle mr-2"></i>LISTED
-                      </span>
-                      <% } else { %>
-                      <span
-                        class="px-6 py-2 bg-red-200 text-red-800 rounded-full font-semibold"
-                      >
-                        <i class="fas fa-times-circle mr-2"></i>UNLISTED
-                      </span>
-                      <% } %>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Right Column - Product Details -->
-                <div class="space-y-6">
-                  <!-- Product Name -->
-                  <div>
-                    <label class="block text-lg font-bold text-gray-900 mb-2">
-                      Product Name <span class="text-red-600">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="productName"
-                      value="<%= data.productName %>"
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                      placeholder="Enter product name"
-                    />
-                    <p id="error-productName" class="text-red-600 text-sm mt-1 hidden"></p>
-                  </div>
-                  <!-- Category -->
-                  <div>
-                    <label class="block text-lg font-bold text-gray-900 mb-2">
-                      Category <span class="text-red-600">*</span>
-                    </label>
-                    <select
-                      name="category"
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base cursor-pointer"
-                    >
-                      <option value=""><%= data.category %></option>
-                      <% categories.forEach(category => { %>
-                      <option value="<%= category.categoryName %>">
-                        <%= category.categoryName %>
-                      </option>
-                      <% }) %>
-                    </select>
-                    <p id="error-category" class="text-red-600 text-sm mt-1 hidden"></p>
-                  </div>
-
-                  <!-- Language -->
-                  <div>
-                    <label class="block text-lg font-bold text-gray-900 mb-2">
-                      Language <span class="text-red-600">*</span>
-                    </label>
-                    <select
-                      name="language"
-                      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base appearance-none cursor-pointer shadow-sm"
-                    >
-                      <option value=""><%= data.language%></option>
-                      <option value="English">English</option>
-                      <option value="Malayalam">Malayalam</option>
-                    </select>
-                    <p id="error-language" class="text-red-600 text-sm mt-1 hidden"></p>
-                  </div>
-
-                  <!-- Description -->
-                  <div>
-                    <label class="block text-lg font-bold text-gray-900 mb-2">
-                      Description
-                    </label>
-                    <textarea
-                      name="description"
-                      rows="3"
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base resize-none"
-                      placeholder="Enter product description"
-                    ><%= data.description || '' %></textarea>
-                  </div>
-
-                  <!-- Author -->
-                  <div>
-                    <label class="block text-lg font-bold text-gray-900 mb-2">
-                      Author <span class="text-red-600">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="author"
-                      value="<%= data.author || '' %>"
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                      placeholder="Enter author name"
-                    />
-                    <p id="error-author" class="text-red-600 text-sm mt-1 hidden"></p>
-                  </div>
-
-                  <!-- Author Description -->
-                  <div>
-                    <label class="block text-lg font-bold text-gray-900 mb-2">
-                      Author Description
-                    </label>
-                    <textarea
-                      name="authorDescription"
-                      rows="3"
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base resize-none"
-                      placeholder="Enter author description"
-                    ><%= data.authorDescription || '' %></textarea>
-                  </div>
-
-                  <!-- Publisher -->
-                  <div>
-                    <label class="block text-lg font-bold text-gray-900 mb-2">
-                      Publisher <span class="text-red-600">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="publisher"
-                      value="<%= data.publisher || '' %>"
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                      placeholder="Enter publisher name"
-                    />
-                    <p id="error-publisher" class="text-red-600 text-sm mt-1 hidden"></p>
-                  </div>
-
-                  <!-- Year of Publishing -->
-                  <div>
-                    <label class="block text-lg font-bold text-gray-900 mb-2">
-                      Year of Publishing <span class="text-red-600">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="yearOfPublishing"
-                      value="<%= data.yearOfPublishing || '' %>"
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                      placeholder="Enter year of publishing"
-                    />
-                    <p id="error-yearOfPublishing" class="text-red-600 text-sm mt-1 hidden"></p>
-                  </div>
-
-                  <!-- Pages -->
-                  <div>
-                    <label class="block text-lg font-bold text-gray-900 mb-2">
-                      Pages <span class="text-red-600">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="pages"
-                      value="<%= data.pages || '' %>"
-                      min="1"
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                      placeholder="Enter number of pages"
-                    />
-                  </div>
-
-                  <!-- Regular Price -->
-                  <div>
-                    <label class="block text-lg font-bold text-gray-900 mb-2">
-                      Regular Price <span class="text-red-600">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="regularPrice"
-                      value="<%= data.regularPrice || '' %>"
-                      min="1"
-                      step="1"
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                      placeholder="Enter regular price"
-                    />
-                    <p id="error-regularPrice" class="text-red-600 text-sm mt-1 hidden"></p>
-                  </div>
-                  <!-- Offer Section -->
-<div class="mt-6 p-4 border border-gray-300 rounded-lg bg-gray-50">
-
-  <h3 class="text-lg font-bold text-gray-900 mb-4">Offer Details</h3>
-
-  <!-- Enable Offer -->
-  <div class="mb-4">
-    <label class="block text-lg font-bold text-gray-900 mb-2">Enable Offer</label>
-    <select
-      name="isOffer"
-      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-base"
-    >
-      <option 
-        value="false" 
-        <%= (!data.offer || data.offer.isOffer === false) ? "selected" : "" %>
-      >
-        No
-      </option>
-
-      <option 
-        value="true" 
-        <%= (data.offer && data.offer.isOffer === true) ? "selected" : "" %>
-      >
-        Yes
-      </option>
-    </select>
-  </div>
-
-  <!-- Discount Percentage -->
-  <div class="mb-4">
-    <label class="block text-lg font-bold text-gray-900 mb-2">Discount (%)</label>
-    <input
-      type="number"
-      name="discountValue"
-      placeholder="Enter discount percentage"
-      step="1"
-      value="<%= data.offer ? data.offer.discountValue : '' %>"
-      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-    />
-    <p id="error-discountValue" class="text-red-600 text-sm mt-1 hidden"></p>
-  </div>
-
-  <!-- Offer Start Date -->
-  <div class="mb-4">
-    <label class="block text-lg font-bold text-gray-900 mb-2">Offer Start Date</label>
-    <input
-      type="date"
-      name="startDate"
-      value="<%= data.offer && data.offer.startDate 
-                ? (typeof data.offer.startDate === 'string' 
-                    ? data.offer.startDate 
-                    : data.offer.startDate.toISOString().split('T')[0]) 
-                : '' %>"
-      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-base"
-    />
-    <p id="error-startDate" class="text-red-600 text-sm mt-1 hidden"></p>
-  </div>
-
-  <!-- Offer End Date -->
-  <div class="mb-4">
-    <label class="block text-lg font-bold text-gray-900 mb-2">Offer End Date</label>
-    <input
-      type="date"
-      name="endDate"
-      value="<%= data.offer && data.offer.endDate 
-                ? (typeof data.offer.endDate === 'string' 
-                    ? data.offer.endDate 
-                    : data.offer.endDate.toISOString().split('T')[0]) 
-                : '' %>"
-      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-base"
-    />
-    <p id="error-endDate" class="text-red-600 text-sm mt-1 hidden"></p>
-  </div>
-
-</div>
-
-
-                  <!-- Quantity (Stock) -->
-                  <div>
-                    <label class="block text-lg font-bold text-gray-900 mb-2">
-                      Quantity <span class="text-red-600">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="stock"
-                      value="<%= data.stock || data.stock || '' %>"
-                      min="0"
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                      placeholder="Enter stock quantity"
-                    />
-                    <p id="error-stock" class="text-red-600 text-sm mt-1 hidden"></p>
-                  </div>
-
-                  <!-- ISBN Number -->
-                  <div>
-                    <label class="block text-lg font-bold text-gray-900 mb-2">
-                      ISBN Number
-                    </label>
-                    <input
-                      type="text"
-                      name="isbnNumber"
-                      value="<%= data.isbnNumber || '' %>"
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                      placeholder="Enter ISBN number"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Action Buttons -->
-              <div
-                class="flex justify-center items-center gap-6 mt-8 pt-8 border-t border-gray-200"
-              >
-                <!-- UPDATE Button -->
-                <button
-                  type="submit"
-                  class="px-12 py-4 bg-green-600 text-white font-bold text-lg rounded-lg hover:bg-green-700 transition shadow-lg"
-                >
-                  <i class="fas fa-save mr-2"></i>UPDATE
-                </button>
-
-                <!-- DELETE BUTTON (with SweetAlert2) -->
-                <button
-                  type="button"
-                  onclick="confirmDelete('<%= data._id %>')"
-                  class="px-12 py-4 bg-red-600 text-white font-bold text-lg rounded-lg hover:bg-red-700 transition shadow-lg"
-                >
-                  <i class="fas fa-trash-alt mr-2"></i>DELETE
-                </button>
-
-                <!-- CANCEL Button -->
-                <a href="/admin/products">
-                  <button
-                    type="button"
-                    class="px-12 py-4 bg-slate-500 text-white font-bold text-lg rounded-lg hover:bg-slate-600 transition shadow-lg"
-                  >
-                    <i class="fas fa-times mr-2"></i>CANCEL
-                  </button>
-                </a>
-              </div>
-            </form>
-          </div>
-        </div>
-      </main>
+        </main>
     </div>
 
-    <!-- Cropper Modal (local to this page) -->
-    <div
-      id="cropperModal"
-      class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center hidden z-50"
-    >
-      <div
-        class="bg-white rounded-xl shadow-2xl p-4 w-[95%] max-w-xl animate-fadeIn"
-      >
-        <div class="flex items-center justify-between mb-3">
-          <h2 id="cropperTitle" class="text-lg font-semibold text-gray-800">
-            Crop Product Image (3:4)
-          </h2>
-          <button
-            type="button"
-            onclick="handleCropCancel()"
-            class="text-gray-600 hover:text-gray-900 text-xl"
-          >
-            ✕
-          </button>
+    <div id="cropperModal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden flex flex-col justify-center items-center z-[100] p-4">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-2xl">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h2 class="font-black text-gray-800 uppercase text-xs tracking-widest">Adjust Frame</h2>
+                <button type="button" onclick="handleCropCancel()" class="w-10 h-10 flex items-center justify-center bg-gray-200 rounded-full text-xs">✕</button>
+            </div>
+            <div class="p-4 bg-gray-900 flex justify-center items-center max-h-[60vh] overflow-hidden"><img id="cropperImage" class="max-w-full block" /></div>
+            <div class="p-6 bg-gray-50 flex flex-col sm:flex-row gap-3">
+                <button type="button" onclick="handleCropCancel()" class="flex-1 py-4 rounded-2xl font-bold text-gray-500 bg-white">Cancel</button>
+                <button type="button" id="cropperConfirmBtn" class="flex-1 py-4 rounded-2xl font-black text-xs uppercase bg-indigo-600 text-white shadow-lg">Save Crop</button>
+            </div>
         </div>
-
-        <div
-          class="h-[60vh] overflow-hidden flex items-center justify-center bg-gray-100 rounded-lg border"
-        >
-          <img
-            id="cropperImage"
-            class="max-w-full max-h-full select-none"
-            alt="Crop preview"
-          />
-        </div>
-
-        <div class="flex justify-end gap-3 mt-5">
-          <button
-            type="button"
-            onclick="handleCropCancel()"
-            class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-200 transition"
-          >
-            Cancel
-          </button>
-          <button
-            id="cropperConfirmBtn"
-            type="button"
-            class="px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-          >
-            Crop & Save
-          </button>
-        </div>
-      </div>
     </div>
 
-    <!-- Cropper JS -->
     <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
-
     <script>
-      const backendErrors = <%- JSON.stringify(errors || {}) %>;
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
 
-      Object.keys(backendErrors).forEach((field) => {
-      showError(field, backendErrors[field]);
-      });
+        const fileInput = document.getElementById("productImages");
+        const newImagesPreviewContainer = document.getElementById("newImagesPreviewContainer");
+        const oldImagesContainer = document.getElementById("oldImagesContainer");
+        const cropperModal = document.getElementById("cropperModal");
+        const cropperImage = document.getElementById("cropperImage");
+        const cropperConfirmBtn = document.getElementById("cropperConfirmBtn");
 
+        let cropper = null;
+        let pendingFiles = [];
+        let currentFileIndex = 0;
+        let newCroppedFiles = [];
+        let cropMode = null;
+        let replaceTargetOldUrl = null;
 
-      function clearAllErrors() {
-  document.querySelectorAll("[id^='error-']").forEach((p) => {
-    p.textContent = "";
-    p.classList.add("hidden");
-  });
-}
-
-      /* ---------------------------
-         DELETE PRODUCT
-      --------------------------- */
-      function confirmDelete(productId) {
-        Swal.fire({
-          title: "Are you sure?",
-          text: "This action cannot be undone!",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#d33",
-          cancelButtonColor: "#6b7280",
-          confirmButtonText: "Yes, delete it!",
-          cancelButtonText: "Cancel",
-          reverseButtons: true,
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = `/admin/deleteProduct?id=${productId}`;
-          }
-        });
-      }
-
-      // -----------------------------
-      // Cropper Logic (Page Local)
-      // -----------------------------
-      const fileInput = document.getElementById("productImages");
-      const existingPreviewContainer = document.getElementById(
-        "productImagePreviewContainer"
-      );
-      const newImagesPreviewContainer = document.getElementById(
-        "newImagesPreviewContainer"
-      );
-      const oldImagesContainer = document.getElementById("oldImagesContainer");
-
-      const cropperModal = document.getElementById("cropperModal");
-      const cropperImage = document.getElementById("cropperImage");
-      const cropperConfirmBtn = document.getElementById("cropperConfirmBtn");
-
-      let cropper = null;
-      let pendingFiles = [];
-      let currentFileIndex = 0;
-      let newCroppedFiles = []; // { file, url }
-      let cropMode = null; // "add" | "replace"
-      let replaceTargetOldUrl = null;
-
-      // Handle new images selection
-      fileInput.addEventListener("change", function (e) {
-        const files = Array.from(e.target.files || []);
-        if (!files.length) return;
-
-        pendingFiles = files;
-        currentFileIndex = 0;
-        cropMode = "add";
-        fileInput.value = "";
-
-        openCropperForCurrentFile();
-      });
-
-      function openCropperForCurrentFile() {
-        if (
-          !pendingFiles.length ||
-          currentFileIndex < 0 ||
-          currentFileIndex >= pendingFiles.length
-        ) {
-          return;
-        }
-
-        const file = pendingFiles[currentFileIndex];
-        const imageUrl = URL.createObjectURL(file);
-
-        cropperImage.src = imageUrl;
-        cropperModal.classList.remove("hidden");
-
-        cropperImage.onload = function () {
-          if (cropper) cropper.destroy();
-
-          cropper = new Cropper(cropperImage, {
-            aspectRatio: 3 / 4,
-            viewMode: 1,
-            autoCropArea: 1,
-          });
-        };
-      }
-
-      function closeCropperModal() {
-        cropperModal.classList.add("hidden");
-        if (cropper) {
-          cropper.destroy();
-          cropper = null;
-        }
-      }
-
-      function handleCropCancel() {
-        closeCropperModal();
-        currentFileIndex++;
-        if (currentFileIndex < pendingFiles.length) {
-          openCropperForCurrentFile();
-        } else {
-          pendingFiles = [];
-          currentFileIndex = 0;
-          cropMode = null;
-          replaceTargetOldUrl = null;
-        }
-      }
-
-      cropperConfirmBtn.addEventListener("click", function () {
-        if (!cropper) return;
-
-        cropperConfirmBtn.disabled = true;
-        cropperConfirmBtn.innerText = "Processing...";
-
-        const canvas = cropper.getCroppedCanvas({
-          width: 600,
-          height: 800,
+        fileInput.addEventListener("change", (e) => {
+            const files = Array.from(e.target.files || []);
+            if (!files.length) return;
+            pendingFiles = files;
+            currentFileIndex = 0; cropMode = "add";
+            fileInput.value = ""; openCropper();
         });
 
-        if (!canvas) {
-          cropperConfirmBtn.disabled = false;
-          cropperConfirmBtn.innerText = "Crop & Save";
-          alert("Something went wrong while cropping.");
-          return;
+        function openCropper() {
+            if (currentFileIndex >= pendingFiles.length) return;
+            cropperImage.src = URL.createObjectURL(pendingFiles[currentFileIndex]);
+            cropperModal.classList.replace("hidden", "flex");
+            cropperImage.onload = () => {
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(cropperImage, { aspectRatio: 3/4, viewMode: 2 });
+            };
         }
 
-        canvas.toBlob(
-          function (blob) {
-            cropperConfirmBtn.disabled = false;
-            cropperConfirmBtn.innerText = "Crop & Save";
-
-            if (!blob) {
-              alert("Failed to generate cropped image.");
-              return;
-            }
-
-            const fileName = `product_edit_${Date.now()}_${
-              currentFileIndex + 1
-            }.jpg`;
-            const croppedFile = new File([blob], fileName, {
-              type: "image/jpeg",
-            });
-            const url = URL.createObjectURL(croppedFile);
-
-            const item = { file: croppedFile, url };
-            newCroppedFiles.push(item);
-
-            if (cropMode === "replace" && replaceTargetOldUrl) {
-              replaceImage(replaceTargetOldUrl, item);
-            } else {
-              addNewImagePreview(item);
-            }
-
-            closeCropperModal();
+        function handleCropCancel() {
+            cropperModal.classList.replace("flex", "hidden");
             currentFileIndex++;
-            if (currentFileIndex < pendingFiles.length) {
-              openCropperForCurrentFile();
-            } else {
-              pendingFiles = [];
-              currentFileIndex = 0;
-              cropMode = null;
-              replaceTargetOldUrl = null;
-            }
-          },
-          "image/jpeg",
-          0.9
-        );
-      });
-
-      // Add preview for new cropped images
-      function addNewImagePreview(item) {
-        const box = document.createElement("div");
-        box.className = "relative group w-40 h-56";
-        box.dataset.newImageUrl = item.url;
-
-        box.innerHTML = `
-          <img src="${item.url}" class="w-full h-full object-cover rounded-lg shadow">
-          <button type="button"
-            class="absolute bottom-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100">
-            Delete
-          </button>
-        `;
-
-        const deleteBtn = box.querySelector("button");
-        deleteBtn.addEventListener("click", function () {
-          removeNewImage(item.url);
-        });
-
-        newImagesPreviewContainer.appendChild(box);
-      }
-
-      // Remove existing image (old URL)
-      function removeExistingImage(url) {
-        // Remove preview card(s)
-        document
-          .querySelectorAll(
-            `[data-existing-image-url="${CSS.escape ? CSS.escape(url) : url}"]`
-          )
-          .forEach((card) => card.remove());
-
-        // Remove hidden input(s)
-        if (oldImagesContainer) {
-          oldImagesContainer
-            .querySelectorAll(`input[value="${url}"]`)
-            .forEach((input) => input.remove());
+            if (currentFileIndex < pendingFiles.length) openCropper();
+            else { pendingFiles = []; cropMode = null; }
         }
-      }
 
-      // Start replace flow for an existing image
-      function startReplaceImage(oldUrl) {
-        const picker = document.createElement("input");
-        picker.type = "file";
-        picker.accept = "image/*";
-
-        picker.onchange = (event) => {
-          const file = event.target.files[0];
-          if (!file) return;
-
-          pendingFiles = [file];
-          currentFileIndex = 0;
-          cropMode = "replace";
-          replaceTargetOldUrl = oldUrl;
-
-          openCropperForCurrentFile();
+        cropperConfirmBtn.onclick = () => {
+            const canvas = cropper.getCroppedCanvas({ width: 600, height: 800 });
+            canvas.toBlob(blob => {
+                const file = new File([blob], `edit_${Date.now()}.jpg`, { type: "image/jpeg" });
+                const url = URL.createObjectURL(file);
+                const item = { file, url };
+                newCroppedFiles.push(item);
+                if (cropMode === "replace") removeExistingImage(replaceTargetOldUrl);
+                
+                const box = document.createElement("div");
+                box.className = "relative aspect-[3/4]";
+                box.dataset.newImageUrl = url;
+                box.innerHTML = `<img src="${url}" class="w-full h-full object-cover rounded-2xl border border-white shadow-sm">
+                                 <button type="button" onclick="removeNewImage('${url}')" class="absolute -top-2 -right-2 bg-rose-500 text-white w-7 h-7 rounded-full text-xs flex items-center justify-center">✕</button>`;
+                newImagesPreviewContainer.appendChild(box);
+                handleCropCancel();
+            }, "image/jpeg", 0.9);
         };
 
-        picker.click();
-      }
+        function removeExistingImage(url) {
+            document.querySelectorAll(`[data-existing-image-url="${CSS.escape(url)}"]`).forEach(c => c.remove());
+            if (oldImagesContainer) document.querySelectorAll(`input[value="${url}"]`).forEach(i => i.remove());
+        }
 
-      // Replace: remove old existing image, add new cropped image
-      function replaceImage(oldUrl, newItem) {
-        removeExistingImage(oldUrl);
-        addNewImagePreview(newItem);
-      }
+        function startReplaceImage(oldUrl) {
+            const picker = document.createElement("input");
+            picker.type = "file"; picker.accept = "image/*";
+            picker.onchange = (e) => {
+                pendingFiles = [e.target.files[0]];
+                currentFileIndex = 0; cropMode = "replace";
+                replaceTargetOldUrl = oldUrl; openCropper();
+            };
+            picker.click();
+        }
 
-      // Remove a new cropped image
-      function removeNewImage(url) {
-        newCroppedFiles = newCroppedFiles.filter((item) => item.url !== url);
+        function removeNewImage(url) {
+            newCroppedFiles = newCroppedFiles.filter(i => i.url !== url);
+            document.querySelectorAll(`[data-new-image-url="${CSS.escape(url)}"]`).forEach(c => c.remove());
+        }
 
-        document
-          .querySelectorAll(
-            `[data-new-image-url="${CSS.escape ? CSS.escape(url) : url}"]`
-          )
-          .forEach((card) => card.remove());
-      }
+        function confirmDelete(id) {
+            Swal.fire({ title: "Delete Product?", text: "This action is irreversible!", icon: "warning", showCancelButton: true, confirmButtonColor: "#f43f5e", confirmButtonText: "Yes, Delete" })
+            .then(res => { if (res.isConfirmed) window.location.href = `/admin/deleteProduct?id=${id}`; });
+        }
 
+        // JS Validations
+        const showError = (field, msg) => {
+            const el = document.getElementById(`err-${field}`);
+            if(el) { el.textContent = msg; el.classList.remove('hidden'); document.getElementById(field)?.classList.add('error-input'); }
+        };
 
+        document.getElementById("productForm").onsubmit = function(e) {
+            document.querySelectorAll("[id^='err-']").forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll(".error-input").forEach(i => i.classList.remove('error-input'));
+            let hasError = false;
+            const f = e.target;
 
-// Expose cancel handler for modal close button
-      window.handleCropCancel = handleCropCancel;
-      window.startReplaceImage = startReplaceImage;
-      window.removeExistingImage = removeExistingImage;
+            if(!f.productName.value.trim()) { showError('productName', "Title is required"); hasError = true; }
+            if(!f.author.value.trim()) { showError('author', "Author is required"); hasError = true; }
+            if(Number(f.regularPrice.value) <= 0) { showError('regularPrice', "Price must be positive"); hasError = true; }
+            if(Number(f.stock.value) < 0) { showError('stock', "Stock cannot be negative"); hasError = true; }
 
- function showError(field, message) {
-    const el = document.getElementById(`error-${field}`);
-    if (!el) return;
-    el.textContent = message;
-    el.classList.remove("hidden");
-  }
+            const totalImgs = document.querySelectorAll("input[name='oldImages[]']").length + newCroppedFiles.length;
+            if(totalImgs === 0) { Swal.fire("Images Required", "Add at least one cover image.", "warning"); hasError = true; }
 
-  function hideError(field) {
-    const el = document.getElementById(`error-${field}`);
-    if (!el) return;
-    el.textContent = "";
-    el.classList.add("hidden");
-  }
-
-  function clearAllErrors() {
-    document
-      .querySelectorAll("[id^='error-']")
-      .forEach((p) => p.classList.add("hidden"));
-  }
-
-
-  const form = document.querySelector("form");
-
-form.addEventListener("submit", function (e) {
-  clearAllErrors();
-  let hasError = false;
-
-  const {
-    productName,
-    author,
-    publisher,
-    yearOfPublishing,
-    regularPrice,
-    stock,
-    discountValue,
-    startDate,
-    endDate,
-    isOffer,
-  } = form;
-
-  /* ---------- BASIC ---------- */
-
-  if (!productName.value.trim()) {
-    showError("productName", "Product name is required");
-    hasError = true;
-  }
-
-
-  if (!author.value.trim()) {
-    showError("author", "Author is required");
-    hasError = true;
-  }
-
-  if (!publisher.value.trim()) {
-    showError("publisher", "Publisher is required");
-    hasError = true;
-  }
-
-  /* ---------- YEAR ---------- */
-
-  if (yearOfPublishing.value) {
-    const year = Number(yearOfPublishing.value);
-    const currentYear = new Date().getFullYear();
-
-    if (!/^\d{4}$/.test(yearOfPublishing.value)) {
-      showError("yearOfPublishing", "Enter a valid 4-digit year");
-      hasError = true;
-    } else if (year > currentYear) {
-      showError("yearOfPublishing", "Publishing year cannot be in the future");
-      hasError = true;
-    }
-  }
-
-  /* ---------- NUMBERS ---------- */
-
-  
-
-  if (!regularPrice.value || Number(regularPrice.value) <= 0) {
-    showError("regularPrice", "Enter a valid price");
-    hasError = true;
-  }
-
-  if (stock.value === "" || Number(stock.value) < 0) {
-    showError("stock", "Stock cannot be negative");
-    hasError = true;
-  }
-
-  /* ---------- OFFER ---------- */
-
-  if (isOffer.value === "true") {
-   const discountRaw = discountValue.value.trim();
-const discount = parseInt(discountRaw, 10);
-
-if (
-  !discountRaw ||
-  Number.isNaN(discount) ||
-  discount < 1 ||
-  discount > 95
-) {
-  showError("discountValue", "Discount must be between 1 and 95%");
-  hasError = true;
-}
-
-    if (!startDate.value) {
-      showError("startDate", "Offer start date is required");
-      hasError = true;
-    }
-
-    if (!endDate.value) {
-      showError("endDate", "Offer end date is required");
-      hasError = true;
-    }
-
-    if (startDate.value) {
-      const start = new Date(startDate.value);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      start.setHours(0, 0, 0, 0);
-
-      if (start < today) {
-        showError("startDate", "Start date cannot be in the past");
-        hasError = true;
-      }
-    }
-
-    if (startDate.value && endDate.value) {
-      const start = new Date(startDate.value);
-      const end = new Date(endDate.value);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(0, 0, 0, 0);
-
-      if (end <= start) {
-        showError("endDate", "End date must be after start date");
-        hasError = true;
-      }
-    }
-  }
-
-  /* ---------- IMAGES ---------- */
-
-  const oldImagesCount =
-    document.querySelectorAll("input[name='oldImages[]']").length || 0;
-  const totalImages = oldImagesCount + newCroppedFiles.length;
-
-  if (totalImages === 0) {
-    showError("images", "At least one product image is required");
-    hasError = true;
-  }
-
-  /* ---------- STOP SUBMIT ---------- */
-
-  if (hasError) {
-    e.preventDefault();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    return;
-  }
-
-  /* ---------- ATTACH FILES ---------- */
-
-  const dataTransfer = new DataTransfer();
-  newCroppedFiles.forEach((item) => dataTransfer.items.add(item.file));
-  fileInput.files = dataTransfer.files;
-});
-
+            if(hasError) { e.preventDefault(); window.scrollTo({top:0, behavior:'smooth'}); }
+            else {
+                const dt = new DataTransfer();
+                newCroppedFiles.forEach(i => dt.items.add(i.file));
+                fileInput.files = dt.files;
+            }
+        };
     </script>
-  </body>
+</body>
 </html>

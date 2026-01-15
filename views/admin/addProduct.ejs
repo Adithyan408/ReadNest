@@ -1,1022 +1,368 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add Product - ReadNest</title>
+    <title>Add Product | ReadNest Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <!-- Cropper CSS -->
-    <link
-      href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css"
-      rel="stylesheet"
-    />
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
-
-      * {
-        font-family: "Poppins", sans-serif;
-      }
-
-      .sidebar-item {
-        transition: all 0.3s ease;
-      }
-
-      .sidebar-item:hover {
-        background-color: #d1d5db;
-      }
-
-      .sidebar-item.active {
-        background-color: #d1d5db;
-      }
-
-      .upload-area {
-        border: 2px dashed #cbd5e0;
-        transition: all 0.3s ease;
-      }
-
-      .upload-area:hover {
-        border-color: #667eea;
-        background-color: #f7fafc;
-      }
-
-      .quantity-btn {
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid #d1d5db;
-        background-color: white;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .quantity-btn:hover {
-        background-color: #f3f4f6;
-      }
-
-      .quantity-input {
-        width: 80px;
-        text-align: center;
-        border: 1px solid #d1d5db;
-        border-left: none;
-        border-right: none;
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: scale(0.95);
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+        * { font-family: "Poppins", sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .sidebar-item.active { background: #f3f4f6; border-right: 4px solid #4f46e5; color: #4f46e5; }
+        #sidebar { transition: transform 0.3s ease-in-out; z-index: 60; }
+        
+        @media (min-width: 1024px) {
+            .main-content { height: calc(100vh - 80px); overflow-y: auto; }
         }
-        to {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
 
-      .animate-fadeIn {
-        animation: fadeIn 0.2s ease-out;
-      }
-                html, body {
-    height: 100%;
-    overflow: hidden;  /* disable full page scroll */
-  }
-
-  .main-scroll-area {
-    height: calc(100vh - 80px); /* header height is ~80px */
-    overflow-y: auto;           /* enable vertical scroll only on the right */
-    overflow-x: hidden;
-  }
+        .upload-area { border: 2px dashed #e5e7eb; transition: all 0.3s ease; }
+        .upload-area:hover { border-color: #4f46e5; background: #f5f3ff; }
+        
+        .error-input { border-color: #f43f5e !important; background-color: #fff1f2 !important; }
     </style>
-  </head>
-  <body class="bg-gray-100">
-    <!-- Header -->
-    <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
-      <div class="flex items-center justify-between px-6 py-4">
-        <!-- Logo -->
-        <a href="/admin">
-          <div class="flex items-center space-x-3">
-            <div
-              class="w-14 h-14 bg-orange-900 rounded-full flex items-center justify-center"
-            >
-              <i class="fas fa-book-open text-white text-2xl"></i>
-            </div>
-            <span class="text-2xl font-bold text-gray-800">ReadNest</span>
-          </div>
-        </a>
+</head>
 
-        <!-- Right Side -->
-        <div class="flex items-center space-x-6">
-          <a href="/admin/blogs">
-            <button
-              class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
-            >
-            <i class="fas fa-blog text-gray-700"></i>
-            <span class="text-base font-semibold text-gray-900">Blog</span>
+<body class="bg-gray-100 min-h-screen lg:overflow-hidden">
+
+    <header class="bg-white shadow-md sticky top-0 z-50 px-4 sm:px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
             </button>
-          </a>
-
-
-          <div class="flex items-center space-x-3">
-            <i class="fas fa-user-circle text-4xl text-gray-600"></i>
-            <span class="text-base font-semibold text-gray-600">ADMIN</span>
-          </div>
+            <a href="/admin" class="flex items-center space-x-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-900 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-book-open text-white text-xl"></i>
+                </div>
+                <span class="text-xl sm:text-2xl font-black text-gray-800 tracking-tighter uppercase">ReadNest</span>
+            </a>
         </div>
-      </div>
+        <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+            <i class="fas fa-user-shield text-indigo-600"></i>
+            <span class="text-xs font-black text-gray-700 uppercase tracking-widest">Inventory Admin</span>
+        </div>
     </header>
 
-    <!-- Main Content -->
     <div class="flex">
-      <!-- Sidebar -->
-      <aside class="w-80 bg-gray-300 h-[calc(100vh-80px)] border-r border-gray-400 flex flex-col">
-        <nav class="flex-1 overflow-y-auto py-4">
-          <a
-            href="/admin"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th-large text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">DashBoard</span>
-          </a>
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-100 -translate-x-full lg:translate-x-0 lg:static lg:h-[calc(100vh-80px)] flex flex-col transition-transform duration-300 shadow-2xl lg:shadow-none">
+            <nav class="flex-1 overflow-y-auto py-6 no-scrollbar space-y-1">
+                <a href="/admin" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-th-large w-8 text-lg"></i> Dashboard</a>
+                <a href="/admin/products" class="sidebar-item active flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-box w-8 text-lg"></i> Products</a>
+                <a href="/admin/orders" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-shopping-bag w-8 text-lg"></i> Orders</a>
+                <a href="/admin/users" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-users w-8 text-lg"></i> Customers</a>
+                <a href="/admin/category" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-th w-8 text-lg"></i> Category</a>
+                <a href="/admin/coupon" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-ticket-alt w-8 text-lg"></i> Voucher</a>
+                <a href="/admin/blogs" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-blog w-8 text-lg"></i> Blogs</a>
+                <a href="/admin/banner" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-image w-8 text-lg"></i> Banner</a>
+                <a href="/admin/logout" class="flex items-center px-8 py-4 text-rose-500 font-bold text-sm mt-10 border-t border-gray-50 pt-8 hover:bg-rose-50 transition-colors"><i class="fas fa-sign-out-alt w-8 text-lg"></i> LOG OUT</a>
+            </nav>
+        </aside>
 
-          <a
-            href="/admin/products"
-            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-box text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Products</span>
-          </a>
+        <main class="main-content flex-1 p-4 sm:p-8 lg:p-12 no-scrollbar bg-gray-50 w-full">
+            <div class="max-w-5xl mx-auto">
+                <div class="mb-6"><%- include('../../views/partials/breadCrumb') %></div>
 
-          <a
-            href="/admin/orders"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-shopping-bag text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Orders List</span>
-          </a>
-
-          <a
-            href="/admin/users"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-users text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Customers</span>
-          </a>
-
-         
-
-          <a
-            href="/admin/category"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Category</span>
-          </a>
-
-          <a
-            href="/admin/coupon"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-ticket-alt text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Voucher</span>
-          </a>
-
-          <a
-            href="/admin/banner"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-image text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Banner</span>
-          </a>
-        </nav>
-
-        <!-- Logout Button at Bottom -->
-        <div class="border-t-2 border-gray-400 bg-gray-300">
-          <a href="/admin/logout">
-            <button
-              class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
-            >
-              <i
-                class="fas fa-sign-out-alt text-xl mr-4 text-gray-700 group-hover:text-red-600"
-              ></i>
-              <span
-                class="text-lg font-semibold text-gray-900 group-hover:text-red-600"
-                >LOG OUT</span
-              >
-            </button>
-          </a>
-        </div>
-      </aside>
-
-      <!-- Main Content - Add Product Form -->
-      <main class="main-scroll-area flex-1 p-8 bg-gray-200 overflow-y-auto">
-        <%- include('../../views/partials/breadCrumb') %>
-        <div class="max-w-6xl">
-          <!-- Page Title -->
-          <div class="flex items-center mb-6">
-            <a href="/admin/products" class="mr-4">
-              <i
-                class="fas fa-chevron-left text-2xl text-gray-700 hover:text-gray-900"
-              ></i>
-            </a>
-            <h2 class="text-3xl font-bold text-gray-900">Add Products</h2>
-          </div>
-
-          <!-- Form -->
-          <form
-            action="/admin/addProducts"
-            method="POST"
-            enctype="multipart/form-data"
-          >
-            <div class="space-y-6">
-              <!-- Row 1: Product Name + Description -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Product Name -->
-                <div>
-                  <input
-                    type="text"
-                    name="productName"
-                    placeholder="Product Name *"
-                    value="<%= oldInput?.productName || '' %>"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <% if (errors?.productName) { %>
-                  <p class="text-red-600 text-sm mt-1" data-error-for="productName">
-                    <%= errors.productName %>
-                  </p>
-                  <% } %>
-                  <p id="error-productName" class="text-red-600 text-sm mt-1 hidden"></p>
+                <div class="flex items-center gap-4 mb-8">
+                    <a href="/admin/products" class="w-10 h-10 flex items-center justify-center bg-white rounded-full text-gray-400 shadow-sm hover:text-gray-900 transition"><i class="fas fa-arrow-left"></i></a>
+                    <h1 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">New Product</h1>
                 </div>
 
-                <!-- Description -->
-                <div>
-                  <textarea
-                    name="description"
-                    placeholder="Product Description *"
-                    rows="3"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 resize-none"
-                  ><%= oldInput?.description || '' %></textarea
-                  >
+                <form id="productForm" action="/admin/addProducts" method="POST" enctype="multipart/form-data" class="space-y-8 pb-10">
+                    
+                    <div class="bg-white rounded-[2rem] shadow-xl shadow-indigo-900/5 p-6 sm:p-10 border border-white space-y-6">
+                        <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Book Details</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="md:col-span-2">
+                                <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Title *</label>
+                                <input type="text" name="productName" id="productName" placeholder="Full book title" value="<%= oldInput?.productName || '' %>"
+                                       class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-gray-800" />
+                                <p id="err-productName" class="text-rose-500 text-[10px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                            </div>
 
-                  <% if (errors?.description) { %>
-                  <p class="text-red-600 text-sm mt-1" data-error-for="description">
-                    <%= errors.description %>
-                  </p>
-                  <% } %>
-                  <p id="error-description" class="text-red-600 text-sm mt-1 hidden"></p>
-                </div>
+                            <div class="md:col-span-2">
+                                <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Synopsis *</label>
+                                <textarea name="description" id="description" rows="4" placeholder="Brief summary of the book..."
+                                          class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-gray-800 resize-none"><%= oldInput?.description || '' %></textarea>
+                                <p id="err-description" class="text-rose-500 text-[10px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                            </div>
 
-                
-              </div>
+                            <div>
+                                <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Genre / Category *</label>
+                                <select name="category" id="category" class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all cursor-pointer">
+                                    <option value="">Select Category</option>
+                                    <% categories.forEach(cat => { %>
+                                    <option value="<%= cat.categoryName %>" <%= oldInput?.category === cat.categoryName ? 'selected' : '' %>><%= cat.categoryName %></option>
+                                    <% }) %>
+                                </select>
+                                <p id="err-category" class="text-rose-500 text-[10px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                            </div>
 
-              <!-- Row 2: Category + Language -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <!-- Category -->
-                <div>
-                  <select
-                    name="category"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-                  >
-                    <option value="">Select Category *</option>
-                    <% categories.forEach(cat => { %>
-                    <option
-                      value="<%= cat.categoryName %>"
-                      <%= oldInput?.category === cat.categoryName ? 'selected'
-                      : '' %>
-                    >
-                      <%= cat.categoryName %>
-                    </option>
-                    <% }) %>
-                  </select>
+                            <div>
+                                <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Language *</label>
+                                <select name="language" id="language" class="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all cursor-pointer">
+                                    <option value="">Choose Language</option>
+                                    <option value="English">English</option>
+                                    <option value="Malayalam">Malayalam</option>
+                                </select>
+                                <p id="err-language" class="text-rose-500 text-[10px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                            </div>
+                        </div>
+                    </div>
 
-                  <% if (errors?.category) { %>
-                  <p class="text-red-600 text-sm mt-1" data-error-for="category">
-                    <%= errors.category %>
-                  </p>
-                  <% } %>
-                  <p id="error-category" class="text-red-600 text-sm mt-1 hidden"></p>
-                </div>
+                    <div class="bg-white rounded-[2rem] shadow-xl shadow-indigo-900/5 p-6 sm:p-10 border border-white space-y-6">
+                        <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Metadata</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Author Name *</label>
+                                <input type="text" name="author" id="author" placeholder="Primary author" class="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 font-bold text-gray-800" />
+                                <p id="err-author" class="text-rose-500 text-[10px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">ISBN Identifier</label>
+                                <input type="text" name="isbnNumber" id="isbnNumber" placeholder="ISBN-10 or ISBN-13" class="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 font-bold text-gray-800" />
+                                <p id="err-isbn" class="text-rose-500 text-[10px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 md:col-span-2">
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Publish Year *</label>
+                                    <input type="text" name="yearOfPublishing" id="yearOfPublishing" placeholder="YYYY" class="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 font-bold text-gray-800" />
+                                    <p id="err-year" class="text-rose-500 text-[10px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Total Pages</label>
+                                    <input type="number" name="pages" id="pages" placeholder="Total count" class="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 font-bold text-gray-800" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- Language -->
-                <div>
-                  <select
-                    name="language"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-                  >
-                    <option value="">Language *</option>
+                    <div class="bg-white rounded-[2rem] shadow-xl shadow-indigo-900/5 p-6 sm:p-10 border border-white">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-6">
+                                <h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2"><i class="fas fa-indian-rupee-sign"></i> Commerce</h3>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Regular Price *</label>
+                                    <input type="number" name="regularPrice" id="regularPrice" step="0.01" placeholder="0.00" 
+                                           class="w-full px-6 py-4 bg-emerald-50/50 rounded-2xl border-2 border-transparent focus:border-emerald-500 font-black text-emerald-700 text-xl" />
+                                    <p id="err-price" class="text-rose-500 text-[10px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Initial Stock *</label>
+                                    <input type="number" name="stock" id="stock" placeholder="0" 
+                                           class="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 font-black text-gray-800 text-xl" />
+                                    <p id="err-stock" class="text-rose-500 text-[10px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                                </div>
+                            </div>
 
-                    <option
-                      value="English"
-                      <%= oldInput?.language === 'English' ? 'selected' : '' %>
-                    >
-                      English
-                    </option>
-                    <option
-                      value="Malayalam"
-                      <%= oldInput?.language === 'Malayalam' ? 'selected' : ''
-                      %>
-                    >
-                      Malayalam
-                    </option>
-                  </select>
+                            <div class="space-y-4 bg-indigo-50/30 p-6 rounded-3xl border border-indigo-50">
+                                <h3 class="text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2"><i class="fas fa-bolt"></i> Campaign</h3>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Active Offer?</label>
+                                    <select name="isOffer" id="isOffer" class="w-full px-4 py-3 bg-white border-2 border-gray-100 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500">
+                                        <option value="false">No Active Offer</option>
+                                        <option value="true">Enable Discount</option>
+                                    </select>
+                                </div>
+                                <div id="offerInputs" class="space-y-4 hidden">
+                                    <div>
+                                        <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Discount (%) *</label>
+                                        <input type="number" name="discountValue" id="discountValue" placeholder="1 - 95" class="w-full px-4 py-3 bg-white border-2 border-gray-100 rounded-xl font-bold text-indigo-600" />
+                                        <p id="err-discount" class="text-rose-500 text-[10px] font-bold mt-1 ml-2 hidden uppercase"></p>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Starts</label>
+                                            <input type="date" name="startDate" id="startDate" class="w-full px-2 py-3 bg-white border-2 border-gray-100 rounded-xl text-xs font-bold" />
+                                        </div>
+                                        <div>
+                                            <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-1 block">Ends</label>
+                                            <input type="date" name="endDate" id="endDate" class="w-full px-2 py-3 bg-white border-2 border-gray-100 rounded-xl text-xs font-bold" />
+                                        </div>
+                                    </div>
+                                    <p id="err-dates" class="text-rose-500 text-[10px] font-bold hidden uppercase"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                  <% if (errors?.language) { %>
-                  <p class="text-red-600 text-sm mt-1" data-error-for="language">
-                    <%= errors.language %>
-                  </p>
-                  <% } %>
-                  <p id="error-language" class="text-red-600 text-sm mt-1 hidden"></p>
-                </div>
-              </div>
+                    <div class="bg-white rounded-[2rem] shadow-xl shadow-indigo-900/5 p-6 sm:p-10 border border-white space-y-6">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Visual Assets</h2>
+                            <span class="text-[10px] font-bold text-indigo-400 uppercase bg-indigo-50 px-3 py-1 rounded-full">Min 1 Required | 3:4 Aspect</span>
+                        </div>
 
-              <!-- Row 3: Author + Author Description -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <input
-                    type="text"
-                    name="author"
-                    placeholder="Author Name"
-                    value="<%= oldInput?.author || '' %>"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <% if (errors?.author) { %>
-                  <p class="text-red-600 text-sm mt-1" data-error-for="author"><%= errors.author %></p>
-                  <% } %>
-                  <p id="error-author" class="text-red-600 text-sm mt-1 hidden"></p>
-                </div>
+                        <div class="upload-area rounded-[2rem] p-10 text-center cursor-pointer" onclick="document.getElementById('productImageInput').click()">
+                            <i class="fas fa-cloud-upload-alt text-5xl text-indigo-200 mb-4"></i>
+                            <p class="text-gray-500 font-bold">Upload book covers</p>
+                            <input type="file" id="productImageInput" name="productImage" accept="image/*" class="hidden" multiple />
+                        </div>
+                        
+                        <div id="imagePreview" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+                        <p id="err-images" class="text-rose-500 text-[10px] font-black uppercase text-center hidden"></p>
+                    </div>
 
-                <div>
-                  <textarea
-                    name="authorDescription"
-                    placeholder="Author Description"
-                    rows="3"
-                    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 resize-none"
-                  ><%= oldInput?.authorDescription || '' %></textarea>
-                </div>
-              </div>
-
-              <!-- Row 4: Publisher, Year, Pages -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-  <!-- Publisher -->
-  <div>
-    <input
-      type="text"
-      name="publisher"
-      placeholder="Publisher"
-      value="<%= oldInput?.publisher || '' %>"
-      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-    />
-  </div>
-
-  <!-- Year Of Publishing -->
-  <div>
-    <input 
-      type="text" 
-      name="yearOfPublishing" 
-      placeholder="Year Of Publishing" 
-      value="<%= oldInput?.yearOfPublishing || '' %>" 
-      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500" 
-    />
-
-    <% if (errors?.yearOfPublishing) { %>
-      <p class="text-red-600 text-sm mt-1" data-error-for="yearOfPublishing">
-        <%= errors.yearOfPublishing %>
-      </p>
-    <% } %>
-    <p id="error-yearOfPublishing" class="text-red-600 text-sm mt-1 hidden"></p>
-  </div>
-
-  <!-- Pages -->
-  <div>
-    <input
-      type="number"
-      name="pages"
-      placeholder="Number of Pages"
-      value="<%= oldInput?.pages || '' %>"
-      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-    />
-  </div>
-
-</div>
-
-
-              <!-- Row 5: Translator -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <input
-                  type="text"
-                  name="translator"
-                  placeholder="Translator"
-                  value="<%= oldInput?.translator || '' %>"
-                  class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-                />
-
-                <textarea
-                  name="translatorDescription"
-                  placeholder="Translator Description"
-                  rows="3"
-                  class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 resize-none"
-                ><%= oldInput?.translatorDescription || '' %></textarea>
-              </div>
-
-              <!-- Row 6: Translated Language + ISBN -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <select
-                  name="translatedLanguage"
-                  class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300"
-                >
-                  <option value="">Translated Language</option>
-                  <option
-                    value="english"
-                    <%= oldInput?.translatedLanguage === 'english'
-                    ? 'selected' : '' %>
-                  >
-                    English
-                  </option>
-                  <option
-                    value="malayalam"
-                    <%= oldInput?.translatedLanguage === 'malayalam'
-                    ? 'selected' : '' %>
-                  >
-                    Malayalam
-                  </option>
-                </select>
-
-                <input
-                  type="text"
-                  name="isbnNumber"
-                  placeholder="ISBN Number"
-                  value="<%= oldInput?.isbnNumber || '' %>"
-                  class="w-full px-4 py-4 pr-12 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <!-- Row 7: Price + Quantity -->
-             
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-
-  <!-- Regular Price -->
-  <div>
-    <label class="block text-lg font-bold text-gray-900 mb-2">
-      Regular Price <span class="text-red-600">*</span>
-    </label>
-    <input
-      type="number"
-      name="regularPrice"
-      placeholder="Enter regular price"
-      step="0.01"
-      min="0"
-      value="<%= oldInput?.regularPrice || '' %>"
-      class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg 
-             focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-    />
-
-    <% if (errors?.regularPrice) { %>
-      <p class="text-red-600 text-sm mt-1" data-error-for="regularPrice"><%= errors.regularPrice %></p>
-    <% } %>
-    <p id="error-regularPrice" class="text-red-600 text-sm mt-1 hidden"></p>
-  </div>
-
-  <!-- Stock Quantity -->
-  <div>
-    <label class="block text-lg font-bold text-gray-900 mb-2">
-      Quantity <span class="text-red-600">*</span>
-    </label>
-    <input
-      type="number"
-      name="stock"
-      placeholder="Enter stock quantity"
-      min="0"
-      value="<%= oldInput?.stock || '' %>"
-      class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg 
-             focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-    />
-
-    <% if (errors?.stock) { %>
-      <p class="text-red-600 text-sm mt-1" data-error-for="stock"><%= errors.stock %></p>
-    <% } %>
-    <p id="error-stock" class="text-red-600 text-sm mt-1 hidden"></p>
-  </div>
-
-</div>
-
-              <!-- Offer Section -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-
-  <!-- Enable Offer -->
-  <div>
-    <label class="text-gray-700 font-medium">Enable Offer</label>
-    <select
-      name="isOffer"
-      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-    >
-      <option value="false" <%= oldInput?.isOffer === "false" ? "selected" : "" %>>No</option>
-      <option value="true" <%= oldInput?.isOffer === "true" ? "selected" : "" %>>Yes</option>
-    </select>
-  </div>
-
-  <!-- Discount Type -->
-  <div class="mb-4">
-  <label class="block text-lg font-bold text-gray-900 mb-2">
-    Discount (%)
-  </label>
-  <input
-    type="number"
-    name="discountValue"
-    placeholder="Enter discount percentage"
-    step="1"
-    value="<%= oldInput?.discountValue || '' %>"
-    class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-  />
-  <% if (errors?.discountValue) { %>
-      <p class="text-red-600 text-sm mt-1" data-error-for="discountValue"><%= errors.discountValue %></p>
-    <% } %>
-    <p id="error-discountValue" class="text-red-600 text-sm mt-1 hidden"></p>
-</div>
-
-
-  <!-- Offer Start Date -->
-  <div>
-    <label class="text-gray-700 font-medium">Offer Start Date</label>
-    <input
-      type="date"
-      name="startDate"
-      value="<%= oldInput?.startDate || '' %>"
-      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-    />
-    <p id="error-startDate" class="text-red-600 text-sm mt-1 hidden"></p>
-  </div>
-
-  <!-- Offer End Date -->
-  <div>
-    <label class="text-gray-700 font-medium">Offer End Date</label>
-    <input
-      type="date"
-      name="endDate"
-      value="<%= oldInput?.endDate || '' %>"
-      class="w-full px-4 py-4 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-    />
-    <p id="error-endDate" class="text-red-600 text-sm mt-1 hidden"></p>
-  </div>
-
-</div>
-
-              <!-- Image Upload -->
-              <div class="bg-white rounded-lg p-8">
-                <div class="upload-area rounded-lg p-12 text-center">
-                  <i class="fas fa-image text-6xl text-gray-400 mb-4"></i>
-                  <p class="text-gray-600">
-                    Drag and drop image or Click add image
-                  </p>
-
-                  <!-- IMPORTANT: name="productImage" for multer -->
-                  <input
-                    type="file"
-                    id="productImageInput"
-                    name="productImage"
-                    accept="image/*"
-                    class="hidden"
-                    multiple
-                  />
-                  <button
-                    type="button"
-                    onclick="document.getElementById('productImageInput').click()"
-                    class="px-8 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-                  >
-                    Add Images
-                  </button>
-
-                  <!-- Preview Thumbnails -->
-                  <div
-                    id="imagePreview"
-                    class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"
-                  ></div>
-                
-                <% if (errors?.imageUrls) { %>
-                  <p class="text-red-600 text-sm" data-error-for="imageUrls"><%= errors.imageUrls %></p>
-                  <% } %>
-                  <p id="error-imageUrls" class="text-red-600 text-sm mt-1 hidden"></p>
-                  </div>
-              </div>
-
-              <!-- Submit -->
-              <div class="flex justify-center pt-4">
-                <button
-                  type="submit"
-                  class="px-16 py-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-lg"
-                >
-                  ADD PRODUCT
-                </button>
-              </div>
+                    <button type="submit" class="w-full bg-indigo-600 text-white py-6 rounded-3xl font-black text-sm uppercase tracking-[0.3em] shadow-2xl shadow-indigo-200 hover:bg-indigo-700 transition active:scale-95">
+                        Create Product Listing
+                    </button>
+                </form>
             </div>
-          </form>
-        </div>
-      </main>
+        </main>
     </div>
 
-    <!-- Cropper Modal (Page Local, No Partial) -->
-    <div
-      id="cropperModal"
-      class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center hidden z-50"
-    >
-      <div
-        class="bg-white rounded-xl shadow-2xl p-4 w-[95%] max-w-xl animate-fadeIn"
-      >
-        <!-- HEADER -->
-        <div class="flex items-center justify-between mb-3">
-          <h2 id="cropperTitle" class="text-lg font-semibold text-gray-800">
-            Crop Product Image (3:4)
-          </h2>
-
-          <button
-            type="button"
-            onclick="handleCropCancel()"
-            class="text-gray-600 hover:text-gray-900 text-xl"
-          >
-            ✕
-          </button>
+    <div id="cropperModal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden flex-col justify-center items-center z-[100] p-4">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-2xl">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h2 class="font-black text-gray-800 uppercase text-xs tracking-widest">Adjust Frame</h2>
+                <button type="button" onclick="handleCropCancel()" class="w-10 h-10 flex items-center justify-center bg-gray-200 rounded-full text-xs text-gray-500">✕</button>
+            </div>
+            <div class="p-4 bg-gray-900 flex justify-center items-center max-h-[60vh] overflow-hidden">
+                <img id="cropperImage" class="max-w-full block" />
+            </div>
+            <div class="p-6 bg-gray-50 flex flex-col sm:flex-row gap-3">
+                <button type="button" onclick="handleCropCancel()" class="flex-1 py-4 rounded-2xl font-bold text-gray-500 bg-white">Skip</button>
+                <button type="button" id="cropperConfirmBtn" class="flex-1 py-4 rounded-2xl font-black text-xs uppercase tracking-widest bg-indigo-600 text-white shadow-lg">Save Crop</button>
+            </div>
         </div>
-
-        <!-- IMAGE AREA -->
-        <div
-          class="h-[60vh] overflow-hidden flex items-center justify-center bg-gray-100 rounded-lg border"
-        >
-          <img
-            id="cropperImage"
-            class="max-w-full max-h-full select-none"
-            alt="Crop preview"
-          />
-        </div>
-
-        <!-- FOOTER -->
-        <div class="flex justify-end gap-3 mt-5">
-          <button
-            type="button"
-            onclick="handleCropCancel()"
-            class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-200 transition"
-          >
-            Cancel
-          </button>
-
-          <button
-            id="cropperConfirmBtn"
-            type="button"
-            class="px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-          >
-            Crop & Save
-          </button>
-        </div>
-      </div>
     </div>
 
-    <!-- Cropper JS -->
     <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
-    <!-- SweetAlert (if not globally included you can uncomment this)
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    -->
-
     <script>
-      function incrementQuantity() {
-        const input = document.getElementById("quantityInput");
-        input.value = parseInt(input.value || "0") + 1;
-      }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
 
-      function decrementQuantity() {
-        const input = document.getElementById("quantityInput");
-        const current = parseInt(input.value || "0");
-        if (current > 0) {
-          input.value = current - 1;
-        }
-      }
+        const form = document.getElementById("productForm");
+        const offerToggle = document.getElementById("isOffer");
+        const offerInputs = document.getElementById("offerInputs");
 
-     
+        // Toggle Campaign Inputs
+        offerToggle.onchange = () => offerInputs.classList.toggle('hidden', offerToggle.value === 'false');
 
-      // -----------------------------
-      // Cropper Logic (Page Local)
-      // -----------------------------
-      const fileInput = document.getElementById("productImageInput");
-      const previewContainer = document.getElementById("imagePreview");
-      const cropperModal = document.getElementById("cropperModal");
-      const cropperImage = document.getElementById("cropperImage");
-      const cropperConfirmBtn = document.getElementById("cropperConfirmBtn");
-
-      let cropper = null;
-      let pendingFiles = [];
-      let currentFileIndex = 0;
-      let croppedFiles = []; // { file, url }
-
-      // Handle file selection
-      fileInput.addEventListener("change", function (e) {
-        const files = Array.from(e.target.files || []);
-        if (!files.length) return;
-
-        pendingFiles = files;
-        currentFileIndex = 0;
-
-        // reset input so user can reselect same files later if needed
-        fileInput.value = "";
-        openCropperForCurrentFile();
-      });
-
-      function openCropperForCurrentFile() {
-        if (
-          !pendingFiles.length ||
-          currentFileIndex < 0 ||
-          currentFileIndex >= pendingFiles.length
-        ) {
-          return;
+        // Validation Helper
+        function setError(id, msg) {
+            const el = document.getElementById(`err-${id}`);
+            if (el) {
+                el.textContent = msg;
+                el.classList.remove('hidden');
+                const input = document.getElementById(id);
+                if (input) input.classList.add('error-input');
+            }
+            return false;
         }
 
-        const file = pendingFiles[currentFileIndex];
-        const imageUrl = URL.createObjectURL(file);
-
-        cropperImage.src = imageUrl;
-        cropperModal.classList.remove("hidden");
-
-        // Initialize cropper once image is loaded
-        cropperImage.onload = function () {
-          if (cropper) {
-            cropper.destroy();
-          }
-
-          cropper = new Cropper(cropperImage, {
-            aspectRatio: 3 / 4,
-            viewMode: 1,
-            autoCropArea: 1,
-          });
-        };
-      }
-
-      function closeCropperModal() {
-        cropperModal.classList.add("hidden");
-        if (cropper) {
-          cropper.destroy();
-          cropper = null;
+        function clearErrors() {
+            document.querySelectorAll("[id^='err-']").forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll(".error-input").forEach(el => el.classList.remove('error-input'));
         }
-      }
 
-      // Cancel crop for current file → move to next
-      function handleCropCancel() {
-        closeCropperModal();
-        currentFileIndex++;
-        if (currentFileIndex < pendingFiles.length) {
-          openCropperForCurrentFile();
-        } else {
-          pendingFiles = [];
-          currentFileIndex = 0;
-        }
-      }
+        // IMAGE CROPPER LOGIC (Enhanced)
+        const fileInput = document.getElementById("productImageInput");
+        const previewContainer = document.getElementById("imagePreview");
+        const cropperModal = document.getElementById("cropperModal");
+        const cropperImage = document.getElementById("cropperImage");
+        const cropperConfirmBtn = document.getElementById("cropperConfirmBtn");
 
-      // Confirm crop
-      cropperConfirmBtn.addEventListener("click", function () {
-        if (!cropper) return;
+        let cropper = null;
+        let pendingFiles = [];
+        let currentFileIndex = 0;
+        let croppedFiles = [];
 
-        cropperConfirmBtn.disabled = true;
-        cropperConfirmBtn.innerText = "Processing...";
-
-        const canvas = cropper.getCroppedCanvas({
-          // optional sizing, but keeps 3:4 aspect ratio
-          width: 600,
-          height: 800,
+        fileInput.addEventListener("change", function (e) {
+            const files = Array.from(e.target.files || []);
+            if (!files.length) return;
+            pendingFiles = files;
+            currentFileIndex = 0;
+            fileInput.value = "";
+            openCropper();
         });
 
-        if (!canvas) {
-          cropperConfirmBtn.disabled = false;
-          cropperConfirmBtn.innerText = "Crop & Save";
-          alert("Something went wrong while cropping.");
-          return;
+        function openCropper() {
+            if (currentFileIndex >= pendingFiles.length) return;
+            cropperImage.src = URL.createObjectURL(pendingFiles[currentFileIndex]);
+            cropperModal.classList.replace("hidden", "flex");
+            cropperImage.onload = () => {
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(cropperImage, { aspectRatio: 3/4, viewMode: 2 });
+            };
         }
 
-        canvas.toBlob(
-          function (blob) {
-            cropperConfirmBtn.disabled = false;
-            cropperConfirmBtn.innerText = "Crop & Save";
-
-            if (!blob) {
-              alert("Failed to generate cropped image.");
-              return;
-            }
-
-            const fileName = `product_${Date.now()}_${
-              currentFileIndex + 1
-            }.jpg`;
-            const croppedFile = new File([blob], fileName, {
-              type: "image/jpeg",
-            });
-            const url = URL.createObjectURL(croppedFile);
-
-            // Save to array
-            const item = { file: croppedFile, url };
-            croppedFiles.push(item);
-
-            // Show preview
-            addProductPreview(item);
-
-            // Move to next image
-            closeCropperModal();
+        function handleCropCancel() {
+            cropperModal.classList.replace("flex", "hidden");
             currentFileIndex++;
-            if (currentFileIndex < pendingFiles.length) {
-              openCropperForCurrentFile();
-            } else {
-              pendingFiles = [];
-              currentFileIndex = 0;
-            }
-          },
-          "image/jpeg",
-          0.9
-        );
-      });
-
-      // Show preview thumbnails
-      function addProductPreview(item) {
-        const box = document.createElement("div");
-        box.className = "relative group";
-        box.dataset.url = item.url;
-
-        box.innerHTML = `
-          <img src="${item.url}" class="w-full h-[200px] object-cover rounded-lg shadow">
-          <button type="button"
-            class="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded text-sm opacity-90 hover:opacity-100">
-            X
-          </button>
-        `;
-
-        const btn = box.querySelector("button");
-        btn.addEventListener("click", function () {
-          removeProductImage(item.url, box);
-        });
-
-        previewContainer.appendChild(box);
-      }
-
-      // Remove image from preview + array
-      function removeProductImage(url, boxElement) {
-        // Remove from array
-        croppedFiles = croppedFiles.filter((item) => item.url !== url);
-
-        // Remove DOM
-        if (boxElement && boxElement.parentElement) {
-          boxElement.parentElement.removeChild(boxElement);
+            openCropper();
         }
-      }
 
-      const form = document.querySelector("form");
-      form.addEventListener("submit", function (e) {
-        const dataTransfer = new DataTransfer();
-        croppedFiles.forEach((item) => {
-          dataTransfer.items.add(item.file);
-        });
+        cropperConfirmBtn.onclick = () => {
+            const canvas = cropper.getCroppedCanvas({ width: 600, height: 800 });
+            canvas.toBlob(blob => {
+                const file = new File([blob], `book_${Date.now()}.jpg`, { type: "image/jpeg" });
+                const url = URL.createObjectURL(file);
+                croppedFiles.push({ file, url });
+                
+                const box = document.createElement("div");
+                box.className = "relative aspect-[3/4]";
+                box.innerHTML = `<img src="${url}" class="w-full h-full object-cover rounded-2xl border border-white shadow-sm">
+                                 <button type="button" class="absolute -top-2 -right-2 bg-rose-500 text-white w-7 h-7 rounded-full text-xs flex items-center justify-center">✕</button>`;
+                box.querySelector("button").onclick = () => {
+                    croppedFiles = croppedFiles.filter(f => f.url !== url);
+                    box.remove();
+                };
+                previewContainer.appendChild(box);
+                handleCropCancel();
+            }, "image/jpeg", 0.9);
+        };
 
-        fileInput.files = dataTransfer.files;
-      });
+        // FORM SUBMISSION VALIDATION
+        form.onsubmit = (e) => {
+            clearErrors();
+            let isValid = true;
+            const today = new Date();
+            today.setHours(0,0,0,0);
 
-      window.handleCropCancel = handleCropCancel;
-    
+            // Required Fields
+            if (!form.productName.value.trim()) isValid = setError('productName', 'Title is required');
+            if (form.description.value.trim().length < 10) isValid = setError('description', 'Description too short (min 10 chars)');
+            if (!form.category.value) isValid = setError('category', 'Select a category');
+            if (!form.language.value) isValid = setError('language', 'Language is required');
+            if (!form.author.value.trim()) isValid = setError('author', 'Author name is required');
+            
+            // Year Validation
+            const year = form.yearOfPublishing.value;
+            if (!/^\d{4}$/.test(year) || parseInt(year) > new Date().getFullYear()) isValid = setError('year', 'Enter a valid year');
 
-        const errorMap = {
-    productName: "Product name is required",
-    description: "Description is required",
-    category: "Please select a category",
-    language: "Please select a language",
-    regularPrice: "Enter a valid price",
-    stock: "Stock quantity is required",
-    discountValue: "Discount must be between 1 and 95",
-    imageUrls: "At least one product image is required",
-    yearOfPublishing: "Enter a valid publishing year"
-  };
+            // Price & Stock
+            if (parseFloat(form.regularPrice.value) <= 0) isValid = setError('price', 'Price must be positive');
+            if (parseInt(form.stock.value) < 0) isValid = setError('stock', 'Stock cannot be negative');
 
-  function showError(field, message) {
-    const el = document.getElementById(`error-${field}`);
-    if (!el) return;
-    el.textContent = message;
-    el.classList.remove("hidden");
-  }
+            // Campaign Validation
+            if (form.isOffer.value === 'true') {
+                const disc = parseInt(form.discountValue.value);
+                if (isNaN(disc) || disc < 1 || disc > 95) isValid = setError('discount', 'Discount must be 1% - 95%');
+                
+                const start = new Date(form.startDate.value);
+                const end = new Date(form.endDate.value);
+                if (!form.startDate.value || !form.endDate.value) isValid = setError('dates', 'Start and End dates are required');
+                else if (start < today) isValid = setError('dates', 'Start date cannot be in the past');
+                else if (end <= start) isValid = setError('dates', 'End date must be after start date');
+            }
 
-  function hideError(field) {
-    const el = document.getElementById(`error-${field}`);
-    if (!el) return;
-    el.textContent = "";
-    el.classList.add("hidden");
-  }
+            // Image Validation
+            if (croppedFiles.length === 0) isValid = setError('images', 'Add at least one cover image');
 
-  function clearAllErrors() {
-    Object.keys(errorMap).forEach(hideError);
-  }
-
-  form.addEventListener("submit", function (e) {
-    clearAllErrors();
-    let hasError = false;
-
-    const productName = form.productName.value.trim();
-    const description = form.description.value.trim();
-    const category = form.category.value;
-    const language = form.language.value;
-    const regularPrice = Number(form.regularPrice.value);
-    const stock = Number(form.stock.value);
-    const discountValue = Number(form.discountValue.value);
-    const year = form.yearOfPublishing.value;
-    const startDate = form.startDate.value;
-    const endDate = form.endDate.value;
-
-    if (!productName) {
-      showError("productName", errorMap.productName);
-      hasError = true;
-    }
-
-    if (!description) {
-      showError("description", errorMap.description);
-      hasError = true;
-    }
-
-    if (!category) {
-      showError("category", errorMap.category);
-      hasError = true;
-    }
-
-    if (!language) {
-      showError("language", errorMap.language);
-      hasError = true;
-    }
-
-    if (!regularPrice || regularPrice <= 0) {
-      showError("regularPrice", errorMap.regularPrice);
-      hasError = true;
-    }
-
-    if (!stock || stock < 0) {
-      showError("stock", errorMap.stock);
-      hasError = true;
-    }
-
-    if (form.isOffer.value === "true") {
-      if (!discountValue || discountValue <= 1 || discountValue > 95) {
-        showError("discountValue", errorMap.discountValue);
-        hasError = true;
-      }
-
-      const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  if (!startDate) {
-    showError("startDate", "Offer start date is required");
-    hasError = true;
-  }
-
-  if (!endDate) {
-    showError("endDate", "Offer end date is required");
-    hasError = true;
-  }
-
-  if (startDate) {
-    const start = new Date(startDate);
-    if (start < today) {
-      showError("startDate", "Start date cannot be in the past");
-      hasError = true;
-    }
-  }
-
-  if (startDate && endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    if (end <= start) {
-      showError("endDate", "End date must be after start date");
-      hasError = true;
-    }
-  }
-
-    }
-
-    if (year) {
-  const yearNum = Number(year);
-  const currentYear = new Date().getFullYear();
-
-  if (!/^\d{4}$/.test(year)) {
-    showError("yearOfPublishing", "Enter a valid 4-digit year");
-    hasError = true;
-  } 
-  else if (yearNum > currentYear) {
-    showError("yearOfPublishing", "Publishing year cannot be in the future");
-    hasError = true;
-  }
-}
-
-
-    if (croppedFiles.length === 0) {
-      showError("imageUrls", errorMap.imageUrls);
-      hasError = true;
-    }
-
-    if (hasError) {
-      e.preventDefault();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  });
-
+            if (!isValid) {
+                e.preventDefault();
+                Swal.fire({ icon: 'warning', title: 'Check Fields', text: 'Please correct the highlighted errors.' });
+            } else {
+                // Attach cropped files to the form
+                const dt = new DataTransfer();
+                croppedFiles.forEach(item => dt.items.add(item.file));
+                fileInput.files = dt.files;
+            }
+        };
     </script>
-  </body>
+</body>
 </html>

@@ -1,88 +1,137 @@
 <% if (!blogs || blogs.length === 0) { %>
-  <p class="text-center text-gray-500 mt-20 text-sm">
-    No blogs found
-  </p>
+    <div class="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100 px-6">
+        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-feather-pointed text-gray-200 text-3xl"></i>
+        </div>
+        <p class="text-gray-400 font-bold italic">No blogs found in the system.</p>
+    </div>
 <% } else { %>
 
-  <% blogs.forEach(blog => { %>
-    <div
-      class="bg-white rounded-2xl border border-gray-200 hover:shadow-sm transition p-8 mb-6"
-    >
-      <!-- TITLE -->
-      <h3
-        class="text-xl font-semibold text-gray-900 leading-snug mb-2 hover:text-blue-700 transition"
-      >
-        <%= blog.title %>
-      </h3>
+    <div class="grid grid-cols-1 gap-6">
+        <% blogs.forEach(blog => { %>
+            <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 transition-all duration-300 p-6 sm:p-8 group">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+                    <h3 class="text-xl sm:text-2xl font-black text-gray-800 leading-tight group-hover:text-indigo-600 transition-colors">
+                        <%= blog.title %>
+                    </h3>
+                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest <%= blog.isBlocked ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600' %>">
+                        <%= blog.isBlocked ? 'Blocked' : 'Active' %>
+                    </span>
+                </div>
 
-      <!-- META -->
-      <p class="text-sm text-gray-500 mb-4">
-        By
-        <span class="font-medium text-gray-700">
-          <%= blog.author?.name || "Unknown" %>
-        </span>
-        · <%= new Date(blog.createdAt).toDateString() %>
-      </p>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-xs">
+                        <%= blog.author?.name ? blog.author.name.charAt(0) : 'U' %>
+                    </div>
+                    <div class="text-xs">
+                        <p class="text-gray-400 font-bold uppercase tracking-tighter">
+                            By <span class="text-gray-700"><%= blog.author?.name || "Unknown" %></span>
+                        </p>
+                        <p class="text-gray-400 font-medium">
+                            <%= new Date(blog.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                        </p>
+                    </div>
+                </div>
 
-      <!-- CTA -->
-      <a
-        href="/admin/blogs/<%= blog._id %>"
-        class="inline-flex items-center gap-1 text-blue-600 text-sm font-medium hover:underline mb-5"
-      >
-        Read more
-        <i class="fa-solid fa-arrow-right text-xs"></i>
-      </a>
+                <a href="/admin/blogs/<%= blog._id %>" 
+                   class="inline-flex items-center gap-2 text-indigo-600 text-xs sm:text-sm font-black uppercase tracking-[0.1em] hover:gap-4 transition-all mb-8 border-b-2 border-transparent hover:border-indigo-600 pb-1">
+                    Manage Story <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </a>
 
-      <!-- ACTION BAR -->
-      <div
-        class="flex justify-between items-center border-t border-gray-100 pt-4 text-gray-600"
-      >
-        <!-- LEFT -->
-        <div class="flex gap-6">
-          <!-- LIKE -->
-          <button
-            onclick="toggleLike('<%= blog._id %>')"
-            class="flex items-center gap-2 hover:text-red-500 transition"
-          >
-            <i
-              class="fa-heart <%= blog.userLiked ? 'fa-solid text-red-500' : 'fa-regular' %>"
-            ></i>
-            <span class="text-sm"><%= blog.likeCount || 0 %></span>
-          </button>
+                <div class="flex justify-between items-center border-t border-gray-50 pt-6">
+                    <div class="flex gap-6 sm:gap-10">
+                        <button onclick="toggleLike('<%= blog._id %>', this)" 
+                                class="flex items-center gap-2.5 text-gray-400 hover:text-rose-500 transition-all active:scale-90 group/btn">
+                            <i class="fa-heart <%= blog.userLiked ? 'fa-solid text-rose-500' : 'fa-regular' %> text-xl sm:text-lg"></i>
+                            <span class="text-xs font-black count-span"><%= blog.likeCount || 0 %></span>
+                        </button>
 
-          <!-- COMMENT -->
-          <a
-            href="/blogs/<%= blog._id %>#comments"
-            class="flex items-center gap-2 hover:text-blue-600 transition"
-          >
-            <i class="fa-regular fa-comment"></i>
-            <span class="text-sm"><%= blog.commentCount || 0 %></span>
-          </a>
-        </div>
+                        <a href="/blogs/<%= blog._id %>#comments" 
+                           class="flex items-center gap-2.5 text-gray-400 hover:text-indigo-600 transition-all">
+                            <i class="fa-regular fa-comment text-xl sm:text-lg"></i>
+                            <span class="text-xs font-black"><%= blog.commentCount || 0 %></span>
+                        </a>
+                    </div>
 
-        <!-- RIGHT -->
-        <div class="flex items-center gap-5">
-          <!-- SAVE -->
-          <button
-            onclick="toggleSave('<%= blog._id %>')"
-            class="transition"
-            title="Save"
-          >
-            <i
-              class="fa-bookmark text-lg transition <%= blog.isSaved ? 'fa-solid text-blue-600' : 'fa-regular text-gray-500 hover:text-black' %>"
-            ></i>
-          </button>
+                    <div class="flex items-center gap-3 sm:gap-6">
+                        <button onclick="toggleSave('<%= blog._id %>', this)" 
+                                class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-white border border-transparent hover:border-gray-100 transition-all shadow-sm"
+                                title="Save to reading list">
+                            <i class="fa-bookmark text-lg transition-colors <%= blog.isSaved ? 'fa-solid text-indigo-600' : 'fa-regular text-gray-400' %>"></i>
+                        </button>
 
-          <!-- SHARE -->
-          <button
-            class="flex items-center gap-2 hover:text-blue-600 transition text-sm"
-          >
-            <i class="fa-solid fa-share"></i>
-            Share
-          </button>
-        </div>
-      </div>
+                        <button class="hidden sm:flex items-center gap-2 text-gray-400 hover:text-indigo-600 transition-colors py-2 px-4 rounded-xl border border-transparent hover:border-indigo-100">
+                            <i class="fa-solid fa-share-nodes text-base"></i>
+                            <span class="text-[10px] font-black uppercase tracking-widest">Share</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
     </div>
-  <% }) %>
 
 <% } %>
+
+<script>
+    /**
+     * TOGGLE LIKE FUNCTION
+     * Updates the UI immediately (Optimistic UI) before server confirmation
+     */
+    async function toggleLike(blogId, btnElement) {
+        try {
+            const res = await fetch("/blog/like", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ blogId }),
+            });
+            const data = await res.json();
+            
+            if (data.success !== false) {
+                const icon = btnElement.querySelector('i');
+                const countSpan = btnElement.querySelector('.count-span');
+                
+                const isLiking = icon.classList.contains('fa-regular');
+                icon.classList.toggle('fa-regular');
+                icon.classList.toggle('fa-solid');
+                icon.classList.toggle('text-rose-500');
+                
+                let currentCount = parseInt(countSpan.textContent);
+                countSpan.textContent = isLiking ? currentCount + 1 : Math.max(0, currentCount - 1);
+            }
+        } catch (err) {
+            console.error("Like operation failed", err);
+        }
+    }
+
+    /**
+     * TOGGLE SAVE/BOOKMARK
+     */
+    async function toggleSave(blogId, btnElement) {
+        try {
+            const res = await fetch("/blogs/save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ blogId }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                const icon = btnElement.querySelector('i');
+                icon.classList.toggle('fa-regular');
+                icon.classList.toggle('fa-solid');
+                icon.classList.toggle('text-indigo-600');
+                
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: data.isSaved ? 'Bookmarked!' : 'Removed from bookmarks',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
+        } catch (err) {
+            console.error("Save operation failed", err);
+        }
+    }
+</script>

@@ -1,294 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add Category - ReadNest</title>
+    <title>Add Category | ReadNest Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
-
-      * {
-        font-family: "Poppins", sans-serif;
-      }
-
-      .sidebar-item {
-        transition: all 0.3s ease;
-      }
-
-      .sidebar-item:hover {
-        background-color: #d1d5db;
-        border-left: 4px solid #667eea;
-      }
-
-      .sidebar-item.active {
-        background-color: #d1d5db;
-        border-left: 4px solid #667eea;
-      }
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+        * { font-family: "Poppins", sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .sidebar-item.active { background: #f3f4f6; border-right: 4px solid #4f46e5; color: #4f46e5; }
+        #sidebar { transition: transform 0.3s ease-in-out; z-index: 60; }
+        
+        @media (min-width: 1024px) {
+            .main-content { height: calc(100vh - 80px); overflow-y: auto; }
+        }
     </style>
-  </head>
-  <body class="bg-gray-100">
-    <!-- Header -->
-    <header class="bg-gray-300 shadow-sm sticky top-0 z-50">
-      <div class="flex items-center justify-between px-6 py-4">
-        <!-- Logo -->
-        <a href="/admin">
-          <div class="flex items-center space-x-3">
-            <div
-              class="w-14 h-14 bg-orange-900 rounded-full flex items-center justify-center"
-            >
-              <i class="fas fa-book-open text-white text-2xl"></i>
-            </div>
-            <span class="text-2xl font-bold text-gray-800">ReadNest</span>
-          </div>
-        </a>
+</head>
 
-        <!-- Right Side -->
-        <div class="flex items-center space-x-6">
-          <a href="/admin/blogs">
-          <button
-            class="flex items-center space-x-2 px-6 py-2 bg-white rounded-lg border border-gray-400 hover:bg-gray-50 transition"
-          >
-          <i class="fas fa-blog text-gray-700"></i>
-          <span class="text-base font-semibold text-gray-900">Blog</span>
-          </button>
-        </a>
+<body class="bg-gray-100 min-h-screen lg:overflow-hidden">
 
-          <div class="flex items-center space-x-3">
-            <i class="fas fa-user-circle text-4xl text-gray-600"></i>
-            <span class="text-base font-semibold text-gray-600">ADMIN</span>
-          </div>
+    <header class="bg-white shadow-md sticky top-0 z-50 px-4 sm:px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+            <a href="/admin" class="flex items-center space-x-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-900 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-book-open text-white text-xl"></i>
+                </div>
+                <span class="text-xl sm:text-2xl font-black text-gray-800 tracking-tighter uppercase">ReadNest</span>
+            </a>
         </div>
-      </div>
+
+        <div class="flex items-center space-x-3 sm:space-x-6">
+            <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                <i class="fas fa-user-shield text-indigo-600"></i>
+                <span class="text-xs font-black text-gray-700 uppercase tracking-widest">Admin Panel</span>
+            </div>
+        </div>
     </header>
 
-    <!-- Main Content -->
     <div class="flex">
-      <!-- Sidebar -->
-      <aside
-        class="w-80 bg-gray-300 min-h-screen border-r border-gray-400 relative"
-      >
-        <nav class="py-4 pb-24">
-          <a
-            href="/admin"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th-large text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">DashBoard</span>
-          </a>
+      <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-100 -translate-x-full lg:translate-x-0 lg:static lg:h-[calc(100vh-80px)] flex flex-col transition-transform duration-300 shadow-2xl lg:shadow-none">
+            <nav class="flex-1 overflow-y-auto py-6 no-scrollbar space-y-1">
+                <a href="/admin" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-th-large w-8 text-lg"></i> Dashboard</a>
+                <a href="/admin/products" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-box w-8 text-lg"></i> Products</a>
+                <a href="/admin/orders" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-shopping-bag w-8 text-lg"></i> Orders</a>
+                <a href="/admin/users" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-users w-8 text-lg"></i> Customers</a>
+                <a href="/admin/category" class="sidebar-item active flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-th w-8 text-lg"></i> Category</a>
+                <a href="/admin/coupon" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-ticket-alt w-8 text-lg"></i> Voucher</a>
+                <a href="/admin/blogs" class="sidebar-item  flex items-center px-8 py-4 text-indigo-600 font-bold text-sm"><i class="fas fa-blog w-8 text-lg"></i> Blogs</a>
+                <a href="/admin/banner" class="sidebar-item flex items-center px-8 py-4 text-gray-500 font-bold text-sm hover:text-indigo-600 transition-all"><i class="fas fa-image w-8 text-lg"></i> Banner</a>
+                <a href="/admin/logout" class="flex items-center px-8 py-4 text-rose-500 font-bold text-sm mt-10 border-t border-gray-50 pt-8 hover:bg-rose-50 transition-colors"><i class="fas fa-sign-out-alt w-8 text-lg"></i> LOG OUT</a>
+            </nav>
+        </aside>
 
-          <a
-            href="/admin/products"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-box text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Products</span>
-          </a>
+        <main class="main-content flex-1 p-4 sm:p-8 lg:p-12 no-scrollbar bg-gray-50 w-full">
+            <div class="max-w-4xl mx-auto">
+                
+                <div class="mb-6"><%- include('../../views/partials/breadCrumb') %></div>
 
-          <a
-            href="/admin/orders"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-shopping-bag text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Orders List</span>
-          </a>
+                <div class="flex items-center gap-4 mb-8">
+                    <a href="/admin/category" class="w-10 h-10 flex items-center justify-center bg-white rounded-full text-gray-400 shadow-sm hover:text-gray-900 transition"><i class="fas fa-arrow-left"></i></a>
+                    <h1 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">New Category</h1>
+                </div>
 
-          <a
-            href="/admin/users"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-users text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Customers</span>
-          </a>
+                <div class="bg-white rounded-[2rem] shadow-xl shadow-indigo-900/5 p-6 sm:p-10 border border-white">
+                    <form id="categoryForm" action="/admin/addCategory" method="POST" class="space-y-10">
+                        
+                        <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+                            <div class="bg-red-50 text-red-600 p-4 rounded-2xl font-bold text-sm border-l-4 border-red-500">
+                                <i class="fas fa-circle-exclamation mr-2"></i><%= errorMessage %>
+                            </div>
+                        <% } %>
+                        <div id="errorMsg" class="hidden bg-red-50 text-red-600 p-4 rounded-2xl font-bold text-sm border-l-4 border-red-500"></div>
 
-          
+                        <div>
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Category Identity</label>
+                            <input type="text" id="categoryName" name="categoryName" placeholder="Enter Category Name (e.g. Science Fiction)" 
+                                   class="w-full px-6 py-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-gray-800 text-lg placeholder:text-gray-300" />
+                        </div>
 
-          <a
-            href="/admin/category"
-            class="sidebar-item active flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-th text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Category</span>
-          </a>
+                        <div class="bg-indigo-50/30 rounded-[2.5rem] p-6 sm:p-10 border border-indigo-100">
+                            <div class="flex items-center gap-3 mb-8">
+                                <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center shadow-lg shadow-indigo-200">
+                                    <i class="fas fa-percentage text-white text-sm"></i>
+                                </div>
+                                <h3 class="text-xs font-black text-indigo-900 uppercase tracking-[0.2em]">Category Discount Offer</h3>
+                            </div>
 
-          <a
-            href="/admin/coupon"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-ticket-alt text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Voucher</span>
-          </a>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="md:col-span-2">
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-2 block">Activation Status</label>
+                                    <select name="isOffer" class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all appearance-none cursor-pointer">
+                                        <option value="false">Inactive (No active offer)</option>
+                                        <option value="true">Active (Apply discount to products)</option>
+                                    </select>
+                                </div>
 
-          <a
-            href="/admin/banner"
-            class="sidebar-item flex items-center px-6 py-4 border-b border-gray-400"
-          >
-            <i class="fas fa-image text-xl mr-4"></i>
-            <span class="text-lg font-semibold text-gray-900">Banner</span>
-          </a>
-        </nav>
+                                <div class="md:col-span-2">
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-2 block">Discount Value (%)</label>
+                                    <input type="number" name="discountValue" placeholder="0.00" step="0.01" min="0" max="100"
+                                           class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-black text-gray-800 outline-none focus:border-indigo-500 transition-all" />
+                                </div>
 
-        <!-- Logout Button at Bottom -->
-        <div
-          class="absolute bottom-0 left-0 right-0 bg-gray-300 border-t-2 border-gray-400"
-        >
-          <a href="/admin/logout">
-            <button
-              class="w-full flex items-center px-6 py-5 hover:bg-red-50 transition-colors group"
-            >
-              <i
-                class="fas fa-sign-out-alt text-xl mr-4 text-gray-700 group-hover:text-red-600"
-              ></i>
-              <span
-                class="text-lg font-semibold text-gray-900 group-hover:text-red-600"
-                >Log Out</span
-              >
-            </button>
-          </a>
-        </div>
-      </aside>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-2 block">Campaign Launch</label>
+                                    <input type="date" name="startDate" 
+                                           class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all" />
+                                </div>
 
-      <!-- Main Content - Add Category Form -->
-      <main class="flex-1 p-8 bg-white">
-        <%- include('../../views/partials/breadCrumb') %>
-        <div class="max-w-2xl">
-          <!-- Header with Back Button -->
-          <div class="flex items-center mb-8">
-            <a
-              href="/admin/category"
-              class="mr-4 text-gray-800 hover:text-gray-600"
-            >
-              <i class="fas fa-chevron-left text-2xl"></i>
-            </a>
-            <h2 class="text-3xl font-bold text-gray-900">Categories</h2>
-          </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-2 block">Campaign Expiry</label>
+                                    <input type="date" name="endDate" 
+                                           class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all" />
+                                </div>
+                            </div>
+                        </div>
 
-          <!-- Form -->
-          <form
-            id="categoryForm"
-            class="space-y-6"
-            action="/admin/addCategory"
-            method="POST"
-          >
-            <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
-            <div id="errorMsg" class="text-red-600 font-semibold mb-3">
-              <%= errorMessage %>
+                        <div class="pt-6 flex flex-col sm:flex-row gap-4">
+                            <button type="submit" class="flex-1 bg-indigo-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition active:scale-[0.98]">
+                                Create Category
+                            </button>
+                            <button type="reset" class="px-10 py-5 bg-gray-100 text-gray-500 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-200 transition">
+                                Reset
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <% } else { %>
-            <div
-              id="errorMsg"
-              class="text-red-600 font-semibold mb-3 hidden"
-            ></div>
-            <% } %>
-
-            <!-- Category Name Input -->
-            <div>
-              <input
-                type="text"
-                id="categoryName"
-                name="categoryName"
-                placeholder="Category Name"
-                class="w-full px-6 py-4 bg-gray-200 rounded-lg text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 border-none text-lg"
-              />
-            </div>
-            <!-- Offer Section -->
-            <div class="mt-6 p-4 border border-gray-300 rounded-lg bg-gray-50">
-              <h3 class="text-lg font-bold text-gray-900 mb-4">
-                Category Offer Details
-              </h3>
-
-              <!-- Enable Offer -->
-              <div class="mb-4">
-                <label class="block text-lg font-bold text-gray-900 mb-2">
-                  Enable Offer
-                </label>
-                <select
-                  name="isOffer"
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-base"
-                >
-                  <option value="false" selected>No</option>
-                  <option value="true">Yes</option>
-                </select>
-              </div>
-
-              <!-- Discount Percentage -->
-              <div class="mb-4">
-                <label class="block text-lg font-bold text-gray-900 mb-2">
-                  Discount (%)
-                </label>
-                <input
-                  type="number"
-                  name="discountValue"
-                  placeholder="Enter discount percentage"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value="<%= (category && category.discountValue) ? category.discountValue : '' %>"
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-                />
-              </div>
-
-              <!-- Offer Start Date -->
-              <div class="mb-4">
-                <label class="block text-lg font-bold text-gray-900 mb-2">
-                  Offer Start Date
-                </label>
-                <input
-                  type="date"
-                  name="startDate"
-                  value=""
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-base"
-                />
-              </div>
-
-              <!-- Offer End Date -->
-              <div class="mb-4">
-                <label class="block text-lg font-bold text-gray-900 mb-2">
-                  Offer End Date
-                </label>
-                <input
-                  type="date"
-                  name="endDate"
-                  value=""
-                  class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-base"
-                />
-              </div>
-            </div>
-
-            <!-- List/Unlist Toggle Buttons -->
-            <p id="errorMsg" class="text-red-500 font-semibold mb-3 hidden"></p>
-            <!-- Add Category Button -->
-            <div class="pt-4">
-              <button
-                type="submit"
-                class="px-12 py-3 bg-indigo-600 text-white font-bold text-lg rounded-lg hover:bg-indigo-700 transition shadow-md"
-              >
-                ADD Category
-              </button>
-            </div>
-          </form>
-        </div>
-      </main>
+        </main>
     </div>
-  </body>
-  <script>
-    document
-      .getElementById("categoryForm")
-      .addEventListener("submit", function (e) {
-        const name = document.getElementById("categoryName").value.trim();
-        const errorMsg = document.getElementById("errorMsg");
 
-        if (!name) {
-          e.preventDefault();
-          errorMsg.textContent = "Fill the field.";
-          errorMsg.classList.remove("hidden");
-        } else {
-          errorMsg.classList.add("hidden");
+    <script>
+        // Sidebar Toggle for Mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
         }
-      });
-  </script>
+
+        // Form Validation Logic
+        document.getElementById("categoryForm").addEventListener("submit", function (e) {
+            const name = document.getElementById("categoryName").value.trim();
+            const errorMsg = document.getElementById("errorMsg");
+
+            if (!name) {
+                e.preventDefault();
+                errorMsg.textContent = "Please provide a category name before submitting.";
+                errorMsg.classList.remove("hidden");
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                // Shake effect for input
+                const input = document.getElementById("categoryName");
+                input.classList.add('border-red-500', 'bg-red-50');
+                setTimeout(() => input.classList.remove('border-red-500', 'bg-red-50'), 2000);
+            } else {
+                errorMsg.classList.add("hidden");
+            }
+        });
+    </script>
+</body>
 </html>
