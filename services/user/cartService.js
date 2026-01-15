@@ -255,6 +255,50 @@ export const validateCartBeforeCheckout = async (req, res) => {
       return res.status(401).json({ message: "Login required" });
     }
 
+    if (req.session.buyNowProductId) {
+      const product = await Product.findById(
+        req.session.buyNowProductId
+      ).lean();
+
+      if (!product) {
+        return res.json({
+          success: false,
+          unavailableItems: [
+            { name: "Product", reason: "Product no longer exists" },
+          ],
+        });
+      }
+
+      const category = await Category.findOne({
+        categoryName: product.category,
+      }).lean();
+
+      if (
+        product.isListed === false ||
+        category?.isListed === false ||
+        product.stock <= 0
+      ) {
+        return res.json({
+          success: false,
+          unavailableItems: [
+            {
+              name: product.productName,
+              reason:
+                product.stock <= 0
+                  ? "Out of stock"
+                  : "No longer available",
+            },
+          ],
+        });
+      }
+
+      return res.json({
+        success: true,
+        unavailableItems: [],
+        removedCount: 0,
+      });
+    }
+
     const cart = await Cart.findOne({ userId }).lean();
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
@@ -284,15 +328,19 @@ export const validateCartBeforeCheckout = async (req, res) => {
       ) {
         unavailableItems.push({
           name: product.productName,
-          reason: product.stock <= 0 ? "Out of stock" : "No longer available",
+          reason:
+            product.stock <= 0 ? "Out of stock" : "No longer available",
         });
       } else {
         validItems.push(item);
       }
     }
- 
+
     if (unavailableItems.length > 0) {
-      await Cart.updateOne({ userId }, { $set: { items: validItems } });
+      await Cart.updateOne(
+        { userId },
+        { $set: { items: validItems } }
+      );
     }
 
     return res.json({
@@ -305,3 +353,4 @@ export const validateCartBeforeCheckout = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+

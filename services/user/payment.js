@@ -120,29 +120,44 @@ export const loadPayment = async (req, res) => {
     const userData = await User.findById(userId).lean();
     const cartDoc = await Cart.findOne({ userId }).lean();
 
-    const isBuyNow = req.query.buyNow || req.session.buyNowProductId;
+    const buyNowProductId =
+      req.query.buyNow || req.session.buyNowProductId || null;
+    const isBuyNow = Boolean(buyNowProductId);
+
     if (!cartDoc?.items?.length && !isBuyNow) {
       return res.redirect("/cart");
     }
 
     let cart = [];
 
-    if (req.query.buyNow) {
-      const product = await Product.findById(req.query.buyNow).lean();
-      if (!product) return res.redirect("/notfound");
+    if (isBuyNow) {
+      const product = await Product.findById(buyNowProductId).lean();
+      if (!product || product.stock <= 0 || product.isListed === false) {
+        return res.redirect("/cart?error=product-unavailable");
+      }
+
+      const categoryDoc = await Category.findOne({
+        categoryName: product.category,
+      });
+
+      if (categoryDoc?.isListed === false) {
+        return res.redirect("/cart?error=product-unavailable");
+      }
 
       const qty = req.session.buyNowQuantity || 1;
       const offer = await calculateOffer(product);
 
-      cart.push({
-        _id: product._id,
-        name: product.productName,
-        image: product.productImage[0],
-        quantity: qty,
-        price: offer.finalPrice,
-        regularPrice: offer.regularPrice,
-        offerPrice: offer.offerPrice,
-      });
+      cart = [
+        {
+          _id: product._id,
+          name: product.productName,
+          image: product.productImage[0],
+          quantity: qty,
+          price: offer.finalPrice,
+          regularPrice: offer.regularPrice,
+          offerPrice: offer.offerPrice,
+        },
+      ];
     } else {
       const fullCart = await Cart.findOne({ userId })
         .populate("items.productId")
@@ -191,9 +206,7 @@ export const loadPayment = async (req, res) => {
 
     const usedCouponIds = usedCoupons.map((c) => c.couponId.toString());
 
-    const isBuyNowMode = Boolean(
-      req.query.buyNow || req.session.buyNowProductId
-    );
+    const isBuyNowMode = isBuyNow;
 
     const applicableCoupons = coupons.filter((coupon) => {
       const couponId = coupon._id.toString();
@@ -244,9 +257,10 @@ export const loadPayment = async (req, res) => {
       payableAmount,
       coupons: normalizedCoupons,
       selectedAddress,
-      isBuyNow: Boolean(req.query.buyNow),
+      isBuyNow,
       appliedCoupon: null,
       selectedPaymentMethod: null,
+      razorpayOrderId: null,
       createdAt: Date.now(),
     });
 
@@ -264,7 +278,7 @@ export const loadPayment = async (req, res) => {
       totalAmount: subtotal,
       shippingCharge,
       payableAmount,
-      isBuyNow: Boolean(req.query.buyNow),
+      isBuyNow,
       coupons: normalizedCoupons,
       walletBalance,
       isWalletUsable,
@@ -284,7 +298,10 @@ export const postCoupon = async (req, res) => {
     const userId = req.session.user?._id;
 
     if (!userId) {
-      return res.json({ success: false, message: ERROR_MESSAGES.AUTH.UNAUTHORIZED });
+      return res.json({
+        success: false,
+        message: ERROR_MESSAGES.AUTH.UNAUTHORIZED,
+      });
     }
 
     const cached = await getPaymentState(userId);
@@ -360,7 +377,10 @@ export const postCoupon = async (req, res) => {
     });
   } catch (error) {
     console.error("Apply Coupon Error:", error);
-    return res.json({ success: false, message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR });
+    return res.json({
+      success: false,
+      message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
+    });
   }
 };
 
@@ -692,7 +712,8 @@ export const verifyRazorpayPayment = async (req, res) => {
     req.session.paymentSuccess = true;
     req.session.razorpayPaymentId = razorpay_payment_id;
 
-    return res.json({ success: true });
+    return res.json({ success: true }); 
+
   } catch (error) {
     console.error("Payment Verification Error:", error);
     return res.status(500).json({ success: false });

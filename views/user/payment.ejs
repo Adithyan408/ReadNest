@@ -391,55 +391,51 @@
   paymentInProgress = true;
 
   try {
-    /* ===============================
-       1️⃣ AVAILABILITY VALIDATION
-    =============================== */
-    const validationRes = await fetch("/cart/validate");
-    const validationData = await validationRes.json();
+ 
+if (!<%= isBuyNow %>) {
+  const validationRes = await fetch("/cart/validate");
+  const validationData = await validationRes.json();
 
-    if (!validationRes.ok) {
-      paymentInProgress = false;
-      Swal.fire("Error", validationData.message || "Validation failed", "error");
-      return;
-    }
+  if (!validationRes.ok) {
+    paymentInProgress = false;
+    Swal.fire(
+      "Error",
+      validationData.message || "Unable to validate cart",
+      "error"
+    );
+    return;
+  }
 
-    if (
-      validationData.unavailableItems &&
-      validationData.unavailableItems.length > 0
-    ) {
-      const listHtml = validationData.unavailableItems
-        .map(
-          (item) => `• <b>${item.name}</b> (${item.reason})`
-        )
-        .join("<br>");
+  if (validationData.unavailableItems?.length > 0) {
+    const listHtml = validationData.unavailableItems
+      .map(
+        (item) => `• <b>${item.name}</b> (${item.reason})`
+      )
+      .join("<br>");
 
-      Swal.fire({
-        icon: "warning",
-        title: "Some items are unavailable",
-        html: `
-          <p>The following items cannot be purchased:</p>
-          <div style="text-align:left;margin-top:8px">${listHtml}</div>
-          <p style="margin-top:12px">
-            Do you want to continue with the remaining items?
-          </p>
-        `,
-        showCancelButton: true,
-        confirmButtonText: "Yes, continue",
-        cancelButtonText: "Cancel",
-        confirmButtonColor: "#2563eb",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.reload(); // 🔄 cart is already fixed server-side
-        }
-      });
+    paymentInProgress = false;
 
-      paymentInProgress = false;
-      return;
-    }
+    Swal.fire({
+      icon: "warning",
+      title: "Some items are unavailable",
+      html: `
+        <p>The following items cannot be purchased:</p>
+        <div style="text-align:left;margin-top:8px">${listHtml}</div>
+        <p style="margin-top:12px">
+          These items were removed from your cart.
+        </p>
+      `,
+      confirmButtonText: "Review Cart",
+      confirmButtonColor: "#2563eb",
+    }).then(() => {
+      window.location.href = "/cart";
+    });
 
-    /* ===============================
-       2️⃣ PAYMENT METHOD VALIDATION
-    =============================== */
+    return;
+  }
+}
+
+
     const method = document.getElementById("paymentMethod").value;
 
     if (!method) {

@@ -226,6 +226,7 @@
 
         <% if (!item.returnStatus || item.returnStatus === "none") { %>
 
+            
 
           <% if (
             (item.status === "ordered" || item.status === "shipped") &&
@@ -240,13 +241,12 @@
             </button>
           <% } %>
 
-            <% if (!canCancelIndividually && !item.status === "delivered") { %>
+          <% if (item.status !== "delivered" && !canCancelIndividually ) { %>
               <p class="text-sm text-gray-500">
                 Item cannot be cancelled individually due to coupon conditions.
                 You may cancel the full order instead.
               </p>
             <% } %>
-
 
           <% if (item.status === "delivered") { %>
             <!-- RETURN -->
