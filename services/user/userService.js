@@ -238,16 +238,22 @@ export const otpResend = async (req, res) => {
   }
 };
 
-export const authGoogle = async (req, res) => {
+export const authGoogle = (req, res, next) => {
   passport.authenticate("google", { failureRedirect: "/signup" })(
     req,
     res,
     () => {
+      if (!req.user) {
+        console.error(" Google OAuth failed: req.user is undefined");
+        return res.redirect("/signup");
+      }
+
       req.session.user = { _id: req.user._id };
       res.redirect("/");
     }
   );
 };
+
 
 export const profileLoad = async (req, res) => {
   try {
