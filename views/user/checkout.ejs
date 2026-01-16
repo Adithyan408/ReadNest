@@ -627,7 +627,7 @@
           );
           return;
         }
-        const homeExists = homeAddressExists();
+        const homeExists = homeAddressExists(data.addressId);
         if (homeExists && data.addressLabel === "Home") {
           Swal.fire(
             "Not Allowed",
@@ -666,6 +666,14 @@
           Swal.fire("Error", "Validation failed", "error");
         }
       }
+
+      function homeAddressExists(excludeId = null) {
+  return ALL_ADDRESSES.some(addr => {
+    if (excludeId && addr._id === excludeId) return false;
+    return addr.addressLabel === "Home";
+  });
+}
+
 
       updateTotalsRight();
     </script>
