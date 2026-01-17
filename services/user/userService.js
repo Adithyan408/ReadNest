@@ -29,18 +29,23 @@ export const getSignup = async (req, res) => {
 
 export const getLogin = async (req, res) => {
   try {
-    if (!req.session.user) {
-      const message = req.session.message || null;
-      req.session.message = null;
-      res.render("login", { message });
-    } else {
-      res.redirect("/");
+    if (req.session.user) {
+      return res.redirect("/");
     }
+
+    if (req.session.message) {
+      const message = req.session.message;
+      req.session.message = null;
+      return res.render("login", { message });
+    }
+
+    res.render("login");
   } catch (error) {
-    res.redirect("/notfound");
-    res.status(500);
+    console.error(error);
+    res.status(500).redirect("/notfound");
   }
 };
+
 
 export const postLogin = async (req, res) => {
   try {

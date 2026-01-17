@@ -111,11 +111,13 @@
                   src="<%= item.image %>"
                   class="w-20 h-28 object-contain bg-gray-50 rounded-xl"
                 />
-                <div class="flex-1">
-                  <h3 class="font-bold text-gray-900 truncate">
+                <div class="flex-1 min-w-0">
+                  <h3
+                    class="font-bold text-gray-900 text-sm sm:text-base line-clamp-1 sm:line-clamp-2 break-words"
+                  >
                     <%= item.name %>
                   </h3>
-                  <div class="mt-4 flex items-center justify-between">
+                  <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
                     <div
                       class="flex items-center border rounded-xl bg-white p-1"
                     >
@@ -186,7 +188,7 @@
                 >
               </div>
             </div>
-            <input type="hidden"  />
+            <input type="hidden" />
             <button
               onclick="proceedToPayment()"
               class="w-full mt-8 bg-blue-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl hover:bg-blue-700 transition-all active:scale-95"
@@ -197,6 +199,7 @@
         </div>
       </div>
     </main>
+    <%- include("../../views/partials/user/footer") %>
 
     <div
       id="addressModal"
@@ -658,12 +661,11 @@
       }
 
       function homeAddressExists(excludeId = null) {
-  return ALL_ADDRESSES.some(addr => {
-    if (excludeId && addr._id === excludeId) return false;
-    return addr.addressLabel === "Home";
-  });
-}
-
+        return ALL_ADDRESSES.some((addr) => {
+          if (excludeId && addr._id === excludeId) return false;
+          return addr.addressLabel === "Home";
+        });
+      }
 
       updateTotalsRight();
     </script>

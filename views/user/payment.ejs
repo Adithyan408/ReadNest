@@ -50,12 +50,12 @@
                     <h2 class="text-lg font-bold text-gray-800 mb-4">Order Items</h2>
                     <div class="max-h-60 overflow-y-auto no-scrollbar divide-y divide-gray-50">
                         <% cart.forEach(item => { %>
-                        <div class="py-3 flex justify-between items-center gap-4">
+                        <div class="py-3 flex items-center gap-4">
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-bold text-gray-800 truncate"><%= item.name %></p>
+                                <p class="text-sm font-bold text-gray-800 line-clamp-1 break-words"><%= item.name %></p>
                                 <p class="text-xs text-gray-400">Qty: <%= item.quantity %> × ₹<%= item.price %></p>
                             </div>
-                            <p class="text-sm font-black text-gray-900">₹<%= item.price * item.quantity %></p>
+                            <p class="text-sm font-black text-gray-900 shrink-0 text-right">₹<%= item.price * item.quantity %></p>
                         </div>
                         <% }) %>
                     </div>

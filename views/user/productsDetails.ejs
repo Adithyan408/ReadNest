@@ -65,13 +65,17 @@
                 <% const isUnlisted = isProductListed === false || isCategoryListed === false; %>
                 <% const isDisabled = isOutOfStock || isUnlisted; %>
 
-                <div class="grid grid-cols-2 gap-3 mt-6">
-                    <button onclick="addToCart(event, '<%= product._id %>')" <%= isDisabled ? "disabled" : "" %> 
-                            class="py-4 rounded-xl font-bold transition shadow-lg flex items-center justify-center gap-2 buy-btn
-                                   <%= isDisabled ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50' %>">
-                        <i class="fa-solid fa-cart-shopping"></i> <span>ADD TO CART</span>
-                    </button>
-                </div>
+               <div class="grid grid-cols-2 gap-3 mt-6">
+  <button
+    onclick="addToCart(event, '<%= product._id %>')"
+    <%= isDisabled ? "disabled" : "" %>
+    class="col-span-2 py-4 rounded-xl font-bold transition shadow-lg flex items-center justify-center gap-2 buy-btn
+           <%= isDisabled ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50' %>">
+    <i class="fa-solid fa-cart-shopping"></i>
+    <span>ADD TO CART</span>
+  </button>
+</div>
+
             </div>
 
             <div class="w-full lg:w-1/2 space-y-8">
