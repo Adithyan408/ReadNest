@@ -36,8 +36,8 @@ import {
 import nocache from "nocache";
 import upload from "../middlewares/multer.js";
 import { addAddress, deleteAddress, getAddress, getSingleAddress, selectedAddressSave, updateAddress } from "../controllers/user/addressController.js";
-import { buyNowUpdate, cartUpdate, getCart, postCart, removeCart, validateCart } from "../controllers/user/cartController.js";
-import { addAddressNew, addresChoose, buyNowValidation, loadBuyNow, loadCheckout, postAddress } from "../controllers/user/checkout.js";
+import {  cartUpdate, getCart, postCart, removeCart, validateCart } from "../controllers/user/cartController.js";
+import { addAddressNew, addresChoose, loadCheckout, postAddress } from "../controllers/user/checkout.js";
 
 import { applyCoupon, getPayment, loadFailed, loadPlace, razorpay_order, razorpay_verify, removeCoupon } from "../controllers/user/payment.js";
 
@@ -90,8 +90,6 @@ router.get("/cart", getCart)
 router.post("/addcart", postCart)
 router.get("/remove-from-cart", removeCart)
 router.post("/update-cart-quantity", cartUpdate);
-router.post("/update-buyNow-qty", buyNowUpdate);
-router.post("/buy-now/validate", buyNowValidation);
 router.get("/cart/validate", validateCart)
 
 
@@ -104,7 +102,6 @@ router.post("/save-address", postAddress);
 router.get("/checkout/payment", getPayment)
 router.post("/apply-coupon", applyCoupon);
 router.get("/place-order", loadPlace)
-router.get("/buy-now/:id",loadBuyNow)
 router.post("/remove-coupon", removeCoupon)
 router.get("/payment-failed", loadFailed)
 router.post("/create-razorpay-order", razorpay_order);

@@ -119,13 +119,16 @@ export const cancelOrderItem = async (req, res) => {
     );
 
     const subtotalBefore = activeItems.reduce(
-      (sum, i) => sum + safeNumber(i.finalAmount || i.subtotal),
+      (sum, i) => sum + safeNumber(i.subtotal),
       0
     );
 
-    const itemAmount = safeNumber(item.finalAmount || item.subtotal);
-    const subtotalAfter = subtotalBefore - itemAmount;
-
+    
+    const itemBaseAmount = safeNumber(item.subtotal); // ORIGINAL price
+    const itemFinalAmount = safeNumber(item.finalAmount || item.subtotal); // discounted price
+    
+    const subtotalAfter = subtotalBefore - itemBaseAmount;
+    
     if (order.couponCode) {
       const coupon = await Coupon.findOne({ code: order.couponCode });
 
@@ -166,15 +169,44 @@ export const cancelOrderItem = async (req, res) => {
     item.status = "cancelled";
     item.cancelledAt = new Date();
 
-    let refundAmount = Math.max(itemAmount - discountDifference, 0);
-    item.refundAmount = refundAmount;
-
-    order.discount = safeNumber(discountAfter);
-    order.payableAmount = safeNumber(order.payableAmount) - refundAmount;
-
     const remainingItems = activeItems.filter(
       (i) => i._id.toString() !== itemId
     );
+
+    const isLastItem = remainingItems.length === 0;
+
+    let shippingRefund = 0;
+
+    if (isLastItem && item.status !== "delivered") {
+      shippingRefund = safeNumber(order.shippingCharge);
+    }
+
+    const couponBrokenByThisCancellation =
+      order.couponCode && discountBefore > 0 && discountAfter === 0;
+
+    let refundAmount;
+
+    if (isLastItem) {
+      // Last item → reverse everything
+      refundAmount = itemBaseAmount - discountBefore + shippingRefund;
+    } else if (couponBrokenByThisCancellation) {
+      // Coupon breaks due to this item
+      refundAmount = Math.max(itemBaseAmount - discountDifference, 0);
+    } else {
+      // Coupon still valid
+      refundAmount = itemBaseAmount;
+    }
+
+    order.discount = safeNumber(discountAfter);
+    order.payableAmount = Math.max(
+      safeNumber(order.payableAmount) - refundAmount,
+      0
+    );
+
+    if (isLastItem) {
+      order.discount = 0;
+      order.shippingCharge = 0;
+    }
 
     order.status =
       remainingItems.length === 0 ? "cancelled" : "partially_cancelled";
@@ -237,19 +269,14 @@ export const cancelFullOrder = async (req, res) => {
       });
     }
 
-
-    let refundAmount = safeNumber(
-      order.payableAmount ?? order.finalPayable
-    );
+    let refundAmount = safeNumber(order.payableAmount ?? order.finalPayable);
 
     for (const item of order.items) {
       if (!["cancelled", "returned"].includes(item.status)) {
         item.status = "cancelled";
         item.cancelledAt = new Date();
 
-        const itemAmount = safeNumber(
-          item.finalAmount || item.subtotal
-        );
+        const itemAmount = safeNumber(item.finalAmount || item.subtotal);
         item.refundAmount = itemAmount;
 
         await Product.updateOne(
@@ -264,7 +291,6 @@ export const cancelFullOrder = async (req, res) => {
     order.status = "cancelled";
 
     await order.save();
-
 
     if (["Razorpay", "WALLET"].includes(order.paymentMethod)) {
       await creditWallet({
@@ -289,8 +315,6 @@ export const cancelFullOrder = async (req, res) => {
     });
   }
 };
-
-
 
 export const returnOrderItem = async (req, res) => {
   try {
@@ -340,12 +364,9 @@ export const downloadInvoice = async (req, res) => {
       });
     }
 
-
-
     let isInvoiceAvailable = false;
 
     if (order.paymentMethod === "COD") {
-  
       isInvoiceAvailable = order.items?.some(
         (item) => item.status === "delivered"
       );
@@ -359,7 +380,6 @@ export const downloadInvoice = async (req, res) => {
         message: "Invoice is available only after delivery",
       });
     }
-
 
     // ---------------- PDF SETUP ----------------
     const invoiceName = `invoice-${orderId}.pdf`;

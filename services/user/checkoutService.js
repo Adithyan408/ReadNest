@@ -14,7 +14,6 @@ export const getCheckout = async (req, res) => {
 
     let cart = [];
 
-    const buyNowId = req.query.buyNow;
 
     const calculateOffer = async (product) => {
       const now = new Date();
@@ -65,35 +64,6 @@ export const getCheckout = async (req, res) => {
       };
     };
 
-    if (buyNowId) {
-      const product = await Product.findById(buyNowId).lean();
-      if (!product) return res.redirect("/notfound");
-
-      const qty = req.session.buyNowQuantity || 1;
-      const pricing = await calculateOffer(product);
-
-      if (pricing.unavailable) {
-        return res.redirect("/?error=product-unavailable");
-      }
-
-      const { finalPrice, offerPrice } = pricing;
-
-      req.session.buyNowProductId = buyNowId;
-      req.session.buyNowPrice = finalPrice;
-
-      cart = [
-        {
-          _id: product._id,
-          name: product.productName,
-          image: product.productImage[0],
-          quantity: qty,
-          price: finalPrice,
-          regularPrice: product.regularPrice,
-          offerPrice: offerPrice,
-          stock: product.stock,
-        },
-      ];
-    } else {
       const cartData = await Cart.findOne({ userId })
         .populate("items.productId")
         .lean();
@@ -121,7 +91,7 @@ export const getCheckout = async (req, res) => {
             )
           ).filter(Boolean)
         : [];
-    }
+    
 
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
@@ -147,7 +117,6 @@ export const getCheckout = async (req, res) => {
       cart,
       addresses,
       selectedAddress,
-      isBuyNow: Boolean(buyNowId),
     });
   } catch (error) {
     console.log("Checkout Load Error:", error);
@@ -272,63 +241,3 @@ export const saveAddress = async (req, res) => {
   }
 };
 
-export const getBuyNow = async (req, res) => {
-  const product = await Product.findById(req.params.id);
-
-  if (!product) return res.redirect("/notfound");
-
-  req.session.buyNowProductId = product._id;
-  req.session.buyNowQuantity = 1;
-  req.session.buyNowUnitPrice = product.salePrice || product.regularPrice;
-
-  return res.redirect(`/checkout?buyNow=${product._id}`);
-};
-
-export const validateBuyNow = async (req, res) => {
-  try {
-    const userId = req.session.user?._id;
-    const { productId } = req.body;
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Please login to continue",
-      });
-    }
-
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
-    }
-
-    const categoryDoc = await Category.findOne({
-      categoryName: product.category,
-    });
-
-    if (
-      product.isListed === false ||
-      categoryDoc?.isListed === false ||
-      product.stock <= 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "This product is no longer available",
-      });
-    }
-
-   
-    req.session.buyNowProductId = product._id;
-    req.session.buyNowQuantity = 1;
-
-    return res.json({ success: true });
-  } catch (error) {
-    console.log("BuyNow validation error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Something went wrong",
-    });
-  }
-};

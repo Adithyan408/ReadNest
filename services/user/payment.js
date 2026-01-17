@@ -64,8 +64,6 @@ export const loadPayment = async (req, res) => {
         discount: cached.discount,
         shippingCharge: cached.shippingCharge,
         payableAmount: cached.payableAmount,
-
-        isBuyNow: cached.isBuyNow,
         coupons: cached.coupons,
         totalAmount: cached.subtotal,
         walletBalance,
@@ -120,45 +118,15 @@ export const loadPayment = async (req, res) => {
     const userData = await User.findById(userId).lean();
     const cartDoc = await Cart.findOne({ userId }).lean();
 
-    const buyNowProductId =
-      req.query.buyNow || req.session.buyNowProductId || null;
-    const isBuyNow = Boolean(buyNowProductId);
 
-    if (!cartDoc?.items?.length && !isBuyNow) {
+
+    if (!cartDoc?.items?.length) {
       return res.redirect("/cart");
     }
 
     let cart = [];
 
-    if (isBuyNow) {
-      const product = await Product.findById(buyNowProductId).lean();
-      if (!product || product.stock <= 0 || product.isListed === false) {
-        return res.redirect("/cart?error=product-unavailable");
-      }
-
-      const categoryDoc = await Category.findOne({
-        categoryName: product.category,
-      });
-
-      if (categoryDoc?.isListed === false) {
-        return res.redirect("/cart?error=product-unavailable");
-      }
-
-      const qty = req.session.buyNowQuantity || 1;
-      const offer = await calculateOffer(product);
-
-      cart = [
-        {
-          _id: product._id,
-          name: product.productName,
-          image: product.productImage[0],
-          quantity: qty,
-          price: offer.finalPrice,
-          regularPrice: offer.regularPrice,
-          offerPrice: offer.offerPrice,
-        },
-      ];
-    } else {
+   
       const fullCart = await Cart.findOne({ userId })
         .populate("items.productId")
         .lean();
@@ -177,7 +145,7 @@ export const loadPayment = async (req, res) => {
           };
         })
       );
-    }
+    
 
     const subtotal = cart.reduce(
       (sum, item) => sum + item.price * item.quantity,
@@ -206,7 +174,7 @@ export const loadPayment = async (req, res) => {
 
     const usedCouponIds = usedCoupons.map((c) => c.couponId.toString());
 
-    const isBuyNowMode = isBuyNow;
+   
 
     const applicableCoupons = coupons.filter((coupon) => {
       const couponId = coupon._id.toString();
@@ -220,8 +188,6 @@ export const loadPayment = async (req, res) => {
         return false;
       }
 
-      if (coupon.buyNowOnly && !isBuyNowMode) return false;
-      if (coupon.cartOnly && isBuyNowMode) return false;
 
       if (coupon.type === "referral") {
         if (!availableReferralCodes.includes(coupon.code)) {
@@ -257,7 +223,6 @@ export const loadPayment = async (req, res) => {
       payableAmount,
       coupons: normalizedCoupons,
       selectedAddress,
-      isBuyNow,
       appliedCoupon: null,
       selectedPaymentMethod: null,
       razorpayOrderId: null,
@@ -278,7 +243,6 @@ export const loadPayment = async (req, res) => {
       totalAmount: subtotal,
       shippingCharge,
       payableAmount,
-      isBuyNow,
       coupons: normalizedCoupons,
       walletBalance,
       isWalletUsable,
@@ -401,7 +365,6 @@ export const orderPlaced = async (req, res) => {
       shippingCharge,
       payableAmount,
       appliedCoupon,
-      isBuyNow,
       razorpayOrderId,
     } = cached;
 
@@ -552,9 +515,7 @@ export const orderPlaced = async (req, res) => {
       );
     }
 
-    if (!isBuyNow) {
-      await Cart.updateOne({ userId }, { items: [] });
-    }
+    
 
     await clearPaymentState(userId);
 
@@ -562,8 +523,6 @@ export const orderPlaced = async (req, res) => {
     req.session.razorpayPaymentId = null;
     req.session.appliedCoupon = null;
     req.session.discountValue = null;
-    req.session.buyNowProductId = null;
-    req.session.buyNowQuantity = null;
 
     res.render("placed", {
       user: userData,

@@ -1,5 +1,5 @@
-import { router } from "../../routes/userRouter.js";
-import { addcart, cartRemove, loadCart, updateBuyNowQty, updateCartQuantity, validateCartBeforeCheckout } from "../../services/user/cartService.js"
+
+import { addcart, cartRemove, loadCart, updateCartQuantity, validateCartBeforeCheckout } from "../../services/user/cartService.js"
 
 
 
@@ -17,10 +17,6 @@ export const removeCart = async(req, res) => {
 
 export const cartUpdate = async(req, res) => {
     await updateCartQuantity(req, res);
-}
-
-export const buyNowUpdate = async(req, res) =>{
-  await updateBuyNowQty(req, res);
 }
 
 export const validateCart = async(req, res) => {

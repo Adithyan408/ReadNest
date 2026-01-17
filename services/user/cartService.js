@@ -210,43 +210,7 @@ export const updateCartQuantity = async (req, res) => {
   }
 };
 
-export const updateBuyNowQty = async (req, res) => {
-  try {
-    const userId = req.session.user?._id;
-    const { productId, quantity } = req.body;
 
-    if (!userId) {
-      return res.json({ success: false, message: "Login required" });
-    }
-
-    if (String(req.session.buyNowProductId) !== String(productId)) {
-      return res.json({ success: false, message: "Buy Now product mismatch" });
-    }
-
-    const product = await Product.findById(productId);
-    const categoryDoc = await Category.findOne({
-      categoryName: product.category,
-    });
-
-    if (
-      product.isListed === false ||
-      categoryDoc?.isListed === false ||
-      product.stock <= 0
-    ) {
-      return res.json({
-        success: false,
-        message: "Product is no longer available",
-      });
-    }
-
-    req.session.buyNowQuantity = Number(quantity);
-
-    return res.json({ success: true });
-  } catch (error) {
-    console.log("BuyNow Quantity update error:", error);
-    return res.json({ success: false });
-  }
-};
 
 export const validateCartBeforeCheckout = async (req, res) => {
   try {
@@ -254,51 +218,6 @@ export const validateCartBeforeCheckout = async (req, res) => {
     if (!userId) {
       return res.status(401).json({ message: "Login required" });
     }
-
-    if (req.session.buyNowProductId) {
-      const product = await Product.findById(
-        req.session.buyNowProductId
-      ).lean();
-
-      if (!product) {
-        return res.json({
-          success: false,
-          unavailableItems: [
-            { name: "Product", reason: "Product no longer exists" },
-          ],
-        });
-      }
-
-      const category = await Category.findOne({
-        categoryName: product.category,
-      }).lean();
-
-      if (
-        product.isListed === false ||
-        category?.isListed === false ||
-        product.stock <= 0
-      ) {
-        return res.json({
-          success: false,
-          unavailableItems: [
-            {
-              name: product.productName,
-              reason:
-                product.stock <= 0
-                  ? "Out of stock"
-                  : "No longer available",
-            },
-          ],
-        });
-      }
-
-      return res.json({
-        success: true,
-        unavailableItems: [],
-        removedCount: 0,
-      });
-    }
-
     const cart = await Cart.findOne({ userId }).lean();
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });

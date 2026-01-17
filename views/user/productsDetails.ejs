@@ -71,12 +71,6 @@
                                    <%= isDisabled ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50' %>">
                         <i class="fa-solid fa-cart-shopping"></i> <span>ADD TO CART</span>
                     </button>
-
-                    <button onclick="buyNow('<%= product._id %>')" <%= isDisabled ? "disabled" : "" %> 
-                            class="py-4 rounded-xl font-bold transition shadow-lg flex items-center justify-center gap-2 buy-btn
-                                   <%= isDisabled ? 'bg-gray-400 text-gray-600 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700' %>">
-                        <i class="fa-solid fa-bolt-lightning"></i> <span>BUY NOW</span>
-                    </button>
                 </div>
             </div>
 
@@ -176,7 +170,6 @@
         window.addEventListener('load', initZoom);
         window.addEventListener('resize', initZoom);
 
-        /* CORE LOGIC: Add to Cart, Buy Now, Wishlist (Kept identical to original) */
          document.addEventListener("click", async (e) => {
       const btn = e.target.closest(".wishlist-btn");
       if (!btn) return;
@@ -193,7 +186,7 @@
       const data = await res.json();
       icon.className = data.inWishlist ? "fa-solid fa-heart text-red-500 text-sm" : "fa-regular fa-heart text-gray-400 text-sm";
     });
-    
+
         async function addToCart(event, productId) {
             event.preventDefault();
             const res = await fetch("/addcart", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId }) });
@@ -203,12 +196,6 @@
             else Swal.fire({ icon: "warning", title: "Wait!", text: data.message });
         }
 
-        async function buyNow(productId) {
-            const res = await fetch("/buy-now/validate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId }) });
-            if (res.status === 401) return window.location.href = "/login";
-            if (res.ok) window.location.href = `/checkout?buyNow=${productId}`;
-            else Swal.fire({ icon: "warning", text: "Something went wrong." });
-        }
     </script>
 </body>
 </html>
