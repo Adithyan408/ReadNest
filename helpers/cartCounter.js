@@ -18,25 +18,25 @@ const cartCountMiddleware = async (req, res, next) => {
       return next();
     }
 
-    let count = 0;
+   let count = 0;
 
-    for (const item of cart.items) {
-      const product = await Product.findById(item.productId).lean();
-      if (!product) continue;
+for (const item of cart.items) {
+  const product = await Product.findById(item.productId).lean();
+  if (!product) continue;
 
-      const category = await Category.findOne({
-        categoryName: product.category,
-      }).lean();
+  const category = await Category.findOne({
+    categoryName: product.category,
+  }).lean();
 
-      const isAvailable =
-        product.isListed !== false &&
-        category?.isListed !== false &&
-        product.stock > 0;
+  const isAvailable =
+    product.isListed !== false &&
+    category?.isListed !== false &&
+    product.stock > 0;
 
-      if (isAvailable) {
-        count += item.quantity;
-      }
-    }
+  if (isAvailable) {
+    count += 1; 
+  }
+}
 
     res.locals.cartCount = count;
   } catch (error) {
