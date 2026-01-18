@@ -8,6 +8,7 @@ export const homeLoad = async (req, res) => {
   try {
     const user = req.session.user;
     const category = req.query.category || null;
+
     const min = Array.isArray(req.query.min)
       ? req.query.min.at(-1)
       : req.query.min;
@@ -15,62 +16,21 @@ export const homeLoad = async (req, res) => {
     const max = Array.isArray(req.query.max)
       ? req.query.max.at(-1)
       : req.query.max;
-    let sort = req.query.sort || null;
-    let selectedLanguages = [];
 
+    const sort = req.query.sort || null;
+
+    let selectedLanguages = [];
     if (req.query.languages) {
-      if (Array.isArray(req.query.languages)) {
-        selectedLanguages = req.query.languages;
-      } else {
-        selectedLanguages = req.query.languages.split(",");
-      }
+      selectedLanguages = Array.isArray(req.query.languages)
+        ? req.query.languages
+        : req.query.languages.split(",");
     }
 
-    let filter = {
-      isListed: true,
-    };
+    let filter = { isListed: true };
 
     if (category) filter.category = category;
-
-    if (min || max) {
-      filter.regularPrice = {};
-      if (min) filter.regularPrice.$gte = parseInt(min);
-      if (max) filter.regularPrice.$lte = parseInt(max);
-    }
-
     if (selectedLanguages.length > 0) {
       filter.language = { $in: selectedLanguages };
-    }
-
-    let sortQuery = {};
-
-    switch (sort) {
-      case "priceAsc":
-        sortQuery = { regularPrice: 1 };
-        break;
-
-      case "priceDesc":
-        sortQuery = { regularPrice: -1 };
-        break;
-
-      case "nameAsc":
-        sortQuery = { productName: 1 };
-        break;
-
-      case "nameDesc":
-        sortQuery = { productName: -1 };
-        break;
-
-      case "newest":
-        sortQuery = { createdAt: -1 };
-        break;
-
-      case "oldest":
-        sortQuery = { createdAt: 1 };
-        break;
-
-      default:
-        sortQuery = {};
     }
 
     const page = parseInt(req.query.page) || 1;
@@ -78,61 +38,61 @@ export const homeLoad = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const products = await Product.find(filter)
-      .populate("category")
-      .sort(sort === "newest" || sort === "oldest" ? sortQuery : {})
       .skip(skip)
       .limit(limit);
 
-    const processedProducts = await Promise.all(
+    let processedProducts = await Promise.all(
       products.map(async (p) => {
         const productObj = p.toObject();
-        const regularPrice = p.regularPrice;
         const now = new Date();
+        const regularPrice = p.regularPrice;
 
         let productDiscount = 0;
         if (p.offer?.isOffer) {
-          const start = p.offer.startDate;
-          const end = p.offer.endDate;
-
           const valid =
-            (!start || now >= new Date(start)) &&
-            (!end || now <= new Date(end));
-
+            (!p.offer.startDate || now >= new Date(p.offer.startDate)) &&
+            (!p.offer.endDate || now <= new Date(p.offer.endDate));
           if (valid) productDiscount = p.offer.discountValue;
         }
 
         let categoryDiscount = 0;
-
         const categoryDoc = await Category.findOne({
           categoryName: p.category,
         });
 
         if (categoryDoc?.offer?.isOffer) {
-          const start = categoryDoc.offer.startDate;
-          const end = categoryDoc.offer.endDate;
-
           const valid =
-            (!start || now >= new Date(start)) &&
-            (!end || now <= new Date(end));
-
+            (!categoryDoc.offer.startDate ||
+              now >= new Date(categoryDoc.offer.startDate)) &&
+            (!categoryDoc.offer.endDate ||
+              now <= new Date(categoryDoc.offer.endDate));
           if (valid) categoryDiscount = categoryDoc.offer.discountValue;
         }
 
         const bestDiscount = Math.max(productDiscount, categoryDiscount);
 
-        if (bestDiscount > 0) {
-          productObj.offerPrice = Math.round(
-            regularPrice - (regularPrice * bestDiscount) / 100
-          );
-        } else {
-          productObj.offerPrice = null;
-        }
+        productObj.offerPrice =
+          bestDiscount > 0
+            ? Math.round(regularPrice - (regularPrice * bestDiscount) / 100)
+            : null;
+
         productObj.effectivePrice =
-          productObj.offerPrice !== null ? productObj.offerPrice : regularPrice;
+          productObj.offerPrice ?? regularPrice;
 
         return productObj;
       })
     );
+
+    if (min || max) {
+      const minVal = min ? parseInt(min) : null;
+      const maxVal = max ? parseInt(max) : null;
+
+      processedProducts = processedProducts.filter((p) => {
+        if (minVal !== null && p.effectivePrice < minVal) return false;
+        if (maxVal !== null && p.effectivePrice > maxVal) return false;
+        return true;
+      });
+    }
 
     if (sort === "priceAsc") {
       processedProducts.sort((a, b) => a.effectivePrice - b.effectivePrice);
@@ -142,18 +102,43 @@ export const homeLoad = async (req, res) => {
       processedProducts.sort((a, b) => b.effectivePrice - a.effectivePrice);
     }
 
-    const totalProducts = await Product.countDocuments(filter);
+    if (sort === "nameAsc") {
+      processedProducts.sort((a, b) =>
+        a.productName.localeCompare(b.productName)
+      );
+    }
+
+    if (sort === "nameDesc") {
+      processedProducts.sort((a, b) =>
+        b.productName.localeCompare(a.productName)
+      );
+    }
+
+    if (sort === "newest") {
+      processedProducts.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+    }
+
+    if (sort === "oldest") {
+      processedProducts.sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
+    }
+
+    const totalProducts =
+      min || max
+        ? processedProducts.length
+        : await Product.countDocuments(filter);
+
     const totalPages = Math.ceil(totalProducts / limit);
 
     let wishlistProducts = [];
     let userData = null;
+
     if (user) {
       userData = await User.findById(user._id);
-
-      const wishlist = await Wishlist.findOne({
-        userId: user._id,
-      }).lean();
-
+      const wishlist = await Wishlist.findOne({ userId: user._id }).lean();
       wishlistProducts = wishlist
         ? wishlist.products.map((id) => id.toString())
         : [];
@@ -161,23 +146,17 @@ export const homeLoad = async (req, res) => {
 
     const categories = await Category.find({ isListed: true });
     let languages = await Product.distinct("language", { isListed: true });
-
-    languages = languages.filter((lang) => lang && lang.trim() !== "");
+    languages = languages.filter((l) => l && l.trim() !== "");
 
     const homeBanner = await Banner.findOne({ title: "home-page" });
 
     const queryParams = new URLSearchParams();
-
     if (category) queryParams.set("category", category);
     if (min) queryParams.set("min", min);
     if (max) queryParams.set("max", max);
     if (sort) queryParams.set("sort", sort);
+    selectedLanguages.forEach((l) => queryParams.append("languages", l));
 
-    selectedLanguages.forEach((lang) => queryParams.append("languages", lang));
-
-    const isHome = req.originalUrl === "/";
-
-    const baseQuery = queryParams.toString();
     res.render("home", {
       user: userData,
       products: processedProducts,
@@ -189,13 +168,14 @@ export const homeLoad = async (req, res) => {
       languages,
       min,
       max,
-      baseQuery,
+      baseQuery: queryParams.toString(),
       sort,
-      homeBanner: homeBanner ? homeBanner.bannerImage : null,
-      isHome: isHome,
+      homeBanner: homeBanner?.bannerImage || null,
+      isHome: req.originalUrl === "/",
       wishlistProducts,
     });
   } catch (error) {
+    console.error("Home load error:", error);
     res.redirect("/notfound");
   }
 };
@@ -230,6 +210,7 @@ export const productDetails = async (req, res) => {
   try {
     const productId = req.query.id;
     const page = req.query.page || 1;
+    const userId = req.session.user._id;
 
     const q = { ...req.query };
     delete q.id;
@@ -355,13 +336,15 @@ export const productDetails = async (req, res) => {
     const isProductListed = product.isListed;
     const isCategoryListed = categoryDoc?.isListed ?? false;
 
+    const user = await User.findById(userId);
+
     return res.render("productsDetails", {
+      user,
       product,
       similarProducts,
       currentPage: page,
       baseQuery,
       wishlistProducts,
-      user: req.session.user,
       isProductListed,
       isCategoryListed,
     });

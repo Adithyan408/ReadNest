@@ -322,6 +322,63 @@
 
     <% }) %>
   </div>
+  <div class="flex justify-center lg:justify-end items-center p-4 sm:p-6 border-t border-gray-200">
+
+  <nav aria-label="Page navigation">
+    <ul class="flex items-center gap-2 text-sm">
+
+      <!-- PREVIOUS -->
+      <% if (currentPage > 1) { %>
+        <li>
+          <a
+            href="?page=<%= currentPage - 1 %><%= baseQuery ? '&' + baseQuery : '' %>"
+            class="px-3 py-2 rounded-lg border bg-white hover:bg-gray-100"
+          >
+            Prev
+          </a>
+        </li>
+      <% } %>
+
+      <!-- MOBILE: CURRENT PAGE ONLY -->
+      <li class="block sm:hidden">
+        <span
+          class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold"
+        >
+          <%= currentPage %> / <%= totalPages %>
+        </span>
+      </li>
+
+      <!-- DESKTOP: ALL PAGE NUMBERS -->
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <li class="hidden sm:block">
+          <a
+            href="?page=<%= i %><%= baseQuery ? '&' + baseQuery : '' %>"
+            class="px-4 py-2 rounded-lg border font-medium transition
+              <%= i === currentPage
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white text-gray-700 hover:bg-gray-100' %>"
+          >
+            <%= i %>
+          </a>
+        </li>
+      <% } %>
+
+      <!-- NEXT -->
+      <% if (currentPage < totalPages) { %>
+        <li>
+          <a
+            href="?page=<%= currentPage + 1 %><%= baseQuery ? '&' + baseQuery : '' %>"
+            class="px-3 py-2 rounded-lg border bg-white hover:bg-gray-100"
+          >
+            Next
+          </a>
+        </li>
+      <% } %>
+
+    </ul>
+  </nav>
+</div>
+
 
   <% } %>
 </main>
