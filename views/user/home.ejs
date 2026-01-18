@@ -4,208 +4,398 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ReadNest - Online Book Store</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
   <style>
     @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
     * { font-family: "Poppins", sans-serif; }
 
-    /* Hide scrollbars but keep functionality */
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    /* Custom Rating Badge */
     .rating-badge {
       background: #22c55e;
       color: white;
       padding: 2px 6px;
       border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
+      font-size: 11px;
+      font-weight: 600;
     }
 
-    /* Fixed Category bar on mobile */
-    @media (max-width: 1023px) {
-      .mobile-category-bar {
-        position: sticky;
-        top: 60px; /* Adjust based on your header height */
-        z-index: 40;
-        background: white;
-      }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { scrollbar-width: none; }
+
+    .filter-sidebar {
+      position: sticky;
+      top: 90px;
+      max-height: calc(100vh - 110px);
+      overflow-y: auto;
     }
   </style>
 </head>
 
 <body class="bg-gray-100">
-  <%- include("../../views/partials/user/header") %>
 
-  <div class="max-w-7xl mx-auto px-2 sm:px-4 py-4 md:py-6">
-    <%- include('../../views/partials/breadCrumb') %>
+<%- include("../../views/partials/user/header") %>
 
-    <div class="bg-white rounded-lg shadow-sm px-4 py-3 mb-4 flex items-center gap-4 border border-gray-200 overflow-hidden">
-      <span class="hidden md:inline font-bold text-gray-700 whitespace-nowrap">Sort By:</span>
-      <form id="sortForm" method="GET" class="flex items-center gap-4 overflow-x-auto no-scrollbar whitespace-nowrap">
-        <% if (selectedCategory) { %><input type="hidden" name="category" value="<%= selectedCategory %>" /><% } %>
-        <% selectedLanguages.forEach(lang => { %><input type="hidden" name="languages" value="<%= lang %>" /><% }) %>
-        <% if (min) { %><input type="hidden" name="min" value="<%= min %>" /><% } %>
-        <% if (max) { %><input type="hidden" name="max" value="<%= max %>" /><% } %>
+<!-- ================= MOBILE UI (UNCHANGED) ================= -->
 
-        <% const sorts = [
-            {v: 'priceAsc', l: 'Price: Low-High'}, {v: 'priceDesc', l: 'Price: High-Low'},
-            {v: 'nameAsc', l: 'A - Z'}, {v: 'nameDesc', l: 'Z - A'},
-            {v: 'newest', l: 'Newest'}, {v: 'oldest', l: 'Oldest'}
-        ] %>
-        <% sorts.forEach(s => { %>
-          <label class="flex items-center gap-1.5 cursor-pointer text-xs md:text-sm group transition">
-            <input type="radio" name="sort" value="<%= s.v %>" <%= sort === s.v ? "checked" : "" %> 
-                   class="w-3 h-3 text-indigo-600 focus:ring-0 border-gray-300">
-            <span class="<%= sort === s.v ? 'text-indigo-600 font-bold' : 'text-gray-500' %> group-hover:text-indigo-600"><%= s.l %></span>
-          </label>
-        <% }) %>
-      </form>
-    </div>
+<!-- MOBILE CATEGORY BAR -->
+<div class="lg:hidden bg-white border-b px-3 py-2 overflow-x-auto no-scrollbar">
+  <div class="flex gap-2 whitespace-nowrap">
+    <a href="/" class="px-4 py-2 rounded-full text-xs font-bold
+      <%= !selectedCategory ? 'bg-indigo-600 text-white' : 'bg-gray-200' %>">
+      All
+    </a>
+    <% categories.forEach(cat => { %>
+      <a href="/?category=<%= cat.categoryName %>"
+         class="px-4 py-2 rounded-full text-xs font-bold
+         <%= selectedCategory === cat.categoryName ? 'bg-indigo-600 text-white' : 'bg-gray-200' %>">
+        <%= cat.categoryName %>
+      </a>
+    <% }) %>
+  </div>
+</div>
 
-    <div class="flex flex-col lg:flex-row gap-6">
-      
-      <aside class="w-full lg:w-64 flex-shrink-0">
-        <div class="mobile-category-bar lg:hidden mb-4 border-b pb-2 no-scrollbar overflow-x-auto flex gap-2">
-            <a href="/" class="px-4 py-2 rounded-full text-xs whitespace-nowrap font-bold transition <%= !selectedCategory ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700' %>">
+<!-- MOBILE SORT + LANGUAGE -->
+<div class="lg:hidden bg-white px-3 py-3 border-b flex gap-3">
+  <select id="mobileSort" class="w-1/2 border rounded-lg px-3 py-2 text-sm">
+    <option value="">Sort By</option>
+    <option value="priceAsc">Price: Low → High</option>
+    <option value="priceDesc">Price: High → Low</option>
+    <option value="newest">Newest</option>
+    <option value="oldest">Oldest</option>
+  </select>
+
+  <select id="mobileLanguage" class="w-1/2 border rounded-lg px-3 py-2 text-sm">
+    <option value="">Language</option>
+    <% languages.forEach(lang => { %>
+      <option value="<%= lang %>" <%= selectedLanguages.includes(lang) ? 'selected' : '' %>>
+        <%= lang %>
+      </option>
+    <% }) %>
+  </select>
+</div>
+
+<!-- ================= DESKTOP SORT BAR ================= -->
+
+<div class="hidden lg:block bg-white border-b">
+  <div class="max-w-7xl mx-auto px-4 py-3">
+    <form id="desktopSortForm" method="GET"
+          class="flex items-center gap-6 text-sm overflow-x-auto no-scrollbar">
+
+      <% if (selectedCategory) { %>
+        <input type="hidden" name="category" value="<%= selectedCategory %>">
+      <% } %>
+
+      <% selectedLanguages.forEach(lang => { %>
+        <input type="hidden" name="languages" value="<%= lang %>">
+      <% }) %>
+
+      <% if (min) { %><input type="hidden" name="min" value="<%= min %>"><% } %>
+      <% if (max) { %><input type="hidden" name="max" value="<%= max %>"><% } %>
+
+      <span class="font-semibold text-gray-700">Sort By:</span>
+
+      <% const sorts = [
+        {v:'priceAsc',l:'Price Low-High'},
+        {v:'priceDesc',l:'Price High-Low'},
+        {v:'nameAsc',l:'Name A-Z'},
+        {v:'nameDesc',l:'Name Z-A'},
+        {v:'newest',l:'Newest'},
+        {v:'oldest',l:'Oldest'}
+      ]; %>
+
+      <% sorts.forEach(s => { %>
+        <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap">
+          <input type="radio" name="sort" value="<%= s.v %>" <%= sort === s.v ? 'checked' : '' %>>
+          <span><%= s.l %></span>
+        </label>
+      <% }) %>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MAIN LAYOUT ================= -->
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+  <div class="flex flex-col lg:flex-row gap-6">
+
+    <!-- ================= DESKTOP SIDEBAR ================= -->
+    <aside class="hidden lg:block w-64">
+      <div class="bg-white p-6 rounded-lg shadow-sm filter-sidebar space-y-8">
+
+        <!-- CATEGORIES -->
+        <div>
+          <h3 class="font-semibold mb-3">Categories</h3>
+          <ul class="space-y-2 text-sm">
+            <li>
+              <a href="/" class="<%= !selectedCategory ? 'text-indigo-600 font-bold' : '' %>">
                 All Books
-            </a>
-            <% categories.forEach(category => { %>
-                <a href="/?category=<%= category.categoryName %><%= sort ? '&sort=' + sort : '' %>" 
-                   class="px-4 py-2 rounded-full text-xs whitespace-nowrap font-bold transition <%= selectedCategory == category.categoryName ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700' %>">
-                    <%= category.categoryName %>
+              </a>
+            </li>
+            <% categories.forEach(cat => { %>
+              <li>
+                <a href="/?category=<%= cat.categoryName %>"
+                   class="<%= selectedCategory === cat.categoryName ? 'text-indigo-600 font-bold' : '' %>">
+                  <%= cat.categoryName %>
                 </a>
+              </li>
             <% }) %>
+          </ul>
         </div>
 
-        <div class="hidden lg:block bg-white rounded-xl shadow-sm p-6 sticky top-24">
-          <h2 class="text-lg font-bold mb-6 flex items-center gap-2"><i class="fas fa-filter text-indigo-600"></i> Filters</h2>
-          
-          <div class="mb-8">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Categories</h3>
-            <ul class="space-y-3">
-              <li><a href="/" class="text-sm <%= !selectedCategory ? 'text-indigo-600 font-bold' : 'text-gray-600' %> hover:text-indigo-600">All Books</a></li>
-              <% categories.forEach(category => { %>
-                <li>
-                  <a href="/?category=<%= category.categoryName %><%= sort ? '&sort=' + sort : '' %>" 
-                     class="text-sm flex justify-between items-center group <%= selectedCategory == category.categoryName ? 'text-indigo-600 font-bold' : 'text-gray-600 hover:text-indigo-600' %>">
-                    <%= category.categoryName %>
-                    <i class="fas fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition"></i>
-                  </a>
-                </li>
-              <% }) %>
-            </ul>
-          </div>
+        <!-- LANGUAGE (AUTO APPLY) -->
+        <div>
+          <h3 class="font-semibold mb-3">Language</h3>
+          <form id="desktopLanguageForm" method="GET" action="/" class="space-y-2">
 
-          <div class="mb-8">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Price Range</h3>
-            <form action="/" method="GET" class="space-y-4">
-              <div class="flex items-center gap-2">
-                <input type="number" name="min" placeholder="Min" value="<%= min || '' %>" class="w-full px-3 py-2 border rounded-lg text-xs outline-none focus:border-indigo-500" />
-                <span class="text-gray-400">-</span>
-                <input type="number" name="max" placeholder="Max" value="<%= max || '' %>" class="w-full px-3 py-2 border rounded-lg text-xs outline-none focus:border-indigo-500" />
-              </div>
-              <button type="submit" class="w-full py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition shadow-md shadow-indigo-100 uppercase tracking-wider">Apply</button>
-            </form>
-          </div>
-        </div>
-      </aside>
+            <% if (selectedCategory) { %><input type="hidden" name="category" value="<%= selectedCategory %>"><% } %>
+            <% if (sort) { %><input type="hidden" name="sort" value="<%= sort %>"><% } %>
+            <% if (min) { %><input type="hidden" name="min" value="<%= min %>"><% } %>
+            <% if (max) { %><input type="hidden" name="max" value="<%= max %>"><% } %>
 
-      <main class="flex-1">
-        <% if (products.length === 0) { %>
-          <div class="bg-white rounded-2xl shadow-sm p-12 text-center border-2 border-dashed border-gray-200">
-            <i class="fas fa-search text-5xl text-gray-300 mb-4"></i>
-            <h2 class="text-xl font-bold text-gray-700">No books found</h2>
-            <p class="text-gray-500 mt-2">Try adjusting your filters or search query.</p>
-          </div>
-        <% } else { %>
-
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
-            <% products.forEach((product, index) => { %>
-
-              <% if (isHome && index === 8) { %>
-                </div><div class="w-full h-32 sm:h-64 md:h-80 bg-gray-200 rounded-xl overflow-hidden my-6 shadow-sm">
-                  <img src="<%= homeBanner %>" class="w-full h-full object-cover" />
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
-              <% } %>
-
-              <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all flex flex-col group relative">
-                <button class="wishlist-btn absolute top-2 right-2 z-10 bg-white/90 backdrop-blur-sm w-8 h-8 rounded-full shadow-sm flex items-center justify-center transition active:scale-90" data-product-id="<%= product._id %>">
-                  <i class="<%= wishlistProducts?.includes(product._id.toString()) ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart text-gray-400' %> text-sm"></i>
-                </button>
-
-                <a href="/product?id=<%= product._id %><%= baseQuery ? '&' + baseQuery : '' %>" class="flex flex-col h-full">
-                  <div class="aspect-[2/3] w-full bg-gray-50 overflow-hidden">
-                    <% if (product.productImage?.length > 0) { %>
-                      <img src="<%= product.productImage[0] %>" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="<%= product.productName %>" />
-                    <% } else { %>
-                      <div class="w-full h-full bg-gray-200 flex items-center justify-center"><i class="fas fa-book text-gray-400 text-3xl"></i></div>
-                    <% } %>
-                  </div>
-
-                  <div class="p-2 sm:p-4 flex flex-col flex-1">
-                    <span class="rating-badge w-fit mb-1"><%= product.rating || "4.5" %> ★</span>
-                    <h3 class="font-bold text-gray-800 text-[11px] sm:text-sm line-clamp-2 mb-1 group-hover:text-indigo-600 transition tracking-tight leading-tight">
-                      <%= product.productName %>
-                    </h3>
-                    
-                    <div class="mt-auto pt-1">
-                      <% if (product.offerPrice < product.regularPrice) { %>
-                        <div class="flex flex-col">
-                            <span class="text-red-600 font-black text-sm sm:text-lg">₹<%= product.offerPrice %></span>
-                            <span class="text-gray-400 line-through text-[10px] sm:text-xs italic">₹<%= product.regularPrice %></span>
-                        </div>
-                      <% } else { %>
-                        <span class="text-gray-900 font-black text-sm sm:text-lg">₹<%= product.regularPrice %></span>
-                      <% } %>
-                    </div>
-                  </div>
-                </a>
-              </div>
-
+            <% languages.forEach(lang => { %>
+              <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox"
+                       name="languages"
+                       value="<%= lang %>"
+                       class="desktop-lang"
+                       <%= selectedLanguages.includes(lang) ? 'checked' : '' %>>
+                <span><%= lang %></span>
+              </label>
             <% }) %>
-          </div>
+          </form>
+        </div>
 
-          <div class="mt-12 flex justify-center pb-10 overflow-x-auto no-scrollbar">
-            <nav class="flex items-center gap-1.5 sm:gap-2 px-4">
-              <% for (let i = 1; i <= totalPages; i++) { %>
-                <a href="?page=<%= i %><%= baseQuery ? '&' + baseQuery : '' %>" 
-                   class="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border-2 font-bold text-xs sm:text-sm transition-all
-                   <%= (i === currentPage) ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-white text-gray-500 border-transparent hover:border-gray-200' %>">
-                  <%= i %>
-                </a>
-              <% } %>
-            </nav>
-          </div>
-        <% } %>
-      </main>
-    </div>
+        <!-- PRICE -->
+        <div>
+          <h3 class="font-semibold mb-3">Price</h3>
+          <form id="priceFilterForm" method="GET" action="/" class="space-y-3">
+
+  <% if (selectedCategory) { %>
+    <input type="hidden" name="category" value="<%= selectedCategory %>">
+  <% } %>
+
+  <% selectedLanguages.forEach(lang => { %>
+    <input type="hidden" name="languages" value="<%= lang %>">
+  <% }) %>
+
+  <% if (sort) { %>
+    <input type="hidden" name="sort" value="<%= sort %>">
+  <% } %>
+
+  <!-- Price Inputs -->
+  <div class="flex gap-2">
+    <input
+      type="number"
+      name="min"
+      id="minPrice"
+      placeholder="Min"
+      value="<%= min || '' %>"
+      class="w-full border rounded px-3 py-2"
+    />
+
+    <input
+      type="number"
+      name="max"
+      id="maxPrice"
+      placeholder="Max"
+      value="<%= max || '' %>"
+      class="w-full border rounded px-3 py-2"
+    />
   </div>
 
-  <%- include("../../views/partials/user/footer") %>
+  <!-- ERROR MESSAGE -->
+  <p id="priceError" class="text-sm text-red-600 hidden"></p>
 
-  <script>
-    document.querySelectorAll("input[name='sort']").forEach(r => r.addEventListener("change", () => document.getElementById("sortForm").submit()));
+  <button
+    type="submit"
+    class="w-full py-2 bg-indigo-600 text-white rounded-lg"
+  >
+    Apply
+  </button>
+</form>
 
-    document.addEventListener("click", async (e) => {
-      const btn = e.target.closest(".wishlist-btn");
-      if (!btn) return;
-      e.preventDefault(); e.stopPropagation();
-      const icon = btn.querySelector("i");
-      
-      const res = await fetch("/wishlist/toggle", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: btn.dataset.productId }),
-      });
+        </div>
 
-      if (res.status === 401) return window.location.href = "/login";
-      const data = await res.json();
-      icon.className = data.inWishlist ? "fa-solid fa-heart text-red-500 text-sm" : "fa-regular fa-heart text-gray-400 text-sm";
+      </div>
+    </aside>
+
+    <!-- ================= PRODUCTS ================= -->
+    <main class="flex-1">
+
+  <!-- NO PRODUCTS -->
+  <% if (!products.length) { %>
+    <div class="bg-white p-10 rounded-xl shadow-sm text-center">
+      <i class="fas fa-box-open text-5xl text-gray-400 mb-4"></i>
+      <h2 class="text-xl font-semibold text-gray-700">No books found</h2>
+      <p class="text-gray-500 mt-2">Try adjusting filters or check back later.</p>
+    </div>
+  <% } else { %>
+
+  <!-- PRODUCT GRID -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+
+    <% products.forEach((product, index) => { %>
+
+      <!-- INSERT BANNER AFTER 8 ITEMS -->
+      <% if (isHome && index === 8) { %>
+        </div>
+
+        <!-- BANNER -->
+        <div class="my-6 sm:my-10 rounded-2xl overflow-hidden shadow-md">
+          <img
+            src="<%= homeBanner %>"
+            alt="Promotional Banner"
+            class="w-full h-40 sm:h-64 lg:h-80 object-cover"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+      <% } %>
+
+      <!-- PRODUCT CARD -->
+      <a
+        href="/product?id=<%= product._id %><%= baseQuery ? '&' + baseQuery : '' %>"
+        class="bg-white rounded-xl shadow-sm hover:shadow-lg transition overflow-hidden group"
+      >
+
+        <!-- IMAGE -->
+        <div class="relative aspect-[2/3] bg-gray-100 overflow-hidden">
+          <% if (product.productImage && product.productImage.length > 0) { %>
+            <img
+              src="<%= product.productImage[0] %>"
+              alt="<%= product.productName %>"
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+            />
+          <% } else { %>
+            <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+              <i class="fas fa-book text-3xl text-gray-400"></i>
+            </div>
+          <% } %>
+
+          <!-- WISHLIST -->
+          <button
+            class="wishlist-btn absolute top-2 right-2 bg-white/90 backdrop-blur p-2 rounded-full shadow hover:scale-105 transition"
+            data-product-id="<%= product._id %>"
+            onclick="event.preventDefault();"
+          >
+            <% if (wishlistProducts?.includes(product._id.toString())) { %>
+              <i class="fa-solid fa-heart text-red-500"></i>
+            <% } else { %>
+              <i class="fa-regular fa-heart text-gray-600"></i>
+            <% } %>
+          </button>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="p-3 flex flex-col">
+
+          <!-- RATING -->
+          <span class="rating-badge w-fit mb-1">
+            <%= product.rating || "4.5" %> ★
+          </span>
+
+          <!-- TITLE -->
+          <h3 class="text-sm font-semibold text-gray-800 line-clamp-2 mb-1">
+            <%= product.productName %>
+          </h3>
+
+          <!-- PRICE (UNCHANGED LOGIC) -->
+          <div class="mt-auto">
+            <% if (product.offerPrice && product.offerPrice < product.regularPrice) { %>
+              <span class="text-xs text-gray-400 line-through">
+                ₹<%= product.regularPrice %>
+              </span>
+              <span class="ml-2 text-lg font-bold text-red-600">
+                ₹<%= product.offerPrice %>
+              </span>
+            <% } else { %>
+              <span class="text-lg font-bold text-gray-900">
+                ₹<%= product.regularPrice %>
+              </span>
+            <% } %>
+          </div>
+
+        </div>
+      </a>
+
+    <% }) %>
+  </div>
+
+  <% } %>
+</main>
+
+  </div>
+</div>
+
+<%- include("../../views/partials/user/footer") %>
+
+<!-- ================= JS ================= -->
+<script>
+  /* MOBILE SORT */
+  document.getElementById("mobileSort")?.addEventListener("change", e => {
+    const params = new URLSearchParams(window.location.search);
+    if (e.target.value) params.set("sort", e.target.value);
+    else params.delete("sort");
+    window.location.search = params.toString();
+  });
+
+  /* MOBILE LANGUAGE AUTO APPLY */
+  document.getElementById("mobileLanguage")?.addEventListener("change", e => {
+    const params = new URLSearchParams(window.location.search);
+    params.delete("languages");
+    if (e.target.value) params.append("languages", e.target.value);
+    window.location.search = params.toString();
+  });
+
+  /* DESKTOP LANGUAGE AUTO APPLY */
+  document.querySelectorAll(".desktop-lang").forEach(cb => {
+    cb.addEventListener("change", () => {
+      document.getElementById("desktopLanguageForm").submit();
     });
-  </script>
+  });
+
+  /* DESKTOP SORT AUTO APPLY */
+  document.querySelectorAll('#desktopSortForm input[name="sort"]').forEach(r => {
+    r.addEventListener("change", () => {
+      document.getElementById("desktopSortForm").submit();
+    });
+  });
+   document.getElementById("priceFilterForm")?.addEventListener("submit", (e) => {
+    const minInput = document.getElementById("minPrice");
+    const maxInput = document.getElementById("maxPrice");
+    const errorEl = document.getElementById("priceError");
+
+    const min = minInput.value.trim();
+    const max = maxInput.value.trim();
+
+    errorEl.classList.add("hidden");
+    errorEl.textContent = "";
+
+    // Convert to numbers if present
+    const minVal = min !== "" ? Number(min) : null;
+    const maxVal = max !== "" ? Number(max) : null;
+
+    // ❌ Negative values
+    if ((minVal !== null && minVal < 0) || (maxVal !== null && maxVal < 0)) {
+      e.preventDefault();
+      errorEl.textContent = "Price cannot be a negative value.";
+      errorEl.classList.remove("hidden");
+      return;
+    }
+
+    // ❌ Min greater than Max
+    if (minVal !== null && maxVal !== null && minVal > maxVal) {
+      e.preventDefault();
+      errorEl.textContent = "Minimum price cannot be greater than maximum price.";
+      errorEl.classList.remove("hidden");
+      return;
+    }
+
+    // ✅ Valid → allow submit
+  });
+</script>
+
 </body>
 </html>
