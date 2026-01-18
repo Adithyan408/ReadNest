@@ -241,3 +241,24 @@ export const saveAddress = async (req, res) => {
   }
 };
 
+export const updateCheckoutQuantity = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+    if (!userId) return res.json({ success: false });
+
+    const { productId, quantity } = req.body;
+
+    
+    if (quantity < 1) return res.json({ success: false });
+
+    await Cart.updateOne(
+      { userId, "items.productId": productId },
+      { $set: { "items.$.quantity": quantity } }
+    );
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.log("Update checkout qty error:", error);
+    return res.json({ success: false });
+  }
+};

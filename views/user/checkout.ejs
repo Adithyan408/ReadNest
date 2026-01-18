@@ -484,29 +484,35 @@
       }
 
       function updateCheckoutQty(productId, change) {
-        const qtyField = document.getElementById("qty-" + productId);
-        const stock = parseInt(
-          document.getElementById("stock-" + productId).value
-        );
-        const unit = parseInt(
-          document.getElementById("unitPrice-" + productId).value
-        );
-        const priceField = document.getElementById("price-" + productId);
-        let qty = parseInt(qtyField.value);
+  const qtyField = document.getElementById("qty-" + productId);
+  const stock = parseInt(document.getElementById("stock-" + productId).value);
+  const unit = parseInt(document.getElementById("unitPrice-" + productId).value);
+  const priceField = document.getElementById("price-" + productId);
+  let qty = parseInt(qtyField.value);
 
-        if (change === -1 && qty <= 1) return;
-        if (change === 1 && qty >= stock)
-          return Swal.fire(
-            "Stock Limit",
-            `Only ${stock} units available`,
-            "warning"
-          );
+  if (change === -1 && qty <= 1) return;
 
-        qty += change;
-        qtyField.value = qty;
-        priceField.textContent = "₹ " + (qty * unit).toLocaleString();
-        updateTotalsRight();
-      }
+  if (change === 1 && qty >= stock) {
+    return Swal.fire("Stock Limit", `Only ${stock} units available`, "warning");
+  }
+
+  qty += change;
+  qtyField.value = qty;
+  priceField.textContent = "₹ " + (qty * unit).toLocaleString();
+
+  // 🔥 UPDATE DB (THIS FIXES YOUR ISSUE)
+  fetch("/checkout/update-quantity", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      productId,
+      quantity: qty,
+    }),
+  });
+
+  updateTotalsRight();
+}
+
 
       function updateTotalsRight() {
         let total = 0;
