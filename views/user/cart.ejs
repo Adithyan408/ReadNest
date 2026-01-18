@@ -184,18 +184,67 @@
         });
 
         async function proceedToCheckout() {
-            try {
-                const res = await fetch("/cart/validate");
-                if (res.status === 401) return (window.location.href = "/login");
-                const data = await res.json();
-                if (!res.ok) {
-                    return Swal.fire({ icon: "warning", title: "Wait!", text: data.message });
-                }
-                window.location.href = "/checkout";
-            } catch (err) {
-                Swal.fire("Error", "Validation failed. Please try again.", "error");
-            }
-        }
+  try {
+    const res = await fetch("/cart/validate");
+
+    // 🔐 Not logged in
+    if (res.status === 401) {
+      return (window.location.href = "/login");
+    }
+
+    const data = await res.json();
+
+    // ❌ Generic backend error
+    if (!res.ok) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Wait!",
+        text: data.message || "Unable to proceed",
+      });
+    }
+
+    // 🚫 Some items are unavailable
+    if (data.removedCount > 0) {
+      const messageHtml = `
+        <p class="mb-2">Some items in your cart are unavailable:</p>
+        <ul class="text-left list-disc pl-5">
+          ${
+            (data.unavailableItems || []).map(item => {
+              let reasonText = "Unavailable";
+
+              if (item.reason === "PRODUCT_UNLISTED") {
+                reasonText = "Product is no longer available";
+              } else if (item.reason === "CATEGORY_BLOCKED") {
+                reasonText = "Category is currently unavailable";
+              } else if (item.reason === "OUT_OF_STOCK") {
+                reasonText = "Out of stock";
+              }
+
+              return `<li><b>${item.name}</b> – ${reasonText}</li>`;
+            }).join("")
+          }
+        </ul>
+      `;
+
+      return Swal.fire({
+        icon: "warning",
+        title: "Cart Updated",
+        html: messageHtml,
+        confirmButtonText: "Review Cart",
+      }).then(() => location.reload());
+    }
+
+    // ✅ Everything is valid → go to checkout
+    window.location.href = "/checkout";
+
+  } catch (err) {
+    Swal.fire(
+      "Error",
+      "Validation failed. Please try again.",
+      "error"
+    );
+  }
+}
     </script>
 </body>
 </html>
