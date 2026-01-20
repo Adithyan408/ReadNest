@@ -150,10 +150,13 @@
                     <% if (totalPages > 1) { %>
                     <div class="flex justify-center sm:justify-end items-center gap-2 p-8 border-t border-gray-50 bg-gray-50/30">
                         <% for(let i = 1; i <= totalPages; i++) { %>
-                            <a href="?page=<%= i %>&search=<%= search %>" 
-                               class="w-10 h-10 flex items-center justify-center rounded-xl font-bold text-xs transition-all <%= (i === currentPage) ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white text-gray-400 border border-gray-100 hover:bg-gray-50' %>">
-                                <%= i %>
-                            </a>
+                            <a href="/admin/category?page=<%= i %>&search=<%= search %>" 
+                                class="w-10 h-10 flex items-center justify-center rounded-xl font-bold text-xs transition-all 
+                                <%= (i === currentPage) 
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' 
+                                    : 'bg-white text-gray-400 border border-gray-100 hover:bg-gray-50' %>">
+                                 <%= i %>
+                                </a>
                         <% } %>
                     </div>
                     <% } %>
