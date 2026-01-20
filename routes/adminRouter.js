@@ -73,8 +73,8 @@ adminRouter.post("/login", login);
 
 //User Management
 adminRouter.get("/users", nocache(), adminAuth, customerInfo);
-adminRouter.get("/blockUsers", adminAuth, blockCustomers);
-adminRouter.get("/unblockUsers", adminAuth, unblockCustomers);
+adminRouter.post("/users/block", adminAuth, blockCustomers);
+adminRouter.post("/users/unblock", adminAuth, unblockCustomers);
 
 //Category Management
 adminRouter.get("/category", nocache(), adminAuth, categoryInfo);

@@ -1,5 +1,5 @@
 
-import { customerBlock, cutomerUnblock, loadCustomer } from "../../services/admin/customerService.js";
+import { customerBlock, customerUnblock, loadCustomer } from "../../services/admin/customerService.js";
 
 export const customerInfo = async (req, res) => {
   await loadCustomer(req, res);
@@ -10,5 +10,5 @@ export const blockCustomers = async (req, res) => {
 };
 
 export const unblockCustomers = async (req, res) => {
-  await cutomerUnblock(req, res);
+  await customerUnblock(req, res);
 };

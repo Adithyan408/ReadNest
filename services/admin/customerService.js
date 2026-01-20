@@ -61,22 +61,40 @@ export const loadCustomer = async (req, res) => {
 
 export const customerBlock = async (req, res) => {
   try {
-    let id = req.query.id;
-    const page = req.query.page || 1;
-    await User.updateOne({ _id: id }, { $set: { isBlocked: true } });
-    res.redirect(`/admin/users?page=${page}`);
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID required" });
+    }
+
+    await User.updateOne(
+      { _id: userId },
+      { $set: { isBlocked: true } }
+    );
+
+    res.json({ success: true });
   } catch (error) {
-    res.redirect("/admin/pageerror");
+    console.error("Block user error:", error);
+    res.status(500).json({ success: false });
   }
 };
 
-export const cutomerUnblock = async (req, res) => {
+export const customerUnblock = async (req, res) => {
   try {
-    let id = req.query.id;
-    const page = req.query.page || 1;
-    await User.updateOne({ _id: id }, { $set: { isBlocked: false } });
-    res.redirect(`/admin/users?page=${page}`);
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID required" });
+    }
+
+    await User.updateOne(
+      { _id: userId },
+      { $set: { isBlocked: false } }
+    );
+
+    res.json({ success: true });
   } catch (error) {
-    res.redirect("/pageerror");
+    console.error("Unblock user error:", error);
+    res.status(500).json({ success: false });
   }
 };
