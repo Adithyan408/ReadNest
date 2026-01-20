@@ -139,10 +139,18 @@ export const postEditProducts = async (req, res) => {
   try {
     const id = req.query.id;
     const existingProduct = await Product.findById(id);
-    const newImageUrls =
-      req.files && req.files.length > 0
-        ? req.files.map((file) => file.path)
-        : [];
+    if (!existingProduct) {
+      return res.redirect("/admin/products?status=notfound");
+    }
+
+    const newImageUrls = req.files?.map(f => f.path) || [];
+
+    const oldImages = Array.isArray(req.body.oldImages)
+      ? req.body.oldImages
+      : req.body.oldImages
+      ? [req.body.oldImages]
+      : [];
+
     const {
       productName,
       productNumber,
@@ -163,76 +171,7 @@ export const postEditProducts = async (req, res) => {
       endDate,
     } = req.body;
 
-    const categories = await Category.find({ isListed: true });
-    const currentYear = new Date().getFullYear();
-
-    if (yearOfPublishing && Number(yearOfPublishing) > currentYear) {
-      return res.render("editProduct", {
-        data: existingProduct,
-        errors: {
-          yearOfPublishing: "Publishing year cannot be in the future",
-        },
-        categories,
-      });
-    }
-
     const offerEnabled = isOffer === "true";
-
-    /* ---------------- OFFER VALIDATION ---------------- */
-
-    if (offerEnabled) {
-      const discount = Number(discountValue);
-
-      if (
-        !discountValue ||
-        Number.isNaN(discount) ||
-        discount < 1 ||
-        discount > 95
-      ) {
-        return res.render("editProduct", {
-          data: existingProduct,
-          errors: {
-            discountValue: "Discount must be between 1 and 95%",
-          },
-          categories,
-        });
-      }
-
-      if (!startDate || !endDate) {
-        return res.render("editProduct", {
-          data: existingProduct,
-          errors: {
-            offerDates: "Offer start and end dates are required",
-          },
-          categories,
-        });
-      }
-
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      if (start < today) {
-        return res.render("editProduct", {
-          data: existingProduct,
-          errors: {
-            startDate: "Offer start date cannot be in the past",
-          },
-          categories,
-        });
-      }
-
-      if (end <= start) {
-        return res.render("editProduct", {
-          data: existingProduct,
-          errors: {
-            endDate: "Offer end date must be after start date",
-          },
-          categories,
-        });
-      }
-    }
 
     const updatedFields = {
       productName,
@@ -248,6 +187,7 @@ export const postEditProducts = async (req, res) => {
       regularPrice,
       stock,
       isbnNumber,
+      productImage: [...oldImages, ...newImageUrls],
       offer: {
         isOffer: offerEnabled,
         discountValue: offerEnabled ? Number(discountValue) : 0,
@@ -256,32 +196,24 @@ export const postEditProducts = async (req, res) => {
       },
     };
 
-    if (newImageUrls.length > 0) {
-      updatedFields.productImage = newImageUrls;
-    } else {
-      updatedFields.productImage = existingProduct.productImage;
-    }
+    Object.keys(updatedFields).forEach((key) => {
+      if (updatedFields[key] === undefined) {
+        delete updatedFields[key];
+      }
+    });
 
-    Object.keys(updatedFields).forEach(
-      (key) =>
-        (updatedFields[key] === undefined || updatedFields[key] === "") &&
-        delete updatedFields[key]
-    );
-
-    const updateProduct = await Product.findByIdAndUpdate(id, updatedFields, {
+    await Product.findByIdAndUpdate(id, updatedFields, {
       new: true,
       runValidators: true,
     });
 
-    if (updateProduct) {
-      res.redirect("/admin/products?status=updated");
-    } else {
-      res.status(400).json({ message: "Product not found" });
-    }
+    res.redirect("/admin/products?status=updated");
   } catch (error) {
+    console.error("Update error:", error);
     res.redirect("/pageerror");
   }
 };
+
 
 export const productList = async (req, res) => {
   try {
