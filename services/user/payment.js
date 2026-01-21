@@ -1,23 +1,22 @@
-import User from "../../models/userSchema.js";
-import Address from "../../models/addressSchema.js";
-import Product from "../../models/productsSchema.js";
-import Cart from "../../models/cartSchema.js";
-import Category from "../../models/categorySchema.js";
-import Order from "../../models/orderSchema.js";
-import Coupon from "../../models/couponSchema.js";
-import Razorpay from "razorpay";
-import crypto from "crypto";
-import couponUsage from "../../models/couponUsage.js";
-import ReferralReward from "../../models/referalSchema.js";
-import Wallet from "../../models/walletSchema.js";
+import User from '../../models/userSchema.js';
+import Address from '../../models/addressSchema.js';
+import Product from '../../models/productsSchema.js';
+import Cart from '../../models/cartSchema.js';
+import Category from '../../models/categorySchema.js';
+import Order from '../../models/orderSchema.js';
+import Coupon from '../../models/couponSchema.js';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
+import couponUsage from '../../models/couponUsage.js';
+import ReferralReward from '../../models/referalSchema.js';
+import Wallet from '../../models/walletSchema.js';
 import {
   savePaymentState,
   getPaymentState,
   clearPaymentState,
-} from "../../helpers/paymentCache.js";
-import { normalizeCoupons } from "../../helpers/couponNormal.js";
-import { generateOrderId } from "../../middlewares/orderId.js";
-import { ERROR_MESSAGES } from "../../helpers/errorMessages.js";
+} from '../../helpers/paymentCache.js';
+import { normalizeCoupons } from '../../helpers/couponNormal.js';
+import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZO_API_KEY,
@@ -27,15 +26,15 @@ const razorpay = new Razorpay({
 export const loadPayment = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-    if (!userId) return res.redirect("/login");
+    if (!userId) return res.redirect('/login');
 
-    const isRetry = req.query.retry === "true";
+    const isRetry = req.query.retry === 'true';
 
     if (isRetry) {
       const cached = await getPaymentState(userId);
 
       if (!cached) {
-        return res.redirect("/cart?error=retry-expired");
+        return res.redirect('/cart?error=retry-expired');
       }
 
       const userData = await User.findById(userId).lean();
@@ -44,9 +43,9 @@ export const loadPayment = async (req, res) => {
 
       const selectedAddress =
         addresses.find(
-          (a) => a._id.toString() === req.session.selectedAddressId
+          (a) => a._id.toString() === req.session.selectedAddressId,
         ) ||
-        addresses.find((a) => a.addressLabel === "Home") ||
+        addresses.find((a) => a.addressLabel === 'Home') ||
         addresses[0] ||
         null;
 
@@ -54,7 +53,7 @@ export const loadPayment = async (req, res) => {
       const walletBalance = walletDoc?.balance || 0;
       const isWalletUsable = walletBalance >= cached.payableAmount;
 
-      return res.render("payment", {
+      return res.render('payment', {
         user: userData,
         addresses,
         selectedAddress,
@@ -118,17 +117,14 @@ export const loadPayment = async (req, res) => {
     const userData = await User.findById(userId).lean();
     const cartDoc = await Cart.findOne({ userId }).lean();
 
-
-
     if (!cartDoc?.items?.length) {
-      return res.redirect("/cart");
+      return res.redirect('/cart');
     }
 
     let cart = [];
-
    
       const fullCart = await Cart.findOne({ userId })
-        .populate("items.productId")
+        .populate('items.productId')
         .lean();
 
       cart = await Promise.all(
@@ -143,13 +139,12 @@ export const loadPayment = async (req, res) => {
             regularPrice: offer.regularPrice,
             offerPrice: offer.offerPrice,
           };
-        })
+        }),
       );
-    
 
     const subtotal = cart.reduce(
       (sum, item) => sum + item.price * item.quantity,
-      0
+      0,
     );
 
     const shippingCharge = 20;
@@ -163,18 +158,16 @@ export const loadPayment = async (req, res) => {
     const referralRewards = await ReferralReward.find({
       referrerId: userId,
       used: false,
-    }).select("couponCode");
+    }).select('couponCode');
 
     const availableReferralCodes = referralRewards.map((r) => r.couponCode);
 
     const usedCoupons = await couponUsage
       .find({ userId, used: true })
-      .select("couponId")
+      .select('couponId')
       .lean();
 
     const usedCouponIds = usedCoupons.map((c) => c.couponId.toString());
-
-   
 
     const applicableCoupons = coupons.filter((coupon) => {
       const couponId = coupon._id.toString();
@@ -188,8 +181,7 @@ export const loadPayment = async (req, res) => {
         return false;
       }
 
-
-      if (coupon.type === "referral") {
+      if (coupon.type === 'referral') {
         if (!availableReferralCodes.includes(coupon.code)) {
           return false;
         }
@@ -209,9 +201,9 @@ export const loadPayment = async (req, res) => {
 
     const selectedAddress =
       addresses.find(
-        (a) => a._id.toString() === req.session.selectedAddressId
+        (a) => a._id.toString() === req.session.selectedAddressId,
       ) ||
-      addresses.find((a) => a.addressLabel === "Home") ||
+      addresses.find((a) => a.addressLabel === 'Home') ||
       addresses[0] ||
       null;
 
@@ -233,7 +225,7 @@ export const loadPayment = async (req, res) => {
     const walletBalance = walletDoc?.balance || 0;
     const isWalletUsable = walletBalance >= payableAmount;
 
-    res.render("payment", {
+    res.render('payment', {
       user: userData,
       addresses: [],
       selectedAddress,
@@ -250,8 +242,8 @@ export const loadPayment = async (req, res) => {
       appliedCoupon: undefined,
     });
   } catch (error) {
-    console.log("Load Payment Error:", error);
-    res.render("notFound");
+    console.log('Load Payment Error:', error);
+    res.render('notFound');
   }
 };
 
@@ -270,20 +262,20 @@ export const postCoupon = async (req, res) => {
 
     const cached = await getPaymentState(userId);
     if (!cached) {
-      return res.json({ success: false, message: "Payment session expired" });
+      return res.json({ success: false, message: 'Payment session expired' });
     }
 
     const couponDoc = await Coupon.findOne({
       code,
-      $or: [{ type: "general" }, { type: "referral", userId }],
+      $or: [{ type: 'general' }, { type: 'referral', userId }],
     }).lean();
 
     if (!couponDoc) {
-      return res.json({ success: false, message: "Invalid coupon" });
+      return res.json({ success: false, message: 'Invalid coupon' });
     }
 
     if (couponDoc.expiry < new Date()) {
-      return res.json({ success: false, message: "Coupon expired" });
+      return res.json({ success: false, message: 'Coupon expired' });
     }
 
     if (cached.subtotal < couponDoc.minPurchase) {
@@ -293,7 +285,7 @@ export const postCoupon = async (req, res) => {
       });
     }
 
-    if (couponDoc.type === "referral") {
+    if (couponDoc.type === 'referral') {
       const reward = await ReferralReward.findOne({
         referrerId: userId,
         couponCode: couponDoc.code,
@@ -303,13 +295,13 @@ export const postCoupon = async (req, res) => {
       if (!reward) {
         return res.json({
           success: false,
-          message: "Invalid or already used referral coupon",
+          message: 'Invalid or already used referral coupon',
         });
       }
     }
 
     const percentageDiscount = Math.round(
-      (couponDoc.discount / 100) * cached.subtotal
+      (couponDoc.discount / 100) * cached.subtotal,
     );
 
     const maxAllowedDiscount =
@@ -340,7 +332,7 @@ export const postCoupon = async (req, res) => {
       finalAmount: payableAmount,
     });
   } catch (error) {
-    console.error("Apply Coupon Error:", error);
+    console.error('Apply Coupon Error:', error);
     return res.json({
       success: false,
       message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
@@ -351,11 +343,11 @@ export const postCoupon = async (req, res) => {
 export const orderPlaced = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-    if (!userId) return res.redirect("/login");
+    if (!userId) return res.redirect('/login');
 
     const cached = await getPaymentState(userId);
     if (!cached) {
-      return res.redirect("/cart?error=payment-expired");
+      return res.redirect('/cart?error=payment-expired');
     }
 
     const {
@@ -371,15 +363,15 @@ export const orderPlaced = async (req, res) => {
     const paymentMode = req.query.payment || req.body.paymentMode;
     const paymentId = req.session.razorpayPaymentId || null;
 
-    if (paymentMode === "Razorpay" && !req.session.paymentSuccess) {
-      return res.redirect("/payment-failed?reason=Payment not completed");
+    if (paymentMode === 'Razorpay' && !req.session.paymentSuccess) {
+      return res.redirect('/payment-failed?reason=Payment not completed');
     }
 
     if (appliedCoupon) {
       const couponDoc = await Coupon.findOne({ code: appliedCoupon });
 
       if (couponDoc) {
-        if (couponDoc.type === "referral") {
+        if (couponDoc.type === 'referral') {
           const reward = await ReferralReward.findOneAndUpdate(
             {
               referrerId: userId,
@@ -390,12 +382,12 @@ export const orderPlaced = async (req, res) => {
               used: true,
               usedAt: new Date(),
             },
-            { new: true }
+            { new: true },
           );
 
           if (!reward) {
             return res.redirect(
-              "/payment-failed?reason=Referral coupon invalid"
+              '/payment-failed?reason=Referral coupon invalid',
             );
           }
         } else {
@@ -408,7 +400,7 @@ export const orderPlaced = async (req, res) => {
               used: true,
               usedAt: new Date(),
             },
-            { upsert: true }
+            { upsert: true },
           );
         }
       }
@@ -420,7 +412,7 @@ export const orderPlaced = async (req, res) => {
 
     const selectedAddress =
       cached.selectedAddress ||
-      addresses.find((a) => a.addressLabel === "Home") ||
+      addresses.find((a) => a.addressLabel === 'Home') ||
       addresses[0] ||
       null;
 
@@ -430,11 +422,11 @@ export const orderPlaced = async (req, res) => {
       const productDoc = await Product.findById(item._id).lean();
 
       if (!productDoc) {
-        return res.redirect("/cart?error=product-not-found");
+        return res.redirect('/cart?error=product-not-found');
       }
 
       if (productDoc.stock < item.quantity) {
-        return res.redirect("/cart?error=out-of-stock");
+        return res.redirect('/cart?error=out-of-stock');
       }
 
       cartItems.push({
@@ -456,7 +448,7 @@ export const orderPlaced = async (req, res) => {
     if (discount > 0 && cartItems.length > 0) {
       const totalItemsAmount = cartItems.reduce(
         (sum, item) => sum + item.subtotal,
-        0
+        0,
       );
 
       let remainingDiscount = discount;
@@ -468,7 +460,7 @@ export const orderPlaced = async (req, res) => {
           itemDiscount = remainingDiscount;
         } else {
           itemDiscount = Math.round(
-            (item.subtotal / totalItemsAmount) * discount
+            (item.subtotal / totalItemsAmount) * discount,
           );
           remainingDiscount -= itemDiscount;
         }
@@ -494,11 +486,11 @@ export const orderPlaced = async (req, res) => {
       paymentId,
       paymentMethod: paymentMode,
       paymentStatus:
-        paymentMode === "Razorpay" || paymentMode === "WALLET"
-          ? "paid"
-          : "pending",
+        paymentMode === 'Razorpay' || paymentMode === 'WALLET'
+          ? 'paid'
+          : 'pending',
 
-      status: "processing",
+      status: 'processing',
       address: selectedAddress ? { ...selectedAddress } : null,
       finalPayable: payableAmount,
       razorpayOrderId,
@@ -511,11 +503,9 @@ export const orderPlaced = async (req, res) => {
     for (const item of cartItems) {
       await Product.updateOne(
         { _id: item.product, stock: { $gte: item.quantity } },
-        { $inc: { stock: -item.quantity } }
+        { $inc: { stock: -item.quantity } },
       );
     }
-
-    
 
     await clearPaymentState(userId);
 
@@ -524,7 +514,7 @@ export const orderPlaced = async (req, res) => {
     req.session.appliedCoupon = null;
     req.session.discountValue = null;
 
-    res.render("placed", {
+    res.render('placed', {
       user: userData,
       addresses,
       selectedAddress,
@@ -532,15 +522,15 @@ export const orderPlaced = async (req, res) => {
       orderId: newOrder.orderId,
     });
   } catch (error) {
-    console.error("Order Error:", error);
-    res.render("notFound");
+    console.error('Order Error:', error);
+    res.render('notFound');
   }
 };
 
 export const paymentFailed = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-    if (!userId) return res.redirect("/login");
+    if (!userId) return res.redirect('/login');
 
     const cached = await getPaymentState(userId);
 
@@ -552,11 +542,11 @@ export const paymentFailed = async (req, res) => {
     }
 
     if (!cached) {
-      return res.render("failedPayment", {
+      return res.render('failedPayment', {
         user: req.session.user,
         reason:
-          "Your payment session has expired. Please place the order again.",
-        retryUrl: "/cart",
+          'Your payment session has expired. Please place the order again.',
+        retryUrl: '/cart',
         retryExpired: true,
       });
     }
@@ -572,18 +562,18 @@ export const paymentFailed = async (req, res) => {
     req.session.razorpayPaymentId = null;
 
     const failureReason =
-      req.query.reason || "Your payment could not be completed.";
+      req.query.reason || 'Your payment could not be completed.';
 
-    res.render("failedPayment", {
+    res.render('failedPayment', {
       user: req.session.user,
       reason: failureReason,
-      retryUrl: "/checkout/payment?retry=true",
+      retryUrl: '/checkout/payment?retry=true',
       retryExpired: false,
       payableAmount: cached.payableAmount,
     });
   } catch (error) {
-    console.error("Payment Failed Controller Error:", error);
-    res.render("notFound");
+    console.error('Payment Failed Controller Error:', error);
+    res.render('notFound');
   }
 };
 
@@ -602,13 +592,13 @@ export const createRazorpayOrder = async (req, res) => {
     if (!cached) {
       return res.status(400).json({
         success: false,
-        message: "Payment session expired. Please try again.",
+        message: 'Payment session expired. Please try again.',
       });
     }
 
     const razorpayOrder = await razorpay.orders.create({
       amount: cached.payableAmount * 100,
-      currency: "INR",
+      currency: 'INR',
       receipt: `order_${Date.now()}`,
     });
 
@@ -626,10 +616,10 @@ export const createRazorpayOrder = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Razorpay Order Fetch Error:", error);
+    console.error('Razorpay Order Fetch Error:', error);
     return res.status(500).json({
       success: false,
-      message: "Unable to fetch payment order",
+      message: 'Unable to fetch payment order',
     });
   }
 };
@@ -647,25 +637,25 @@ export const verifyRazorpayPayment = async (req, res) => {
     const cached = await getPaymentState(userId);
 
     if (!cached) {
-      return res.redirect("/payment-failed?reason=Payment session expired");
+      return res.redirect('/payment-failed?reason=Payment session expired');
     }
 
     if (cached.razorpayOrderId !== razorpay_order_id) {
-      return res.redirect("/payment-failed?reason=Invalid payment order");
+      return res.redirect('/payment-failed?reason=Invalid payment order');
     }
 
-    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+    const sign = razorpay_order_id + '|' + razorpay_payment_id;
 
     const expectedSign = crypto
-      .createHmac("sha256", process.env.RAZO_KEY_SECRET)
+      .createHmac('sha256', process.env.RAZO_KEY_SECRET)
       .update(sign)
-      .digest("hex");
+      .digest('hex');
 
     if (expectedSign !== razorpay_signature) {
       req.session.paymentSuccess = null;
       req.session.razorpayPaymentId = null;
 
-      return res.redirect("/payment-failed?reason=Payment verification failed");
+      return res.redirect('/payment-failed?reason=Payment verification failed');
     }
 
     req.session.paymentSuccess = true;
@@ -674,7 +664,7 @@ export const verifyRazorpayPayment = async (req, res) => {
     return res.json({ success: true }); 
 
   } catch (error) {
-    console.error("Payment Verification Error:", error);
+    console.error('Payment Verification Error:', error);
     return res.status(500).json({ success: false });
   }
 };

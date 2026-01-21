@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const productsSchema = new Schema(
@@ -10,30 +10,30 @@ const productsSchema = new Schema(
 
     description: {
       type: String,
-      default: "",
+      default: '',
       required: true,
     },
 
     author: {
       type: String,
-      default: "",
+      default: '',
       required: true,
     },
 
     authorDescription: {
       type: String,
-      default: "",
+      default: '',
     },
 
     category: {
       type: String,
-      default: "",
+      default: '',
       required: true,
     },
 
     language: {
       type: String,
-      default: "",
+      default: '',
       required: true,
     },
 
@@ -59,12 +59,12 @@ const productsSchema = new Schema(
 
     publisher: {
       type: String,
-      default: "",
+      default: '',
     },
 
     yearOfPublishing: {
       type: String,
-      default: "",
+      default: '',
     },
 
     pages: {
@@ -74,13 +74,13 @@ const productsSchema = new Schema(
 
     isbnNumber: {
       type: String,
-      default: "",
+      default: '',
     },
 
     status: {
       type: String,
-      enum: ["Available", "Out of Stock", "Discontinued"],
-      default: "Available",
+      enum: ['Available', 'Out of Stock', 'Discontinued'],
+      default: 'Available',
     },
     offer: {
       isOffer: { type: Boolean, default: false },
@@ -89,8 +89,8 @@ const productsSchema = new Schema(
       endDate: { type: Date, default: null },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const Product = mongoose.model("Product", productsSchema);
+const Product = mongoose.model('Product', productsSchema);
 export default Product;

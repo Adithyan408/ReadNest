@@ -1,29 +1,23 @@
-import User from "../../models/userSchema.js";
-import nodemailer from "nodemailer";
-import dotenv from "dotenv";
-import bcrypt from "bcrypt";
-import passport from "../../config/passport.js";
-import session from "express-session";
-import { v2 as cloudinary } from "cloudinary";
+import User from '../../models/userSchema.js';
+import bcrypt from 'bcrypt';
+import { v2 as cloudinary } from 'cloudinary';
 import {
   generateOtp,
   securePassword,
   sendVerificationEmail,
-} from "../../helpers/verify.js";
-import { ERROR_MESSAGES } from "../../helpers/errorMessages.js";
-
+} from '../../helpers/verify.js';
+import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
 
 export const forgotPassword = async(req, res) => {
      try {
       const { error } = req.query;
-    res.render("forgot-password", {
-      error 
+    res.render('forgot-password', {
+      error, 
     });
   } catch (error) {
-    res.render("notFound");
+    res.render('notFound');
   }
 };
-
 
 export const forgotEmail = async(req, res) => {
     try {
@@ -31,7 +25,7 @@ export const forgotEmail = async(req, res) => {
     
         const findUser = await User.findOne({ email });
         if (!findUser) {
-          return res.redirect(`/forgot-password?error=User does not exist`);
+          return res.redirect('/forgot-password?error=User does not exist');
         }
         const name = findUser.name;
     
@@ -39,7 +33,7 @@ export const forgotEmail = async(req, res) => {
     
         const emailSent =  sendVerificationEmail(name, email, otp);
         if (!emailSent) {
-         return res.render("forgot-password", { message: "Can't send Email , Try after some time" });
+         return res.render('forgot-password', { message: "Can't send Email , Try after some time" });
         }
         req.session.userOtp = {
           code: otp,
@@ -48,12 +42,11 @@ export const forgotEmail = async(req, res) => {
         req.session.userData = { email };
     
         res.redirect(`/verify-otp?forgot=true&email=${encodeURIComponent(email)}`);
-        console.log("otp sent", otp);
+        console.log('otp sent', otp);
       } catch (error) {
-        res.redirect("/notfound")
+        res.redirect('/notfound');
       }
-}
-
+};
 
 export const forgotVerify = async (req, res) => {
   try {
@@ -62,8 +55,8 @@ export const forgotVerify = async (req, res) => {
 
     if (!storedOtp || Date.now() > storedOtp.expiresAt) {
       req.session.userOtp = null;
-      return res.render("verify-otp", {
-        message: "OTP expired. Please request a new one.",
+      return res.render('verify-otp', {
+        message: 'OTP expired. Please request a new one.',
       });
     }
 
@@ -74,26 +67,26 @@ export const forgotVerify = async (req, res) => {
 
       return res.json({
         success: true,
-        message: "OTP verified successfully!",
+        message: 'OTP verified successfully!',
         redirect: `/reset-password?email=${encodeURIComponent(email)}`,
       });
     } else {
-      return res.render("verify-otp", {
-        message: "Invalid OTP. Please try again.",
+      return res.render('verify-otp', {
+        message: 'Invalid OTP. Please try again.',
       });
     }
   } catch (error) {
-    res.render("verify-otp", { message: "Something went wrong." });
+    res.render('verify-otp', { message: 'Something went wrong.' });
   }
 };
 
 export const resetPassword = async (req, res) => {
   try {
     const { email } = req.query;
-    if (!email) return res.redirect("/forgot-password");
-    res.render("reset-password", { email });
+    if (!email) return res.redirect('/forgot-password');
+    res.render('reset-password', { email });
   } catch (error) {
-    res.render("notFound");
+    res.render('notFound');
   }
 };
 
@@ -102,35 +95,35 @@ export const resetPasswordPost = async (req, res) => {
     const { email, newPassword, confirmPassword } = req.body;
 
     if (newPassword !== confirmPassword) {
-      return res.render("reset-password", {
-        message: "Passwords do not match.",
+      return res.render('reset-password', {
+        message: 'Passwords do not match.',
         email,
       });
     }
 
     if (newPassword.length < 6) {
-      return res.render("reset-password", {
-        message: "Password must be at least 6 characters long.",
+      return res.render('reset-password', {
+        message: 'Password must be at least 6 characters long.',
       });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     const result = await User.updateOne(
       { email },
-      { password: hashedPassword }
+      { password: hashedPassword },
     );
 
     if (result.modifiedCount === 0) {
-      return res.render("reset-password", { message: "User not found." });
+      return res.render('reset-password', { message: 'User not found.' });
     }
 
     req.session.userEmail = null;
     req.session.userOtp = null;
     req.session.userData = null;
 
-    return res.redirect("/login");
+    return res.redirect('/login');
   } catch (error) {
-    res.render("reset-password", { message: "Something went wrong." });
+    res.render('reset-password', { message: 'Something went wrong.' });
   }
 };
 
@@ -140,24 +133,22 @@ export const updateProfile = async (req, res) => {
     const userId = req.session.user?._id;
 
     if (!userId) {
-      return res.json({ success: false, message: "Unauthorized" });
+      return res.json({ success: false, message: 'Unauthorized' });
     }
-
 
     if (!firstName || !firstName.trim()) {
       return res.json({
         success: false,
-        message: "First name is required",
+        message: 'First name is required',
       });
     }
 
     if (phone && !/^[0-9]{10}$/.test(phone)) {
       return res.json({
         success: false,
-        message: "Invalid phone number",
+        message: 'Invalid phone number',
       });
     }
-
 
     const updateData = {
       name: lastName?.trim()
@@ -169,7 +160,6 @@ export const updateProfile = async (req, res) => {
       updateData.phone = phone;
     }
 
-
     await User.findByIdAndUpdate(userId, updateData, {
       new: true,
       runValidators: true,
@@ -177,21 +167,20 @@ export const updateProfile = async (req, res) => {
 
     return res.json({ success: true });
   } catch (error) {
-    console.error("Profile update error:", error);
+    console.error('Profile update error:', error);
     return res.json({
       success: false,
-      message: "Server error",
+      message: 'Server error',
     });
   }
 };
-
 
 export const emailUpdate = async (req, res) => {
   try {
     const { email } = req.body;
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.json({ success: false, message: "Email already in use" });
+      return res.json({ success: false, message: 'Email already in use' });
     }
 
     const otp = generateOtp();
@@ -201,11 +190,11 @@ export const emailUpdate = async (req, res) => {
     if (!emailSent) {
       return res.json({
         success: false,
-        message: "Cannot send email right now",
+        message: 'Cannot send email right now',
       });
     }
 
-    console.log("OTP sent:", otp);
+    console.log('OTP sent:', otp);
 
     req.session.emailOtp = otp;
     req.session.newEmail = email;
@@ -213,7 +202,7 @@ export const emailUpdate = async (req, res) => {
     return res.json({ success: true });
   } catch (error) {
     console.error(error);
-    return res.json({ success: false, message: "Server error" });
+    return res.json({ success: false, message: 'Server error' });
   }
 };
 
@@ -222,7 +211,7 @@ export const verifyEmailUpdate = async (req, res) => {
     const { otp } = req.body;
 
     if (otp !== req.session.emailOtp) {
-      return res.json({ success: false, message: "Incorrect OTP" });
+      return res.json({ success: false, message: 'Incorrect OTP' });
     }
 
     const newEmail = req.session.newEmail;
@@ -232,9 +221,9 @@ export const verifyEmailUpdate = async (req, res) => {
     req.session.emailOtp = null;
     req.session.newEmail = null;
 
-    return res.json({ success: true, message: "Email updated successfully" });
+    return res.json({ success: true, message: 'Email updated successfully' });
   } catch (error) {
-    return res.json({ success: false, message: "Server error" });
+    return res.json({ success: false, message: 'Server error' });
   }
 };
 
@@ -243,7 +232,7 @@ export const passwordSet = async (req, res) => {
     const { email } = req.body;
     const findUser = await User.find({ email });
     if (!findUser) {
-      return res.json({ success: false, message: "Invalid Email ID" });
+      return res.json({ success: false, message: 'Invalid Email ID' });
     }
     const name = findUser.name;
     const password = findUser.password;
@@ -253,12 +242,12 @@ export const passwordSet = async (req, res) => {
     if (!emailSent) {
       return res.json({ success: false, message: "Can't sent Email Now" });
     }
-    console.log("otp send :", otp);
+    console.log('otp send :', otp);
     req.session.userOtp = otp;
     req.session.userData = { name, email, password };
     return res.json({ success: true });
   } catch (error) {
-    return res.json({ success: false, message: "Server Error" });
+    return res.json({ success: false, message: 'Server Error' });
   }
 };
 
@@ -267,16 +256,16 @@ export const passwordVerify = async (req, res) => {
     const { email, otp, password, confirmPassword } = req.body;
 
     if (otp !== req.session.userOtp) {
-      return res.json({ success: false, message: "Incorrect OTP" });
+      return res.json({ success: false, message: 'Incorrect OTP' });
     }
 
     if (password !== confirmPassword) {
-      return res.json({ success: false, message: "Passwords do not match" });
+      return res.json({ success: false, message: 'Passwords do not match' });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.json({ success: false, message: "User not found" });
+      return res.json({ success: false, message: 'User not found' });
     }
 
     const hashedPassword = await securePassword(password);
@@ -288,11 +277,11 @@ export const passwordVerify = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Password updated successfully",
+      message: 'Password updated successfully',
     });
   } catch (error) {
     console.log(error);
-    return res.json({ success: false, message: "Server error" });
+    return res.json({ success: false, message: 'Server error' });
   }
 };
 
@@ -305,7 +294,7 @@ export const passwordChange = async (req, res) => {
     if (!user.password) {
       return res.json({
         success: false,
-        message: "No password set for this account",
+        message: 'No password set for this account',
       });
     }
 
@@ -313,7 +302,7 @@ export const passwordChange = async (req, res) => {
     if (!match) {
       return res.json({
         success: false,
-        message: "Incorrect current password",
+        message: 'Incorrect current password',
       });
     }
 
@@ -332,29 +321,29 @@ export const profileImage = async (req, res) => {
     const userId = req.session.user?._id;
 
     if (!userId) {
-      req.session.status = "error";
+      req.session.status = 'error';
       req.session.message = ERROR_MESSAGES.AUTH.SESSION_EXPIRED;
-      return res.redirect("/account");
+      return res.redirect('/account');
     }
 
     const user = await User.findById(userId);
 
     if (!req.file) {
-      req.session.status = "error";
-      req.session.message = "Please upload a valid image.";
-      return res.redirect("/account");
+      req.session.status = 'error';
+      req.session.message = 'Please upload a valid image.';
+      return res.redirect('/account');
     }
 
     if (user.profileImage) {
       try {
         const oldUrl = user.profileImage;
-        const publicId = oldUrl.split("/").pop().split(".")[0];
+        const publicId = oldUrl.split('/').pop().split('.')[0];
 
         if (publicId) {
           await cloudinary.uploader.destroy(`re-image/${publicId}`);
         }
       } catch (err) {
-        console.error("Cloudinary delete failed:", err);
+        console.error('Cloudinary delete failed:', err);
       }
     }
 
@@ -364,17 +353,17 @@ export const profileImage = async (req, res) => {
 
     req.session.user.profileImage = newImageUrl;
 
-    req.session.status = "success";
-    req.session.message = "Profile photo updated successfully!";
+    req.session.status = 'success';
+    req.session.message = 'Profile photo updated successfully!';
 
-    return res.redirect("/account");
+    return res.redirect('/account');
   } catch (err) {
-    console.error("Upload profile image error:", err);
+    console.error('Upload profile image error:', err);
 
-    req.session.status = "error";
-    req.session.message = "Server error while uploading the image.";
+    req.session.status = 'error';
+    req.session.message = 'Server error while uploading the image.';
 
-    return res.redirect("/account");
+    return res.redirect('/account');
   }
 };
 
@@ -385,7 +374,7 @@ export const profileImageDelete = async (req, res) => {
     if (!userId) {
       return res.json({
         success: false,
-        message: "User session expired. Please log in again.",
+        message: 'User session expired. Please log in again.',
       });
     }
 
@@ -394,19 +383,19 @@ export const profileImageDelete = async (req, res) => {
     if (!user || !user.profileImage) {
       return res.json({
         success: false,
-        message: "No profile image to delete.",
+        message: 'No profile image to delete.',
       });
     }
 
     try {
       const oldUrl = user.profileImage;
-      const publicId = oldUrl.split("/").pop().split(".")[0];
+      const publicId = oldUrl.split('/').pop().split('.')[0];
 
       if (publicId) {
         await cloudinary.uploader.destroy(`re-image/${publicId}`);
       }
     } catch (err) {
-      console.error("Cloudinary delete failed:", err);
+      console.error('Cloudinary delete failed:', err);
     }
 
     user.profileImage = null;
@@ -414,18 +403,18 @@ export const profileImageDelete = async (req, res) => {
 
     req.session.user.profileImage = null;
     
-    req.session.status = "error";
-    req.session.message = "Profile photo removed successfully!";
+    req.session.status = 'error';
+    req.session.message = 'Profile photo removed successfully!';
     return res.json({
       success: true,
-      message: "Profile photo removed successfully.",
+      message: 'Profile photo removed successfully.',
     });
   } catch (err) {
-    console.error("Delete profile image error:", err);
+    console.error('Delete profile image error:', err);
 
     return res.json({
       success: false,
-      message: "Server error while deleting the image.",
+      message: 'Server error while deleting the image.',
     });
   }
-}
+};

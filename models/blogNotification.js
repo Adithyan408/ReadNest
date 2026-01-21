@@ -1,29 +1,29 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const notificationSchema = new Schema(
   {
     recipient: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
 
     sender: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
 
     blog: {
       type: Schema.Types.ObjectId,
-      ref: "Blog",
+      ref: 'Blog',
       required: true,
     },
 
     type: {
       type: String,
-      enum: ["like", "comment"],
+      enum: ['like', 'comment'],
       required: true,
     },
 
@@ -32,7 +32,7 @@ const notificationSchema = new Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export default mongoose.model("Notification", notificationSchema);
+export default mongoose.model('Notification', notificationSchema);

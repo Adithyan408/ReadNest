@@ -1,5 +1,5 @@
 
-import { bannerDelete, loadBanner, loadBannerAdd, loadEditBanner, postBannerAdd, postEditBanner } from "../../services/admin/bannerService.js";
+import { bannerDelete, loadBanner, loadBannerAdd, loadEditBanner, postBannerAdd, postEditBanner } from '../../services/admin/bannerService.js';
 
 export const getBanner = async (req, res) => {
   await loadBanner(req, res);

@@ -1,6 +1,6 @@
-import Cart from "../models/cartSchema.js";
-import Product from "../models/productsSchema.js";
-import Category from "../models/categorySchema.js";
+import Cart from '../models/cartSchema.js';
+import Product from '../models/productsSchema.js';
+import Category from '../models/categorySchema.js';
 
 const cartCountMiddleware = async (req, res, next) => {
   res.locals.cartCount = 0;
@@ -40,7 +40,7 @@ for (const item of cart.items) {
 
     res.locals.cartCount = count;
   } catch (error) {
-    console.error("Cart count middleware error:", error);
+    console.error('Cart count middleware error:', error);
   }
 
   next();

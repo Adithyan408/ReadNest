@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon src/server.js"
+    "start": "nodemon src/server.js", 
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
@@ -33,5 +34,8 @@
     "razorpay": "^2.9.6",
     "redis": "^5.10.0",
     "sanitize-html": "^2.17.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.2"
   }
 }

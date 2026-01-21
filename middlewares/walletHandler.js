@@ -1,4 +1,4 @@
-import Wallet from "../models/walletSchema.js";
+import Wallet from '../models/walletSchema.js';
 
 export const creditWallet = async ({
   userId,
@@ -7,11 +7,11 @@ export const creditWallet = async ({
   orderId = null,
   paymentId = null,
   itemId = null,      // ✅ NEW
-  source = "refund",  // refund | return_refund | cancel_refund | webhook_refund
+  source = 'refund',  // refund | return_refund | cancel_refund | webhook_refund
 }) => {
   // 1️⃣ Validate amount
   if (!Number.isFinite(amount) || amount <= 0) {
-    console.log("Invalid wallet credit amount:", amount);
+    console.log('Invalid wallet credit amount:', amount);
     return;
   }
 
@@ -21,7 +21,7 @@ export const creditWallet = async ({
   if (wallet && wallet.transactions?.length) {
     const isDuplicate = wallet.transactions.some((tx) => {
       // 🔐 Razorpay / webhook protection
-      if (paymentId && source === "webhook_refund") {
+      if (paymentId && source === 'webhook_refund') {
         return tx.paymentId === paymentId && tx.source === source;
       }
 
@@ -38,7 +38,7 @@ export const creditWallet = async ({
     });
 
     if (isDuplicate) {
-      console.log("Duplicate wallet credit prevented:", {
+      console.log('Duplicate wallet credit prevented:', {
         paymentId,
         itemId,
         source,
@@ -54,7 +54,7 @@ export const creditWallet = async ({
       $inc: { balance: amount },
       $push: {
         transactions: {
-          type: "credit",
+          type: 'credit',
           source,
           amount,
           note,
@@ -65,14 +65,14 @@ export const creditWallet = async ({
         },
       },
     },
-    { upsert: true, new: true }
+    { upsert: true, new: true },
   );
 };
 
 export const calculateRefundAmount = (
   item,
   orderShipping = 0,
-  deductShipping = false
+  deductShipping = false,
 ) => {
   let refund = Number(item.subtotal || 0);
 
@@ -89,7 +89,6 @@ export const calculateRefundAmount = (
   return Math.max(refund, 0);
 };
 
-
 /**
  * Debit amount from user's wallet
  * Used for WALLET order payments
@@ -103,19 +102,19 @@ export const debitWallet = async ({
 }) => {
   // 1️⃣ Validate amount
   if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error("Invalid wallet debit amount");
+    throw new Error('Invalid wallet debit amount');
   }
 
   // 2️⃣ Fetch wallet
   const wallet = await Wallet.findOne({ user: userId });
 
   if (!wallet) {
-    throw new Error("Wallet not found");
+    throw new Error('Wallet not found');
   }
 
   // 3️⃣ Balance check
   if (wallet.balance < amount) {
-    throw new Error("Insufficient wallet balance");
+    throw new Error('Insufficient wallet balance');
   }
 
   // 4️⃣ Debit wallet
@@ -123,7 +122,7 @@ export const debitWallet = async ({
 
   // 5️⃣ Record transaction
   wallet.transactions.push({
-    type: "debit",
+    type: 'debit',
     amount: Number(amount),
     note,
     orderId,

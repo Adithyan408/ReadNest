@@ -1,4 +1,4 @@
-import express from "express";
+import express from 'express';
 import {
   loadLogin,
   login,
@@ -7,12 +7,12 @@ import {
   loadDashboard,
   downloadSalesReport,
   downloadExcel,
-} from "../controllers/admin/adminController.js";
+} from '../controllers/admin/adminController.js';
 import {
   customerInfo,
   blockCustomers,
   unblockCustomers,
-} from "../controllers/admin/customerController.js";
+} from '../controllers/admin/customerController.js';
 import {
   categoryInfo,
   addCategory,
@@ -22,8 +22,8 @@ import {
   geteditCategory,
   editCategory,
   deleteCategory,
-} from "../controllers/admin/categoryController.js";
-import { userAuth, adminAuth } from "../middlewares/auth.js";
+} from '../controllers/admin/categoryController.js';
+import {  adminAuth } from '../middlewares/auth.js';
 import {
   editProduct,
   geteditProduct,
@@ -34,9 +34,9 @@ import {
   deleteProduct,
   getFilteredProducts,
   imageUpload,
-} from "../controllers/admin/productController.js";
-import upload from "../middlewares/multer.js";
-import nocache from "nocache";
+} from '../controllers/admin/productController.js';
+import upload from '../middlewares/multer.js';
+import nocache from 'nocache';
 import {
   getBanner,
   getBannerAdd,
@@ -44,7 +44,7 @@ import {
   geteditBanner,
   editBanner,
   deleteBanner,
-} from "../controllers/admin/bannerController.js";
+} from '../controllers/admin/bannerController.js';
 import {
   getOrderList,
   loadOrderDetails,
@@ -52,115 +52,115 @@ import {
   returnApprove,
   returnReject,
   updateSingleItemStatus,
-} from "../controllers/admin/orderController.js";
+} from '../controllers/admin/orderController.js';
 import {
   couponDelete,
   couponUpdate,
   getAddCoupon,
   getCoupon,
   postCouponAdd,
-} from "../controllers/admin/couponController.js";
-import { blogSearchAdmin, blogsGet,  commentDelete, detailedBlog, unblockBlockBlog } from "../controllers/admin/blogController.js";
+} from '../controllers/admin/couponController.js';
+import { blogSearchAdmin, blogsGet,  commentDelete, detailedBlog, unblockBlockBlog } from '../controllers/admin/blogController.js';
 
 export const adminRouter = express.Router();
 
 //Log-in Management
-adminRouter.get("/login", loadLogin);
-adminRouter.get("/", nocache(), adminAuth, loadDashboard);
-adminRouter.get("/logout", nocache(), logout);
-adminRouter.get("/pageerror", loadPageError);
-adminRouter.post("/login", login);
+adminRouter.get('/login', loadLogin);
+adminRouter.get('/', nocache(), adminAuth, loadDashboard);
+adminRouter.get('/logout', nocache(), logout);
+adminRouter.get('/pageerror', loadPageError);
+adminRouter.post('/login', login);
 
 //User Management
-adminRouter.get("/users", nocache(), adminAuth, customerInfo);
-adminRouter.post("/users/block", adminAuth, blockCustomers);
-adminRouter.post("/users/unblock", adminAuth, unblockCustomers);
+adminRouter.get('/users', nocache(), adminAuth, customerInfo);
+adminRouter.post('/users/block', adminAuth, blockCustomers);
+adminRouter.post('/users/unblock', adminAuth, unblockCustomers);
 
 //Category Management
-adminRouter.get("/category", nocache(), adminAuth, categoryInfo);
-adminRouter.get("/category/addCategory", nocache(), adminAuth, categoryAdd);
-adminRouter.post("/addCategory", nocache(), adminAuth, addCategory);
-adminRouter.get("/listCategory", nocache(), adminAuth, listCategory);
-adminRouter.get("/unlistCategory", nocache(), adminAuth, unlistCategory);
-adminRouter.get("/editCategory", nocache(), adminAuth, geteditCategory);
-adminRouter.post("/editCategory", adminAuth, editCategory);
-adminRouter.get("/deleteCategory", nocache(), adminAuth, deleteCategory);
+adminRouter.get('/category', nocache(), adminAuth, categoryInfo);
+adminRouter.get('/category/addCategory', nocache(), adminAuth, categoryAdd);
+adminRouter.post('/addCategory', nocache(), adminAuth, addCategory);
+adminRouter.get('/listCategory', nocache(), adminAuth, listCategory);
+adminRouter.get('/unlistCategory', nocache(), adminAuth, unlistCategory);
+adminRouter.get('/editCategory', nocache(), adminAuth, geteditCategory);
+adminRouter.post('/editCategory', adminAuth, editCategory);
+adminRouter.get('/deleteCategory', nocache(), adminAuth, deleteCategory);
 
 //Products Management
-adminRouter.get("/products/addProducts", nocache(), adminAuth, getProductsAdd);
+adminRouter.get('/products/addProducts', nocache(), adminAuth, getProductsAdd);
 adminRouter.post(
-  "/addProducts",
+  '/addProducts',
   nocache(),
   adminAuth,
-  upload.array("productImage", 5),
-  productsAdd
+  upload.array('productImage', 5),
+  productsAdd,
 );
-adminRouter.get("/updateProduct", nocache(), adminAuth, geteditProduct);
+adminRouter.get('/updateProduct', nocache(), adminAuth, geteditProduct);
 adminRouter.post(
-  "/updateProduct",
+  '/updateProduct',
   adminAuth,
-  upload.array("productImage", 5),
-  editProduct
+  upload.array('productImage', 5),
+  editProduct,
 );
-adminRouter.get("/listProduct", nocache(), adminAuth, listProduct);
-adminRouter.get("/unlistProduct", nocache(), adminAuth, unlistProduct);
-adminRouter.get("/deleteProduct", nocache(), adminAuth, deleteProduct);
-adminRouter.get("/products", nocache(), adminAuth, getFilteredProducts);
+adminRouter.get('/listProduct', nocache(), adminAuth, listProduct);
+adminRouter.get('/unlistProduct', nocache(), adminAuth, unlistProduct);
+adminRouter.get('/deleteProduct', nocache(), adminAuth, deleteProduct);
+adminRouter.get('/products', nocache(), adminAuth, getFilteredProducts);
 adminRouter.post(
-  "/upload-cropped",
+  '/upload-cropped',
   nocache(),
   adminAuth,
-  upload.array("croppedImages", 5),
-  imageUpload
+  upload.array('croppedImages', 5),
+  imageUpload,
 );
 
 //Banner Management
-adminRouter.get("/banner", adminAuth, getBanner);
-adminRouter.get("/banner/addBanner", nocache(), adminAuth, getBannerAdd);
+adminRouter.get('/banner', adminAuth, getBanner);
+adminRouter.get('/banner/addBanner', nocache(), adminAuth, getBannerAdd);
 adminRouter.post(
-  "/banner/addBanner",
+  '/banner/addBanner',
   nocache(),
   adminAuth,
-  upload.single("bannerImage"),
-  bannerAdd
+  upload.single('bannerImage'),
+  bannerAdd,
 );
-adminRouter.get("/banner/updateBanner", nocache(), adminAuth, geteditBanner);
+adminRouter.get('/banner/updateBanner', nocache(), adminAuth, geteditBanner);
 adminRouter.post(
-  "/banner/updateBanner",
+  '/banner/updateBanner',
   nocache(),
   adminAuth,
-  upload.single("bannerImage"),
-  editBanner
+  upload.single('bannerImage'),
+  editBanner,
 );
-adminRouter.get("/deleteBanner", nocache(), adminAuth, deleteBanner);
+adminRouter.get('/deleteBanner', nocache(), adminAuth, deleteBanner);
 
 //Order Managment
-adminRouter.get("/orders", adminAuth, getOrderList);
-adminRouter.post("/orders/:orderId/status", adminAuth, postOrderUpdate);
-adminRouter.get("/orders/:orderId", adminAuth, loadOrderDetails);
-adminRouter.post("/orders/:orderId/items/:itemId/approve-return", adminAuth , returnApprove);
-adminRouter.post("/orders/:orderId/items/:itemId/reject-return", adminAuth , returnReject);
+adminRouter.get('/orders', adminAuth, getOrderList);
+adminRouter.post('/orders/:orderId/status', adminAuth, postOrderUpdate);
+adminRouter.get('/orders/:orderId', adminAuth, loadOrderDetails);
+adminRouter.post('/orders/:orderId/items/:itemId/approve-return', adminAuth, returnApprove);
+adminRouter.post('/orders/:orderId/items/:itemId/reject-return', adminAuth, returnReject);
 
 adminRouter.post(
-  "/orders/:orderId/items/:itemId/status",
+  '/orders/:orderId/items/:itemId/status',
   adminAuth,
-  updateSingleItemStatus
+  updateSingleItemStatus,
 );
-adminRouter.get("/coupon", adminAuth, getCoupon);
-adminRouter.get("/coupon/addCoupon", adminAuth, getAddCoupon);
-adminRouter.post("/coupon/addCoupon", adminAuth, postCouponAdd);
-adminRouter.post("/coupon/updateCoupon", adminAuth, couponUpdate);
-adminRouter.get("/coupon/delete", adminAuth, couponDelete);
+adminRouter.get('/coupon', adminAuth, getCoupon);
+adminRouter.get('/coupon/addCoupon', adminAuth, getAddCoupon);
+adminRouter.post('/coupon/addCoupon', adminAuth, postCouponAdd);
+adminRouter.post('/coupon/updateCoupon', adminAuth, couponUpdate);
+adminRouter.get('/coupon/delete', adminAuth, couponDelete);
 
 adminRouter.get(
-  "/sales-report/download",
+  '/sales-report/download',
   adminAuth,
-  downloadSalesReport
+  downloadSalesReport,
 );
-adminRouter.get("/sales-report/excel",adminAuth, downloadExcel);
+adminRouter.get('/sales-report/excel', adminAuth, downloadExcel);
 
-adminRouter.get("/blogs", adminAuth, blogsGet);
-adminRouter.get("/blogs/search", adminAuth, blogSearchAdmin);
-adminRouter.get("/blogs/:id", adminAuth, detailedBlog);
-adminRouter.patch("/blogs/block/:id", adminAuth, unblockBlockBlog);
-adminRouter.delete("/blogs/comment/:id",adminAuth, commentDelete);
+adminRouter.get('/blogs', adminAuth, blogsGet);
+adminRouter.get('/blogs/search', adminAuth, blogSearchAdmin);
+adminRouter.get('/blogs/:id', adminAuth, detailedBlog);
+adminRouter.patch('/blogs/block/:id', adminAuth, unblockBlockBlog);
+adminRouter.delete('/blogs/comment/:id', adminAuth, commentDelete);

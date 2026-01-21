@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const couponSchema = new mongoose.Schema(
   {
@@ -18,30 +18,30 @@ const couponSchema = new mongoose.Schema(
 
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       default: null,
       validate: {
         validator: function (v) {
-          if (this.type === "referral") {
+          if (this.type === 'referral') {
             return v !== null;
           }
           return true;
         },
-        message: "Referral coupons must belong to a user",
+        message: 'Referral coupons must belong to a user',
       },
     },
 
     type: {
       type: String,
-      enum: ["general", "referral"],
-      default: "general",
+      enum: ['general', 'referral'],
+      default: 'general',
     },
 
     maxUse: { type: Number, default: 1 },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 couponSchema.index({ code: 1, userId: 1 }, { unique: true });
 
-export default mongoose.model("Coupon", couponSchema);
+export default mongoose.model('Coupon', couponSchema);

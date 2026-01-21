@@ -1,5 +1,5 @@
-import Product from "../models/productsSchema.js";
-import Category from "../models/categorySchema.js";
+import Product from '../models/productsSchema.js';
+import Category from '../models/categorySchema.js';
 
 export const normalizeCart = async (cart) => {
   const activeItems = [];
@@ -8,7 +8,7 @@ export const normalizeCart = async (cart) => {
   for (const item of cart.items) {
     const product = await Product.findById(item.productId);
     if (!product) {
-      inactiveItems.push({ ...item, reason: "deleted" });
+      inactiveItems.push({ ...item, reason: 'deleted' });
       continue;
     }
 
@@ -20,9 +20,9 @@ export const normalizeCart = async (cart) => {
       product.isListed === false ||
       category?.isListed === false
     ) {
-      inactiveItems.push({ ...item, reason: "blocked" });
+      inactiveItems.push({ ...item, reason: 'blocked' });
     } else if (product.stock <= 0) {
-      inactiveItems.push({ ...item, reason: "out-of-stock" });
+      inactiveItems.push({ ...item, reason: 'out-of-stock' });
     } else {
       activeItems.push(item);
     }

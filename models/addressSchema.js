@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const addressSchema = new Schema({
@@ -10,8 +10,8 @@ const addressSchema = new Schema({
     {
       addressLabel: {
         type: String,
-        enum: ["Home", "Office", "Other"],
-        default: "Home",
+        enum: ['Home', 'Office', 'Other'],
+        default: 'Home',
         required: true,
       },
       houseName: {
@@ -52,6 +52,6 @@ const addressSchema = new Schema({
   ],
 });
 
-const Address = mongoose.model("Address", addressSchema);
+const Address = mongoose.model('Address', addressSchema);
 
 export default Address;

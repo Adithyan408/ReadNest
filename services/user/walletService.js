@@ -1,7 +1,7 @@
-import Wallet from "../../models/walletSchema.js";
-import crypto from "crypto";
-import { creditWallet, debitWallet } from "../../middlewares/walletHandler.js";
-import { getPaymentState } from "../../helpers/paymentCache.js";
+import Wallet from '../../models/walletSchema.js';
+import crypto from 'crypto';
+import { creditWallet, debitWallet } from '../../middlewares/walletHandler.js';
+import { getPaymentState } from '../../helpers/paymentCache.js';
 
 export const loadWallet = async (req, res) => {
   try {
@@ -9,7 +9,7 @@ export const loadWallet = async (req, res) => {
     const limit = 4;
     const skip = (page - 1) * limit;
     if (!req.session.user || !req.session.user._id) {
-      return res.redirect("/login");
+      return res.redirect('/login');
     }
 
     const userId = req.session.user._id;
@@ -25,15 +25,15 @@ export const loadWallet = async (req, res) => {
     let totalAdded = 0;
 
     wallet.transactions.forEach((tx) => {
-      if (tx.type === "credit") {
+      if (tx.type === 'credit') {
         totalAdded += tx.amount;
 
-        if (tx.note?.toLowerCase().includes("refund")) {
+        if (tx.note?.toLowerCase().includes('refund')) {
           totalRefunds += tx.amount;
         }
       }
 
-      if (tx.type === "debit") {
+      if (tx.type === 'debit') {
         totalSpent += tx.amount;
       }
     });
@@ -47,7 +47,7 @@ export const loadWallet = async (req, res) => {
 
     wallet.transactions = paginatedTransactions;
 
-    res.render("wallet", {
+    res.render('wallet', {
       wallet,
       totalRefunds,
       totalSpent,
@@ -56,12 +56,12 @@ export const loadWallet = async (req, res) => {
       totalPages,
     });
   } catch (err) {
-    console.error("Wallet Load Error:", err);
-    res.redirect("/500");
+    console.error('Wallet Load Error:', err);
+    res.redirect('/500');
   }
 };
 
-import Razorpay from "razorpay";
+import Razorpay from 'razorpay';
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZO_API_KEY,
@@ -74,7 +74,7 @@ export const razorpayOrderCreate = async (req, res) => {
 
     const order = await razorpay.orders.create({
       amount: amount * 100, // paise
-      currency: "INR",
+      currency: 'INR',
       receipt: `wallet_${Date.now()}`,
     });
 
@@ -94,12 +94,12 @@ export const walletVerify = async (req, res) => {
       amount,
     } = req.body;
 
-    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+    const sign = razorpay_order_id + '|' + razorpay_payment_id;
 
     const expectedSign = crypto
-      .createHmac("sha256", process.env.RAZO_KEY_SECRET)
+      .createHmac('sha256', process.env.RAZO_KEY_SECRET)
       .update(sign)
-      .digest("hex");
+      .digest('hex');
 
     if (expectedSign !== razorpay_signature) {
       return res.json({ success: false });
@@ -109,9 +109,9 @@ export const walletVerify = async (req, res) => {
     await creditWallet({
       userId: req.session.user._id,
       amount: Number(amount),
-      note: "Wallet top-up",
+      note: 'Wallet top-up',
       paymentId: razorpay_payment_id,
-      source: "topup",
+      source: 'topup',
     });
 
     res.json({ success: true });
@@ -126,14 +126,14 @@ export const walletPayment = async (req, res) => {
 
     const userId = req.session.user?._id;
     if (!userId) {
-      return res.json({ success: false, message: "Unauthorized" });
+      return res.json({ success: false, message: 'Unauthorized' });
     }
 
     const cached = await getPaymentState(userId);
     if (!cached) {
       return res.json({
         success: false,
-        message: "Payment session expired",
+        message: 'Payment session expired',
       });
     }
     
@@ -142,7 +142,7 @@ export const walletPayment = async (req, res) => {
     if (!Number.isFinite(payableAmount) || payableAmount <= 0) {
       return res.json({
         success: false,
-        message: "Invalid payable amount",
+        message: 'Invalid payable amount',
       });
     }
 
@@ -150,14 +150,14 @@ export const walletPayment = async (req, res) => {
     if (!wallet || wallet.balance < payableAmount) {
       return res.json({
         success: false,
-        message: "Insufficient wallet balance",
+        message: 'Insufficient wallet balance',
       });
     }
 
     await debitWallet({
       userId,
       amount: payableAmount,
-      note: "Order payment via wallet",
+      note: 'Order payment via wallet',
       paymentId: `WALLET-${Date.now()}`,
     });
 
@@ -166,10 +166,10 @@ export const walletPayment = async (req, res) => {
 
     return res.json({ success: true });
   } catch (error) {
-    console.error("Wallet Payment Error:", error);
+    console.error('Wallet Payment Error:', error);
     return res.json({
       success: false,
-      message: "Wallet payment failed",
+      message: 'Wallet payment failed',
     });
   }
 };

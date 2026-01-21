@@ -1,38 +1,37 @@
-import Order from "../../models/orderSchema.js";
-import Product from "../../models/productsSchema.js";
-import Coupon from "../../models/couponSchema.js";
-import PDFDocument from "pdfkit";
-import fs from "fs";
-import path from "path";
+import Order from '../../models/orderSchema.js';
+import Product from '../../models/productsSchema.js';
+import Coupon from '../../models/couponSchema.js';
+import PDFDocument from 'pdfkit';
+import fs from 'fs';
+import path from 'path';
 import {
   creditWallet,
-  calculateRefundAmount,
-} from "../../middlewares/walletHandler.js";
-import { ERROR_MESSAGES } from "../../helpers/errorMessages.js";
+} from '../../middlewares/walletHandler.js';
+import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
 
 export const getOrderDetailsPage = async (req, res) => {
   try {
     const orderId = req.params.orderId;
 
     const order = await Order.findOne({ orderId })
-      .populate("items.product", "productImage")
+      .populate('items.product', 'productImage')
       .lean();
 
-    if (!order) return res.render("notFound");
+    if (!order) return res.render('notFound');
 
     order.items = order.items.map((item) => ({
       ...item,
-      canCancel: item.status === "ordered" || item.status === "shipped",
-      canReturn: item.status === "delivered",
+      canCancel: item.status === 'ordered' || item.status === 'shipped',
+      canReturn: item.status === 'delivered',
     }));
 
-    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
 
     let isInvoiceAvailable = false;
 
-    if (order.paymentMethod === "COD") {
+    if (order.paymentMethod === 'COD') {
       isInvoiceAvailable = order.items.some(
-        (item) => item.status === "delivered"
+        (item) => item.status === 'delivered',
       );
     } else {
       isInvoiceAvailable = true;
@@ -47,7 +46,7 @@ export const getOrderDetailsPage = async (req, res) => {
 
       if (coupon) {
         const activeSubtotal = order.items
-          .filter((i) => !["cancelled", "returned"].includes(i.status))
+          .filter((i) => !['cancelled', 'returned'].includes(i.status))
           .reduce((sum, i) => sum + i.finalAmount, 0);
 
         if (activeSubtotal < coupon.minPurchase) {
@@ -56,15 +55,15 @@ export const getOrderDetailsPage = async (req, res) => {
       }
     }
 
-    return res.render("orderDetails", {
+    return res.render('orderDetails', {
       order,
       selectedAddress: order.address,
       isInvoiceAvailable,
       canCancelIndividually,
     });
   } catch (err) {
-    console.error("Order Details Error:", err);
-    return res.render("notFound");
+    console.error('Order Details Error:', err);
+    return res.render('notFound');
   }
 };
 
@@ -95,7 +94,7 @@ export const cancelOrderItem = async (req, res) => {
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: "Order not found",
+        message: 'Order not found',
       });
     }
 
@@ -103,29 +102,28 @@ export const cancelOrderItem = async (req, res) => {
     if (!item) {
       return res.status(404).json({
         success: false,
-        message: "Item not found",
+        message: 'Item not found',
       });
     }
 
-    if (!["ordered", "shipped"].includes(item.status)) {
+    if (!['ordered', 'shipped'].includes(item.status)) {
       return res.status(400).json({
         success: false,
-        message: "Item cannot be cancelled at this stage",
+        message: 'Item cannot be cancelled at this stage',
       });
     }
 
     const activeItems = order.items.filter(
-      (i) => !["cancelled", "returned"].includes(i.status)
+      (i) => !['cancelled', 'returned'].includes(i.status),
     );
 
     const subtotalBefore = activeItems.reduce(
       (sum, i) => sum + safeNumber(i.subtotal),
-      0
+      0,
     );
-
     
     const itemBaseAmount = safeNumber(item.subtotal); // ORIGINAL price
-    const itemFinalAmount = safeNumber(item.finalAmount || item.subtotal); // discounted price
+    // const itemFinalAmount = safeNumber(item.finalAmount || item.subtotal); // discounted price
     
     const subtotalAfter = subtotalBefore - itemBaseAmount;
     
@@ -139,9 +137,9 @@ export const cancelOrderItem = async (req, res) => {
       ) {
         return res.status(400).json({
           success: false,
-          reason: "COUPON_MIN_BREAK",
+          reason: 'COUPON_MIN_BREAK',
           message:
-            "This item cannot be cancelled individually due to coupon conditions. Please cancel the full order.",
+            'This item cannot be cancelled individually due to coupon conditions. Please cancel the full order.',
         });
       }
     }
@@ -158,26 +156,26 @@ export const cancelOrderItem = async (req, res) => {
 
     const discountDifference = Math.max(
       discountBefore - safeNumber(discountAfter),
-      0
+      0,
     );
 
     await Product.updateOne(
       { _id: item.product },
-      { $inc: { stock: item.quantity } }
+      { $inc: { stock: item.quantity } },
     );
 
-    item.status = "cancelled";
+    item.status = 'cancelled';
     item.cancelledAt = new Date();
 
     const remainingItems = activeItems.filter(
-      (i) => i._id.toString() !== itemId
+      (i) => i._id.toString() !== itemId,
     );
 
     const isLastItem = remainingItems.length === 0;
 
     let shippingRefund = 0;
 
-    if (isLastItem && item.status !== "delivered") {
+    if (isLastItem && item.status !== 'delivered') {
       shippingRefund = safeNumber(order.shippingCharge);
     }
 
@@ -200,7 +198,7 @@ export const cancelOrderItem = async (req, res) => {
     order.discount = safeNumber(discountAfter);
     order.payableAmount = Math.max(
       safeNumber(order.payableAmount) - refundAmount,
-      0
+      0,
     );
 
     if (isLastItem) {
@@ -209,31 +207,31 @@ export const cancelOrderItem = async (req, res) => {
     }
 
     order.status =
-      remainingItems.length === 0 ? "cancelled" : "partially_cancelled";
+      remainingItems.length === 0 ? 'cancelled' : 'partially_cancelled';
 
     await order.save();
 
     /* -------- WALLET REFUND -------- */
-    if (["Razorpay", "WALLET"].includes(order.paymentMethod)) {
+    if (['Razorpay', 'WALLET'].includes(order.paymentMethod)) {
       await creditWallet({
         userId: order.user,
         amount: refundAmount,
-        note: "Refund after item cancellation (coupon adjusted)",
+        note: 'Refund after item cancellation (coupon adjusted)',
         orderId: order.orderId,
         paymentId: order.paymentId || null,
-        source: "cancel_refund",
+        source: 'cancel_refund',
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Item cancelled successfully",
+      message: 'Item cancelled successfully',
     });
   } catch (err) {
-    console.error("Cancel Order Error:", err);
+    console.error('Cancel Order Error:', err);
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: 'Internal server error',
     });
   }
 };
@@ -251,29 +249,29 @@ export const cancelFullOrder = async (req, res) => {
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: "Order not found",
+        message: 'Order not found',
       });
     }
 
-    if (order.status === "cancelled") {
+    if (order.status === 'cancelled') {
       return res.status(400).json({
         success: false,
-        message: "Order is already cancelled",
+        message: 'Order is already cancelled',
       });
     }
 
     if (!order.couponCode) {
       return res.status(403).json({
         success: false,
-        message: "Full order cancellation is allowed only for coupon orders",
+        message: 'Full order cancellation is allowed only for coupon orders',
       });
     }
 
     let refundAmount = safeNumber(order.payableAmount ?? order.finalPayable);
 
     for (const item of order.items) {
-      if (!["cancelled", "returned"].includes(item.status)) {
-        item.status = "cancelled";
+      if (!['cancelled', 'returned'].includes(item.status)) {
+        item.status = 'cancelled';
         item.cancelledAt = new Date();
 
         const itemAmount = safeNumber(item.finalAmount || item.subtotal);
@@ -281,37 +279,37 @@ export const cancelFullOrder = async (req, res) => {
 
         await Product.updateOne(
           { _id: item.product },
-          { $inc: { stock: item.quantity } }
+          { $inc: { stock: item.quantity } },
         );
       }
     }
 
     order.discount = 0;
     order.payableAmount = 0;
-    order.status = "cancelled";
+    order.status = 'cancelled';
 
     await order.save();
 
-    if (["Razorpay", "WALLET"].includes(order.paymentMethod)) {
+    if (['Razorpay', 'WALLET'].includes(order.paymentMethod)) {
       await creditWallet({
         userId: order.user,
         amount: refundAmount,
-        note: "Full order cancellation refund",
+        note: 'Full order cancellation refund',
         orderId: order.orderId,
         paymentId: order.paymentId || null,
-        source: "full_order_cancel",
+        source: 'full_order_cancel',
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Order cancelled successfully",
+      message: 'Order cancelled successfully',
     });
   } catch (err) {
-    console.error("Full Order Cancel Error:", err);
+    console.error('Full Order Cancel Error:', err);
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: 'Internal server error',
     });
   }
 };
@@ -322,26 +320,26 @@ export const returnOrderItem = async (req, res) => {
     const { returnReason } = req.body;
 
     const order = await Order.findOne({ orderId });
-    if (!order) return res.render("notFound");
+    if (!order) return res.render('notFound');
 
     const item = order.items.id(itemId);
-    if (!item || item.status !== "delivered") {
-      return res.render("notFound");
+    if (!item || item.status !== 'delivered') {
+      return res.render('notFound');
     }
 
-    if (item.returnStatus !== "none") {
+    if (item.returnStatus !== 'none') {
       return res.redirect(`/orders/${orderId}`);
     }
 
-    item.returnStatus = "requested";
+    item.returnStatus = 'requested';
     item.returnReason = returnReason;
 
     await order.save();
 
     res.redirect(`/orders/${orderId}`);
   } catch (err) {
-    console.log("Return Item Error:", err);
-    return res.render("notFound");
+    console.log('Return Item Error:', err);
+    return res.render('notFound');
   }
 };
 
@@ -357,18 +355,18 @@ export const downloadInvoice = async (req, res) => {
       });
     }
 
-    if (order.status === "cancelled") {
+    if (order.status === 'cancelled') {
       return res.status(403).json({
         success: false,
-        message: "Invoice not available for cancelled orders",
+        message: 'Invoice not available for cancelled orders',
       });
     }
 
     let isInvoiceAvailable = false;
 
-    if (order.paymentMethod === "COD") {
+    if (order.paymentMethod === 'COD') {
       isInvoiceAvailable = order.items?.some(
-        (item) => item.status === "delivered"
+        (item) => item.status === 'delivered',
       );
     } else {
       isInvoiceAvailable = true;
@@ -377,48 +375,48 @@ export const downloadInvoice = async (req, res) => {
     if (!isInvoiceAvailable) {
       return res.status(403).json({
         success: false,
-        message: "Invoice is available only after delivery",
+        message: 'Invoice is available only after delivery',
       });
     }
 
     // ---------------- PDF SETUP ----------------
     const invoiceName = `invoice-${orderId}.pdf`;
-    const invoiceDir = "invoices";
+    const invoiceDir = 'invoices';
     const invoicePath = path.join(invoiceDir, invoiceName);
 
     if (!fs.existsSync(invoiceDir)) fs.mkdirSync(invoiceDir);
 
     const doc = new PDFDocument({ margin: 40 });
 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="${invoiceName}"`);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${invoiceName}"`);
 
     doc.pipe(fs.createWriteStream(invoicePath));
     doc.pipe(res);
 
     // ---------------- HEADER ----------------
-    const logoPath = path.join("public", "images", "logo2.png");
+    const logoPath = path.join('public', 'images', 'logo2.png');
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, 40, 30, { width: 70 });
     }
 
-    doc.fontSize(26).fillColor("#333").text("READNEST", { align: "center" });
-    doc.fontSize(12).fillColor("#666").text("Digital Book Store", {
-      align: "center",
+    doc.fontSize(26).fillColor('#333').text('READNEST', { align: 'center' });
+    doc.fontSize(12).fillColor('#666').text('Digital Book Store', {
+      align: 'center',
     });
 
-    doc.moveTo(40, 100).lineTo(550, 100).stroke("#ccc");
+    doc.moveTo(40, 100).lineTo(550, 100).stroke('#ccc');
     doc.moveDown(2);
 
-    doc.fontSize(20).fillColor("#222").text("INVOICE", { align: "center" });
+    doc.fontSize(20).fillColor('#222').text('INVOICE', { align: 'center' });
     doc.moveDown(1);
 
     doc
       .fontSize(12)
-      .fillColor("#444")
-      .text(`Order ID: ${order.orderId}`, { align: "center" })
+      .fillColor('#444')
+      .text(`Order ID: ${order.orderId}`, { align: 'center' })
       .text(`Order Date: ${new Date(order.createdAt).toLocaleString()}`, {
-        align: "center",
+        align: 'center',
       });
 
     doc.moveDown(2);
@@ -447,18 +445,18 @@ Phone: ${a.phone}`;
       const boxHeight = textHeight + padding * 2 + 20; // title space
 
       // Draw box
-      doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 8).stroke("#999");
+      doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 8).stroke('#999');
 
       // Title
       doc
         .fontSize(14)
-        .fillColor("#222")
-        .text("Delivery Address", boxX + padding, boxY + 8);
+        .fillColor('#222')
+        .text('Delivery Address', boxX + padding, boxY + 8);
 
       // Address text
       doc
         .fontSize(12)
-        .fillColor("#444")
+        .fillColor('#444')
         .text(addressText, boxX + padding, boxY + 28, {
           width: boxWidth - padding * 2,
           lineGap: 2,
@@ -469,7 +467,7 @@ Phone: ${a.phone}`;
     }
 
     // ---------------- ITEMS TABLE ----------------
-    doc.fontSize(14).fillColor("#222").text("Order Items", { underline: true });
+    doc.fontSize(14).fillColor('#222').text('Order Items', { underline: true });
 
     const tableTop = doc.y + 10;
     const columnX = {
@@ -480,57 +478,57 @@ Phone: ${a.phone}`;
       status: 480,
     };
 
-    doc.rect(40, tableTop, 510, 22).fill("#f2f2f2").stroke();
+    doc.rect(40, tableTop, 510, 22).fill('#f2f2f2').stroke();
 
     doc
-      .fillColor("#000")
+      .fillColor('#000')
       .fontSize(12)
-      .text("Item", columnX.item, tableTop + 6)
-      .text("Qty", columnX.qty, tableTop + 6)
-      .text("Price", columnX.price, tableTop + 6)
-      .text("Subtotal", columnX.subtotal, tableTop + 6)
-      .text("Status", columnX.status, tableTop + 6);
+      .text('Item', columnX.item, tableTop + 6)
+      .text('Qty', columnX.qty, tableTop + 6)
+      .text('Price', columnX.price, tableTop + 6)
+      .text('Subtotal', columnX.subtotal, tableTop + 6)
+      .text('Status', columnX.status, tableTop + 6);
 
     let posY = tableTop + 30;
 
     order.items.forEach((item) => {
-      let statusLabel = "";
-      let statusColor = "#555";
+      let statusLabel = '';
+      let statusColor = '#555';
 
       switch (item.status) {
-        case "ordered":
-        case "placed":
-          statusLabel = "Order Placed";
-          statusColor = "#1565c0"; // blue
+        case 'ordered':
+        case 'placed':
+          statusLabel = 'Order Placed';
+          statusColor = '#1565c0'; // blue
           break;
 
-        case "shipped":
-          statusLabel = "Shipped";
-          statusColor = "#6a1b9a"; // purple
+        case 'shipped':
+          statusLabel = 'Shipped';
+          statusColor = '#6a1b9a'; // purple
           break;
 
-        case "delivered":
-          statusLabel = "Delivered";
-          statusColor = "#2e7d32"; // green
+        case 'delivered':
+          statusLabel = 'Delivered';
+          statusColor = '#2e7d32'; // green
           break;
 
-        case "returned":
-          statusLabel = "Returned (Refunded)";
-          statusColor = "#ef6c00"; // orange
+        case 'returned':
+          statusLabel = 'Returned (Refunded)';
+          statusColor = '#ef6c00'; // orange
           break;
 
-        case "cancelled":
-          statusLabel = "Cancelled";
-          statusColor = "#c62828"; // red
+        case 'cancelled':
+          statusLabel = 'Cancelled';
+          statusColor = '#c62828'; // red
           break;
 
         default:
-          statusLabel = "Processing";
-          statusColor = "#555";
+          statusLabel = 'Processing';
+          statusColor = '#555';
       }
 
       doc
-        .fillColor("#333")
+        .fillColor('#333')
         .text(item.productName, columnX.item, posY)
         .text(item.quantity.toString(), columnX.qty, posY)
         .text(`₹${item.unitPrice}`, columnX.price, posY)
@@ -541,43 +539,43 @@ Phone: ${a.phone}`;
       doc
         .moveTo(40, posY + 18)
         .lineTo(550, posY + 18)
-        .stroke("#ddd");
+        .stroke('#ddd');
 
       posY += 25;
     });
 
     // ---------------- SUMMARY ----------------
     const subtotal = order.items
-      .filter((item) => item.status === "delivered")
+      .filter((item) => item.status === 'delivered')
       .reduce((sum, item) => sum + item.subtotal, 0);
 
     const discount = Number(order.discount || 0);
     const shippingCharge = Number(order.shippingCharge || 0);
     const totalPaid = Number(order.finalPayable);
 
-    doc.roundedRect(300, posY + 10, 250, 120, 8).stroke("#999");
+    doc.roundedRect(300, posY + 10, 250, 120, 8).stroke('#999');
 
     doc
       .fontSize(12)
-      .fillColor("#444")
+      .fillColor('#444')
       .text(`Subtotal (Delivered Items): ₹${subtotal}`, 320, posY + 25)
       .text(`Discount: ₹${discount}`, 320, posY + 45)
       .text(`Shipping: ₹${shippingCharge}`, 320, posY + 65)
       .fontSize(13)
-      .fillColor("#000")
+      .fillColor('#000')
       .text(`Total Amount Paid: ₹${totalPaid}`, 320, posY + 90);
 
     doc.moveDown(5);
 
     doc
       .fontSize(10)
-      .fillColor("#777")
-      .text("Thank you for shopping with READNEST!", { align: "center" });
+      .fillColor('#777')
+      .text('Thank you for shopping with READNEST!', { align: 'center' });
 
     doc.end();
   } catch (error) {
-    console.log("Invoice Error:", error);
-    res.render("notFound");
+    console.log('Invoice Error:', error);
+    res.render('notFound');
   }
 };
 
@@ -585,16 +583,16 @@ export const getListOrders = async (req, res) => {
   try {
     const userId = req.session.user?._id;
 
-    const search = req.query.search?.trim() || "";
+    const search = req.query.search?.trim() || '';
 
     let query = { user: userId };
 
     if (search) {
       query.$expr = {
         $regexMatch: {
-          input: { $toString: "$_id" },
+          input: { $toString: '$_id' },
           regex: search,
-          options: "i",
+          options: 'i',
         },
       };
     }
@@ -607,13 +605,13 @@ export const getListOrders = async (req, res) => {
       noResultsMessage = `No orders found with Order ID "${search}"`;
     }
 
-    res.render("orders", {
+    res.render('orders', {
       orders,
       search,
       noResultsMessage,
     });
   } catch (err) {
-    console.log("Orders Page Error:", err);
-    res.render("notFound");
+    console.log('Orders Page Error:', err);
+    res.render('notFound');
   }
 };

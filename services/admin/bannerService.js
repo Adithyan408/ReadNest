@@ -1,5 +1,5 @@
-import { ERROR_MESSAGES } from "../../helpers/errorMessages.js";
-import Banner from "../../models/bannerSchema.js";
+import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
+import Banner from '../../models/bannerSchema.js';
 
 export const loadBanner = async (req, res) => {
   try {
@@ -14,17 +14,17 @@ export const loadBanner = async (req, res) => {
 
     const total = await Banner.countDocuments();
     const totalPages = Math.ceil(total / limit);
-    res.render("banner", { data: findBanner, currentPage: page, totalPages });
+    res.render('banner', { data: findBanner, currentPage: page, totalPages });
   } catch (error) {
-    res.redirect("/pageerror");
+    res.redirect('/pageerror');
   }
 };
 
 export const loadBannerAdd = async (req, res) => {
   try {
-    res.render("addBanner", { errors: {}, oldInput: {} });
+    res.render('addBanner', { errors: {}, oldInput: {} });
   } catch (error) {
-    res.render("admin-error");
+    res.render('admin-error');
   }
 };
 
@@ -33,32 +33,32 @@ export const postBannerAdd = async (req, res) => {
     const { title, startDate, endDate, status } = req.body;
     let errors = {};
 
-    if (!title || title.trim() === "") {
-      errors.title = "Banner title is required.";
+    if (!title || title.trim() === '') {
+      errors.title = 'Banner title is required.';
     }
 
     if (!startDate) {
-      errors.startDate = "Start Date is required.";
+      errors.startDate = 'Start Date is required.';
     }
 
     if (!endDate) {
-      errors.endDate = "End Date is required.";
+      errors.endDate = 'End Date is required.';
     }
 
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      errors.dateRange = "Start Date cannot be after End Date.";
+      errors.dateRange = 'Start Date cannot be after End Date.';
     }
 
     if (!status) {
-      errors.status = "Please select a banner status.";
+      errors.status = 'Please select a banner status.';
     }
 
     if (!req.file) {
-      errors.bannerImage = "Banner image is required.";
+      errors.bannerImage = 'Banner image is required.';
     }
 
     if (Object.keys(errors).length > 0) {
-      return res.render("addBanner", {
+      return res.render('addBanner', {
         errors,
         oldInput: req.body,
       });
@@ -73,9 +73,9 @@ export const postBannerAdd = async (req, res) => {
       status,
     });
     await newBanner.save();
-    res.redirect("/admin/banner?status=added");
+    res.redirect('/admin/banner?status=added');
   } catch (error) {
-    res.redirect("/pageerror");
+    res.redirect('/pageerror');
   }
 };
 
@@ -83,9 +83,9 @@ export const loadEditBanner = async (req, res) => {
   try {
     const id = req.query.id;
     const banner = await Banner.findOne({ _id: id });
-    res.render("editBanner", { data: banner });
+    res.render('editBanner', { data: banner });
   } catch (error) {
-    res.redirect("/pageerror");
+    res.redirect('/pageerror');
   }
 };
 
@@ -113,12 +113,12 @@ export const postEditBanner = async (req, res) => {
     });
 
     if (updateBanner) {
-      res.redirect("/admin/banner?status=updated");
+      res.redirect('/admin/banner?status=updated');
     } else {
       res.json({ message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR });
     }
   } catch (error) {
-    res.redirect("/pageerror");
+    res.redirect('/pageerror');
   }
 };
 
@@ -127,17 +127,16 @@ export const bannerDelete = async (req, res) => {
     const { id } = req.query;
 
     if (!id) {
-      return res.status(400).send("Category ID not provided");
+      return res.status(400).send('Category ID not provided');
     }
 
     const deletedBanner = await Banner.findByIdAndDelete(id);
-    
 
     if (!deletedBanner) {
-      return res.status(404).send("Banner not found");
+      return res.status(404).send('Banner not found');
     }
-    res.redirect("/admin/banner?deleted=true&status=deleted");
+    res.redirect('/admin/banner?deleted=true&status=deleted');
   } catch (error) {
-    res.status(500).redirect("/pageerror");
+    res.status(500).redirect('/pageerror');
   }
 };

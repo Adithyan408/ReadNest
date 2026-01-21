@@ -1,32 +1,33 @@
+import Order from '../models/orderSchema.js';
 export const getSalesReportData = async ({ filter, start, end }) => {
   const now = new Date();
   let fromDate, toDate;
 
   switch (filter) {
-    case "today":
+    case 'today':
       fromDate = new Date();
       fromDate.setHours(0, 0, 0, 0);
       toDate = new Date();
       break;
 
-    case "week":
+    case 'week':
       fromDate = new Date();
       fromDate.setDate(now.getDate() - 6);
       fromDate.setHours(0, 0, 0, 0);
       toDate = new Date();
       break;
 
-    case "month":
+    case 'month':
       fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
       toDate = new Date();
       break;
 
-    case "year":
+    case 'year':
       fromDate = new Date(now.getFullYear(), 0, 1);
       toDate = new Date();
       break;
 
-    case "custom":
+    case 'custom':
       fromDate = new Date(start);
       toDate = new Date(end);
       toDate.setHours(23, 59, 59, 999);
@@ -39,41 +40,41 @@ export const getSalesReportData = async ({ filter, start, end }) => {
 
   const salesMatch = {
     $or: [
-      { paymentMethod: "COD", "items.status": "delivered" },
-      { paymentMethod: { $in: ["Razorpay", "WALLET"] } },
+      { paymentMethod: 'COD', 'items.status': 'delivered' },
+      { paymentMethod: { $in: ['Razorpay', 'WALLET'] } },
     ],
   };
 
   const salesData = await Order.aggregate([
     { $match: { createdAt: { $gte: fromDate, $lte: toDate } } },
-    { $unwind: "$items" },
+    { $unwind: '$items' },
     { $match: salesMatch },
     {
       $lookup: {
-        from: "users",
-        localField: "user",
-        foreignField: "_id",
-        as: "user",
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'user',
       },
     },
-    { $unwind: "$user" },
+    { $unwind: '$user' },
     {
       $project: {
         orderId: 1,
-        username: "$user.name",
-        date: "$createdAt",
-        product: "$items.productName",
-        quantity: "$items.quantity",
-        status: "$items.status",
+        username: '$user.name',
+        date: '$createdAt',
+        product: '$items.productName',
+        quantity: '$items.quantity',
+        status: '$items.status',
         amount: {
           $cond: [
-            { $in: ["$items.status", ["cancelled", "returned"]] },
-            { $multiply: ["$items.subtotal", -1] },
-            "$items.subtotal",
+            { $in: ['$items.status', ['cancelled', 'returned']] },
+            { $multiply: ['$items.subtotal', -1] },
+            '$items.subtotal',
           ],
         },
         discount: {
-          $subtract: ["$items.regularPrice", "$items.unitPrice"],
+          $subtract: ['$items.regularPrice', '$items.unitPrice'],
         },
       },
     },
@@ -93,7 +94,7 @@ export const getSalesReportData = async ({ filter, start, end }) => {
 
   const totalDiscount = salesData.reduce(
     (a, b) => a + (b.discount || 0),
-    0
+    0,
   );
 
   return {

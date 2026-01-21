@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const bannerSchema = new Schema(
@@ -21,13 +21,13 @@ const bannerSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["ACTIVE", "INACTIVE"],
-      default: "ACTIVE",
-    }
+      enum: ['ACTIVE', 'INACTIVE'],
+      default: 'ACTIVE',
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const Banner = mongoose.model("Banner", bannerSchema);
+const Banner = mongoose.model('Banner', bannerSchema);
 
 export default Banner;

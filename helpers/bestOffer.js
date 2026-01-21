@@ -8,16 +8,12 @@ export const getActiveProductOffer = (product) => {
 
   const validStart = start instanceof Date && !isNaN(start);
   const validEnd = end instanceof Date && !isNaN(end);
-
  
   if (!validStart && !validEnd) return product.offer;
 
-
   if (validStart && !validEnd) return now >= start ? product.offer : 0;
 
-
   if (!validStart && validEnd) return now <= end ? product.offer : 0;
-
 
   if (now >= start && now <= end) return product.offer;
 

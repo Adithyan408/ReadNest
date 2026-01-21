@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const userSchema = new Schema(
@@ -46,26 +46,26 @@ const userSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["ACTIVE", "INACTIVE"],
-      default: "ACTIVE",
+      enum: ['ACTIVE', 'INACTIVE'],
+      default: 'ACTIVE',
     },
     cart: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Cart",
+        ref: 'Cart',
       },
     ],
     orderHistory: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Order",
+        ref: 'Order',
       },
     ],
     searchHistory: [
       {
         category: {
           type: Schema.Types.ObjectId,
-          ref: "Category",
+          ref: 'Category',
         },
         author: {
           type: String,
@@ -79,22 +79,22 @@ const userSchema = new Schema(
     savedBlogs: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Blog",
+        ref: 'Blog',
       },
     ],
     referralCode: { type: String, unique: true },
     referredBy: { type: String, default: null },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-userSchema.pre("save", function (next) {
+userSchema.pre('save', function (next) {
   if (!this.referralCode) {
     this.referralCode = this._id.toString().slice(-6).toUpperCase();
   }
   next();
 });
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model('User', userSchema);
 
 export default User;

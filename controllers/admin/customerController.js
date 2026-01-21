@@ -1,5 +1,5 @@
 
-import { customerBlock, customerUnblock, loadCustomer } from "../../services/admin/customerService.js";
+import { customerBlock, customerUnblock, loadCustomer } from '../../services/admin/customerService.js';
 
 export const customerInfo = async (req, res) => {
   await loadCustomer(req, res);

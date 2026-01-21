@@ -1,6 +1,6 @@
-import redis from "../config/redis.js";
+import redis from '../config/redis.js';
 
-const KEY_PREFIX = "payment:";
+const KEY_PREFIX = 'payment:';
 
 // Save payment state
 export const savePaymentState = async (userId, data) => {

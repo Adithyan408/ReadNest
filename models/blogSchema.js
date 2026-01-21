@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const blogSchema = new mongoose.Schema(
   {
@@ -16,7 +16,7 @@ const blogSchema = new mongoose.Schema(
     },
     author: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
     isBlocked: {
@@ -28,8 +28,8 @@ const blogSchema = new mongoose.Schema(
 
   {
     timestamps: true,
-  }
+  },
 );
 
-const Blog = mongoose.model("Blog", blogSchema);
+const Blog = mongoose.model('Blog', blogSchema);
 export default Blog;

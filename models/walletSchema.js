@@ -1,11 +1,11 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const walletSchema = new Schema(
   {
     user: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
       unique: true,
     },
@@ -24,7 +24,7 @@ const walletSchema = new Schema(
       {
         type: {
           type: String,
-          enum: ["credit", "debit"],
+          enum: ['credit', 'debit'],
           required: true,
         },
 
@@ -54,8 +54,8 @@ const walletSchema = new Schema(
     ],
   },
 
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const Wallet = mongoose.model("Wallet", walletSchema);
+const Wallet = mongoose.model('Wallet', walletSchema);
 export default Wallet;

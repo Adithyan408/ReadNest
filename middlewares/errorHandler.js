@@ -1,8 +1,6 @@
 
-
-
 export default function errorHandler(err, req, res, next) {
-  console.error("Global Error:", err.stack);
+  console.error('Global Error:', err.stack);
 
   if (res.headersSent) {
     return next(err);

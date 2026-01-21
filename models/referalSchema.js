@@ -1,15 +1,15 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const referralRewardSchema = new mongoose.Schema({
   referrerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: 'User',
     required: true,
   },
 
   referredUserId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: 'User',
     required: true,
   },
 
@@ -37,4 +37,4 @@ const referralRewardSchema = new mongoose.Schema({
   usedAt: Date,
 });
 
-export default mongoose.model("ReferralReward", referralRewardSchema);
+export default mongoose.model('ReferralReward', referralRewardSchema);

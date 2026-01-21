@@ -1,16 +1,16 @@
-import User from "../../models/userSchema.js";
+import User from '../../models/userSchema.js';
 
 export const loadCustomer = async (req, res) => {
   try {
-    const search = req.query.search || "";
+    const search = req.query.search || '';
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
 
     const matchStage = {
       isAdmin: false,
       $or: [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
       ],
     };
 
@@ -22,17 +22,17 @@ export const loadCustomer = async (req, res) => {
 
       {
         $lookup: {
-          from: "wallets",        
-          localField: "_id",      
-          foreignField: "user",   
-          as: "wallet",
+          from: 'wallets',        
+          localField: '_id',      
+          foreignField: 'user',   
+          as: 'wallet',
         },
       },
 
       {
         $addFields: {
           walletBalance: {
-            $ifNull: [{ $arrayElemAt: ["$wallet.balance", 0] }, 0],
+            $ifNull: [{ $arrayElemAt: ['$wallet.balance', 0] }, 0],
           },
         },
       },
@@ -47,7 +47,7 @@ export const loadCustomer = async (req, res) => {
     const count = await User.countDocuments(matchStage);
     const totalPages = Math.ceil(count / limit);
 
-    res.render("customer", {
+    res.render('customer', {
       data: userData,
       totalPages,
       currentPage: page,
@@ -55,7 +55,7 @@ export const loadCustomer = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.render("admin-error");
+    res.render('admin-error');
   }
 };
 
@@ -64,17 +64,17 @@ export const customerBlock = async (req, res) => {
     const { userId } = req.body;
 
     if (!userId) {
-      return res.status(400).json({ success: false, message: "User ID required" });
+      return res.status(400).json({ success: false, message: 'User ID required' });
     }
 
     await User.updateOne(
       { _id: userId },
-      { $set: { isBlocked: true } }
+      { $set: { isBlocked: true } },
     );
 
     res.json({ success: true });
   } catch (error) {
-    console.error("Block user error:", error);
+    console.error('Block user error:', error);
     res.status(500).json({ success: false });
   }
 };
@@ -84,17 +84,17 @@ export const customerUnblock = async (req, res) => {
     const { userId } = req.body;
 
     if (!userId) {
-      return res.status(400).json({ success: false, message: "User ID required" });
+      return res.status(400).json({ success: false, message: 'User ID required' });
     }
 
     await User.updateOne(
       { _id: userId },
-      { $set: { isBlocked: false } }
+      { $set: { isBlocked: false } },
     );
 
     res.json({ success: true });
   } catch (error) {
-    console.error("Unblock user error:", error);
+    console.error('Unblock user error:', error);
     res.status(500).json({ success: false });
   }
 };

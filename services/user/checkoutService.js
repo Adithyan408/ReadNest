@@ -1,19 +1,17 @@
-import Product from "../../models/productsSchema.js";
-import User from "../../models/userSchema.js";
-import Cart from "../../models/cartSchema.js";
-import Address from "../../models/addressSchema.js";
-import Category from "../../models/categorySchema.js";
+import User from '../../models/userSchema.js';
+import Cart from '../../models/cartSchema.js';
+import Address from '../../models/addressSchema.js';
+import Category from '../../models/categorySchema.js';
 
 export const getCheckout = async (req, res) => {
   try {
     const userId = req.session.user?._id;
 
-    if (!userId) return res.redirect("/login");
+    if (!userId) return res.redirect('/login');
 
     const userData = await User.findById(userId).lean();
 
     let cart = [];
-
 
     const calculateOffer = async (product) => {
       const now = new Date();
@@ -65,7 +63,7 @@ export const getCheckout = async (req, res) => {
     };
 
       const cartData = await Cart.findOne({ userId })
-        .populate("items.productId")
+        .populate('items.productId')
         .lean();
 
       cart = cartData
@@ -87,11 +85,10 @@ export const getCheckout = async (req, res) => {
                   offerPrice: pricing.offerPrice,
                   stock: p.stock,
                 };
-              })
+              }),
             )
           ).filter(Boolean)
         : [];
-    
 
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
@@ -101,26 +98,26 @@ export const getCheckout = async (req, res) => {
     if (addresses.length > 0) {
       if (req.session.selectedAddressId) {
         selectedAddress = addresses.find(
-          (a) => a._id.toString() === req.session.selectedAddressId
+          (a) => a._id.toString() === req.session.selectedAddressId,
         );
       }
       if (!selectedAddress) {
         selectedAddress =
-          addresses.find((a) => a.addressLabel === "Home") || addresses[0];
+          addresses.find((a) => a.addressLabel === 'Home') || addresses[0];
       }
     }
     if (cart.length < 1) {
-      return res.redirect("/");
+      return res.redirect('/');
     }
-    return res.render("checkout", {
+    return res.render('checkout', {
       user: userData,
       cart,
       addresses,
       selectedAddress,
     });
   } catch (error) {
-    console.log("Checkout Load Error:", error);
-    return res.redirect("/notfound");
+    console.log('Checkout Load Error:', error);
+    return res.redirect('/notfound');
   }
 };
 
@@ -132,10 +129,10 @@ export const setSelectedAddress = (req, res) => {
 
     return res.json({
       success: true,
-      message: "Address selected",
+      message: 'Address selected',
     });
   } catch (error) {
-    console.log("Set address error:", error);
+    console.log('Set address error:', error);
     return res.json({ success: false });
   }
 };
@@ -162,7 +159,7 @@ export const addNewAddress = async (req, res) => {
 
     return res.json({ success: true });
   } catch (error) {
-    console.error("Add address error:", error);
+    console.error('Add address error:', error);
     return res.json({ success: false });
   }
 };
@@ -236,7 +233,7 @@ export const saveAddress = async (req, res) => {
     await addressDoc.save();
     return res.json({ success: true });
   } catch (err) {
-    console.log("Save address error:", err);
+    console.log('Save address error:', err);
     return res.json({ success: false });
   }
 };
@@ -247,18 +244,17 @@ export const updateCheckoutQuantity = async (req, res) => {
     if (!userId) return res.json({ success: false });
 
     const { productId, quantity } = req.body;
-
     
     if (quantity < 1) return res.json({ success: false });
 
     await Cart.updateOne(
-      { userId, "items.productId": productId },
-      { $set: { "items.$.quantity": quantity } }
+      { userId, 'items.productId': productId },
+      { $set: { 'items.$.quantity': quantity } },
     );
 
     return res.json({ success: true });
   } catch (error) {
-    console.log("Update checkout qty error:", error);
+    console.log('Update checkout qty error:', error);
     return res.json({ success: false });
   }
 };

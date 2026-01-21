@@ -1,10 +1,10 @@
-import mongoose from "mongoose";
-import crypto from "crypto";
+import mongoose from 'mongoose';
+import crypto from 'crypto';
 
 const orderItemSchema = new mongoose.Schema({
   product: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Product",
+    ref: 'Product',
     required: true,
   },
 
@@ -33,14 +33,14 @@ const orderItemSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ["ordered", "shipped", "delivered", "cancelled", "returned"],
-    default: "ordered",
+    enum: ['ordered', 'shipped', 'delivered', 'cancelled', 'returned'],
+    default: 'ordered',
   },
 
   returnStatus: {
     type: String,
-    enum: ["none", "requested", "approved", "rejected"],
-    default: "none",
+    enum: ['none', 'requested', 'approved', 'rejected'],
+    default: 'none',
   },
 
   returnReason: String,
@@ -52,8 +52,8 @@ const orderItemSchema = new mongoose.Schema({
   refundAmount: Number,
   refundStatus: {
     type: String,
-    enum: ["none", "initiated", "completed"],
-    default: "none",
+    enum: ['none', 'initiated', 'completed'],
+    default: 'none',
   },
 });
 
@@ -66,7 +66,7 @@ const orderSchema = new mongoose.Schema(
       index: true,
       default: () => crypto.randomUUID(),
     },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
     items: [orderItemSchema],
 
@@ -79,7 +79,7 @@ const orderSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
-      enum: ["COD", "Razorpay", "WALLET"],
+      enum: ['COD', 'Razorpay', 'WALLET'],
       required: true,
     },
 
@@ -87,8 +87,8 @@ const orderSchema = new mongoose.Schema(
 
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "failed"],
-      default: "pending",
+      enum: ['pending', 'paid', 'failed'],
+      default: 'pending',
     },
 
     address: {
@@ -97,8 +97,8 @@ const orderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["processing", "partially_cancelled", "cancelled", "completed", "Return_Requested"],
-      default: "processing",
+      enum: ['processing', 'partially_cancelled', 'cancelled', 'completed', 'Return_Requested'],
+      default: 'processing',
     },
     shippingRefunded: {
       type: Boolean,
@@ -110,7 +110,7 @@ const orderSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export default mongoose.model("Order", orderSchema);
+export default mongoose.model('Order', orderSchema);

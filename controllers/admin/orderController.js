@@ -5,7 +5,7 @@ import {
   rejectReturn,
   updateItemStatus,
   updateOrderStatus,
-} from "../../services/admin/orderService.js";
+} from '../../services/admin/orderService.js';
 
 export const getOrderList = async (req, res) => {
   await loadOrders(req, res);

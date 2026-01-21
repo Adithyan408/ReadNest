@@ -1,16 +1,16 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const blogCommentSchema = new mongoose.Schema(
   {
     blog: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Blog",
+      ref: 'Blog',
       required: true,
       index: true,
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
       index: true,
     },
@@ -21,8 +21,8 @@ const blogCommentSchema = new mongoose.Schema(
       maxLength: 500,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const BlogComment = mongoose.model("BlogComment", blogCommentSchema);
+const BlogComment = mongoose.model('BlogComment', blogCommentSchema);
 export default BlogComment;

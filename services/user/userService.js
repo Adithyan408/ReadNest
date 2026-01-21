@@ -1,19 +1,19 @@
-import User from "../../models/userSchema.js";
-import { securePassword } from "../../helpers/verify.js";
-import dotenv from "dotenv";
-import bcrypt from "bcrypt";
-import passport from "../../config/passport.js";
-import { generateOtp, sendVerificationEmail } from "../../helpers/verify.js";
-import Coupon from "../../models/couponSchema.js";
-import ReferralReward from "../../models/referalSchema.js";
+import User from '../../models/userSchema.js';
+import { securePassword } from '../../helpers/verify.js';
+import dotenv from 'dotenv';
+import bcrypt from 'bcrypt';
+import passport from '../../config/passport.js';
+import { generateOtp, sendVerificationEmail } from '../../helpers/verify.js';
+import Coupon from '../../models/couponSchema.js';
+import ReferralReward from '../../models/referalSchema.js';
 
 dotenv.config();
 
 export const notfound = async (req, res) => {
   try {
-    res.render("notFound");
+    res.render('notFound');
   } catch (error) {
-    res.redirect("/notfound");
+    res.redirect('/notfound');
   }
 };
 
@@ -21,31 +21,30 @@ export const getSignup = async (req, res) => {
   try {
     const message = req.session.message || null;
     req.session.message = null;
-    return res.render("signup", { message });
+    return res.render('signup', { message });
   } catch (error) {
-    res.status(500).render("notFound");
+    res.status(500).render('notFound');
   }
 };
 
 export const getLogin = async (req, res) => {
   try {
     if (req.session.user) {
-      return res.redirect("/");
+      return res.redirect('/');
     }
 
     if (req.session.message) {
       const message = req.session.message;
       req.session.message = null;
-      return res.render("login", { message });
+      return res.render('login', { message });
     }
 
-    res.render("login");
+    res.render('login');
   } catch (error) {
     console.error(error);
-    res.status(500).redirect("/notfound");
+    res.status(500).redirect('/notfound');
   }
 };
-
 
 export const postLogin = async (req, res) => {
   try {
@@ -53,27 +52,27 @@ export const postLogin = async (req, res) => {
     const findUser = await User.findOne({ isAdmin: false, email: email });
 
     if (!findUser) {
-      req.session.message = "User not found";
-      return res.redirect("/login");
+      req.session.message = 'User not found';
+      return res.redirect('/login');
     }
     if (findUser.isBlocked) {
-      req.session.message = "User is Blocked by Admin";
-      return res.redirect("/login");
+      req.session.message = 'User is Blocked by Admin';
+      return res.redirect('/login');
     }
 
     const passwordMatch = await bcrypt.compare(password, findUser.password);
 
     if (!passwordMatch) {
-      req.session.message = "Invalide Credentials";
-      return res.redirect("/login");
+      req.session.message = 'Invalide Credentials';
+      return res.redirect('/login');
     }
     if (passwordMatch) {
       req.session.user = { _id: findUser._id };
-      res.redirect("/");
+      res.redirect('/');
     }
   } catch (error) {
-    req.session.message = "Please try again";
-    res.redirect("/login");
+    req.session.message = 'Please try again';
+    res.redirect('/login');
   }
 };
 
@@ -82,36 +81,36 @@ export const postSignup = async (req, res) => {
     const { name, email, password, confirmPassword, referralCode } = req.body;
 
     if (!name || !email || !password || !confirmPassword) {
-      req.session.message = "All fields are required";
-      return res.redirect("/signup");
+      req.session.message = 'All fields are required';
+      return res.redirect('/signup');
     }
 
     if (password !== confirmPassword) {
-      req.session.message = "Passwords do not match";
-      return res.redirect("/signup");
+      req.session.message = 'Passwords do not match';
+      return res.redirect('/signup');
     }
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      req.session.message = "User with this email already exists";
-      return res.redirect("/signup");
+      req.session.message = 'User with this email already exists';
+      return res.redirect('/signup');
     }
 
     let referredUser = null;
 
-    if (referralCode && referralCode.trim() !== "") {
+    if (referralCode && referralCode.trim() !== '') {
       const normalizedCode = referralCode.trim().toUpperCase();
 
       referredUser = await User.findOne({ referralCode: normalizedCode });
 
       if (!referredUser) {
-        req.session.message = "Invalid referral code";
-        return res.redirect("/signup");
+        req.session.message = 'Invalid referral code';
+        return res.redirect('/signup');
       }
 
       if (referredUser.email.toLowerCase() === email.toLowerCase()) {
-        req.session.message = "You cannot use your own referral code";
-        return res.redirect("/signup");
+        req.session.message = 'You cannot use your own referral code';
+        return res.redirect('/signup');
       }
     }
 
@@ -119,7 +118,7 @@ export const postSignup = async (req, res) => {
     const emailSent = sendVerificationEmail(name, email, otp);
 
     if (!emailSent) {
-      return res.json("Email-error");
+      return res.json('Email-error');
     }
 
     req.session.userOtp = otp;
@@ -132,10 +131,10 @@ export const postSignup = async (req, res) => {
     };
 
     res.redirect(`/verify-otp?email=${encodeURIComponent(email)}`);
-    console.log("OTP sent:", otp);
+    console.log('OTP sent:', otp);
   } catch (error) {
-    console.error("Signup error:", error);
-    res.redirect("/notfound");
+    console.error('Signup error:', error);
+    res.redirect('/notfound');
   }
 };
 
@@ -146,7 +145,7 @@ export const otpVerify = async (req, res) => {
     if (otp !== req.session.userOtp) {
       return res.json({
         success: false,
-        message: "Invalid OTP. Please try again.",
+        message: 'Invalid OTP. Please try again.',
       });
     }
 
@@ -165,20 +164,20 @@ export const otpVerify = async (req, res) => {
 
       if (inviter && inviter._id.toString() !== newUser._id.toString()) {
         let referralCoupon = await Coupon.findOne({
-          code: "SPECIAL10",
+          code: 'SPECIAL10',
           userId: inviter._id,
-          type: "referral",
+          type: 'referral',
         });
 
         if (!referralCoupon) {
           referralCoupon = await Coupon.create({
-            code: "SPECIAL10",
+            code: 'SPECIAL10',
             discount: 10,
             expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             minPurchase: 0,
             maxDiscount: null,
             userId: inviter._id,
-            type: "referral",
+            type: 'referral',
             maxUse: 1,
           });
         }
@@ -186,14 +185,14 @@ export const otpVerify = async (req, res) => {
         const alreadyRewarded = await ReferralReward.findOne({
           referrerId: inviter._id,
           referredUserId: newUser._id,
-          couponCode: "SPECIAL10",
+          couponCode: 'SPECIAL10',
         });
 
         if (!alreadyRewarded) {
           await ReferralReward.create({
             referrerId: inviter._id,
             referredUserId: newUser._id,
-            couponCode: "SPECIAL10",
+            couponCode: 'SPECIAL10',
             discount: 10,
           });
         }
@@ -207,20 +206,20 @@ export const otpVerify = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "OTP verified successfully",
-      redirect: "/",
+      message: 'OTP verified successfully',
+      redirect: '/',
     });
   } catch (error) {
-    console.error("OTP Verify Error:", error);
-    return res.json({ success: false, message: "Internal server error" });
+    console.error('OTP Verify Error:', error);
+    return res.json({ success: false, message: 'Internal server error' });
   }
 };
 
 export const verifyLoad = async (req, res) => {
   const { forgot, email } = req.query;
-  res.render("verify-otp", {
+  res.render('verify-otp', {
     email,
-    fromForgotPassword: forgot === "true",
+    fromForgotPassword: forgot === 'true',
   });
 };
 
@@ -229,13 +228,13 @@ export const otpResend = async (req, res) => {
     const { name, email } = req.session.userData || req.body;
 
     const otp = generateOtp();
-    console.log("Resent OTP:", otp);
+    console.log('Resent OTP:', otp);
 
     req.session.userOtp = otp;
 
     sendVerificationEmail(name, email, otp)
-      .then(() => console.log("OTP email sent"))
-      .catch((err) => console.error("OTP email error:", err));
+      .then(() => console.log('OTP email sent'))
+      .catch((err) => console.error('OTP email error:', err));
 
     res.sendStatus(200);
   } catch (error) {
@@ -243,22 +242,21 @@ export const otpResend = async (req, res) => {
   }
 };
 
-export const authGoogle = (req, res, next) => {
-  passport.authenticate("google", { failureRedirect: "/signup" })(
+export const authGoogle = (req, res) => {
+  passport.authenticate('google', { failureRedirect: '/signup' })(
     req,
     res,
     () => {
       if (!req.user) {
-        console.error(" Google OAuth failed: req.user is undefined");
-        return res.redirect("/signup");
+        console.error(' Google OAuth failed: req.user is undefined');
+        return res.redirect('/signup');
       }
 
       req.session.user = { _id: req.user._id };
-      res.redirect("/");
-    }
+      res.redirect('/');
+    },
   );
 };
-
 
 export const profileLoad = async (req, res) => {
   try {
@@ -266,22 +264,22 @@ export const profileLoad = async (req, res) => {
     const status = req.session.status;
     const userId = req.session?.user?._id;
     if (!userId) {
-      return res.redirect("/login");
+      return res.redirect('/login');
     }
     const userData = await User.findById(userId).lean();
     req.session.message = null;
     req.session.status = null;
-    res.render("profile", { user: userData, message, status });
+    res.render('profile', { user: userData, message, status });
   } catch (error) {
-    res.render("notFound");
+    res.render('notFound');
   }
 };
 
 export const logoutLoad = async (req, res) => {
   try {
     delete req.session.user;
-    return res.redirect("/");
+    return res.redirect('/');
   } catch (error) {
-    res.redirect("/notfound");
+    res.redirect('/notfound');
   }
 };

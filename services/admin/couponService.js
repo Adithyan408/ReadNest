@@ -1,5 +1,5 @@
-import Coupon from "../../models/couponSchema.js";
-import User from "../../models/userSchema.js";
+import Coupon from '../../models/couponSchema.js';
+import User from '../../models/userSchema.js';
 
 export const loadCoupon = async (req, res) => {
   try {
@@ -17,7 +17,7 @@ export const loadCoupon = async (req, res) => {
     const status = req.session.status;
     req.session.status = null;
 
-    res.render("coupon", {
+    res.render('coupon', {
       data: coupons,
       totalPages,
       currentPage: page,
@@ -25,20 +25,20 @@ export const loadCoupon = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.redirect("/admin/error");
+    res.redirect('/admin/error');
   }
 };
 
 export const loadAddCoupon = async (req, res) => {
   try {
-    const users = await User.find({}, "name email").lean();
+    const users = await User.find({}, 'name email').lean();
 
-    res.render("addCoupon", {
+    res.render('addCoupon', {
       users,
     });
   } catch (error) {
-    console.log("Error loading add coupon page:", error);
-    res.redirect("/admin/error");
+    console.log('Error loading add coupon page:', error);
+    res.redirect('/admin/error');
   }
 };
 
@@ -49,11 +49,11 @@ export const postAddCoupon = async (req, res) => {
 
     if (!code || !discount || !expiry) {
       req.session.status = {
-        type: "error",
-        message: "All fields are required",
+        type: 'error',
+        message: 'All fields are required',
       };
 
-      return res.redirect("/admin/coupon/addCoupon");
+      return res.redirect('/admin/coupon/addCoupon');
     }
 
     const expiryDate = new Date(expiry);
@@ -65,15 +65,15 @@ export const postAddCoupon = async (req, res) => {
 
     if (isNaN(expiryDate.getTime()) || expiryDate <= today) {
       req.session.status = {
-        type: "error",
-        message: "Expiry date must be a future date!",
+        type: 'error',
+        message: 'Expiry date must be a future date!',
       };
-      return res.redirect("/admin/coupon/addCoupon");
+      return res.redirect('/admin/coupon/addCoupon');
     }
 
     if (expiryDate <= startDate) {
-      req.session.status = "Expiry date must be later than start date!";
-      return res.redirect("/admin/coupon");
+      req.session.status = 'Expiry date must be later than start date!';
+      return res.redirect('/admin/coupon');
     }
 
     const existingCoupon = await Coupon.findOne({
@@ -81,8 +81,8 @@ export const postAddCoupon = async (req, res) => {
     });
 
     if (existingCoupon) {
-      req.session.status = "Coupon code already exists!";
-      return res.redirect("/admin/coupon/addCoupon");
+      req.session.status = 'Coupon code already exists!';
+      return res.redirect('/admin/coupon/addCoupon');
     }
 
     await Coupon.create({
@@ -94,19 +94,19 @@ export const postAddCoupon = async (req, res) => {
       userId: null,
       minPurchase: Number(minPurchase) || 0,
       maxDiscount: Number(maxDiscount),
-      type: "general",
+      type: 'general',
     });
 
     req.session.status = {
-      type: "success",
-      message: "Coupon updated successfully!",
+      type: 'success',
+      message: 'Coupon updated successfully!',
     };
 
-    res.redirect("/admin/coupon");
+    res.redirect('/admin/coupon');
   } catch (error) {
-    console.error("Error adding coupon:", error);
-    req.session.status = "Error creating coupon!";
-    res.redirect("/admin/coupon/addCoupon");
+    console.error('Error adding coupon:', error);
+    req.session.status = 'Error creating coupon!';
+    res.redirect('/admin/coupon/addCoupon');
   }
 };
 
@@ -116,8 +116,8 @@ export const updateCoupon = async (req, res) => {
       req.body;
 
     if (!id) {
-      req.session.status = "Invalid coupon ID";
-      return res.redirect("/admin/coupon");
+      req.session.status = 'Invalid coupon ID';
+      return res.redirect('/admin/coupon');
     }
 
     const today = new Date();
@@ -130,19 +130,19 @@ export const updateCoupon = async (req, res) => {
     expiryDate.setHours(0, 0, 0, 0);
 
     if (isNaN(expiryDate.getTime()) || expiryDate <= today) {
-      req.session.status = "Expiry date must be a future date!";
-      return res.redirect("/admin/coupon");
+      req.session.status = 'Expiry date must be a future date!';
+      return res.redirect('/admin/coupon');
     }
 
     if (expiryDate <= startDate) {
-      req.session.status = "Expiry date must be later than start date!";
-      return res.redirect("/admin/coupon");
+      req.session.status = 'Expiry date must be later than start date!';
+      return res.redirect('/admin/coupon');
     }
 
     const coupon = await Coupon.findById(id);
     if (!coupon) {
-      req.session.status = "Coupon not found!";
-      return res.redirect("/admin/coupon");
+      req.session.status = 'Coupon not found!';
+      return res.redirect('/admin/coupon');
     }
 
     coupon.code = code.trim().toUpperCase();
@@ -154,12 +154,12 @@ export const updateCoupon = async (req, res) => {
 
     await coupon.save();
 
-    req.session.status = "Coupon updated successfully!";
-    res.redirect("/admin/coupon");
+    req.session.status = 'Coupon updated successfully!';
+    res.redirect('/admin/coupon');
   } catch (error) {
-    console.log("Error updating coupon:", error);
-    req.session.status = "Error updating coupon!";
-    res.redirect("/admin/coupon");
+    console.log('Error updating coupon:', error);
+    req.session.status = 'Error updating coupon!';
+    res.redirect('/admin/coupon');
   }
 };
 
@@ -169,33 +169,33 @@ export const deleteCoupon = async (req, res) => {
 
     if (!id) {
       req.session.status = {
-        type: "error",
-        message: "Invalid coupon ID",
+        type: 'error',
+        message: 'Invalid coupon ID',
       };
 
-      return res.redirect("/admin/coupon");
+      return res.redirect('/admin/coupon');
     }
 
     const deleted = await Coupon.findByIdAndDelete(id);
 
     if (!deleted) {
       req.session.status = {
-        type: "error",
-        message: " coupon not Found",
+        type: 'error',
+        message: ' coupon not Found',
       };
 
-      return res.redirect("/admin/coupon");
+      return res.redirect('/admin/coupon');
     }
 
     req.session.status = {
-      type: "success",
-      message: "Coupon deleted successfully",
+      type: 'success',
+      message: 'Coupon deleted successfully',
     };
 
-    return res.redirect("/admin/coupon");
+    return res.redirect('/admin/coupon');
   } catch (error) {
-    console.log("Error deleting coupon:", error);
-    req.session.status = "Error deleting coupon!";
-    res.redirect("/admin/coupon");
+    console.log('Error deleting coupon:', error);
+    req.session.status = 'Error deleting coupon!';
+    res.redirect('/admin/coupon');
   }
 };

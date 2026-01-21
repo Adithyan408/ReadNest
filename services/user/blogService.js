@@ -1,16 +1,16 @@
-import Blog from "../../models/blogSchema.js";
-import sanitizeHtml from "sanitize-html";
-import BlogLike from "../../models/blogLikeSchema.js";
-import BlogComment from "../../models/blogCommentSchema.js";
-import User from "../../models/userSchema.js";
-import Notification from "../../models/blogNotification.js";
+import Blog from '../../models/blogSchema.js';
+import sanitizeHtml from 'sanitize-html';
+import BlogLike from '../../models/blogLikeSchema.js';
+import BlogComment from '../../models/blogCommentSchema.js';
+import User from '../../models/userSchema.js';
+import Notification from '../../models/blogNotification.js';
 
 export const listBlog = async (req, res) => {
   try {
     const userId = req.session.user?._id;
 
     const blogs = await Blog.find({ isBlocked: false })
-      .populate("author", "name")
+      .populate('author', 'name')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -18,12 +18,12 @@ export const listBlog = async (req, res) => {
 
     const likeAgg = await BlogLike.aggregate([
       { $match: { blog: { $in: blogIds } } },
-      { $group: { _id: "$blog", count: { $sum: 1 } } },
+      { $group: { _id: '$blog', count: { $sum: 1 } } },
     ]);
 
     const commentAgg = await BlogComment.aggregate([
       { $match: { blog: { $in: blogIds } } },
-      { $group: { _id: "$blog", count: { $sum: 1 } } },
+      { $group: { _id: '$blog', count: { $sum: 1 } } },
     ]);
 
     const userLikes = userId
@@ -45,7 +45,7 @@ export const listBlog = async (req, res) => {
     });
 
     if (userId) {
-      const user = await User.findById(userId).select("savedBlogs");
+      const user = await User.findById(userId).select('savedBlogs');
 
       const savedSet = new Set(user.savedBlogs.map((id) => id.toString()));
 
@@ -55,14 +55,14 @@ export const listBlog = async (req, res) => {
     }
     const user = await User.findById(userId);
 
-    res.render("blog", {
+    res.render('blog', {
       blogs,
       user,
-      baseUrl: `${req.protocol}://${req.get("host")}`,
+      baseUrl: `${req.protocol}://${req.get('host')}`,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send("Failed to load blogs");
+    res.status(500).send('Failed to load blogs');
   }
 };
 
@@ -72,11 +72,11 @@ export const singleBlog = async (req, res) => {
     const userId = req.session.user?._id;
 
     const blog = await Blog.findById(blogId)
-      .populate("author", "name email")
+      .populate('author', 'name email')
       .lean();
 
     if (!blog) {
-      return res.send("error");
+      return res.send('error');
     }
 
     const likeCount = await BlogLike.countDocuments({ blog: blogId });
@@ -85,34 +85,34 @@ export const singleBlog = async (req, res) => {
       : false;
 
     const comments = await BlogComment.find({ blog: blogId })
-      .populate("user", "name")
+      .populate('user', 'name')
       .sort({ createdAt: -1 })
       .lean();
 
     const user = await User.findById(userId);
-    const blogUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-    res.render("blog-details", {
+    const blogUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+    res.render('blog-details', {
       blog,
       likeCount,
       userLiked,
       comments,
       user,
-      blogUrl
+      blogUrl,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).render("error", {
-      message: "Failed to load blog",
+    res.status(500).render('error', {
+      message: 'Failed to load blog',
     });
   }
 };
 
 export const loadCreateBlog = async (req, res) => {
   try {
-    res.render("createBlog");
+    res.render('createBlog');
   } catch (error) {
     console.error(error);
-    res.status(500).send("Failed to load page");
+    res.status(500).send('Failed to load page');
   }
 };
 
@@ -121,19 +121,19 @@ export const createBlog = async (req, res) => {
     const { title, content } = req.body;
 
     if (!title || !content) {
-      return res.status(400).send("All fields are required");
+      return res.status(400).send('All fields are required');
     }
 
     const cleanContent = sanitizeHtml(content, {
       allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-        "img",
-        "h1",
-        "h2",
-        "h3",
+        'img',
+        'h1',
+        'h2',
+        'h3',
       ]),
       allowedAttributes: {
-        "*": ["style"],
-        img: ["src", "alt"],
+        '*': ['style'],
+        img: ['src', 'alt'],
       },
     });
 
@@ -143,10 +143,10 @@ export const createBlog = async (req, res) => {
       author: req.session.user._id,
     });
 
-    res.redirect("/blog");
+    res.redirect('/blog');
   } catch (error) {
     console.error(error);
-    res.status(500).send("Failed to create blog");
+    res.status(500).send('Failed to create blog');
   }
 };
 
@@ -180,7 +180,7 @@ export const toggleBlogLike = async (req, res) => {
         recipient: blog.author,
         sender: userId,
         blog: blogId,
-        type: "like",
+        type: 'like',
       });
     }
 
@@ -209,7 +209,7 @@ export const addComment = async (req, res) => {
       comment,
     });
 
-    await newComment.populate("user", "name");
+    await newComment.populate('user', 'name');
 
     const blog = await Blog.findById(blogId);
 
@@ -218,7 +218,7 @@ export const addComment = async (req, res) => {
         recipient: blog.author,
         sender: userId,
         blog: blogId,
-        type: "comment",
+        type: 'comment',
       });
     }
 
@@ -255,8 +255,8 @@ export const getSavedBlog = async (req, res) => {
 
     const user = await User.findById(userId)
       .populate({
-        path: "savedBlogs",
-        populate: { path: "author", select: "name" },
+        path: 'savedBlogs',
+        populate: { path: 'author', select: 'name' },
       })
       .lean();
 
@@ -268,7 +268,7 @@ export const getSavedBlog = async (req, res) => {
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const users = await User.findById(userId);
-    res.render("savedBlogs", {
+    res.render('savedBlogs', {
       users,
       blogs,
       user: req.session.user,
@@ -283,23 +283,23 @@ export const getStories = async (req, res) => {
   try {
     const userId = req.session.user?._id;
     if (!userId) {
-      return res.redirect("/login");
+      return res.redirect('/login');
     }
 
     const blogs = await Blog.find({ author: userId })
-      .populate("author", "name")
+      .populate('author', 'name')
       .sort({ createdAt: -1 })
       .lean();
 
     const blogIds = blogs.map((b) => b._id);
     const likeAgg = await BlogLike.aggregate([
       { $match: { blog: { $in: blogIds } } },
-      { $group: { _id: "$blog", count: { $sum: 1 } } },
+      { $group: { _id: '$blog', count: { $sum: 1 } } },
     ]);
 
     const commentAgg = await BlogComment.aggregate([
       { $match: { blog: { $in: blogIds } } },
-      { $group: { _id: "$blog", count: { $sum: 1 } } },
+      { $group: { _id: '$blog', count: { $sum: 1 } } },
     ]);
 
     const userLikes = userId
@@ -321,7 +321,7 @@ export const getStories = async (req, res) => {
     });
 
     if (userId) {
-      const user = await User.findById(userId).select("savedBlogs");
+      const user = await User.findById(userId).select('savedBlogs');
 
       const savedSet = new Set(user.savedBlogs.map((id) => id.toString()));
 
@@ -331,7 +331,7 @@ export const getStories = async (req, res) => {
     }
     const user = await User.findById(userId);
 
-    res.render("myStories", {
+    res.render('myStories', {
       blogs,
       user,
     });
@@ -354,7 +354,7 @@ export const blogDelete = async (req, res) => {
     await Blog.findByIdAndDelete(blogId);
     await BlogComment.deleteMany({ blog: blog._id });
 
-    return res.json({ success: true, message: "Blog deleted successfully" });
+    return res.json({ success: true, message: 'Blog deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false });
   }
@@ -367,7 +367,7 @@ export const editBlogGet = async (req, res) => {
     if (blog.author.toString() !== req.session.user.id.toString()) {
       return res.status(403).json({ success: false });
     }
-    res.render("edit-blog", { blog });
+    res.render('edit-blog', { blog });
   } catch (error) {
     res.status(500).json({ success: false });
   }
@@ -383,7 +383,7 @@ export const editBlogPost = async (req, res) => {
       content,
     });
   } catch (error) {
-    res.redirect("/notfound");
+    res.redirect('/notfound');
   }
 };
 
@@ -411,8 +411,8 @@ export const putEditBlog = async (req, res) => {
     });
 
     res.json({ success: true });
-  } catch (err) {
-    res.json({ success: false, message: "Update failed" });
+  } catch (error) {
+    res.json({ success: false, message: 'Update failed' });
   }
 };
 
@@ -424,16 +424,16 @@ export const putEditComment = async (req, res) => {
     const updated = await BlogComment.findOneAndUpdate(
       { _id: req.params.id, user: userId },
       { comment },
-      { new: true }
+      { new: true },
     );
 
     if (!updated) {
-      return res.json({ success: false, message: "Unauthorized" });
+      return res.json({ success: false, message: 'Unauthorized' });
     }
 
     res.json({ success: true });
-  } catch (err) {
-    res.json({ success: false, message: "Update failed" });
+  } catch (error) {
+    res.json({ success: false, message: 'Update failed' });
   }
 };
 
@@ -447,21 +447,21 @@ export const searchBlogs = async (req, res) => {
       blogs = await Blog.aggregate([
         {
           $lookup: {
-            from: "users",
-            localField: "author",
-            foreignField: "_id",
-            as: "author",
+            from: 'users',
+            localField: 'author',
+            foreignField: '_id',
+            as: 'author',
           },
         },
-        { $unwind: "$author" },
+        { $unwind: '$author' },
 
         {
           $match: {
             isBlocked: false,
             $or: [
-              { title: { $regex: query, $options: "i" } },
-              { content: { $regex: query, $options: "i" } },
-              { "author.name": { $regex: query, $options: "i" } },
+              { title: { $regex: query, $options: 'i' } },
+              { content: { $regex: query, $options: 'i' } },
+              { 'author.name': { $regex: query, $options: 'i' } },
             ],
           },
         },
@@ -470,15 +470,15 @@ export const searchBlogs = async (req, res) => {
       ]);
     } else {
       blogs = await Blog.find({ isBlocked: false })
-        .populate("author", "name")
+        .populate('author', 'name')
         .sort({ createdAt: -1 })
         .lean();
     }
 
-    res.render("blogList", { blogs });
+    res.render('blogList', { blogs });
   } catch (error) {
-    console.error("Search error:", error);
-    res.status(500).send("");
+    console.error('Search error:', error);
+    res.status(500).send('');
   }
 };
 
@@ -505,8 +505,8 @@ export const getNotifications = async (req, res) => {
       recipient: userId,
       isRead: false, 
     })
-      .populate("sender", "name")
-      .populate("blog", "title")
+      .populate('sender', 'name')
+      .populate('blog', 'title')
       .sort({ createdAt: -1 })
       .limit(30);
 
@@ -542,7 +542,7 @@ export const getInsights = async (req, res) => {
 
     const userBlogs = await Blog.find(
       { author: userId },
-      { _id: 1 }
+      { _id: 1 },
     ).lean();
 
     const blogIds = userBlogs.map((b) => b._id);
@@ -568,19 +568,19 @@ export const getInsights = async (req, res) => {
     });
 
     const interactions = likesMade + commentsMade;
-    const users = await User.findById(userId)
-    res.render("blogInsights", {
+    const users = await User.findById(userId);
+    res.render('blogInsights', {
       likes: likesReceived, 
       comments: commentsReceived, 
       posts: postsCount, 
       interactions, 
-      users
-    })
+      users,
+    });
   } catch (error) {
-    console.error("Insights error:", error);
+    console.error('Insights error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to load insights",
+      message: 'Failed to load insights',
     });
   }
 };

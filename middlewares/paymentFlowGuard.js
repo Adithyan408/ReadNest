@@ -1,15 +1,15 @@
-import { clearPaymentState } from "../helpers/paymentCache.js";
+import { clearPaymentState } from '../helpers/paymentCache.js';
 
 const PAYMENT_SAFE_ROUTES = [
-  "/checkout/payment",
-  "/apply-coupon",
-  "/remove-coupon",
-  "/save-payment-method",
-  "/create-razorpay-order",
-  "/verify-razorpay-payment",
-  "/pay-with-wallet",
-  "/place-order",
-  "/payment-failed",
+  '/checkout/payment',
+  '/apply-coupon',
+  '/remove-coupon',
+  '/save-payment-method',
+  '/create-razorpay-order',
+  '/verify-razorpay-payment',
+  '/pay-with-wallet',
+  '/place-order',
+  '/payment-failed',
 ];
 
 export const paymentFlowGuard = async (req, res, next) => {
@@ -22,10 +22,10 @@ export const paymentFlowGuard = async (req, res, next) => {
       return next();
     }
 
-    const isRetry = req.query.retry === "true";
+    const isRetry = req.query.retry === 'true';
 
     const isSafeRoute = PAYMENT_SAFE_ROUTES.some((route) =>
-      req.path.startsWith(route)
+      req.path.startsWith(route),
     );
 
     /**
@@ -39,7 +39,7 @@ export const paymentFlowGuard = async (req, res, next) => {
 
     next();
   } catch (err) {
-    console.error("Payment Flow Guard Error:", err);
+    console.error('Payment Flow Guard Error:', err);
     next();
   }
 };

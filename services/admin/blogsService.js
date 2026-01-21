@@ -1,12 +1,12 @@
-import Blog from "../../models/blogSchema.js";
-import User from "../../models/userSchema.js";
-import BlogLike from "../../models/blogLikeSchema.js";
-import BlogComment from "../../models/blogCommentSchema.js";
+import Blog from '../../models/blogSchema.js';
+import User from '../../models/userSchema.js';
+import BlogLike from '../../models/blogLikeSchema.js';
+import BlogComment from '../../models/blogCommentSchema.js';
 
 export const getBlogs = async (req, res) => {
   try {
     const blogs = await Blog.find()
-      .populate("author", "name")
+      .populate('author', 'name')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -14,12 +14,12 @@ export const getBlogs = async (req, res) => {
 
     const likeAgg = await BlogLike.aggregate([
       { $match: { blog: { $in: blogIds } } },
-      { $group: { _id: "$blog", count: { $sum: 1 } } },
+      { $group: { _id: '$blog', count: { $sum: 1 } } },
     ]);
 
     const commentAgg = await BlogComment.aggregate([
       { $match: { blog: { $in: blogIds } } },
-      { $group: { _id: "$blog", count: { $sum: 1 } } },
+      { $group: { _id: '$blog', count: { $sum: 1 } } },
     ]);
 
     const likeMap = {};
@@ -38,13 +38,13 @@ export const getBlogs = async (req, res) => {
     });
     const user = await User.find();
 
-    res.render("blogs", {
+    res.render('blogs', {
       blogs,
       user,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send("Failed to load blogs");
+    res.status(500).send('Failed to load blogs');
   }
 };
 
@@ -53,10 +53,10 @@ export const getBlogDetails = async (req, res) => {
     const blogId = req.params.id;
     const admin = req.session.admin; 
 
-    const blog = await Blog.findById(blogId).populate("author", "name").lean();
+    const blog = await Blog.findById(blogId).populate('author', 'name').lean();
 
     if (!blog) {
-      return res.status(404).render("404");
+      return res.status(404).render('404');
     }
 
     const likeCount = await BlogLike.countDocuments({
@@ -66,19 +66,19 @@ export const getBlogDetails = async (req, res) => {
     const comments = await BlogComment.find({
       blog: blogId,
     })
-      .populate("user", "name")
+      .populate('user', 'name')
       .sort({ createdAt: -1 })
       .lean();
 
-    res.render("detailed-blog", {
+    res.render('detailed-blog', {
       blog,
       comments,
       likeCount,
       admin,
     });
   } catch (error) {
-    console.error("Admin blog detail error:", error);
-    res.status(500).send("Failed to load blog details");
+    console.error('Admin blog detail error:', error);
+    res.status(500).send('Failed to load blog details');
   }
 };
 
@@ -89,7 +89,7 @@ export const blockUnblockBlog = async (req, res) => {
     const blog = await Blog.findById(blogId);
 
     if (!blog) {
-      return res.json({ success: false, message: "Blog not found" });
+      return res.json({ success: false, message: 'Blog not found' });
     }
 
     blog.isBlocked = !blog.isBlocked;
@@ -100,7 +100,7 @@ export const blockUnblockBlog = async (req, res) => {
       isBlocked: blog.isBlocked,
     });
   } catch (error) {
-    console.error("Block blog error:", error);
+    console.error('Block blog error:', error);
     res.json({ success: false });
   }
 };
@@ -112,19 +112,19 @@ export const deleteCommentAdmin = async (req, res) => {
     const deleted = await BlogComment.findByIdAndDelete(commentId);
 
     if (!deleted) {
-      return res.json({ success: false, message: "Comment not found" });
+      return res.json({ success: false, message: 'Comment not found' });
     }
 
     res.json({ success: true });
   } catch (error) {
-    console.error("Admin delete comment error:", error);
+    console.error('Admin delete comment error:', error);
     res.json({ success: false });
   }
 };
 
 export const adminBlogSearch = async (req, res) => {
   try {
-    if (!req.session.admin) return res.status(401).send("");
+    if (!req.session.admin) return res.status(401).send('');
 
     const query = req.query.q?.trim();
     let blogs = [];
@@ -133,19 +133,19 @@ export const adminBlogSearch = async (req, res) => {
       blogs = await Blog.aggregate([
         {
           $lookup: {
-            from: "users",
-            localField: "author",
-            foreignField: "_id",
-            as: "author",
+            from: 'users',
+            localField: 'author',
+            foreignField: '_id',
+            as: 'author',
           },
         },
-        { $unwind: "$author" },
+        { $unwind: '$author' },
         {
           $match: {
             $or: [
-              { title: { $regex: query, $options: "i" } },
-              { content: { $regex: query, $options: "i" } },
-              { "author.name": { $regex: query, $options: "i" } },
+              { title: { $regex: query, $options: 'i' } },
+              { content: { $regex: query, $options: 'i' } },
+              { 'author.name': { $regex: query, $options: 'i' } },
             ],
           },
         },
@@ -153,14 +153,14 @@ export const adminBlogSearch = async (req, res) => {
       ]);
     } else {
       blogs = await Blog.find()
-        .populate("author", "name")
+        .populate('author', 'name')
         .sort({ createdAt: -1 })
         .lean();
     }
 
-    return res.render("blogListAdmin", { blogs });
+    return res.render('blogListAdmin', { blogs });
   } catch (error) {
-    console.error("Search error:", error);
-    return res.status(500).send("");
+    console.error('Search error:', error);
+    return res.status(500).send('');
   }
 };

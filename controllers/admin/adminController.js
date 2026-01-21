@@ -1,5 +1,5 @@
 
-import { getDashboard, pageError, postLogout, getLogin, postLogin, salesReport, downloadSalesExcel } from "../../services/admin/adminService.js";
+import { getDashboard, pageError, postLogout, getLogin, postLogin, salesReport, downloadSalesExcel } from '../../services/admin/adminService.js';
 
 export const loadPageError = async(req, res) => {
   await pageError(req, res);
@@ -23,8 +23,8 @@ export const logout = async (req, res) => {
 
 export const downloadSalesReport = async(req, res) => {
   await salesReport(req, res);
-}
+};
 
 export const downloadExcel = async(req, res) => {
   await downloadSalesExcel(req, res);
-}
+};

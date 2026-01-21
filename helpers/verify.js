@@ -1,6 +1,6 @@
 
-import nodemailer from "nodemailer";
-import dotenv from "dotenv";
+import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 
 dotenv.config();
@@ -9,11 +9,10 @@ export function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-
-export async function sendVerificationEmail(name ,email, otp) {
+export async function sendVerificationEmail(name, email, otp) {
   try {
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      service: 'gmail',
       port: 587,
       secure: false,
       requireTLS: true,
@@ -26,7 +25,7 @@ export async function sendVerificationEmail(name ,email, otp) {
     const info = await transporter.sendMail({
       from: process.env.NODEMAILER_EMAIL,
       to: email,
-      subject: "Verify your Account for Reset Password",
+      subject: 'Verify your Account for Reset Password',
       text: `Your otp is ${otp}`,
       html: `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; margin: 0; padding: 40px 0; text-align: center;">
@@ -64,24 +63,24 @@ export async function sendVerificationEmail(name ,email, otp) {
         </div>`,
       attachments: [
         {
-          filename: "logo2.png",
-          path: "public/images/logo2.png",
-          cid: "logo",
+          filename: 'logo2.png',
+          path: 'public/images/logo2.png',
+          cid: 'logo',
         },
       ], 
     });
     return info.accepted.length > 0;
   } catch (error) {
-    console.error("Error sending Mail", error);
+    console.error('Error sending Mail', error);
     return false;
   }
 }
 
 export async function securePassword(password) {
   try {
-    const passwordHash = await bcrypt.hash(password, 10);
-    return passwordHash;
+    return await bcrypt.hash(password, 10);
   } catch (error) {
-    res.render("notFound");
+    throw new Error('Password hashing failed');
   }
-};
+}
+

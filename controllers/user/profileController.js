@@ -11,8 +11,8 @@ import {
   verifyEmailUpdate,
   profileImage,
   profileImageDelete,
-  updateProfile
-} from "../../services/user/profileSerive.js";
+  updateProfile,
+} from '../../services/user/profileSerive.js';
 
 export const getForgotPassword = async (req, res) => {
   await forgotPassword(req, res);
@@ -36,7 +36,7 @@ export const postResetPassword = async (req, res) => {
 
 export const profileUpdate = async(req, res) => {
   await updateProfile(req, res);
-}
+};
 export const updateEmail = async (req, res) => {
   await emailUpdate(req, res);
 };
