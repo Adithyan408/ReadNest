@@ -356,17 +356,30 @@ export const productDetails = async (req, res) => {
 
 export const searchLive = async (req, res) => {
   try {
-    const query = req.query.q;
-    if (!query || query.trim() === '') {
-      return res.json([]);
-    }
-    const regex = new RegExp(query, 'i');
+    const query = req.query.q?.trim();
+
+    if (!query) return res.json([]);
+
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'i');
 
     const products = await Product.find({
-      $or: [{ productName: regex }, { author: regex }, { category: regex }],
-    }).limit(8);
+      isListed: true,
+      stock: { $gt: 0 },
+      $or: [
+        { productName: regex },
+        { author: regex },
+        { category: regex },
+      ],
+    })
+      .select('_id productName author productImage')
+      .sort({ createdAt: -1 })
+      .limit(8)
+      .lean();
+
     res.json(products);
   } catch (error) {
-    console.log(error);
+    console.error('Live search error:', error);
+    res.status(500).json([]);
   }
 };
