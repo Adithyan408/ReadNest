@@ -6,19 +6,36 @@ export const loadBanner = async (req, res) => {
     const limit = 10;
     const page = parseInt(req.query.page) || 1;
     const skip = (page - 1) * limit;
+    const search = req.query.search?.trim();
 
-    const findBanner = await Banner.find({})
-      .sort({ createdAt: 1 })
+    let filter = {};
+
+    // 🔍 SEARCH BY TITLE
+    if (search) {
+      filter.title = { $regex: search, $options: "i" };
+    }
+
+    const banners = await Banner.find(filter)
+      .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
-    const total = await Banner.countDocuments();
+    const total = await Banner.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
-    res.render('banner', { data: findBanner, currentPage: page, totalPages });
+
+    res.render('banner', {
+      data: banners,
+      currentPage: page,
+      totalPages,
+      search,
+    });
   } catch (error) {
+    console.error('Banner Load Error:', error);
     res.redirect('/pageerror');
   }
 };
+
 
 export const loadBannerAdd = async (req, res) => {
   try {

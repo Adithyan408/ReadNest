@@ -79,13 +79,41 @@
 
                 <div id="statusMessage" class="hidden animate-bounce mb-6 p-4 rounded-2xl text-sm font-bold text-center"></div>
 
-                <div class="bg-white p-4 rounded-t-[2rem] border border-gray-100 border-b-0">
-                    <div class="relative max-w-md">
-                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
-                        <input type="text" id="bannerSearch" placeholder="Search banner by title..." 
-                               class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-medium text-sm" />
-                    </div>
-                </div>
+               <div class="bg-white p-4 rounded-t-[2rem] border border-gray-100 border-b-0">
+  <div class="flex flex-wrap items-center gap-2 max-w-xl">
+    <!-- Search Input -->
+    <div class="relative flex-1 min-w-[220px] group">
+      <i
+        class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-500 transition-colors"
+      ></i>
+      <input
+        type="text"
+        id="bannerSearch"
+        placeholder="Search banner by title..."
+        class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-medium text-sm"
+      />
+    </div>
+
+    <!-- Search Button -->
+    <button
+      onclick="searchBanners()"
+      class="px-6 py-3.5 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition active:scale-95 flex items-center gap-2"
+    >
+      <i class="fas fa-search"></i>
+      <span class="hidden sm:inline">Search</span>
+    </button>
+
+    <!-- Clear Button -->
+    <button
+      onclick="clearBannerSearch()"
+      class="px-6 py-3.5 bg-gray-100 text-gray-600 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-rose-500 hover:text-white transition active:scale-95 flex items-center gap-2"
+    >
+      <i class="fas fa-times"></i>
+      <span class="hidden sm:inline">Clear</span>
+    </button>
+  </div>
+</div>
+
 
                 <div class="bg-white rounded-b-[2rem] shadow-xl shadow-indigo-900/5 border border-gray-100 overflow-hidden">
                     <div class="overflow-x-auto no-scrollbar">
@@ -171,21 +199,21 @@
         }
 
         // Search logic
-        const searchInput = document.getElementById("bannerSearch");
-        const tableBody = document.getElementById("bannerTableBody");
+      function searchBanners() {
+  const query = document.getElementById("bannerSearch").value.trim();
+  const params = new URLSearchParams(window.location.search);
 
-        searchInput.addEventListener("input", function () {
-            const searchTerm = this.value.toLowerCase();
-            const rows = tableBody.getElementsByTagName("tr");
+  if (query) params.set("search", query);
+  else params.delete("search");
 
-            Array.from(rows).forEach((row) => {
-                const titleCell = row.cells[1];
-                if (titleCell) {
-                    const title = titleCell.textContent.toLowerCase();
-                    row.style.display = title.includes(searchTerm) ? "" : "none";
-                }
-            });
-        });
+  params.set("page", 1);
+  window.location.href = `${window.location.pathname}?${params.toString()}`;
+}
+
+function clearBannerSearch() {
+  window.location.href = window.location.pathname;
+}
+
 
         // Delete Handler
         function confirmDelete(id) {
@@ -233,6 +261,13 @@
                 window.history.replaceState({}, document.title, cleanUrl);
             }
         };
+
+        document
+  .getElementById("bannerSearch")
+  .addEventListener("keydown", (e) => {
+    if (e.key === "Enter") searchBanners();
+  });
+
     </script>
 </body>
 </html>
