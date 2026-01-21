@@ -4,83 +4,77 @@ import {
   creditWallet,
 } from '../../middlewares/walletHandler.js';
 import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
-
+import User from '../../models/userSchema.js';
 export const loadOrders = async (req, res) => {
   try {
-    const search = req.query.search || '';
-    const statusFilter = req.query.status || '';
+    const search = req.query.search?.trim();
+    const statusFilter = req.query.status;
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
 
     let match = {};
 
+    // 🔍 SEARCH
     if (search) {
+      const users = await User.find({
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+        ],
+      }).select('_id');
+
+      const userIds = users.map(u => u._id);
+
       match.$or = [
-        {
-          $expr: {
-            $regexMatch: {
-              input: { $toString: '$_id' },
-              regex: search,
-              options: 'i',
-            },
-          },
-        },
-        { 'user.name': { $regex: search, $options: 'i' } },
-        { 'user.email': { $regex: search, $options: 'i' } },
+        { orderId: { $regex: search, $options: 'i' } },
+        { user: { $in: userIds } },
       ];
     }
 
-    const allOrders = await Order.find(match)
+    // 📦 FETCH ORDERS
+    const orders = await Order.find(match)
       .populate('user', 'name email')
-      .lean()
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
 
-    const ordersWithStatus = allOrders.map((order) => {
+    // 🧠 DERIVE STATUS
+    const processedOrders = orders.map(order => {
       const hasReturnRequest = order.items?.some(
-        (item) => item.returnStatus === 'requested',
+        item => item.returnStatus === 'requested',
       );
-
-      let overallStatus = order.status;
-
-      if (hasReturnRequest) {
-        overallStatus = 'Return_Requested';
-      }
 
       return {
         ...order,
-        overallStatus,
+        overallStatus: hasReturnRequest
+          ? 'return_requested'
+          : order.status,
         hasReturnRequest,
       };
     });
 
-    let filteredOrders = ordersWithStatus;
+    // 📊 STATUS FILTER (after derivation)
+    const finalOrders = statusFilter
+      ? processedOrders.filter(o => o.overallStatus === statusFilter)
+      : processedOrders;
 
-    if (statusFilter) {
-      filteredOrders = filteredOrders.filter(
-        (order) => order.overallStatus === statusFilter,
-      );
-    }
-
-    const totalOrders = filteredOrders.length;
+    const totalOrders = await Order.countDocuments(match);
     const totalPages = Math.ceil(totalOrders / limit);
 
-    const paginatedOrders = filteredOrders.slice(
-      (page - 1) * limit,
-      page * limit,
-    );
-
     res.render('orderList', {
-      orders: paginatedOrders,
+      orders: finalOrders,
       currentPage: page,
       totalPages,
       search,
       statusFilter,
     });
   } catch (error) {
-    console.log('Admin Orders Error:', error);
+    console.error('Admin Orders Error:', error);
     res.render('admin-error');
   }
 };
+
 
 export const orderDetails = async (req, res) => {
   try {

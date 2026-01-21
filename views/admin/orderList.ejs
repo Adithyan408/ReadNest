@@ -182,9 +182,16 @@
         function toggleFilterMenu() { document.getElementById("filterMenu").classList.toggle("hidden"); }
 
         function searchOrders() {
-            var q = document.getElementById("searchInput").value.trim();
-            window.location.href = "/admin/orders?search=" + encodeURIComponent(q);
-        }
+  const q = document.getElementById("searchInput").value.trim();
+  const params = new URLSearchParams(window.location.search);
+
+  if (q) params.set("search", q);
+  else params.delete("search");
+
+  params.set("page", 1); // reset pagination
+  window.location.href = `/admin/orders?${params.toString()}`;
+}
+
 
         function clearSearch() { window.location.href = "/admin/orders"; }
 
@@ -193,6 +200,11 @@
             const fw = document.querySelector(".filter-wrapper");
             if (fw && !fw.contains(event.target)) document.getElementById("filterMenu").classList.add("hidden");
         });
+
+        document.getElementById("searchInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") searchOrders();
+});
+
     </script>
 </body>
 </html>
