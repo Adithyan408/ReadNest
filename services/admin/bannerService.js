@@ -12,7 +12,7 @@ export const loadBanner = async (req, res) => {
 
     // 🔍 SEARCH BY TITLE
     if (search) {
-      filter.title = { $regex: search, $options: "i" };
+      filter.title = { $regex: search, $options: 'i' };
     }
 
     const banners = await Banner.find(filter)

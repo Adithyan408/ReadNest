@@ -81,6 +81,43 @@
                     </a>
                 </div>
 
+                <div class="bg-white p-6 rounded-t-[2rem] border border-gray-100 border-b-0">
+  <div class="flex flex-wrap items-center gap-2 max-w-xl">
+    <!-- Search Input -->
+    <div class="relative flex-1 min-w-[220px] group">
+      <i
+        class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-500 transition-colors"
+      ></i>
+      <input
+        type="text"
+        id="couponSearch"
+        placeholder="Search by coupon code..."
+        value="<%= search || '' %>"
+        class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-sm uppercase"
+      />
+    </div>
+
+    <!-- Search Button -->
+    <button
+      onclick="searchCoupons()"
+      class="px-6 py-3.5 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition active:scale-95 flex items-center gap-2"
+    >
+      <i class="fas fa-search"></i>
+      <span class="hidden sm:inline">Search</span>
+    </button>
+
+    <!-- Clear Button -->
+    <button
+      onclick="clearCouponSearch()"
+      class="px-6 py-3.5 bg-gray-100 text-gray-600 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-rose-500 hover:text-white transition active:scale-95 flex items-center gap-2"
+    >
+      <i class="fas fa-times"></i>
+      <span class="hidden sm:inline">Clear</span>
+    </button>
+  </div>
+</div>
+
+
                 <div class="bg-white rounded-[2rem] shadow-xl shadow-indigo-900/5 border border-gray-100 overflow-hidden">
                     <div class="overflow-x-auto no-scrollbar">
                         <table class="w-full text-left border-collapse">
@@ -202,6 +239,21 @@
                 </form>
             </div>
         </div>
+        <% if (totalPages > 1) { %>
+  <div
+    class="flex justify-center sm:justify-end items-center gap-2 p-8 border-t border-gray-50 bg-gray-50/30"
+  >
+    <% for(let i = 1; i <= totalPages; i++) { %>
+      <a
+        href="/admin/coupon?page=<%= i %>&search=<%= search %>"
+        class="w-10 h-10 flex items-center justify-center rounded-xl font-bold text-xs transition-all <%= (i === currentPage) ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white text-gray-400 border border-gray-100 hover:bg-gray-50' %>"
+      >
+        <%= i %>
+      </a>
+    <% } %>
+  </div>
+<% } %>
+
     </div>
 
     <script>
@@ -272,6 +324,27 @@
             const el = document.getElementById("statusMessage");
             if (el) el.style.display = "none";
         }, 4000);
+
+        function searchCoupons() {
+  const query = document.getElementById("couponSearch").value.trim();
+  const params = new URLSearchParams(window.location.search);
+
+  if (query) params.set("search", query);
+  else params.delete("search");
+
+  params.set("page", 1);
+  window.location.href = `/admin/coupon?${params.toString()}`;
+}
+
+function clearCouponSearch() {
+  window.location.href = "/admin/coupon";
+}
+
+// Enter key support
+document.getElementById("couponSearch").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") searchCoupons();
+});
+
     </script>
 </body>
 </html>
