@@ -9,7 +9,7 @@ export const loadWallet = async (req, res) => {
     const limit = 4;
     const skip = (page - 1) * limit;
     if (!req.session.user || !req.session.user._id) {
-      return res.redirect('/login');
+      return res.status(HttpStatus.UNAUTHORIZED).redirect('/login');
     }
 
     const userId = req.session.user._id;
@@ -57,11 +57,12 @@ export const loadWallet = async (req, res) => {
     });
   } catch (err) {
     console.error('Wallet Load Error:', err);
-    res.redirect('/500');
+    res.status(HttpStatus.BAD_REQUEST).redirect('/pageerror');
   }
 };
 
 import Razorpay from 'razorpay';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZO_API_KEY,
@@ -78,10 +79,10 @@ export const razorpayOrderCreate = async (req, res) => {
       receipt: `wallet_${Date.now()}`,
     });
 
-    res.json({ success: true, order });
+    res.status(HttpStatus.OK).json({ success: true, order });
   } catch (err) {
     console.log(err);
-    res.json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -105,7 +106,6 @@ export const walletVerify = async (req, res) => {
       return res.json({ success: false });
     }
 
-    // ✅ Credit wallet
     await creditWallet({
       userId: req.session.user._id,
       amount: Number(amount),
@@ -114,10 +114,10 @@ export const walletVerify = async (req, res) => {
       source: 'topup',
     });
 
-    res.json({ success: true });
+    res.status(HttpStatus.OK).json({ success: true });
   } catch (err) {
     console.log(err);
-    res.json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -126,7 +126,7 @@ export const walletPayment = async (req, res) => {
 
     const userId = req.session.user?._id;
     if (!userId) {
-      return res.json({ success: false, message: 'Unauthorized' });
+      return res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: 'Unauthorized' });
     }
 
     const cached = await getPaymentState(userId);
@@ -164,10 +164,10 @@ export const walletPayment = async (req, res) => {
     req.session.paymentSuccess = true;
     req.session.razorpayPaymentId = null;
 
-    return res.json({ success: true });
+    return res.status(HttpStatus.OK).json({ success: true });
   } catch (error) {
     console.error('Wallet Payment Error:', error);
-    return res.json({
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Wallet payment failed',
     });

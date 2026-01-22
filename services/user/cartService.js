@@ -3,6 +3,7 @@ import Address from '../../models/addressSchema.js';
 import Cart from '../../models/cartSchema.js';
 import Category from '../../models/categorySchema.js';
 import { normalizeCart } from '../../helpers/cartNormal.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 
 export const loadCart = async (req, res) => {
   try {
@@ -76,7 +77,7 @@ export const loadCart = async (req, res) => {
     });
   } catch (error) {
     console.log('Cart load error:', error);
-    res.redirect('/notfound');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/notfound');
   }
 };
 
@@ -86,7 +87,7 @@ export const addcart = async (req, res) => {
     const productId = req.body.productId;
 
     if (!userId) {
-      return res.status(401).json({
+      return res.status(HttpStatus.UNAUTHORIZED).json({
         success: false,
         message: 'Please login to continue',
       });
@@ -94,7 +95,7 @@ export const addcart = async (req, res) => {
 
     const product = await Product.findById(productId);
     if (!product) {
-      return res.status(404).send('Product not found');
+      return res.status(HttpStatus.NOT_FOUND).send('Product not found');
     }
 
     const categoryDoc = await Category.findOne({
@@ -102,14 +103,14 @@ export const addcart = async (req, res) => {
     });
 
     if (product.isListed === false || categoryDoc?.isListed === false) {
-      return res.status(403).json({
+      return res.status(HttpStatus.FORBIDDEN).json({
         success: false,
         message: 'Product is no longer available',
       });
     }
 
     if (product.stock <= 0) {
-      return res.status(400).json({
+      return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message: 'Product is out of stock',
       });
@@ -144,12 +145,13 @@ export const addcart = async (req, res) => {
     }
 
     await cart.save();
-    return res.status(200).json({
+    return res.status(HttpStatus.OK).json({
       success: true,
       message: 'Added to cart',
     });
   } catch (error) {
     console.log('Add to DB cart error:', error);
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -158,14 +160,14 @@ export const cartRemove = async (req, res) => {
     const userId = req.session.user?._id;
     const productId = req.query.id;
 
-    if (!userId) return res.redirect('/login');
+    if (!userId) return res.status(HttpStatus.UNAUTHORIZED).redirect('/login');
 
     await Cart.updateOne({ userId }, { $pull: { items: { productId } } });
 
     return res.redirect('/cart');
   } catch (error) {
     console.log('Error removing cart item:', error);
-    return res.redirect('/cart');
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/cart');
   }
 };
 
@@ -175,12 +177,12 @@ export const updateCartQuantity = async (req, res) => {
     const { productId, quantity } = req.body;
 
     if (!userId) {
-      return res.json({ success: false, message: 'Login required' });
+      return res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: 'Login required' });
     }
 
     const product = await Product.findById(productId);
     if (!product) {
-      return res.json({ success: false, message: 'Product not found' });
+      return res.status(HttpStatus.NOT_FOUND).json({ success: false, message: 'Product not found' });
     }
 
     const categoryDoc = await Category.findOne({
@@ -192,7 +194,7 @@ export const updateCartQuantity = async (req, res) => {
       categoryDoc?.isListed === false ||
       product.stock <= 0
     ) {
-      return res.json({
+      return res.status(HttpStatus.FORBIDDEN).json({
         success: false,
         message: 'Product is no longer available',
       });
@@ -206,7 +208,7 @@ export const updateCartQuantity = async (req, res) => {
     return res.json({ success: true });
   } catch (error) {
     console.log('Quantity update error:', error);
-    return res.json({ success: false });
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -214,11 +216,11 @@ export const validateCartBeforeCheckout = async (req, res) => {
   try {
     const userId = req.session.user?._id;
     if (!userId) {
-      return res.status(401).json({ message: 'Login required' });
+      return res.status(HttpStatus.UNAUTHORIZED).json({ message: 'Login required' });
     }
     const cart = await Cart.findOne({ userId }).lean();
     if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ message: 'Cart is empty' });
+      return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Cart is empty' });
     }
 
     const unavailableItems = [];
@@ -267,7 +269,7 @@ export const validateCartBeforeCheckout = async (req, res) => {
     });
   } catch (err) {
     console.error('Cart validation error:', err);
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Server error' });
   }
 };
 

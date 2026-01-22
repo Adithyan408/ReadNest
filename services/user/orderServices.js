@@ -8,6 +8,7 @@ import {
   creditWallet,
 } from '../../middlewares/walletHandler.js';
 import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 
 export const getOrderDetailsPage = async (req, res) => {
   try {
@@ -17,7 +18,7 @@ export const getOrderDetailsPage = async (req, res) => {
       .populate('items.product', 'productImage')
       .lean();
 
-    if (!order) return res.render('notFound');
+    if (!order) return res.status(HttpStatus.NOT_FOUND).render('notFound');
 
     order.items = order.items.map((item) => ({
       ...item,
@@ -63,7 +64,7 @@ export const getOrderDetailsPage = async (req, res) => {
     });
   } catch (err) {
     console.error('Order Details Error:', err);
-    return res.render('notFound');
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
   }
 };
 
@@ -92,7 +93,7 @@ export const cancelOrderItem = async (req, res) => {
 
     const order = await Order.findOne({ orderId });
     if (!order) {
-      return res.status(404).json({
+      return res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: 'Order not found',
       });
@@ -100,14 +101,14 @@ export const cancelOrderItem = async (req, res) => {
 
     const item = order.items.id(itemId);
     if (!item) {
-      return res.status(404).json({
+      return res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: 'Item not found',
       });
     }
 
     if (!['ordered', 'shipped'].includes(item.status)) {
-      return res.status(400).json({
+      return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message: 'Item cannot be cancelled at this stage',
       });
@@ -135,7 +136,7 @@ export const cancelOrderItem = async (req, res) => {
         subtotalAfter < coupon.minPurchase &&
         activeItems.length > 1
       ) {
-        return res.status(400).json({
+        return res.status(HttpStatus.BAD_REQUEST).json({
           success: false,
           reason: 'COUPON_MIN_BREAK',
           message:
@@ -185,13 +186,10 @@ export const cancelOrderItem = async (req, res) => {
     let refundAmount;
 
     if (isLastItem) {
-      // Last item → reverse everything
       refundAmount = itemBaseAmount - discountBefore + shippingRefund;
     } else if (couponBrokenByThisCancellation) {
-      // Coupon breaks due to this item
       refundAmount = Math.max(itemBaseAmount - discountDifference, 0);
     } else {
-      // Coupon still valid
       refundAmount = itemBaseAmount;
     }
 
@@ -223,13 +221,13 @@ export const cancelOrderItem = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
+    return res.status(HttpStatus.OK).json({
       success: true,
       message: 'Item cancelled successfully',
     });
   } catch (err) {
     console.error('Cancel Order Error:', err);
-    return res.status(500).json({
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Internal server error',
     });
@@ -247,21 +245,21 @@ export const cancelFullOrder = async (req, res) => {
 
     const order = await Order.findOne({ orderId });
     if (!order) {
-      return res.status(404).json({
+      return res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: 'Order not found',
       });
     }
 
     if (order.status === 'cancelled') {
-      return res.status(400).json({
+      return res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: 'Order is already cancelled',
       });
     }
 
     if (!order.couponCode) {
-      return res.status(403).json({
+      return res.status(HttpStatus.FORBIDDEN).json({
         success: false,
         message: 'Full order cancellation is allowed only for coupon orders',
       });
@@ -301,13 +299,13 @@ export const cancelFullOrder = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
+    return res.status(HttpStatus.OK).json({
       success: true,
       message: 'Order cancelled successfully',
     });
   } catch (err) {
     console.error('Full Order Cancel Error:', err);
-    return res.status(500).json({
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Internal server error',
     });
@@ -324,11 +322,11 @@ export const returnOrderItem = async (req, res) => {
 
     const item = order.items.id(itemId);
     if (!item || item.status !== 'delivered') {
-      return res.render('notFound');
+      return res.status(HttpStatus.NOT_FOUND).render('notFound');
     }
 
     if (item.returnStatus !== 'none') {
-      return res.redirect(`/orders/${orderId}`);
+      return res.status(HttpStatus.BAD_REQUEST).redirect(`/orders/${orderId}`);
     }
 
     item.returnStatus = 'requested';
@@ -339,7 +337,7 @@ export const returnOrderItem = async (req, res) => {
     res.redirect(`/orders/${orderId}`);
   } catch (err) {
     console.log('Return Item Error:', err);
-    return res.render('notFound');
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
   }
 };
 
@@ -349,14 +347,14 @@ export const downloadInvoice = async (req, res) => {
 
     const order = await Order.findOne({ orderId }).lean();
     if (!order) {
-      return res.status(404).json({
+      return res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: ERROR_MESSAGES.ORDER.NOT_FOUND,
       });
     }
 
     if (order.status === 'cancelled') {
-      return res.status(403).json({
+      return res.status(HttpStatus.FORBIDDEN).json({
         success: false,
         message: 'Invoice not available for cancelled orders',
       });
@@ -373,7 +371,7 @@ export const downloadInvoice = async (req, res) => {
     }
 
     if (!isInvoiceAvailable) {
-      return res.status(403).json({
+      return res.status(HttpStatus.FORBIDDEN).json({
         success: false,
         message: 'Invoice is available only after delivery',
       });
@@ -575,7 +573,7 @@ Phone: ${a.phone}`;
     doc.end();
   } catch (error) {
     console.log('Invoice Error:', error);
-    res.render('notFound');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
   }
 };
 
@@ -612,6 +610,6 @@ export const getListOrders = async (req, res) => {
     });
   } catch (err) {
     console.log('Orders Page Error:', err);
-    res.render('notFound');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
   }
 };

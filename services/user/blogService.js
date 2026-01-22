@@ -4,6 +4,7 @@ import BlogLike from '../../models/blogLikeSchema.js';
 import BlogComment from '../../models/blogCommentSchema.js';
 import User from '../../models/userSchema.js';
 import Notification from '../../models/blogNotification.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 
 export const listBlog = async (req, res) => {
   try {
@@ -62,7 +63,7 @@ export const listBlog = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send('Failed to load blogs');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('Failed to load blogs');
   }
 };
 
@@ -76,7 +77,7 @@ export const singleBlog = async (req, res) => {
       .lean();
 
     if (!blog) {
-      return res.send('error');
+      return res.status(HttpStatus.NOT_FOUND).send('error');
     }
 
     const likeCount = await BlogLike.countDocuments({ blog: blogId });
@@ -101,7 +102,7 @@ export const singleBlog = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).render('error', {
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('error', {
       message: 'Failed to load blog',
     });
   }
@@ -112,7 +113,7 @@ export const loadCreateBlog = async (req, res) => {
     res.render('createBlog');
   } catch (error) {
     console.error(error);
-    res.status(500).send('Failed to load page');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('Failed to load page');
   }
 };
 
@@ -121,7 +122,7 @@ export const createBlog = async (req, res) => {
     const { title, content } = req.body;
 
     if (!title || !content) {
-      return res.status(400).send('All fields are required');
+      return res.status(HttpStatus.BAD_REQUEST).send('All fields are required');
     }
 
     const cleanContent = sanitizeHtml(content, {
@@ -146,7 +147,7 @@ export const createBlog = async (req, res) => {
     res.redirect('/blog');
   } catch (error) {
     console.error(error);
-    res.status(500).send('Failed to create blog');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('Failed to create blog');
   }
 };
 
@@ -156,7 +157,7 @@ export const toggleBlogLike = async (req, res) => {
     const { blogId } = req.body;
 
     if (!userId) {
-      return res.status(401).json({ success: false });
+      return res.status(HttpStatus.UNAUTHORIZED).json({ success: false });
     }
 
     const existingLike = await BlogLike.findOne({
@@ -186,7 +187,7 @@ export const toggleBlogLike = async (req, res) => {
 
     res.json({ liked: true });
   } catch (error) {
-    res.status(500).json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -196,11 +197,11 @@ export const addComment = async (req, res) => {
     const { blogId, comment } = req.body;
 
     if (!userId) {
-      return res.status(401).json({ success: false });
+      return res.status(HttpStatus.UNAUTHORIZED).json({ success: false });
     }
 
     if (!comment || !comment.trim()) {
-      return res.status(400).json({ success: false });
+      return res.status(HttpStatus.BAD_REQUEST).json({ success: false });
     }
 
     const newComment = await BlogComment.create({
@@ -225,7 +226,7 @@ export const addComment = async (req, res) => {
     res.json({ success: true, comment: newComment });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -245,7 +246,7 @@ export const toggelSaveBlog = async (req, res) => {
     await user.save();
     res.json({ success: true, saved: !alreadySaved });
   } catch (error) {
-    res.status(500).json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -275,7 +276,7 @@ export const getSavedBlog = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -283,7 +284,7 @@ export const getStories = async (req, res) => {
   try {
     const userId = req.session.user?._id;
     if (!userId) {
-      return res.redirect('/login');
+      return res.status(HttpStatus.UNAUTHORIZED).redirect('/login');
     }
 
     const blogs = await Blog.find({ author: userId })
@@ -337,7 +338,7 @@ export const getStories = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -346,17 +347,17 @@ export const blogDelete = async (req, res) => {
     const blogId = req.params.id;
     const blog = await Blog.findById(blogId);
     if (!blog) {
-      return res.json({ success: false });
+      return res.status(HttpStatus.NOT_FOUND).json({ success: false });
     }
     if (blog.author.toString() !== req.session.user._id.toString()) {
-      return res.status(403).json({ success: false });
+      return res.status(HttpStatus.FORBIDDEN).json({ success: false });
     }
     await Blog.findByIdAndDelete(blogId);
     await BlogComment.deleteMany({ blog: blog._id });
 
     return res.json({ success: true, message: 'Blog deleted successfully' });
   } catch (error) {
-    res.status(500).json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -365,11 +366,11 @@ export const editBlogGet = async (req, res) => {
     const blogId = req.params.id;
     const blog = await Blog.findById(blogId);
     if (blog.author.toString() !== req.session.user.id.toString()) {
-      return res.status(403).json({ success: false });
+      return res.status(HttpStatus.FORBIDDEN).json({ success: false });
     }
     res.render('edit-blog', { blog });
   } catch (error) {
-    res.status(500).json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -383,7 +384,7 @@ export const editBlogPost = async (req, res) => {
       content,
     });
   } catch (error) {
-    res.redirect('/notfound');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/notfound');
   }
 };
 
@@ -391,13 +392,13 @@ export const commentDelete = async (req, res) => {
   try {
     const comment = await BlogComment.findById(req.params.id);
     if (!comment) {
-      return res.json({ success: false });
+      return res.status(HttpStatus.NOT_FOUND).json({ success: false });
     }
 
     await BlogComment.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (error) {
-    return res.json({ success: false });
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -412,7 +413,7 @@ export const putEditBlog = async (req, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    res.json({ success: false, message: 'Update failed' });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Update failed' });
   }
 };
 
@@ -428,12 +429,12 @@ export const putEditComment = async (req, res) => {
     );
 
     if (!updated) {
-      return res.json({ success: false, message: 'Unauthorized' });
+      return res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: 'Unauthorized' });
     }
 
     res.json({ success: true });
   } catch (error) {
-    res.json({ success: false, message: 'Update failed' });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Update failed' });
   }
 };
 
@@ -478,7 +479,7 @@ export const searchBlogs = async (req, res) => {
     res.render('blogList', { blogs });
   } catch (error) {
     console.error('Search error:', error);
-    res.status(500).send('');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('');
   }
 };
 
@@ -578,7 +579,7 @@ export const getInsights = async (req, res) => {
     });
   } catch (error) {
     console.error('Insights error:', error);
-    res.status(500).json({
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Failed to load insights',
     });

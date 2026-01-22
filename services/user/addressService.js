@@ -1,3 +1,4 @@
+import { HttpStatus } from '../../helpers/statusCodes.js';
 import Address from '../../models/addressSchema.js';
 import User from '../../models/userSchema.js';
 
@@ -25,7 +26,7 @@ export const loadAddress = async (req, res) => {
     req.session.status = 'error';
     req.session.message = 'Server error while loading addresses';
 
-    return res.redirect('/account');
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/account');
   }
 };
 
@@ -34,7 +35,7 @@ export const postAddress = async (req, res) => {
     const userId = req.session.user?._id;
 
     if (!userId) {
-      return res.json({
+      return res.status(HttpStatus.UNAUTHORIZED).json({
         success: false,
         message: 'No user logged in',
       });
@@ -77,14 +78,14 @@ export const postAddress = async (req, res) => {
 
     await existing.save();
 
-    return res.json({
+    return res.status(HttpStatus.OK).json({
       success: true,
       message: 'Address added successfully!',
       data: existing,
     });
   } catch (error) {
     console.error('Add address error:', error);
-    return res.json({
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Something went wrong',
     });
@@ -97,13 +98,13 @@ export const geteditAddress = async (req, res) => {
     const addressId = req.params.id;
 
     if (!userId) {
-      return res.json({ success: false, message: 'Not logged in' });
+      return res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: 'Not logged in' });
     }
 
     const addressDoc = await Address.findOne({ userId });
 
     if (!addressDoc) {
-      return res.json({ success: false, message: 'No addresses found' });
+      return res.status(HttpStatus.NOT_FOUND).json({ success: false, message: 'No addresses found' });
     }
 
     const singleAddress = addressDoc.addresses.find(
@@ -111,7 +112,7 @@ export const geteditAddress = async (req, res) => {
     );
 
     if (!singleAddress) {
-      return res.json({ success: false, message: 'Address not found' });
+      return res.status(HttpStatus.NOT_FOUND).json({ success: false, message: 'Address not found' });
     }
 
     return res.json({
@@ -120,7 +121,7 @@ export const geteditAddress = async (req, res) => {
     });
   } catch (err) {
     console.error('Get single address error:', err);
-    return res.json({
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Server error',
     });
@@ -133,7 +134,7 @@ export const updateEditAddress = async (req, res) => {
     const addressId = req.params.id;
 
     if (!userId) {
-      return res.json({ success: false, message: 'Not logged in' });
+      return res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: 'Not logged in' });
     }
 
     const {
@@ -152,7 +153,7 @@ export const updateEditAddress = async (req, res) => {
     const addressDoc = await Address.findOne({ userId });
 
     if (!addressDoc) {
-      return res.json({ success: false, message: 'No address found' });
+      return res.status(HttpStatus.NOT_FOUND).json({ success: false, message: 'No address found' });
     }
 
     const index = addressDoc.addresses.findIndex(
@@ -185,7 +186,7 @@ export const updateEditAddress = async (req, res) => {
     });
   } catch (err) {
     console.error('Update address error:', err);
-    return res.json({
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Server error',
     });
@@ -198,13 +199,13 @@ export const addressDelete = async (req, res) => {
     const addressId = req.params.id;
 
     if (!userId) {
-      return res.json({ success: false, message: 'Not logged in' });
+      return res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: 'Not logged in' });
     }
 
     const addressDoc = await Address.findOne({ userId });
 
     if (!addressDoc) {
-      return res.json({ success: false, message: 'Address record not found' });
+      return res.status(HttpStatus.NOT_FOUND).json({ success: false, message: 'Address record not found' });
     }
 
     const updatedAddresses = addressDoc.addresses.filter(
@@ -224,7 +225,7 @@ export const addressDelete = async (req, res) => {
     });
   } catch (err) {
     console.error('Delete address error:', err);
-    return res.json({
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Server error while deleting address',
     });
@@ -236,6 +237,6 @@ export const saveSelectedAddress = async (req, res) => {
     req.session.selectedAddressId = req.body.addressId;
     res.json({ success: true });
   } catch (error) {
-    res.json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };

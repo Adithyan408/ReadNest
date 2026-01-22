@@ -1,4 +1,5 @@
 import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 import Category from '../../models/categorySchema.js';
 
 export const categoryLoad = async (req, res) => {
@@ -32,7 +33,7 @@ export const categoryLoad = async (req, res) => {
       search,
     });
   } catch (error) {
-    res.redirect('/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/pageerror');
   }
 };
 
@@ -40,7 +41,7 @@ export const postCategory = async (req, res) => {
   const { categoryName, isOffer, discountValue, startDate, endDate } = req.body;
   try {
     if (!categoryName) {
-      return res.status(400).render('addCategory', {
+      return res.status(HttpStatus.NOT_FOUND).render('addCategory', {
         errorMessage: 'Both category name and number are required.',
         category: { categoryName },
       });
@@ -87,7 +88,7 @@ export const postCategory = async (req, res) => {
       search: '',
     });
   } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Internal Server Error' });
   }
 };
 
@@ -102,7 +103,7 @@ export const getCategory = async (req, res) => {
 
     res.render('addCategory', { category });
   } catch (error) {
-    res.redirect('/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/pageerror');
   }
 };
 
@@ -126,7 +127,7 @@ export const getunlistCategory = async (req, res) => {
 
     res.redirect(`/admin/category?page=${page}`);
   } catch (error) {
-    res.redirect('/admin/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/admin/pageerror');
   }
 };
 
@@ -148,7 +149,7 @@ export const getEditCategory = async (req, res) => {
     res.render('editCategory', { category: formattedCategory });
   } catch (error) {
     console.log(error);
-    res.redirect('/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/pageerror');
   }
 };
 
@@ -188,7 +189,7 @@ export const postEditCategory = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.redirect('/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/pageerror');
   }
 };
 
@@ -203,10 +204,10 @@ export const categoryDelete = async (req, res) => {
     const deletedCategory = await Category.findByIdAndDelete(id);
 
     if (!deletedCategory) {
-      return res.status(404).send('Category not found');
+      return res.status(HttpStatus.NOT_FOUND).send('Category not found');
     }
     res.redirect('/admin/category?deleted=true&status=deleted');
   } catch (error) {
-    res.redirect('/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/pageerror');
   }
 };

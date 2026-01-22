@@ -17,6 +17,7 @@ import {
 } from '../../helpers/paymentCache.js';
 import { normalizeCoupons } from '../../helpers/couponNormal.js';
 import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZO_API_KEY,
@@ -26,7 +27,7 @@ const razorpay = new Razorpay({
 export const loadPayment = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-    if (!userId) return res.redirect('/login');
+    if (!userId) return res.status(HttpStatus.NOT_FOUND).redirect('/login');
 
     const isRetry = req.query.retry === 'true';
 
@@ -34,7 +35,7 @@ export const loadPayment = async (req, res) => {
       const cached = await getPaymentState(userId);
 
       if (!cached) {
-        return res.redirect('/cart?error=retry-expired');
+        return res.status(HttpStatus.BAD_REQUEST).redirect('/cart?error=retry-expired');
       }
 
       const userData = await User.findById(userId).lean();
@@ -118,7 +119,7 @@ export const loadPayment = async (req, res) => {
     const cartDoc = await Cart.findOne({ userId }).lean();
 
     if (!cartDoc?.items?.length) {
-      return res.redirect('/cart');
+      return res.status(HttpStatus.BAD_REQUEST).redirect('/cart');
     }
 
     let cart = [];
@@ -243,7 +244,7 @@ export const loadPayment = async (req, res) => {
     });
   } catch (error) {
     console.log('Load Payment Error:', error);
-    res.render('notFound');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
   }
 };
 
@@ -254,7 +255,7 @@ export const postCoupon = async (req, res) => {
     const userId = req.session.user?._id;
 
     if (!userId) {
-      return res.json({
+      return res.status(HttpStatus.UNAUTHORIZED).json({
         success: false,
         message: ERROR_MESSAGES.AUTH.UNAUTHORIZED,
       });
@@ -262,7 +263,7 @@ export const postCoupon = async (req, res) => {
 
     const cached = await getPaymentState(userId);
     if (!cached) {
-      return res.json({ success: false, message: 'Payment session expired' });
+      return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: 'Payment session expired' });
     }
 
     const couponDoc = await Coupon.findOne({
@@ -343,11 +344,11 @@ export const postCoupon = async (req, res) => {
 export const orderPlaced = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-    if (!userId) return res.redirect('/login');
+    if (!userId) return res.status(HttpStatus.UNAUTHORIZED).redirect('/login');
 
     const cached = await getPaymentState(userId);
     if (!cached) {
-      return res.redirect('/cart?error=payment-expired');
+      return res.status(HttpStatus.FORBIDDEN).redirect('/cart?error=payment-expired');
     }
 
     const {
@@ -422,7 +423,7 @@ export const orderPlaced = async (req, res) => {
       const productDoc = await Product.findById(item._id).lean();
 
       if (!productDoc) {
-        return res.redirect('/cart?error=product-not-found');
+        return res.status(HttpStatus.FORBIDDEN).redirect('/cart?error=product-not-found');
       }
 
       if (productDoc.stock < item.quantity) {
@@ -523,14 +524,14 @@ export const orderPlaced = async (req, res) => {
     });
   } catch (error) {
     console.error('Order Error:', error);
-    res.render('notFound');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
   }
 };
 
 export const paymentFailed = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-    if (!userId) return res.redirect('/login');
+    if (!userId) return res.status(HttpStatus.UNAUTHORIZED).redirect('/login');
 
     const cached = await getPaymentState(userId);
 
@@ -581,7 +582,7 @@ export const createRazorpayOrder = async (req, res) => {
   try {
     const userId = req.session.user?._id;
     if (!userId) {
-      return res.status(401).json({
+      return res.status(HttpStatus.UNAUTHORIZED).json({
         success: false,
         message: ERROR_MESSAGES.AUTH.UNAUTHORIZED,
       });
@@ -590,7 +591,7 @@ export const createRazorpayOrder = async (req, res) => {
     const cached = await getPaymentState(userId);
 
     if (!cached) {
-      return res.status(400).json({
+      return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message: 'Payment session expired. Please try again.',
       });
@@ -665,7 +666,7 @@ export const verifyRazorpayPayment = async (req, res) => {
 
   } catch (error) {
     console.error('Payment Verification Error:', error);
-    return res.status(500).json({ success: false });
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 

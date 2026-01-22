@@ -3,6 +3,7 @@ import Product from '../../models/productsSchema.js';
 import Category from '../../models/categorySchema.js';
 import Banner from '../../models/bannerSchema.js';
 import Wishlist from '../../models/wishlistSchema.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 
 export const homeLoad = async (req, res) => {
   try {
@@ -150,6 +151,7 @@ export const homeLoad = async (req, res) => {
 
     const homeBanner = await Banner.findOne({ title: 'home-page' });
 
+    // eslint-disable-next-line no-undef
     const queryParams = new URLSearchParams();
     if (category) queryParams.set('category', category);
     if (min) queryParams.set('min', min);
@@ -176,7 +178,7 @@ export const homeLoad = async (req, res) => {
     });
   } catch (error) {
     console.error('Home load error:', error);
-    res.redirect('/notfound');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/notfound');
   }
 };
 
@@ -188,7 +190,7 @@ export const getProductStatus = async (req, res) => {
     );
 
     if (!product) {
-      return res.status(404).json({ exists: false });
+      return res.status(HttpStatus.NOT_FOUND).json({ exists: false });
     }
 
     const category = await Category.findOne({
@@ -202,7 +204,7 @@ export const getProductStatus = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Status check failed' });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Status check failed' });
   }
 };
 
@@ -215,6 +217,7 @@ export const productDetails = async (req, res) => {
     const q = { ...req.query };
     delete q.id;
 
+    // eslint-disable-next-line no-undef
     const baseQuery = new URLSearchParams(q).toString();
 
     let product = await Product.findById(productId);
@@ -350,7 +353,7 @@ export const productDetails = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.redirect('/notFound');
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/notFound');
   }
 };
 
@@ -380,6 +383,6 @@ export const searchLive = async (req, res) => {
     res.json(products);
   } catch (error) {
     console.error('Live search error:', error);
-    res.status(500).json([]);
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json([]);
   }
 };

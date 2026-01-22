@@ -5,6 +5,7 @@ import {
 } from '../../middlewares/walletHandler.js';
 import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
 import User from '../../models/userSchema.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 export const loadOrders = async (req, res) => {
   try {
     const search = req.query.search?.trim();
@@ -14,7 +15,6 @@ export const loadOrders = async (req, res) => {
 
     let match = {};
 
-    // 🔍 SEARCH
     if (search) {
       const users = await User.find({
         $or: [
@@ -31,7 +31,6 @@ export const loadOrders = async (req, res) => {
       ];
     }
 
-    // 📦 FETCH ORDERS
     const orders = await Order.find(match)
       .populate('user', 'name email')
       .sort({ createdAt: -1 })
@@ -39,7 +38,6 @@ export const loadOrders = async (req, res) => {
       .limit(limit)
       .lean();
 
-    // 🧠 DERIVE STATUS
     const processedOrders = orders.map(order => {
       const hasReturnRequest = order.items?.some(
         item => item.returnStatus === 'requested',
@@ -54,7 +52,6 @@ export const loadOrders = async (req, res) => {
       };
     });
 
-    // 📊 STATUS FILTER (after derivation)
     const finalOrders = statusFilter
       ? processedOrders.filter(o => o.overallStatus === statusFilter)
       : processedOrders;
@@ -71,7 +68,7 @@ export const loadOrders = async (req, res) => {
     });
   } catch (error) {
     console.error('Admin Orders Error:', error);
-    res.render('admin-error');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('admin-error');
   }
 };
 
@@ -85,13 +82,13 @@ export const orderDetails = async (req, res) => {
       .lean();
 
     if (!order) {
-      return res.render('notFound');
+      return res.status(HttpStatus.NOT_FOUND).render('notFound');
     }
 
     res.render('orderItems', { order });
   } catch (error) {
     console.log('Order Details Error:', error);
-    res.render('admin-error');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('admin-error');
   }
 };
 
@@ -108,7 +105,7 @@ export const updateOrderStatus = async (req, res) => {
     ];
 
     if (!allowedStatuses.includes(status)) {
-      return res.json({ success: false, message: 'Invalid status' });
+      return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: 'Invalid status' });
     }
 
     await Order.findOneAndUpdate({ orderId }, { status });
@@ -116,7 +113,7 @@ export const updateOrderStatus = async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.log('Order Status Update Error:', error);
-    res.json({ success: false, message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR });
   }
 };
 
@@ -127,7 +124,7 @@ export const updateItemStatus = async (req, res) => {
 
     const order = await Order.findOne({ orderId });
     if (!order) {
-      return res.json({
+      return res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: ERROR_MESSAGES.ORDER.NOT_FOUND,
       });
@@ -135,7 +132,7 @@ export const updateItemStatus = async (req, res) => {
 
     const item = order.items.id(itemId);
     if (!item) {
-      return res.json({ success: false, message: 'Item not found' });
+      return res.status(HttpStatus.NOT_FOUND).json({ success: false, message: 'Item not found' });
     }
 
     if (['cancelled', 'returned'].includes(item.status)) {
@@ -189,7 +186,7 @@ export const updateItemStatus = async (req, res) => {
     return res.json({ success: true });
   } catch (err) {
     console.log('Update item status error:', err);
-    return res.json({
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
     });
@@ -218,7 +215,7 @@ export const approveReturn = async (req, res) => {
 
     const order = await Order.findOne({ orderId });
     if (!order) {
-      return res.status(404).json({
+      return res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: ERROR_MESSAGES.ORDER.NOT_FOUND,
       });
@@ -226,14 +223,14 @@ export const approveReturn = async (req, res) => {
 
     const item = order.items.id(itemId);
     if (!item || item.returnStatus !== 'requested') {
-      return res.status(400).json({
+      return res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: 'Invalid return request',
       });
     }
 
     if (item.refundAmount > 0) {
-      return res.status(400).json({
+      return res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: 'Refund already processed',
       });
@@ -252,7 +249,7 @@ export const approveReturn = async (req, res) => {
     );
 
     if (totalItemsValue === 0) {
-      return res.status(400).json({
+      return res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: 'No refundable amount left',
       });
@@ -294,13 +291,13 @@ export const approveReturn = async (req, res) => {
       { $inc: { stock: item.quantity } },
     );
 
-    return res.json({
+    return res.status(HttpStatus.OK).json({
       success: true,
       message: `Return approved. ₹${refundAmount} credited to wallet.`,
     });
   } catch (err) {
     console.error('Approve Return Error:', err);
-    return res.status(500).json({
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Server error while approving return',
     });
@@ -314,16 +311,16 @@ export const rejectReturn = async (req, res) => {
 
     const order = await Order.findOne({ orderId });
     if (!order)
-      return res.json({
+      return res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: ERROR_MESSAGES.ORDER.NOT_FOUND,
       });
 
     const item = order.items.id(itemId);
-    if (!item) return res.json({ success: false, message: 'Item not found' });
+    if (!item) return res.status(HttpStatus.NOT_FOUND).json({ success: false, message: 'Item not found' });
 
     if (item.returnStatus !== 'requested') {
-      return res.json({
+      return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message: 'No return request to reject',
       });
@@ -337,6 +334,6 @@ export const rejectReturn = async (req, res) => {
     res.json({ success: true, message: 'Return rejected' });
   } catch (err) {
     console.log('Reject Return Error:', err);
-    res.json({ success: false, message: ERROR_MESSAGES.SERVER.NOT_FOUND });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: ERROR_MESSAGES.SERVER.NOT_FOUND });
   }
 };

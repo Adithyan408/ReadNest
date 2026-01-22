@@ -6,6 +6,7 @@ import passport from '../../config/passport.js';
 import { generateOtp, sendVerificationEmail } from '../../helpers/verify.js';
 import Coupon from '../../models/couponSchema.js';
 import ReferralReward from '../../models/referalSchema.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 
 dotenv.config();
 
@@ -23,7 +24,7 @@ export const getSignup = async (req, res) => {
     req.session.message = null;
     return res.render('signup', { message });
   } catch (error) {
-    res.status(500).render('notFound');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
   }
 };
 
@@ -42,7 +43,7 @@ export const getLogin = async (req, res) => {
     res.render('login');
   } catch (error) {
     console.error(error);
-    res.status(500).redirect('/notfound');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/notfound');
   }
 };
 
@@ -53,7 +54,7 @@ export const postLogin = async (req, res) => {
 
     if (!findUser) {
       req.session.message = 'User not found';
-      return res.redirect('/login');
+      return res.status(HttpStatus.UNAUTHORIZED).redirect('/login');
     }
     if (findUser.isBlocked) {
       req.session.message = 'User is Blocked by Admin';
@@ -72,7 +73,7 @@ export const postLogin = async (req, res) => {
     }
   } catch (error) {
     req.session.message = 'Please try again';
-    res.redirect('/login');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/login');
   }
 };
 
@@ -82,7 +83,7 @@ export const postSignup = async (req, res) => {
 
     if (!name || !email || !password || !confirmPassword) {
       req.session.message = 'All fields are required';
-      return res.redirect('/signup');
+      return res.status(HttpStatus.BAD_REQUEST).redirect('/signup');
     }
 
     if (password !== confirmPassword) {
@@ -134,7 +135,7 @@ export const postSignup = async (req, res) => {
     console.log('OTP sent:', otp);
   } catch (error) {
     console.error('Signup error:', error);
-    res.redirect('/notfound');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/notfound');
   }
 };
 
@@ -143,7 +144,7 @@ export const otpVerify = async (req, res) => {
     const { otp } = req.body;
 
     if (otp !== req.session.userOtp) {
-      return res.json({
+      return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message: 'Invalid OTP. Please try again.',
       });
@@ -211,7 +212,7 @@ export const otpVerify = async (req, res) => {
     });
   } catch (error) {
     console.error('OTP Verify Error:', error);
-    return res.json({ success: false, message: 'Internal server error' });
+    return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -236,9 +237,10 @@ export const otpResend = async (req, res) => {
       .then(() => console.log('OTP email sent'))
       .catch((err) => console.error('OTP email error:', err));
 
-    res.sendStatus(200);
+    res.status(HttpStatus.OK);
   } catch (error) {
-    res.sendStatus(500);
+    console.log(error);
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -271,7 +273,8 @@ export const profileLoad = async (req, res) => {
     req.session.status = null;
     res.render('profile', { user: userData, message, status });
   } catch (error) {
-    res.render('notFound');
+    console.log(error);
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
   }
 };
 
@@ -280,6 +283,7 @@ export const logoutLoad = async (req, res) => {
     delete req.session.user;
     return res.redirect('/');
   } catch (error) {
-    res.redirect('/notfound');
+    console.log(error);
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/notfound');
   }
 };

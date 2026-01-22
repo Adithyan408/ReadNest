@@ -1,3 +1,4 @@
+import { HttpStatus } from '../../helpers/statusCodes.js';
 import User from '../../models/userSchema.js';
 
 export const loadCustomer = async (req, res) => {
@@ -55,7 +56,7 @@ export const loadCustomer = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.render('admin-error');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('admin-error');
   }
 };
 
@@ -75,7 +76,7 @@ export const customerBlock = async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Block user error:', error);
-    res.status(500).json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -84,7 +85,7 @@ export const customerUnblock = async (req, res) => {
     const { userId } = req.body;
 
     if (!userId) {
-      return res.status(400).json({ success: false, message: 'User ID required' });
+      return res.status(HttpStatus.NOT_FOUND).json({ success: false, message: 'User ID required' });
     }
 
     await User.updateOne(
@@ -95,6 +96,6 @@ export const customerUnblock = async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Unblock user error:', error);
-    res.status(500).json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };

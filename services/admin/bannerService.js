@@ -1,4 +1,5 @@
 import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 import Banner from '../../models/bannerSchema.js';
 
 export const loadBanner = async (req, res) => {
@@ -32,7 +33,7 @@ export const loadBanner = async (req, res) => {
     });
   } catch (error) {
     console.error('Banner Load Error:', error);
-    res.redirect('/pageerror');
+    res.status(HttpStatus.BAD_REQUEST).redirect('/pageerror');
   }
 };
 
@@ -41,7 +42,7 @@ export const loadBannerAdd = async (req, res) => {
   try {
     res.render('addBanner', { errors: {}, oldInput: {} });
   } catch (error) {
-    res.render('admin-error');
+    res.status(HttpStatus.NOT_FOUND).render('admin-error');
   }
 };
 
@@ -92,7 +93,7 @@ export const postBannerAdd = async (req, res) => {
     await newBanner.save();
     res.redirect('/admin/banner?status=added');
   } catch (error) {
-    res.redirect('/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/pageerror');
   }
 };
 
@@ -132,7 +133,7 @@ export const postEditBanner = async (req, res) => {
     if (updateBanner) {
       res.redirect('/admin/banner?status=updated');
     } else {
-      res.json({ message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR });
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: ERROR_MESSAGES.SERVER.INTERNAL_ERROR });
     }
   } catch (error) {
     res.redirect('/pageerror');
@@ -144,16 +145,16 @@ export const bannerDelete = async (req, res) => {
     const { id } = req.query;
 
     if (!id) {
-      return res.status(400).send('Category ID not provided');
+      return res.status(HttpStatus.BAD_REQUEST).send('Category ID not provided');
     }
 
     const deletedBanner = await Banner.findByIdAndDelete(id);
 
     if (!deletedBanner) {
-      return res.status(404).send('Banner not found');
+      return res.status(HttpStatus.NOT_FOUND).send('Banner not found');
     }
     res.redirect('/admin/banner?deleted=true&status=deleted');
   } catch (error) {
-    res.status(500).redirect('/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/pageerror');
   }
 };

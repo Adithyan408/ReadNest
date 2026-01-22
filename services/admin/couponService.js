@@ -1,3 +1,4 @@
+import { HttpStatus } from '../../helpers/statusCodes.js';
 import Coupon from '../../models/couponSchema.js';
 import User from '../../models/userSchema.js';
 
@@ -10,7 +11,6 @@ export const loadCoupon = async (req, res) => {
 
     let filter = {};
 
-    // 🔍 Search by coupon code
     if (search) {
       filter.code = { $regex: search, $options: 'i' };
     }
@@ -34,11 +34,11 @@ export const loadCoupon = async (req, res) => {
       totalPages,
       currentPage: page,
       status,
-      search, // 🔹 needed to keep input & pagination in sync
+      search, 
     });
   } catch (error) {
     console.error('Load Coupon Error:', error);
-    res.redirect('/admin/error');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/admin/error');
   }
 };
 
@@ -51,7 +51,7 @@ export const loadAddCoupon = async (req, res) => {
     });
   } catch (error) {
     console.log('Error loading add coupon page:', error);
-    res.redirect('/admin/error');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/admin/error');
   }
 };
 
@@ -66,7 +66,7 @@ export const postAddCoupon = async (req, res) => {
         message: 'All fields are required',
       };
 
-      return res.redirect('/admin/coupon/addCoupon');
+      return res.status(HttpStatus.BAD_REQUEST).redirect('/admin/coupon/addCoupon');
     }
 
     const expiryDate = new Date(expiry);
@@ -209,6 +209,6 @@ export const deleteCoupon = async (req, res) => {
   } catch (error) {
     console.log('Error deleting coupon:', error);
     req.session.status = 'Error deleting coupon!';
-    res.redirect('/admin/coupon');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/admin/coupon');
   }
 };

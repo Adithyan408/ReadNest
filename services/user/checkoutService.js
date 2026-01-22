@@ -2,12 +2,13 @@ import User from '../../models/userSchema.js';
 import Cart from '../../models/cartSchema.js';
 import Address from '../../models/addressSchema.js';
 import Category from '../../models/categorySchema.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 
 export const getCheckout = async (req, res) => {
   try {
     const userId = req.session.user?._id;
 
-    if (!userId) return res.redirect('/login');
+    if (!userId) return res.status(HttpStatus.UNAUTHORIZED).redirect('/login');
 
     const userData = await User.findById(userId).lean();
 
@@ -117,7 +118,7 @@ export const getCheckout = async (req, res) => {
     });
   } catch (error) {
     console.log('Checkout Load Error:', error);
-    return res.redirect('/notfound');
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/notfound');
   }
 };
 
@@ -133,14 +134,14 @@ export const setSelectedAddress = (req, res) => {
     });
   } catch (error) {
     console.log('Set address error:', error);
-    return res.json({ success: false });
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
 export const addNewAddress = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-    if (!userId) return res.json({ success: false });
+    if (!userId) return res.status(HttpStatus.UNAUTHORIZED).json({ success: false });
 
     const addressData = req.body;
 
@@ -160,7 +161,7 @@ export const addNewAddress = async (req, res) => {
     return res.json({ success: true });
   } catch (error) {
     console.error('Add address error:', error);
-    return res.json({ success: false });
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -234,7 +235,7 @@ export const saveAddress = async (req, res) => {
     return res.json({ success: true });
   } catch (err) {
     console.log('Save address error:', err);
-    return res.json({ success: false });
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -255,6 +256,6 @@ export const updateCheckoutQuantity = async (req, res) => {
     return res.json({ success: true });
   } catch (error) {
     console.log('Update checkout qty error:', error);
-    return res.json({ success: false });
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };

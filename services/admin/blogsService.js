@@ -2,6 +2,7 @@ import Blog from '../../models/blogSchema.js';
 import User from '../../models/userSchema.js';
 import BlogLike from '../../models/blogLikeSchema.js';
 import BlogComment from '../../models/blogCommentSchema.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 
 export const getBlogs = async (req, res) => {
   try {
@@ -44,7 +45,7 @@ export const getBlogs = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send('Failed to load blogs');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('Failed to load blogs');
   }
 };
 
@@ -56,7 +57,7 @@ export const getBlogDetails = async (req, res) => {
     const blog = await Blog.findById(blogId).populate('author', 'name').lean();
 
     if (!blog) {
-      return res.status(404).render('404');
+      return res.status(HttpStatus.NOT_FOUND).render('404');
     }
 
     const likeCount = await BlogLike.countDocuments({
@@ -78,7 +79,7 @@ export const getBlogDetails = async (req, res) => {
     });
   } catch (error) {
     console.error('Admin blog detail error:', error);
-    res.status(500).send('Failed to load blog details');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('Failed to load blog details');
   }
 };
 
@@ -89,7 +90,7 @@ export const blockUnblockBlog = async (req, res) => {
     const blog = await Blog.findById(blogId);
 
     if (!blog) {
-      return res.json({ success: false, message: 'Blog not found' });
+      return res.status(HttpStatus.NOT_FOUND).json({ success: false, message: 'Blog not found' });
     }
 
     blog.isBlocked = !blog.isBlocked;
@@ -101,7 +102,7 @@ export const blockUnblockBlog = async (req, res) => {
     });
   } catch (error) {
     console.error('Block blog error:', error);
-    res.json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -112,13 +113,13 @@ export const deleteCommentAdmin = async (req, res) => {
     const deleted = await BlogComment.findByIdAndDelete(commentId);
 
     if (!deleted) {
-      return res.json({ success: false, message: 'Comment not found' });
+      return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: 'Comment not found' });
     }
 
     res.json({ success: true });
   } catch (error) {
     console.error('Admin delete comment error:', error);
-    res.json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -161,6 +162,6 @@ export const adminBlogSearch = async (req, res) => {
     return res.render('blogListAdmin', { blogs });
   } catch (error) {
     console.error('Search error:', error);
-    return res.status(500).send('');
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('');
   }
 };

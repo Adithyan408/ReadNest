@@ -4,6 +4,7 @@ import PDFDocument from 'pdfkit';
 import bcrypt from 'bcrypt';
 import ExcelJS from 'exceljs';
 import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 
 export const pageError = async (req, res) => {
   res.render('admin-error');
@@ -23,7 +24,7 @@ export const postLogin = async (req, res) => {
     const admin = await User.findOne({ email, isAdmin: true });
 
     if (!admin) {
-      return res.render('admin-login', {
+      return res.status(HttpStatus.UNAUTHORIZED).render('admin-login', {
         message: ERROR_MESSAGES.AUTH.ADMIN_NOT_FOUND,
       });
     }
@@ -39,9 +40,11 @@ export const postLogin = async (req, res) => {
     req.session.admin = true;
     req.session.adminData = admin;
 
-    return res.json({ success: true });
+    return res.status(HttpStatus.OK).json({
+      success: true,
+    });
   } catch (error) {
-    return res.redirect('/pageerror');
+    return res.status(HttpStatus.NOT_FOUND).redirect('/pageerror');
   }
 };
 
@@ -275,23 +278,23 @@ export const getDashboard = async (req, res) => {
     const paginatedSales = salesTableAgg.slice(skip, skip + limit);
 
     /* -------------------- REFUND AMOUNT -------------------- */
-const refundAgg = await Order.aggregate([
-  { $match: { createdAt: { $gte: fromDate, $lte: toDate } } },
-  { $unwind: '$items' },
-  {
-    $match: {
-      'items.status': { $in: ['cancelled', 'returned'] },
-    },
-  },
-  {
-    $group: {
-      _id: null,
-      refundAmount: { $sum: '$items.subtotal' },
-    },
-  },
-]);
+    const refundAgg = await Order.aggregate([
+      { $match: { createdAt: { $gte: fromDate, $lte: toDate } } },
+      { $unwind: '$items' },
+      {
+        $match: {
+          'items.status': { $in: ['cancelled', 'returned'] },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          refundAmount: { $sum: '$items.subtotal' },
+        },
+      },
+    ]);
 
-const refundAmount = refundAgg[0]?.refundAmount || 0;
+    const refundAmount = refundAgg[0]?.refundAmount || 0;
 
     /* -------------------- RENDER -------------------- */
     res.render('dashboard', {
@@ -328,7 +331,7 @@ const refundAmount = refundAgg[0]?.refundAmount || 0;
     });
   } catch (error) {
     console.error('Dashboard Error:', error);
-    res.redirect('/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/pageerror');
   }
 };
 
@@ -436,7 +439,6 @@ export const salesReport = async (req, res) => {
       { $sort: { date: -1 } },
     ]);
 
-    /* -------------------- CALCULATIONS -------------------- */
     const uniqueOrders = new Set(salesData.map((s) => s.orderId)).size;
 
     const totalSales = salesData
@@ -463,7 +465,6 @@ export const salesReport = async (req, res) => {
     // eslint-disable-next-line no-unused-vars
     const totalRevenue = totalSales - refundAmount;
 
-    /* -------------------- PDF SETUP -------------------- */
     const doc = new PDFDocument({ margin: 40, size: 'A4' });
 
     res.setHeader('Content-Type', 'application/pdf');
@@ -494,11 +495,7 @@ export const salesReport = async (req, res) => {
 
     doc.text(`Total Orders        : ${uniqueOrders}`);
     doc.text(`Total Sales         : ₹${totalSales.toFixed(2)}`);
-    doc.text(
-      `Total Discount      : ₹${totalDiscount.toFixed(
-        2,
-      )} `,
-    );
+    doc.text(`Total Discount      : ₹${totalDiscount.toFixed(2)} `);
     doc.text(`Cancelled Products  : ${cancelledCount}`);
     doc.text(`Returned Products   : ${returnedCount}`);
     doc.text(`Refund Amount       : -₹${refundAmount.toFixed(2)}`);
@@ -710,6 +707,6 @@ export const downloadSalesExcel = async (req, res) => {
     res.end();
   } catch (error) {
     console.error('Excel Error:', error);
-    res.status(500).send('Unable to generate Excel');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('Unable to generate Excel');
   }
 };

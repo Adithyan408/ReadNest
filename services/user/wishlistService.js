@@ -3,6 +3,7 @@ import Product from '../../models/productsSchema.js';
 import Cart from '../../models/cartSchema.js';
 import Category from '../../models/categorySchema.js';
 import User from '../../models/userSchema.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 
 export const WishlistToggle = async (req, res) => {
   try {
@@ -11,7 +12,7 @@ export const WishlistToggle = async (req, res) => {
 
     if (!productId) {
       return res
-        .status(400)
+        .status(HttpStatus.NOT_FOUND)
         .json({ success: false, message: 'Product ID missing' });
     }
 
@@ -23,7 +24,7 @@ export const WishlistToggle = async (req, res) => {
         products: [productId],
       });
 
-      return res.json({ success: true, inWishlist: true });
+      return res.status(HttpStatus.OK).json({ success: true, inWishlist: true });
     }
 
     const index = wishlist.products.findIndex(
@@ -39,18 +40,18 @@ export const WishlistToggle = async (req, res) => {
       wishlist.products.push(productId);
       await wishlist.save();
 
-      return res.json({ success: true, inWishlist: true });
+      return res.status(HttpStatus.OK).json({ success: true, inWishlist: true });
     }
   } catch (err) {
     console.error('Wishlist toggle error:', err);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error' });
   }
 };
 
 export const loadWishlist = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-    if (!userId) return res.redirect('/login');
+    if (!userId) return res.status(HttpStatus.UNAUTHORIZED).redirect('/login');
 
     const wishlist = await Wishlist.findOne({ userId }).lean();
 
@@ -127,7 +128,7 @@ export const loadWishlist = async (req, res) => {
     });
   } catch (error) {
     console.error('Error loading wishlist:', error);
-    return res.render('notFound');
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
   }
 };
 
@@ -136,11 +137,11 @@ export const moveSingleToCart = async (req, res) => {
     const userId = req.session.user?._id;
     const { productId } = req.body;
 
-    if (!userId) return res.redirect('/login');
+    if (!userId) return res.status(HttpStatus.UNAUTHORIZED).redirect('/login');
 
     const product = await Product.findById(productId);
     if (!product) {
-      return res.redirect('/wishlist?error=not-found');
+      return res.status(HttpStatus.NOT_FOUND).redirect('/wishlist?error=not-found');
     }
 
     const categoryDoc = await Category.findOne({
@@ -191,7 +192,7 @@ export const moveSingleToCart = async (req, res) => {
     return res.redirect('/cart');
   } catch (error) {
     console.log('Move single wishlist item error:', error);
-    return res.redirect('/wishlist?error=server');
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/wishlist?error=server');
   }
 };
 
@@ -268,7 +269,7 @@ export const moveAllToCart = async (req, res) => {
     return res.redirect('/cart');
   } catch (error) {
     console.log('Move all wishlist items error:', error);
-    return res.redirect('/wishlist?error=server');
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/wishlist?error=server');
   }
 };
 
@@ -277,14 +278,14 @@ export const removeSingleWishlistItem = async (req, res) => {
     const userId = req.session.user?._id;
     const { productId } = req.body;
 
-    if (!userId) return res.redirect('/login');
+    if (!userId) return res.status(HttpStatus.UNAUTHORIZED).redirect('/login');
 
     await Wishlist.updateOne({ userId }, { $pull: { products: productId } });
 
     return res.redirect('/wishlist');
   } catch (error) {
     console.log('Error removing wishlist item:', error);
-    return res.redirect('/wishlist');
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/wishlist');
   }
 };
 
@@ -292,13 +293,13 @@ export const removeAllWishlistItems = async (req, res) => {
   try {
     const userId = req.session.user?._id;
 
-    if (!userId) return res.redirect('/login');
+    if (!userId) return res.status(HttpStatus.UNAUTHORIZED).redirect('/login');
 
     await Wishlist.updateOne({ userId }, { $set: { products: [] } });
 
     return res.redirect('/wishlist');
   } catch (error) {
     console.log('Error clearing wishlist:', error);
-    return res.redirect('/wishlist');
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/wishlist');
   }
 };

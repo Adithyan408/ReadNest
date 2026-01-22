@@ -1,5 +1,6 @@
 import Product from '../../models/productsSchema.js';
 import Category from '../../models/categorySchema.js';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 
 export const loadProductsAdd = async (req, res) => {
   try {
@@ -13,7 +14,7 @@ export const loadProductsAdd = async (req, res) => {
     }
     res.render('addProduct', { product, categories, errors: {}, oldInput: {} });
   } catch (error) {
-    res.redirect('/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/pageerror');
   }
 };
 
@@ -120,7 +121,7 @@ export const postProducts = async (req, res) => {
 
     res.redirect('/admin/products?added=true&status=added');
   } catch (error) {
-    res.redirect('/admin/products?status=error');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/admin/products?status=error');
   }
 };
 
@@ -131,7 +132,7 @@ export const loadEditProducts = async (req, res) => {
     const product = await Product.findOne({ _id: id });
     res.render('editProduct', { data: product, categories, errors: {} });
   } catch (error) {
-    res.redirect('/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/pageerror');
   }
 };
 
@@ -140,7 +141,7 @@ export const postEditProducts = async (req, res) => {
     const id = req.query.id;
     const existingProduct = await Product.findById(id);
     if (!existingProduct) {
-      return res.redirect('/admin/products?status=notfound');
+      return res.status(HttpStatus.NOT_FOUND).redirect('/admin/products?status=notfound');
     }
 
     const newImageUrls = req.files?.map(f => f.path) || [];
@@ -210,7 +211,7 @@ export const postEditProducts = async (req, res) => {
     res.redirect('/admin/products?status=updated');
   } catch (error) {
     console.error('Update error:', error);
-    res.redirect('/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/pageerror');
   }
 };
 
@@ -225,8 +226,9 @@ export const productList = async (req, res) => {
         category || ''
       }`,
     );
-  } catch (err) {
-    res.redirect('/admin/pageerror');
+  } catch (error) {
+    console.log(error);
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/admin/pageerror');
   }
 };
 
@@ -241,8 +243,9 @@ export const productUnlist = async (req, res) => {
         category || ''
       }`,
     );
-  } catch (err) {
-    res.redirect('/admin/pageerror');
+  } catch (error) {
+    console.log(error);
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/admin/pageerror');
   }
 };
 
@@ -251,17 +254,17 @@ export const productDelete = async (req, res) => {
     const { id } = req.query;
 
     if (!id) {
-      return res.status(400).send('Category ID not provided');
+      return res.status(HttpStatus.NOT_FOUND).send('Category ID not provided');
     }
 
     const deletedProduct = await Product.findByIdAndDelete(id);
 
     if (!deletedProduct) {
-      return res.status(404).send('Category not found');
+      return res.status(HttpStatus.NOT_FOUND).send('Category not found');
     }
     res.redirect('/admin/products?deleted=true&status=deleted');
   } catch (error) {
-    res.redirect('/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/pageerror');
   }
 };
 
@@ -342,7 +345,7 @@ export const loadFilteredProducts = async (req, res) => {
       sort,
     });
   } catch (error) {
-    res.redirect('/admin/pageerror');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/admin/pageerror');
   }
 };
 
@@ -358,6 +361,6 @@ export const imageCropper = async (req, res) => {
     });
   } catch (error) {
     console.error('Crop upload error:', error);
-    return res.json({ success: false, message: 'Upload failed' });
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Upload failed' });
   }
 };
