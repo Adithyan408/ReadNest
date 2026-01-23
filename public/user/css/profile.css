@@ -1,0 +1,45 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+* {
+    font-family: "Poppins", sans-serif;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Smooth Sidebar Transitions */
+.sidebar-link {
+    transition: all 0.2s ease;
+}
+
+.sidebar-link:hover {
+    background-color: #f3f4f6;
+    padding-left: 1.75rem;
+}
+
+.sidebar-link.active {
+    background-color: #eff6ff;
+    border-right: 4px solid #2563eb;
+    color: #2563eb;
+}
+
+/* Ensure smooth scrolling for the main content on desktop */
+@media (min-width: 1024px) {
+    .desktop-scroll-area {
+        height: calc(100vh - 80px);
+        /* Adjust based on header height */
+        overflow-y: auto;
+    }
+
+    .sidebar-fixed {
+        height: calc(100vh - 80px);
+        position: sticky;
+        top: 80px;
+    }
+}

@@ -7,18 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <style>
-        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
-        * { font-family: "Poppins", sans-serif; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        .sidebar-item.active { background: #f3f4f6; border-right: 4px solid #4f46e5; color: #4f46e5; }
-        #sidebar { transition: transform 0.3s ease-in-out; z-index: 60; }
-        
-        @media (min-width: 1024px) {
-            .main-content { height: calc(100vh - 80px); overflow-y: auto; }
-        }
-    </style>
+    <link rel="stylesheet" href="/admin/css/addCategory.css">
 </head>
 
 <body class="bg-gray-100 min-h-screen lg:overflow-hidden">
@@ -136,32 +125,6 @@
         </main>
     </div>
 
-    <script>
-        // Sidebar Toggle for Mobile
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('-translate-x-full');
-        }
-
-        // Form Validation Logic
-        document.getElementById("categoryForm").addEventListener("submit", function (e) {
-            const name = document.getElementById("categoryName").value.trim();
-            const errorMsg = document.getElementById("errorMsg");
-
-            if (!name) {
-                e.preventDefault();
-                errorMsg.textContent = "Please provide a category name before submitting.";
-                errorMsg.classList.remove("hidden");
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                
-                // Shake effect for input
-                const input = document.getElementById("categoryName");
-                input.classList.add('border-red-500', 'bg-red-50');
-                setTimeout(() => input.classList.remove('border-red-500', 'bg-red-50'), 2000);
-            } else {
-                errorMsg.classList.add("hidden");
-            }
-        });
-    </script>
+    <script src="/admin/js/addCategory.js"></script>
 </body>
 </html>

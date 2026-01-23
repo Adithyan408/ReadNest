@@ -1,0 +1,27 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+* {
+    font-family: "Poppins", sans-serif;
+}
+
+/* Ensure CKEditor content is responsive */
+article img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+article {
+    line-height: 1.8;
+    color: #374151;
+}
+
+/* Custom scrollbar for notifications */
+#notificationList::-webkit-scrollbar {
+    width: 4px;
+}
+
+#notificationList::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 10px;
+}

@@ -1,0 +1,28 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+* {
+    font-family: "Poppins", sans-serif;
+}
+
+/* CKEditor Responsive Styling */
+.cke {
+    border-radius: 12px !important;
+    border: 2px solid #e5e7eb !important;
+    width: 100% !important;
+    /* Forces editor to stay inside parent container */
+}
+
+.cke_top {
+    background: #f9fafb !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 8px !important;
+}
+
+.cke_contents {
+    padding: 10px !important;
+}
+
+/* Hide scrollbar for cleaner UI */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}

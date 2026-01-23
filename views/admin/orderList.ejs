@@ -7,16 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <style>
-        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
-        * { font-family: "Poppins", sans-serif; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .sidebar-item.active { background: #f3f4f6; border-right: 4px solid #4f46e5; color: #4f46e5; }
-        #sidebar { transition: transform 0.3s ease-in-out; z-index: 60; }
-        @media (min-width: 1024px) {
-            .main-content { height: calc(100vh - 80px); overflow-y: auto; }
-        }
-    </style>
+    <link rel="stylesheet" href="/admin/css/orderList.css">
 </head>
 
 <body class="bg-gray-100 min-h-screen lg:overflow-hidden">
@@ -176,35 +167,6 @@
             </div>
         </main>
     </div>
-
-    <script>
-        function toggleSidebar() { document.getElementById("sidebar").classList.toggle("-translate-x-full"); }
-        function toggleFilterMenu() { document.getElementById("filterMenu").classList.toggle("hidden"); }
-
-        function searchOrders() {
-  const q = document.getElementById("searchInput").value.trim();
-  const params = new URLSearchParams(window.location.search);
-
-  if (q) params.set("search", q);
-  else params.delete("search");
-
-  params.set("page", 1); // reset pagination
-  window.location.href = `/admin/orders?${params.toString()}`;
-}
-
-
-        function clearSearch() { window.location.href = "/admin/orders"; }
-
-        // Close dropdowns on outside click
-        document.addEventListener("click", function (event) {
-            const fw = document.querySelector(".filter-wrapper");
-            if (fw && !fw.contains(event.target)) document.getElementById("filterMenu").classList.add("hidden");
-        });
-
-        document.getElementById("searchInput").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") searchOrders();
-});
-
-    </script>
+    <script src="/admin/js/orderList.js"></script>
 </body>
 </html>

@@ -1,0 +1,44 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+
+* {
+    font-family: "Poppins", sans-serif;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.sidebar-item.active {
+    background: #f3f4f6;
+    border-right: 4px solid #4f46e5;
+    color: #4f46e5;
+}
+
+#sidebar {
+    transition: transform 0.3s ease-in-out;
+    z-index: 60;
+}
+
+@media (min-width: 1024px) {
+    .main-content {
+        height: calc(100vh - 80px);
+        overflow-y: auto;
+    }
+}
+
+/* Prose customization to match Admin UI */
+.prose blockquote {
+    border-left-color: #4f46e5;
+    font-style: italic;
+    color: #4b5563;
+}
+
+.prose img {
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}

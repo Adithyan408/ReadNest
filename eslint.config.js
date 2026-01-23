@@ -9,12 +9,18 @@ export default [
       ecmaVersion: 'latest',
       sourceType: 'module',
 
-      // 👇 THIS FIXES process, console, etc.
+      
       globals: {
         console: 'readonly',
         process: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
+        window: 'readonly',
+        document: 'readonly',
+        fetch: 'readonly',
+        Swal: 'readonly',
+        location: 'readonly',
+        function: 'readonly',
       },
     },
 

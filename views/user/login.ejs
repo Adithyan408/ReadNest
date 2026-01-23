@@ -9,32 +9,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-    <style>
-      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
-      * {
-        font-family: "Poppins", sans-serif;
-      }
-      body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-      }
-      .form-container {
-        animation: slideIn 0.5s ease-out;
-      }
-      @keyframes slideIn {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      .error-message {
-        display: none;
-      }
-    </style>
+    <link rel="stylesheet" href="/user/css/login.css">
   </head>
 
   <body class="flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
@@ -172,59 +147,6 @@
       </div>
     </div>
 
-    <script>
-      function togglePassword(fieldId, icon) {
-        const field = document.getElementById(fieldId);
-        field.type = field.type === "password" ? "text" : "password";
-        icon.classList.toggle("fa-eye");
-        icon.classList.toggle("fa-eye-slash");
-      }
-
-      function showError(fieldId, message) {
-        const errorElement = document.getElementById(fieldId + "Error");
-        if (errorElement) {
-          errorElement.querySelector("span").textContent = message;
-          errorElement.style.display = "block";
-          document.getElementById(fieldId).classList.add("border-red-500");
-        }
-      }
-
-      function hideError(fieldId) {
-        const errorElement = document.getElementById(fieldId + "Error");
-        if (errorElement) {
-          errorElement.style.display = "none";
-          document.getElementById(fieldId).classList.remove("border-red-500");
-        }
-      }
-
-      function googleSignIn() {
-        window.location.href = "/auth/google";
-      }
-
-      // Logic for auto-submitting on Enter and basic front-end validation
-      document
-        .getElementById("loginForm")
-        .addEventListener("submit", function (e) {
-          const email = document.getElementById("email").value;
-          const password = document.getElementById("password").value;
-          let isValid = true;
-
-          if (!email.includes("@")) {
-            showError("email", "Please enter a valid email");
-            isValid = false;
-          }
-          if (password.length < 6) {
-            showError("password", "Password is too short");
-            isValid = false;
-          }
-
-          if (!isValid) e.preventDefault();
-        });
-
-      // Clear error on input
-      document.querySelectorAll("input").forEach((input) => {
-        input.addEventListener("input", () => hideError(input.id));
-      });
-    </script>
+  <script src="/user/js/login.js"></script>
   </body>
 </html>

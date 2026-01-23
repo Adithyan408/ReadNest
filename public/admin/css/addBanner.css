@@ -1,0 +1,27 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+* {
+    font-family: "Poppins", sans-serif;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.sidebar-item.active {
+    background: #d1d5db;
+    border-right: 4px solid #4f46e5;
+}
+
+/* Smooth transition for sidebar mobile */
+#sidebar {
+    transition: transform 0.3s ease-in-out;
+    z-index: 60;
+}
+
+@media (min-width: 1024px) {
+    .main-content {
+        height: calc(100vh - 80px);
+        overflow-y: auto;
+    }
+}

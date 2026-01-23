@@ -8,11 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-
-    <style>
-        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
-        * { font-family: "Poppins", sans-serif; }
-    </style>
+    <link rel="stylesheet" href="/user/css/failedPayment.css">
+    
 </head>
 
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -69,13 +66,7 @@
     </main>
 
     <%- include("../../views/partials/user/footer") %>
-
-    <script>
-        // Prevent users from going back to a broken state
-        window.history.pushState(null, "", window.location.href);
-        window.onpopstate = function () {
-            window.location.href = "/cart";
-        };
-    </script>
+    <script src="/user/js/failedPayment.js"></script>
+   
 </body>
 </html>

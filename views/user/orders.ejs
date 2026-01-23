@@ -7,26 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <style>
-        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
-        * { font-family: "Poppins", sans-serif; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        @media (min-width: 1024px) {
-            .desktop-scroll-area {
-                height: calc(100vh - 80px);
-                overflow-y: auto;
-            }
-            .sidebar-fixed {
-                height: calc(100vh - 80px);
-                position: sticky;
-                top: 80px;
-            }
-        }
-        .order-card { transition: all 0.3s ease; }
-        .order-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
-    </style>
+    <link rel="stylesheet" href="/user/css/orders.css">
 </head>
 
 <body class="bg-gray-50">
@@ -166,32 +147,6 @@
 
     <%- include("../../views/partials/user/footer") %>
 
-    <script>
-        const orderInput = document.getElementById("orderSearch");
-        const orderClear = document.getElementById("orderClearBtn");
-
-        if (orderInput.value.trim() !== "") orderClear.classList.remove("hidden");
-
-        function applyOrderSearch() {
-            const search = orderInput.value.trim();
-            const params = new URLSearchParams();
-            if (search) params.append("search", search);
-            window.location.href = `/orders?${params.toString()}`;
-        }
-
-        let typingTimer;
-        orderInput.addEventListener("input", () => {
-            clearTimeout(typingTimer);
-            orderClear.classList.toggle("hidden", orderInput.value.trim() === "");
-            typingTimer = setTimeout(applyOrderSearch, 800);
-        });
-
-        orderInput.addEventListener("keypress", e => { if (e.key === "Enter") applyOrderSearch(); });
-        orderClear.addEventListener("click", () => { window.location.href = "/orders"; });
-
-        if (performance.getEntriesByType("navigation")[0]?.type === "reload") {
-            if (window.location.search.includes("search")) window.location.replace("/orders");
-        }
-    </script>
+   <script src="/user/js/orders.js"></script>
 </body>
 </html>

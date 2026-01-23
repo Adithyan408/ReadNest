@@ -10,23 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css" />
     <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
-
-    <style>
-        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
-        * { font-family: "Poppins", sans-serif; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        .sidebar-item.active { background: #f3f4f6; border-right: 4px solid #4f46e5; color: #4f46e5; }
-        #sidebar { transition: transform 0.3s ease-in-out; z-index: 60; }
-        
-        @media (min-width: 1024px) {
-            .main-content { height: calc(100vh - 80px); overflow-y: auto; }
-        }
-
-        .upload-area { border: 2px dashed #e5e7eb; transition: all 0.3s ease; }
-        .upload-area:hover { border-color: #4f46e5; background: #f5f3ff; }
-    </style>
+    <link rel="stylesheet" href="/admin/css/editBanner.css">
 </head>
 
 <body class="bg-gray-100 min-h-screen lg:overflow-hidden">
@@ -163,65 +147,6 @@
         </div>
     </div>
 
-    <script>
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
-
-        let cropper = null;
-        const bannerInput = document.getElementById("bannerImage");
-        const modal = document.getElementById("cropperModal");
-        const cropImg = document.getElementById("cropperImage");
-        const preview = document.getElementById("bannerPreview");
-
-        window.startBannerCrop = function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            cropImg.src = URL.createObjectURL(file);
-            modal.classList.replace("hidden", "flex");
-            cropImg.onload = () => {
-                if (cropper) cropper.destroy();
-                cropper = new Cropper(cropImg, { aspectRatio: 16/9, viewMode: 2, autoCropArea: 1 });
-            };
-        };
-
-        window.closeBannerCrop = function() {
-            modal.classList.replace("flex", "hidden");
-            if (cropper) cropper.destroy();
-            cropper = null;
-            bannerInput.value = "";
-        };
-
-        window.applyBannerCrop = function() {
-            if (!cropper) return;
-            const canvas = cropper.getCroppedCanvas({ width: 1920, height: 1080 });
-            canvas.toBlob((blob) => {
-                const file = new File([blob], "banner_update.jpg", { type: "image/jpeg" });
-                const dt = new DataTransfer();
-                dt.items.add(file);
-                bannerInput.files = dt.files;
-                preview.innerHTML = `<img src="${URL.createObjectURL(blob)}" class="rounded-2xl shadow-xl border-4 border-white max-h-56 object-cover"/>`;
-                modal.classList.replace("flex", "hidden");
-                cropper.destroy();
-                cropper = null;
-            }, "image/jpeg", 0.9);
-        };
-
-        function confirmDelete(id) {
-            Swal.fire({
-                title: "Delete this Banner?",
-                text: "This campaign will be permanently removed from the storefront.",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#f43f5e",
-                cancelButtonColor: "#94a3b8",
-                confirmButtonText: "Yes, Delete",
-                background: "#ffffff",
-                customClass: {
-                    title: 'font-black uppercase tracking-tight text-gray-800',
-                    confirmButton: 'rounded-xl font-bold uppercase tracking-widest text-xs py-4 px-8',
-                    cancelButton: 'rounded-xl font-bold uppercase tracking-widest text-xs py-4 px-8'
-                }
-            }).then((res) => { if (res.isConfirmed) window.location.href = `/admin/deleteBanner?id=${id}`; });
-        }
-    </script>
+   <script src="/admin/js/editBanner.js"></script>
 </body>
 </html>

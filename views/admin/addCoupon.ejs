@@ -7,18 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <style>
-        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
-        * { font-family: "Poppins", sans-serif; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        .sidebar-item.active { background: #f3f4f6; border-right: 4px solid #4f46e5; color: #4f46e5; }
-        #sidebar { transition: transform 0.3s ease-in-out; z-index: 60; }
-        
-        @media (min-width: 1024px) {
-            .main-content { height: calc(100vh - 80px); overflow-y: auto; }
-        }
-    </style>
+    <link rel="stylesheet" href="/admin/css/addCoupon.css">
 </head>
 
 <body class="bg-gray-100 min-h-screen lg:overflow-hidden">
@@ -130,39 +119,6 @@
         </main>
     </div>
 
-    <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('-translate-x-full');
-        }
-
-        document.getElementById("couponForm").addEventListener("submit", function (e) {
-            e.preventDefault();
-
-            const form = e.target;
-            const code = form.code.value.trim();
-            const discount = form.discount.value;
-            const minPurchase = form.minPurchase.value;
-            const maxDiscount = form.maxDiscount.value;
-            const expiry = form.expiry.value;
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            if (!code || !/^[A-Z0-9]{3,20}$/.test(code)) {
-                return Swal.fire("Error", "Valid code required (3-20 uppercase/numbers)", "warning");
-            }
-            if (!discount || discount < 1 || discount > 90) {
-                return Swal.fire("Error", "Discount must be between 1% and 90%", "warning");
-            }
-            if (!maxDiscount || maxDiscount < 0) {
-                return Swal.fire("Error", "Please set a valid Maximum Discount cap", "warning");
-            }
-            if (!expiry || new Date(expiry) <= today) {
-                return Swal.fire("Error", "Expiry must be a future date", "warning");
-            }
-
-            form.submit();
-        });
-    </script>
+    <script src="/admin/js/addCoupon.js"></script>
 </body>
 </html>
