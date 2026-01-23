@@ -508,7 +508,8 @@ export const orderPlaced = async (req, res) => {
       );
     }
 
-    await clearPaymentState(userId);
+    await clearPaymentState(userId);  
+    await Cart.deleteOne({ userId: userId });
 
     req.session.paymentSuccess = null;
     req.session.razorpayPaymentId = null;

@@ -139,6 +139,17 @@
     <%- include("../../views/partials/user/footer") %>
 
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        const RAZORPAY_KEY = '<%= process.env.RAZO_API_KEY %>';
+
+  // Transfer EJS data to a global JS object
+         window.orderData = {
+            coupon: "<%= appliedCoupon || '' %>",
+            discount: Number("<%= discount || 0 %>"),
+            total: Number("<%= payableAmount || 0 %>"),
+            method: "<%= selectedPaymentMethod || '' %>"
+        };
+    </script>
     <script src="/user/js/payment.js"></script>
 </body>
 </html>

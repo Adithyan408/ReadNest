@@ -189,7 +189,7 @@ async function processPayment() {
       }
 
       const options = {
-        key: '<%= process.env.RAZO_API_KEY %>',
+        key: RAZORPAY_KEY,
         amount: order.amount,
         currency: 'INR',
         name: 'ReadNest',
@@ -236,11 +236,10 @@ async function processPayment() {
 /* =====================================================
      RESTORE STATE ON RETRY
   ===================================================== */
+// Inside payment.js
 document.addEventListener('DOMContentLoaded', () => {
-  const coupon = "<%= appliedCoupon || '' %>";
-  const discount = Number('<%= discount || 0 %>');
-  const total = Number('<%= payableAmount %>');
-  const method = "<%= selectedPaymentMethod || '' %>";
+  // Use the object we created in the EJS file
+  const { coupon, discount, total, method } = window.orderData;
 
   if (coupon) {
     couponValid = true;
@@ -253,6 +252,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (method) {
-    document.getElementById('paymentMethod').value = method;
+    const methodElement = document.getElementById('paymentMethod');
+    if (methodElement) {
+      methodElement.value = method;
+    }
   }
 });
