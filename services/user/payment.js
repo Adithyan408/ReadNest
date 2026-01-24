@@ -342,27 +342,31 @@ export const postCoupon = async (req, res) => {
 };
 
 export const orderPlaced = async (req, res) => {
+  let reservedProducts = [];
+  let payableAmount = 0;
+  let paymentMode = null;
+  let paymentId = null;
+  let userId = null;
+
   try {
-    const userId = req.session.user?._id;
-    if (!userId) return res.status(HttpStatus.UNAUTHORIZED).redirect('/login');
+    userId = req.session.user?._id;
+    if (!userId) return res.redirect('/login');
 
     const cached = await getPaymentState(userId);
     if (!cached) {
-      return res.status(HttpStatus.FORBIDDEN).redirect('/cart?error=payment-expired');
+      return res.redirect('/cart?error=payment-expired');
     }
 
-    const {
-      cart,
-      subtotal,
-      discount,
-      shippingCharge,
-      payableAmount,
-      appliedCoupon,
-      razorpayOrderId,
-    } = cached;
+    const cart = cached.cart;
+    const subtotal = cached.subtotal;
+    const discount = cached.discount;
+    const shippingCharge = cached.shippingCharge;
+    const appliedCoupon = cached.appliedCoupon;
+    const razorpayOrderId = cached.razorpayOrderId;
 
-    const paymentMode = req.query.payment || req.body.paymentMode;
-    const paymentId = req.session.razorpayPaymentId || null;
+    payableAmount = cached.payableAmount;
+    paymentMode = req.query.payment || req.body.paymentMode;
+    paymentId = req.session.razorpayPaymentId || null;
 
     if (paymentMode === 'Razorpay' && !req.session.paymentSuccess) {
       return res.redirect('/payment-failed?reason=Payment not completed');
@@ -374,37 +378,72 @@ export const orderPlaced = async (req, res) => {
       if (couponDoc) {
         if (couponDoc.type === 'referral') {
           const reward = await ReferralReward.findOneAndUpdate(
-            {
-              referrerId: userId,
-              couponCode: couponDoc.code,
-              used: false,
-            },
-            {
-              used: true,
-              usedAt: new Date(),
-            },
+            { referrerId: userId, couponCode: couponDoc.code, used: false },
+            { used: true, usedAt: new Date() },
             { new: true },
           );
 
-          if (!reward) {
-            return res.redirect(
-              '/payment-failed?reason=Referral coupon invalid',
-            );
-          }
+          if (!reward) throw new Error('INVALID_COUPON');
         } else {
           await couponUsage.findOneAndUpdate(
-            {
-              userId,
-              couponId: couponDoc._id,
-            },
-            {
-              used: true,
-              usedAt: new Date(),
-            },
+            { userId, couponId: couponDoc._id },
+            { used: true, usedAt: new Date() },
             { upsert: true },
           );
         }
       }
+    }
+
+    let cartItems = [];
+
+    for (const item of cart) {
+      const updatedProduct = await Product.findOneAndUpdate(
+        { _id: item._id, stock: { $gte: item.quantity } },
+        { $inc: { stock: -item.quantity } },
+        { new: true },
+      );
+
+      if (!updatedProduct) {
+        throw new Error('OUT_OF_STOCK');
+      }
+
+      reservedProducts.push({
+        productId: item._id,
+        quantity: item.quantity,
+      });
+
+      cartItems.push({
+        product: item._id,
+        productName: item.name,
+        category: updatedProduct.category,
+        regularPrice: item.regularPrice,
+        unitPrice: item.price,
+        quantity: item.quantity,
+        subtotal: item.price * item.quantity,
+        productImage: [item.image],
+        stock: updatedProduct.stock,
+      });
+    }
+
+    if (discount > 0 && cartItems.length > 0) {
+      const total = cartItems.reduce((s, i) => s + i.subtotal, 0);
+      let remaining = discount;
+
+      cartItems.forEach((item, idx) => {
+        const itemDiscount =
+          idx === cartItems.length - 1
+            ? remaining
+            : Math.round((item.subtotal / total) * discount);
+
+        remaining -= itemDiscount;
+        item.couponDiscount = itemDiscount;
+        item.finalAmount = item.subtotal - itemDiscount;
+      });
+    } else {
+      cartItems.forEach((item) => {
+        item.couponDiscount = 0;
+        item.finalAmount = item.subtotal;
+      });
     }
 
     const userData = await User.findById(userId).lean();
@@ -417,66 +456,7 @@ export const orderPlaced = async (req, res) => {
       addresses[0] ||
       null;
 
-    let cartItems = [];
-
-    for (const item of cart) {
-      const productDoc = await Product.findById(item._id).lean();
-
-      if (!productDoc) {
-        return res.status(HttpStatus.FORBIDDEN).redirect('/cart?error=product-not-found');
-      }
-
-      if (productDoc.stock < item.quantity) {
-        return res.redirect('/cart?error=out-of-stock');
-      }
-
-      cartItems.push({
-        product: item._id,
-        productName: item.name,
-        category: productDoc.category,
-
-        regularPrice: item.regularPrice,
-        unitPrice: item.price,
-        quantity: item.quantity,
-
-        subtotal: item.price * item.quantity,
-        productImage: [item.image],
-
-        stock: productDoc.stock,
-      });
-    }
-
-    if (discount > 0 && cartItems.length > 0) {
-      const totalItemsAmount = cartItems.reduce(
-        (sum, item) => sum + item.subtotal,
-        0,
-      );
-
-      let remainingDiscount = discount;
-
-      cartItems.forEach((item, index) => {
-        let itemDiscount;
-
-        if (index === cartItems.length - 1) {
-          itemDiscount = remainingDiscount;
-        } else {
-          itemDiscount = Math.round(
-            (item.subtotal / totalItemsAmount) * discount,
-          );
-          remainingDiscount -= itemDiscount;
-        }
-
-        item.couponDiscount = itemDiscount;
-        item.finalAmount = item.subtotal - itemDiscount;
-      });
-    } else {
-      cartItems.forEach((item) => {
-        item.couponDiscount = 0;
-        item.finalAmount = item.subtotal;
-      });
-    }
-
-    const newOrder = new Order({
+    const newOrder = await Order.create({
       user: userId,
       items: cartItems,
       total: subtotal,
@@ -490,33 +470,24 @@ export const orderPlaced = async (req, res) => {
         paymentMode === 'Razorpay' || paymentMode === 'WALLET'
           ? 'paid'
           : 'pending',
-
       status: 'processing',
       address: selectedAddress ? { ...selectedAddress } : null,
       finalPayable: payableAmount,
       razorpayOrderId,
     });
 
-    await newOrder.save();
     newOrder.orderId = `RN${newOrder._id.toString().slice(-6).toUpperCase()}`;
     await newOrder.save();
 
-    for (const item of cartItems) {
-      await Product.updateOne(
-        { _id: item.product, stock: { $gte: item.quantity } },
-        { $inc: { stock: -item.quantity } },
-      );
-    }
-
-    await clearPaymentState(userId);  
-    await Cart.deleteOne({ userId: userId });
+    await clearPaymentState(userId);
+    await Cart.deleteOne({ userId });
 
     req.session.paymentSuccess = null;
     req.session.razorpayPaymentId = null;
     req.session.appliedCoupon = null;
     req.session.discountValue = null;
 
-    res.render('placed', {
+    return res.render('placed', {
       user: userData,
       addresses,
       selectedAddress,
@@ -525,9 +496,46 @@ export const orderPlaced = async (req, res) => {
     });
   } catch (error) {
     console.error('Order Error:', error);
-    res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
+
+    for (const r of reservedProducts) {
+      await Product.updateOne(
+        { _id: r.productId },
+        { $inc: { stock: r.quantity } },
+      );
+    }
+
+    if (error.message === 'OUT_OF_STOCK') {
+      if (paymentMode === 'WALLET') {
+        await Wallet.updateOne(
+          { userId },
+          {
+            $inc: { balance: payableAmount },
+            $push: {
+              transactions: {
+                amount: payableAmount,
+                type: 'credit',
+                reason: 'Order failed - Out of stock',
+                createdAt: new Date(),
+              },
+            },
+          },
+        );
+      }
+
+      if (paymentMode === 'Razorpay' && paymentId) {
+        await razorpay.payments.refund(paymentId, {
+          amount: payableAmount * 100,
+        });
+      }
+
+      await clearPaymentState(userId);
+      return res.redirect('/cart?error=out-of-stock-refunded');
+    }
+
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
   }
 };
+
 
 export const paymentFailed = async (req, res) => {
   try {
