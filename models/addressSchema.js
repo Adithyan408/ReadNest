@@ -28,9 +28,25 @@ const addressSchema = new Schema({
         type: String,
         required: true,
       },
-      district: {
+    district: {
         type: String,
         required: true,
+        enum: [
+          'Thiruvananthapuram',
+          'Kollam',
+          'Pathanamthitta',
+          'Alappuzha',
+          'Kottayam',
+          'Idukki',
+          'Ernakulam',
+          'Thrissur',
+          'Palakkad',
+          'Malappuram',
+          'Kozhikode',
+          'Wayanad',
+          'Kannur',
+          'Kasaragod',
+        ],
       },
       state: {
         type: String,
