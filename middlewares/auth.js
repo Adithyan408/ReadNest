@@ -10,6 +10,7 @@ export const userAuth = (req, res, next) => {
                 res.redirect('/login');
             }
         })
+        // eslint-disable-next-line no-unused-vars
         .catch(error => {
             console.log('Error in User Authentication');
             res.status(500).send('Internal Server Error');

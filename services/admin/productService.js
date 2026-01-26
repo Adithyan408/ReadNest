@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import Product from '../../models/productsSchema.js';
 import Category from '../../models/categorySchema.js';
 import { HttpStatus } from '../../helpers/statusCodes.js';
@@ -111,6 +112,7 @@ export const postProducts = async (req, res) => {
     const page = 1;
     const skip = (page - 1) * limit;
 
+     
     const productData = await Product.find({})
       .sort({ productName: 1 })
       .skip(skip)

@@ -12,6 +12,7 @@ import { generateBreadcrumbs } from './middlewares/breadCrumb.js';
 import userSessionMiddleware from './middlewares/userSession.js';
 import errorHandler from './middlewares/errorHandler.js';
 import cartCountMiddleware from './helpers/cartCounter.js';
+import logger from './config/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,6 +21,11 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+app.use((req, res, next) => {
+  logger.http(`${req.method} ${req.url}`);
+  next();
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
