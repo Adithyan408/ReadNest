@@ -1,26 +1,26 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-undef */
 function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("-translate-x-full");
+  document.getElementById('sidebar').classList.toggle('-translate-x-full');
 }
+let { chartLabels, chartValues, netSales, discountAmount } = window.dashboardData;
 
-// --- Charts Initialization ---
-let chartLabels = <%- JSON.stringify(chartLabels) %>;
-let chartValues = <%- JSON.stringify(chartValues) %>;
 if (!chartLabels.length) {
-  chartLabels = ["No Data"];
+  chartLabels = ['No Data'];
   chartValues = [0];
 }
 
 const velocityCtx = document
-  .getElementById("monthlySalesChart")
-  .getContext("2d");
+  .getElementById('monthlySalesChart')
+  .getContext('2d');
 new Chart(velocityCtx, {
-  type: "bar",
+  type: 'bar',
   data: {
     labels: chartLabels,
     datasets: [
       {
         data: chartValues,
-        backgroundColor: "#4f46e5",
+        backgroundColor: '#4f46e5',
         borderRadius: 12,
         barThickness: 24,
       },
@@ -33,12 +33,12 @@ new Chart(velocityCtx, {
     scales: {
       x: {
         grid: { display: false },
-        ticks: { font: { size: 10, weight: "bold" }, color: "#94a3b8" },
+        ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' },
       },
       y: {
-        grid: { borderDash: [5, 5], color: "#f1f5f9" },
+        grid: { borderDash: [5, 5], color: '#f1f5f9' },
         ticks: {
-          callback: (v) => "₹" + v.toLocaleString(),
+          callback: (v) => '₹' + v.toLocaleString(),
           font: { size: 10 },
         },
       },
@@ -46,20 +46,20 @@ new Chart(velocityCtx, {
   },
 });
 
-const compositionCtx = document.getElementById("salesDiscountChart").getContext("2d");
+const compositionCtx = document.getElementById('salesDiscountChart').getContext('2d');
 new Chart(compositionCtx, {
-    type: "doughnut",
+    type: 'doughnut',
     data: {
-        labels: ["Net Sales", "Discount"],
+        labels: ['Net Sales', 'Discount'],
         datasets: [{
-            data: [<%= filtered.netSales %>, <%= filtered.discountAmount %>],
-            backgroundColor: ["#4f46e5", "#f43f5e"],
+            data: [netSales, discountAmount],
+            backgroundColor: ['#4f46e5', '#f43f5e'],
             borderWidth: 0,
-            hoverOffset: 10
-        }]
+            hoverOffset: 10,
+        }],
     },
     options: {
-        responsive: true, cutout: "75%",
-        plugins: { legend: { display: false } }
-    }
+        responsive: true, cutout: '75%',
+        plugins: { legend: { display: false } },
+    },
 });

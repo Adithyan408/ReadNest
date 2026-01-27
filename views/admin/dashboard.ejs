@@ -258,6 +258,15 @@
         </main>
     </div>
 
+    <script>
+        window.dashboardData = {
+        chartLabels: <%- JSON.stringify(chartLabels) %>,
+        chartValues: <%- JSON.stringify(chartValues) %>,
+        netSales: <%= filtered.netSales %>,
+        discountAmount: <%= filtered.discountAmount %>
+        };
+    </script>
+
     <script src="/admin/js/dashboard.js"></script>
 </body>
 </html>
