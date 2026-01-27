@@ -68,8 +68,13 @@
                         
                         <div>
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Identity</label>
-                            <input type="text" id="categoryName" name="categoryName" value="<%= category.categoryName %>" placeholder="Genre name" 
-                                   class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-gray-800 text-lg" />
+                            <input type="text" id="categoryName" name="categoryName"
+                            value="<%= category.categoryName %>"
+                            class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-gray-800 text-lg" />
+
+                        <p id="err-categoryName"
+                         class="text-rose-500 text-[11px] font-bold mt-2 hidden uppercase">
+                        </p>
                         </div>
 
                         <div class="bg-indigo-50/30 rounded-[2rem] p-6 sm:p-10 border border-indigo-100">
@@ -89,24 +94,44 @@
 
                                 <div class="md:col-span-2">
                                     <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-2 block">Discount Value (%)</label>
-                                    <input type="number" name="discountValue" step="0.01" min="0" max="100" 
-                                           value="<%= (category.offer && category.offer.discountValue !== undefined) ? category.offer.discountValue : '' %>"
-                                           class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-black text-gray-800 outline-none focus:border-indigo-500 transition-all" />
+                                    <input type="number" name="discountValue"
+                                    value="<%= category.offer ? category.offer.discountValue : '' %>"
+                                    class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-black text-gray-800 outline-none focus:border-indigo-500 transition-all" />
+
+                                <p id="err-discountValue"
+                                class="text-rose-500 text-[11px] font-bold mt-2 hidden uppercase">
+                                </p>
                                 </div>
 
                                 <div>
                                     <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-2 block">Start Date</label>
-                                    <input type="date" name="startDate" 
-                                           value="<%= (category.offer && category.offer.startDate) ? (typeof category.offer.startDate === 'string' ? category.offer.startDate : category.offer.startDate.toISOString().split('T')[0]) : '' %>"
-                                           class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all" />
-                                </div>
+                                    <input type="date" name="startDate"
+                                    value="<%= category.offer && category.offer.startDate
+                                        ? (typeof category.offer.startDate === 'string'
+                                        ? category.offer.startDate
+                                        : category.offer.startDate.toISOString().split('T')[0])
+                                        : '' %>"
+                                    class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all" />
+
+                                <p id="err-startDate"
+                                class="text-rose-500 text-[11px] font-bold mt-2 hidden uppercase">
+                                </p>
+                                 </div>
 
                                 <div>
                                     <label class="text-[10px] font-black text-gray-500 uppercase ml-1 mb-2 block">Expiry Date</label>
-                                    <input type="date" name="endDate" 
-                                           value="<%= (category.offer && category.offer.endDate) ? (typeof category.offer.endDate === 'string' ? category.offer.endDate : category.offer.endDate.toISOString().split('T')[0]) : '' %>"
-                                           class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all" />
-                                </div>
+                                   <input type="date" name="endDate"
+                                    value="<%= category.offer && category.offer.endDate
+                                        ? (typeof category.offer.endDate === 'string'
+                                        ? category.offer.endDate
+                                        : category.offer.endDate.toISOString().split('T')[0])
+                                        : '' %>"
+                                    class="w-full px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 outline-none focus:border-indigo-500 transition-all" />
+
+                                <p id="err-endDate"
+                                class="text-rose-500 text-[11px] font-bold mt-2 hidden uppercase">
+                                </p>
+                                 </div>
                             </div>
                         </div>
 
