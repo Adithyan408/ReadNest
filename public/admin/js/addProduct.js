@@ -142,8 +142,8 @@ form.onsubmit = (e) => {
   }
 
   // Image Validation
-  if (croppedFiles.length === 0)
-    isValid = setError('images', 'Add at least one cover image');
+  if (croppedFiles.length < 3)
+    isValid = setError('images', 'Add at least three cover images');
 
   if (!isValid) {
     e.preventDefault();

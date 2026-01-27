@@ -99,7 +99,7 @@ adminRouter.get('/updateProduct', nocache(), adminAuth, geteditProduct);
 adminRouter.post(
   '/updateProduct',
   adminAuth,
-  upload.array('productImage', 5),
+  upload.array('productImages', 5),
   editProduct,
 );
 adminRouter.get('/listProduct', nocache(), adminAuth, listProduct);

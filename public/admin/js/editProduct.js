@@ -2,16 +2,13 @@
 /* eslint-disable no-undef */
 //   const backendErrors = <%- JSON.stringify(errors || {}) %>;
 
-Object.keys(backendErrors).forEach((field) => {
-  showError(field, backendErrors[field]);
-});
 
-//       function clearAllErrors() {
-//   document.querySelectorAll("[id^='error-']").forEach((p) => {
-//     p.textContent = "";
-//     p.classList.add("hidden");
-//   });
-// }
+if (window.backendErrors && Object.keys(window.backendErrors).length) {
+  Object.keys(window.backendErrors).forEach((field) => {
+    showError(field, window.backendErrors[field]);
+  });
+}
+
 
 /* ---------------------------
          DELETE PRODUCT
@@ -259,14 +256,14 @@ window.startReplaceImage = startReplaceImage;
 window.removeExistingImage = removeExistingImage;
 
 function showError(field, message) {
-  const el = document.getElementById(`error-${field}`);
+  const el = document.getElementById(`err-${field}`);
   if (!el) return;
   el.textContent = message;
   el.classList.remove('hidden');
 }
 
 function hideError(field) {
-  const el = document.getElementById(`error-${field}`);
+  const el = document.getElementById(`err-${field}`);
   if (!el) return;
   el.textContent = '';
   el.classList.add('hidden');
@@ -274,14 +271,16 @@ function hideError(field) {
 
 function clearAllErrors() {
   document
-    .querySelectorAll("[id^='error-']")
+    .querySelectorAll("[id^='err-']")
     .forEach((p) => p.classList.add('hidden'));
 }
 
-const form = document.querySelector('form');
+const form = document.getElementById('productForm');
 
 form.addEventListener('submit', function (e) {
+  e.preventDefault(); 
   clearAllErrors();
+
   let hasError = false;
 
   const {
@@ -316,7 +315,7 @@ form.addEventListener('submit', function (e) {
 
   /* ---------- YEAR ---------- */
 
-  if (yearOfPublishing.value) {
+  if (yearOfPublishing && yearOfPublishing.value) {
     const year = Number(yearOfPublishing.value);
     const currentYear = new Date().getFullYear();
 
@@ -331,12 +330,14 @@ form.addEventListener('submit', function (e) {
 
   /* ---------- NUMBERS ---------- */
 
-  if (!regularPrice.value || Number(regularPrice.value) <= 0) {
-    showError('regularPrice', 'Enter a valid price');
+  const price = regularPrice.valueAsNumber;
+  if (Number.isNaN(price) || price <= 0) {
+    showError('regularPrice', 'Price must be greater than 0');
     hasError = true;
   }
 
-  if (stock.value === '' || Number(stock.value) < 0) {
+  const stockValue = stock.valueAsNumber;
+  if (Number.isNaN(stockValue) || stockValue < 0) {
     showError('stock', 'Stock cannot be negative');
     hasError = true;
   }
@@ -344,15 +345,9 @@ form.addEventListener('submit', function (e) {
   /* ---------- OFFER ---------- */
 
   if (isOffer.value === 'true') {
-    const discountRaw = discountValue.value.trim();
-    const discount = parseInt(discountRaw, 10);
+    const discount = parseInt(discountValue.value, 10);
 
-    if (
-      !discountRaw ||
-      Number.isNaN(discount) ||
-      discount < 1 ||
-      discount > 95
-    ) {
+    if (Number.isNaN(discount) || discount < 1 || discount > 95) {
       showError('discountValue', 'Discount must be between 1 and 95%');
       hasError = true;
     }
@@ -367,21 +362,10 @@ form.addEventListener('submit', function (e) {
       hasError = true;
     }
 
-    if (startDate.value) {
-      const start = new Date(startDate.value);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      start.setHours(0, 0, 0, 0);
-
-      if (start < today) {
-        showError('startDate', 'Start date cannot be in the past');
-        hasError = true;
-      }
-    }
-
     if (startDate.value && endDate.value) {
       const start = new Date(startDate.value);
       const end = new Date(endDate.value);
+
       start.setHours(0, 0, 0, 0);
       end.setHours(0, 0, 0, 0);
 
@@ -398,22 +382,28 @@ form.addEventListener('submit', function (e) {
     document.querySelectorAll("input[name='oldImages[]']").length || 0;
   const totalImages = oldImagesCount + newCroppedFiles.length;
 
-  if (totalImages === 0) {
-    showError('images', 'At least one product image is required');
+  if (totalImages < 3) {
+    showError('images', 'At least three product images are required');
     hasError = true;
   }
 
-  /* ---------- STOP SUBMIT ---------- */
+  /* ---------- STOP IF ERROR ---------- */
 
   if (hasError) {
-    e.preventDefault();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
 
   /* ---------- ATTACH FILES ---------- */
 
-  const dataTransfer = new DataTransfer();
-  newCroppedFiles.forEach((item) => dataTransfer.items.add(item.file));
-  fileInput.files = dataTransfer.files;
+  if (newCroppedFiles.length > 0) {
+    const dataTransfer = new DataTransfer();
+    newCroppedFiles.forEach((item) =>
+      dataTransfer.items.add(item.file),
+    );
+    fileInput.files = dataTransfer.files;
+  }
+
+  /* ---------- MANUAL SUBMIT ---------- */
+  form.submit();
 });
