@@ -29,7 +29,7 @@ async function addMoneyWithRazorpay() {
       return Swal.fire('Error', 'Payment gateway is busy', 'error');
 
     const options = {
-      key: '<%= process.env.RAZO_API_KEY %>',
+      key: RAZO_KEY,
       amount: data.order.amount,
       currency: 'INR',
       name: 'ReadNest Wallet',

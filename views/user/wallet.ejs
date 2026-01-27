@@ -172,6 +172,9 @@
 
     <%- include("../../views/partials/user/footer") %>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        const RAZO_KEY = '<%= process.env.RAZO_API_KEY %>';
+    </script>
     <script src="/user/js/wallet.js"></script>
 </body>
 </html>
