@@ -54,7 +54,6 @@ export const retryPayment = async (req, res) => {
       });
     }
 
-    /* ---------- 7 DAY RETRY LIMIT ---------- */
     const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
     if (Date.now() - attempt.createdAt.getTime() > SEVEN_DAYS) {
       return res.status(400).json({
@@ -63,7 +62,6 @@ export const retryPayment = async (req, res) => {
       });
     }
 
-    /* ---------- MAX RETRY LIMIT ---------- */
     if (attempt.retryCount >= 3) {
       return res.status(400).json({
         success: false,
@@ -71,7 +69,6 @@ export const retryPayment = async (req, res) => {
       });
     }
 
-    /* ---------- STOCK REVALIDATION ---------- */
     for (const item of attempt.items) {
       if (!item.product || item.product.stock < item.quantity) {
         return res.json({
@@ -81,7 +78,6 @@ export const retryPayment = async (req, res) => {
       }
     }
 
-    /* ---------- CREATE NEW RAZORPAY ORDER ---------- */
     const razorpayOrder = await razorpay.orders.create({
       amount: attempt.totals.finalPayable * 100,
       currency: 'INR',
@@ -122,13 +118,11 @@ export const verifyRetryPayment = async (req, res) => {
       .populate('items.product')
       .session(session);
 
-    /* ---------- BASIC VALIDATION ---------- */
     if (!attempt || attempt.status !== 'failed') {
       await session.abortTransaction();
       return res.status(400).json({ success: false, message: 'Invalid attempt' });
     }
 
-    /* ---------- EXPIRY CHECK ---------- */
     if (attempt.expiresAt < new Date()) {
       attempt.status = 'expired';
       await attempt.save({ session });
@@ -140,7 +134,6 @@ export const verifyRetryPayment = async (req, res) => {
       });
     }
 
-    /* ---------- VERIFY RAZORPAY SIGNATURE ---------- */
     const sign = `${razorpay_order_id}|${razorpay_payment_id}`;
 
     const expectedSign = crypto
@@ -153,7 +146,6 @@ export const verifyRetryPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Verification failed' });
     }
 
-    /* ---------- STOCK REVALIDATION ---------- */
     for (const item of attempt.items) {
       if (!item.product || item.product.stock < item.quantity) {
         await session.abortTransaction();
@@ -164,7 +156,6 @@ export const verifyRetryPayment = async (req, res) => {
       }
     }
 
-    /* ---------- BUILD ORDER ITEMS ---------- */
     const orderItems = attempt.items.map((item) => ({
       product: item.product._id,
       category: item.product.category,
@@ -176,7 +167,6 @@ export const verifyRetryPayment = async (req, res) => {
       stock: item.product.stock - item.quantity,
     }));
 
-    /* ---------- CREATE ORDER ---------- */
     const order = await Order.create(
       [
         {
@@ -195,7 +185,6 @@ export const verifyRetryPayment = async (req, res) => {
       { session },
     );
 
-    /* ---------- UPDATE STOCK ---------- */
     for (const item of attempt.items) {
       await Product.updateOne(
         { _id: item.product._id, stock: { $gte: item.quantity } },
@@ -204,12 +193,10 @@ export const verifyRetryPayment = async (req, res) => {
       );
     }
 
-    /* ---------- MARK ATTEMPT CONVERTED ---------- */
     attempt.status = 'converted';
     attempt.convertedOrder = order[0]._id;
     await attempt.save({ session });
 
-    /* ---------- CLEANUP OTHER FAILED ATTEMPTS ---------- */
     await paymentAttempt.deleteMany(
       {
         user: attempt.user,
