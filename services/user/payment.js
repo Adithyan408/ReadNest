@@ -18,6 +18,8 @@ import {
 import { normalizeCoupons } from '../../helpers/couponNormal.js';
 import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
 import { HttpStatus } from '../../helpers/statusCodes.js';
+import PaymentAttempt from '../../models/failedPayment.js';
+import { createPaymentAttempt } from './paymentAttemptService.js';
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZO_API_KEY,
@@ -27,15 +29,20 @@ const razorpay = new Razorpay({
 export const loadPayment = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-    if (!userId) return res.status(HttpStatus.NOT_FOUND).redirect('/login');
+    if (!userId) {
+      return res.status(HttpStatus.NOT_FOUND).redirect('/login');
+    }
 
-    const isRetry = req.query.retry === 'true';
+    const retryType = req.query.retry;
+   
+    if (!retryType) {
+      await clearPaymentState(userId);
+    }
 
-    if (isRetry) {
+    if (retryType === 'redis') {
       const cached = await getPaymentState(userId);
-
       if (!cached) {
-        return res.status(HttpStatus.BAD_REQUEST).redirect('/cart?error=retry-expired');
+        return res.redirect('/orders?error=retry-expired');
       }
 
       const userData = await User.findById(userId).lean();
@@ -58,7 +65,6 @@ export const loadPayment = async (req, res) => {
         user: userData,
         addresses,
         selectedAddress,
-
         cart: cached.cart,
         subtotal: cached.subtotal,
         discount: cached.discount,
@@ -69,11 +75,88 @@ export const loadPayment = async (req, res) => {
         walletBalance,
         isWalletUsable,
         razorpayOrderId: cached.razorpayOrderId,
-
         appliedCoupon: cached.appliedCoupon,
         selectedPaymentMethod: cached.selectedPaymentMethod,
       });
     }
+
+    if (retryType === 'db') {
+      const { orderId } = req.query;
+
+      const order = await Order.findOne({
+        orderId,
+        user: userId,
+        paymentStatus: 'failed',
+      }).lean();
+
+      if (!order) {
+        return res.redirect('/orders');
+      }
+
+      let coupons = [];
+        let appliedCoupon = null;
+         let discount = order.discount || 0;
+
+if (order.couponCode) {
+  const coupon = await Coupon.findOne({
+    code: order.couponCode,
+  }).lean();
+
+  if (coupon) {
+    const alreadyUsed = await couponUsage.findOne({
+      userId,
+      couponId: coupon._id,
+      used: true,
+      orderId: { $ne: order._id }, 
+    });
+
+    if (!alreadyUsed) {
+      
+      coupons = [coupon];
+      appliedCoupon = coupon.code;
+    } else {
+      coupons = [];
+      appliedCoupon = null;
+      discount = 0;
+    }
+  }
+}
+
+      for (const item of order.items) {
+        const product = await Product.findById(item.product).lean();
+        if (!product || product.stock < item.quantity) {
+          return res.redirect(
+            `/orders/${order.orderId}?error=item-unavailable`,
+          );
+        }
+      }
+
+      const cart = order.items.map((item) => ({
+        _id: item.product,
+        name: item.productName,
+        image: item.productImage?.[0],
+        quantity: item.quantity,
+        price: item.unitPrice,
+        regularPrice: item.unitPrice,
+        offerPrice: null,
+      }));
+
+      await savePaymentState(userId, {
+        cart,
+        subtotal: order.subtotal,
+        discount,
+        shippingCharge: order.shippingCharge,
+        payableAmount:   order.subtotal - discount + order.shippingCharge,
+        coupons,
+        appliedCoupon,
+        selectedPaymentMethod: order.paymentMethod || null,
+        razorpayOrderId: null,
+        createdAt: Date.now(),
+      });
+
+      return res.redirect(303, '/checkout/payment?retry=redis');
+    }
+
 
     const calculateOffer = async (product) => {
       const now = new Date();
@@ -116,32 +199,62 @@ export const loadPayment = async (req, res) => {
     };
 
     const userData = await User.findById(userId).lean();
-    const cartDoc = await Cart.findOne({ userId }).lean();
+    const redisFallback = await getPaymentState(userId);
 
-    if (!cartDoc?.items?.length) {
-      return res.status(HttpStatus.BAD_REQUEST).redirect('/cart');
+    if (redisFallback) {
+      const userData = await User.findById(userId).lean();
+      const addressDoc = await Address.findOne({ userId }).lean();
+      const addresses = addressDoc?.addresses || [];
+
+      const selectedAddress =
+        addresses.find(
+          (a) => a._id.toString() === req.session.selectedAddressId,
+        ) ||
+        addresses.find((a) => a.addressLabel === 'Home') ||
+        addresses[0] ||
+        null;
+
+      const walletDoc = await Wallet.findOne({ user: userId }).lean();
+      const walletBalance = walletDoc?.balance || 0;
+      const isWalletUsable = walletBalance >= redisFallback.payableAmount;
+
+      return res.render('payment', {
+        user: userData,
+        addresses,
+        selectedAddress,
+        cart: redisFallback.cart,
+        subtotal: redisFallback.subtotal,
+        discount: redisFallback.discount,
+        shippingCharge: redisFallback.shippingCharge,
+        payableAmount: redisFallback.payableAmount,
+        coupons: redisFallback.coupons,
+        totalAmount: redisFallback.subtotal,
+        walletBalance,
+        isWalletUsable,
+        razorpayOrderId: redisFallback.razorpayOrderId,
+        appliedCoupon: redisFallback.appliedCoupon,
+        selectedPaymentMethod: redisFallback.selectedPaymentMethod,
+      });
     }
 
-    let cart = [];
-   
-      const fullCart = await Cart.findOne({ userId })
-        .populate('items.productId')
-        .lean();
+    const fullCart = await Cart.findOne({ userId })
+      .populate('items.productId')
+      .lean();
 
-      cart = await Promise.all(
-        fullCart.items.map(async (i) => {
-          const offer = await calculateOffer(i.productId);
-          return {
-            _id: i.productId._id,
-            name: i.productId.productName,
-            image: i.productId.productImage[0],
-            quantity: i.quantity,
-            price: offer.finalPrice,
-            regularPrice: offer.regularPrice,
-            offerPrice: offer.offerPrice,
-          };
-        }),
-      );
+    const cart = await Promise.all(
+      fullCart.items.map(async (i) => {
+        const offer = await calculateOffer(i.productId);
+        return {
+          _id: i.productId._id,
+          name: i.productId.productName,
+          image: i.productId.productImage[0],
+          quantity: i.quantity,
+          price: offer.finalPrice,
+          regularPrice: offer.regularPrice,
+          offerPrice: offer.offerPrice,
+        };
+      }),
+    );
 
     const subtotal = cart.reduce(
       (sum, item) => sum + item.price * item.quantity,
@@ -152,50 +265,9 @@ export const loadPayment = async (req, res) => {
     const payableAmount = subtotal + shippingCharge;
 
     const now = new Date();
-    const coupons = await Coupon.find({
-      expiry: { $gte: now },
-    }).lean();
+    const coupons = await Coupon.find({ expiry: { $gte: now } }).lean();
 
-    const referralRewards = await ReferralReward.find({
-      referrerId: userId,
-      used: false,
-    }).select('couponCode');
-
-    const availableReferralCodes = referralRewards.map((r) => r.couponCode);
-
-    const usedCoupons = await couponUsage
-      .find({ userId, used: true })
-      .select('couponId')
-      .lean();
-
-    const usedCouponIds = usedCoupons.map((c) => c.couponId.toString());
-
-    const applicableCoupons = coupons.filter((coupon) => {
-      const couponId = coupon._id.toString();
-      const minPurchase = coupon.minPurchase || 0;
-
-      if (usedCouponIds.includes(couponId)) {
-        return false;
-      }
-
-      if (subtotal < minPurchase) {
-        return false;
-      }
-
-      if (coupon.type === 'referral') {
-        if (!availableReferralCodes.includes(coupon.code)) {
-          return false;
-        }
-
-        if (coupon.userId?.toString() !== userId.toString()) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-
-    const normalizedCoupons = normalizeCoupons(applicableCoupons);
+    const normalizedCoupons = normalizeCoupons(coupons);
 
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
@@ -263,7 +335,9 @@ export const postCoupon = async (req, res) => {
 
     const cached = await getPaymentState(userId);
     if (!cached) {
-      return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: 'Payment session expired' });
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ success: false, message: 'Payment session expired' });
     }
 
     const couponDoc = await Coupon.findOne({
@@ -536,20 +610,14 @@ export const orderPlaced = async (req, res) => {
   }
 };
 
-
 export const paymentFailed = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-    if (!userId) return res.status(HttpStatus.UNAUTHORIZED).redirect('/login');
+    if (!userId) {
+      return res.status(401).redirect('/login');
+    }
 
     const cached = await getPaymentState(userId);
-
-    if (req.query.paymentMethod && cached) {
-      await savePaymentState(userId, {
-        ...cached,
-        selectedPaymentMethod: req.query.paymentMethod,
-      });
-    }
 
     if (!cached) {
       return res.render('failedPayment', {
@@ -560,30 +628,100 @@ export const paymentFailed = async (req, res) => {
         retryExpired: true,
       });
     }
+    const paymentMethod =
+      req.query.paymentMethod || cached.selectedPaymentMethod;
 
-    if (cached && req.query.paymentMethod) {
+    if (paymentMethod) {
       await savePaymentState(userId, {
         ...cached,
-        selectedPaymentMethod: req.query.paymentMethod,
+        selectedPaymentMethod: paymentMethod,
       });
     }
 
+    const existingAttempt = await PaymentAttempt.findOne({
+      user: userId,
+      status: 'failed',
+      createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }, 
+    });
+
+  
+    const attemptItems = [];
+
+    for (const item of cached.cart) {
+      const productDoc = await Product.findById(item._id)
+        .select('category')
+        .lean();
+
+      attemptItems.push({
+        product: item._id,
+        productName: item.name,
+        category: productDoc?.category || 'Unknown', 
+        regularPrice: item.regularPrice || item.price,
+        unitPrice: item.price,
+        quantity: item.quantity,
+        subtotal: item.price * item.quantity,
+        productImage: [item.image],
+        stock: item.quantity, 
+      });
+    }
+
+    if (!existingAttempt) {
+      await createPaymentAttempt({
+        user: userId,
+        items: attemptItems,
+        totals: {
+          subtotal: cached.subtotal,
+          discount: cached.discount,
+          shippingCharge: cached.shippingCharge,
+          finalPayable: cached.payableAmount,
+        },
+        couponCode: cached.appliedCoupon || null,
+        paymentMethod,
+        failureReason:
+          req.query.reason || 'Payment failed due to gateway error',
+      });
+    }
+    await Order.create({
+      user: userId,
+      items: attemptItems.map((i) => ({
+        product: i.product,
+        productName: i.productName,
+        category: i.category, 
+        regularPrice: i.regularPrice,
+        unitPrice: i.unitPrice,
+        quantity: i.quantity,
+        subtotal: i.subtotal,
+        productImage: i.productImage,
+        stock: i.stock,
+        couponDiscount: 0,
+        finalAmount: i.subtotal,
+      })),
+      subtotal: cached.subtotal,
+      discount: cached.discount,
+      shippingCharge: cached.shippingCharge,
+      finalPayable: cached.payableAmount,
+      couponCode: cached.appliedCoupon || null,
+      paymentMethod,
+      paymentStatus: 'failed', 
+      status: 'processing', 
+      address: cached.selectedAddress || null,
+    });
+
+    
     req.session.paymentSuccess = null;
     req.session.razorpayPaymentId = null;
 
-    const failureReason =
-      req.query.reason || 'Your payment could not be completed.';
-
-    res.render('failedPayment', {
+    
+    return res.render('failedPayment', {
       user: req.session.user,
-      reason: failureReason,
+      reason: req.query.reason || 'Your payment could not be completed.',
       retryUrl: '/checkout/payment?retry=true',
       retryExpired: false,
       payableAmount: cached.payableAmount,
     });
   } catch (error) {
     console.error('Payment Failed Controller Error:', error);
-    res.render('notFound');
+    return res.render('notFound');
   }
 };
 
@@ -671,11 +809,12 @@ export const verifyRazorpayPayment = async (req, res) => {
     req.session.paymentSuccess = true;
     req.session.razorpayPaymentId = razorpay_payment_id;
 
-    return res.json({ success: true }); 
-
+    return res.json({ success: true });
   } catch (error) {
     console.error('Payment Verification Error:', error);
-    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
+    return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({ success: false });
   }
 };
 

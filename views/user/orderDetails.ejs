@@ -43,6 +43,15 @@
                 >
                     <%= order.status %>
                 </button>
+                <% if (isRetryEligible) { %>
+  <button
+    onclick="retryPayment('<%= order.orderId %>')"
+    class="mt-2 px-5 py-2 rounded-full bg-red-600 text-white text-xs font-black uppercase tracking-wider shadow hover:bg-red-700 transition active:scale-95"
+  >
+    <i class="fa-solid fa-rotate-right mr-2"></i> Retry Payment
+  </button>
+<% } %>
+
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -58,28 +67,46 @@
                     </div>
                 </div>
 
-                <div class="text-sm">
-                    <h3 class="font-bold text-gray-900 border-b border-gray-50 pb-2 mb-3">Delivery Info</h3>
-                    <p class="text-gray-600 leading-relaxed">
-                        <span class="font-bold text-gray-800">Status:</span> <%= order.paymentId ? "Prepaid" : "Cash on Delivery" %><br>
-                        <% if (order.createdAt) { 
-                            let d = new Date(order.createdAt); d.setDate(d.getDate() + 6);
-                        %>
-                        <span class="font-bold text-gray-800">Est. Delivery:</span> <%= d.toDateString() %>
-                        <% } %>
-                    </p>
-                    <div class="mt-4">
-                        <% if (isInvoiceAvailable) { %>
-                            <button onclick="downloadInvoice('<%= order.orderId %>')" class="w-full lg:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-blue-700 transition">
-                                <i class="fa-solid fa-download mr-2"></i> INVOICE
-                            </button>
-                        <% } else { %>
-                            <button disabled class="w-full lg:w-auto bg-gray-100 text-gray-400 px-4 py-2 rounded-lg font-bold text-xs cursor-not-allowed">
-                                INVOICE PENDING
-                            </button>
-                        <% } %>
-                    </div>
-                </div>
+               <div class="text-sm">
+  <h3 class="font-bold text-gray-900 border-b border-gray-50 pb-2 mb-3">
+    Delivery Info
+  </h3>
+
+  <p class="text-gray-600 leading-relaxed">
+    <span class="font-bold text-gray-800">Status:</span>
+    <%= order.paymentId ? "Prepaid" : "Cash on Delivery" %>
+    <br>
+
+    <% if (order.createdAt) { 
+      const d = new Date(order.createdAt);
+      d.setDate(d.getDate() + 6);
+    %>
+      <span class="font-bold text-gray-800">Est. Delivery:</span>
+      <%= d.toDateString() %>
+    <% } %>
+  </p>
+
+  <!-- Invoice Section -->
+  <div class="mt-4">
+    <% if (!isRetryEligible) { %>
+
+      <% if (isInvoiceAvailable) { %>
+        <button
+          onclick="downloadInvoice('<%= order.orderId %>')"
+          class="w-full lg:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-blue-700 transition">
+          <i class="fa-solid fa-download mr-2"></i> INVOICE
+        </button>
+      <% } else { %>
+        <button
+          disabled
+          class="w-full lg:w-auto bg-gray-100 text-gray-400 px-4 py-2 rounded-lg font-bold text-xs cursor-not-allowed">
+          INVOICE PENDING
+        </button>
+      <% } %>
+
+    <% } %>
+  </div>
+</div>
 
                 <div class="text-sm">
                     <h3 class="font-bold text-gray-900 border-b border-gray-50 pb-2 mb-3">Shipping Address</h3>
@@ -107,17 +134,22 @@
                             %>
                             <img src="<%= imgSrc %>" class="w-20 h-20 lg:w-24 lg:h-24 object-cover rounded-xl border border-gray-100" />
                             
-                            <span class="sm:hidden px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter bg-gray-100 text-gray-600">
-                                <%= item.status %>
-                            </span>
+                           <% if (!isRetryEligible) { %>
+  <span class="hidden sm:inline-block px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter bg-gray-100 text-gray-600">
+    <%= item.status %>
+  </span>
+<% } %>
+
                         </div>
 
                         <div class="flex-1">
                             <div class="flex justify-between items-start">
                                 <h3 class="font-bold text-gray-900 lg:text-lg"><%= item.productName %></h3>
-                                <span class="hidden sm:inline-block px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter bg-gray-100 text-gray-600">
-                                    <%= item.status %>
-                                </span>
+                                <% if (!isRetryEligible) { %>
+  <span class="sm:hidden px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter bg-gray-100 text-gray-600">
+    <%= item.status %>
+  </span>
+<% } %>
                             </div>
 
                             <div class="mt-2 grid grid-cols-2 sm:flex sm:gap-8 text-sm">
@@ -127,15 +159,30 @@
                             </div>
 
                             <div class="mt-6 flex flex-wrap gap-3">
-                                <% if (!item.returnStatus || item.returnStatus === "none") { %>
-                                    <% if ((item.status === "ordered" || item.status === "shipped") && canCancelIndividually) { %>
-                                        <button onclick="confirmCancel('<%= order.orderId %>', '<%= item._id %>')" class="flex-1 sm:flex-none bg-red-50 text-red-600 px-5 py-2 rounded-lg font-bold text-xs hover:bg-red-100 transition uppercase tracking-wider">Cancel</button>
-                                    <% } %>
+                               <% if (!isRetryEligible) { %>
 
-                                    <% if (item.status === "delivered") { %>
-                                        <button onclick="confirmReturn('<%= order.orderId %>', '<%= item._id %>')" class="flex-1 sm:flex-none bg-orange-50 text-orange-600 px-5 py-2 rounded-lg font-bold text-xs hover:bg-orange-100 transition uppercase tracking-wider">Return</button>
-                                    <% } %>
-                                <% } %>
+                     <% if (!item.returnStatus || item.returnStatus === "none") { %>
+
+                       <% if ((item.status === "ordered" || item.status === "shipped") && canCancelIndividually) { %>
+                         <button
+                           onclick="confirmCancel('<%= order.orderId %>', '<%= item._id %>')"
+                           class="flex-1 sm:flex-none bg-red-50 text-red-600 px-5 py-2 rounded-lg font-bold text-xs hover:bg-red-100 transition uppercase tracking-wider">
+                           Cancel
+                         </button>
+                       <% } %>
+
+                       <% if (item.status === "delivered") { %>
+                         <button
+                           onclick="confirmReturn('<%= order.orderId %>', '<%= item._id %>')"
+                           class="flex-1 sm:flex-none bg-orange-50 text-orange-600 px-5 py-2 rounded-lg font-bold text-xs hover:bg-orange-100 transition uppercase tracking-wider">
+                           Return
+                         </button>
+                       <% } %>
+
+                     <% } %>
+
+                   <% } %>
+
 
                                 <% if (item.status !== "delivered" && !canCancelIndividually ) { %>
                                     <p class="text-[10px] font-medium text-gray-400 italic">Individual cancellation restricted by coupon.</p>

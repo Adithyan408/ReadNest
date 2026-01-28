@@ -9,6 +9,7 @@ import {
 } from '../../middlewares/walletHandler.js';
 import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
 import { HttpStatus } from '../../helpers/statusCodes.js';
+import User from '../../models/userSchema.js';
 
 export const getOrderDetailsPage = async (req, res) => {
   try {
@@ -56,11 +57,19 @@ export const getOrderDetailsPage = async (req, res) => {
       }
     }
 
+    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+
+  const isRetryEligible =
+  order.paymentStatus === 'failed' &&
+  !['cancelled'].includes(order.status) &&
+  Date.now() - new Date(order.createdAt).getTime() <= SEVEN_DAYS;
+
     return res.render('orderDetails', {
       order,
       selectedAddress: order.address,
       isInvoiceAvailable,
       canCancelIndividually,
+      isRetryEligible,
     });
   } catch (err) {
     console.error('Order Details Error:', err);
@@ -577,39 +586,46 @@ Phone: ${a.phone}`;
   }
 };
 
+
 export const getListOrders = async (req, res) => {
   try {
-    const userId = req.session.user?._id;
+    const sessionUser = req.session.user;
 
-    const search = req.query.search?.trim() || '';
-
-    let query = { user: userId };
-
-    if (search) {
-      query.$expr = {
-        $regexMatch: {
-          input: { $toString: '$_id' },
-          regex: search,
-          options: 'i',
-        },
-      };
+    if (!sessionUser) {
+      return res.redirect('/login');
     }
 
-    const orders = await Order.find(query).sort({ createdAt: -1 }).lean();
+    const userId = sessionUser._id;
+    const search = req.query.search?.trim() || '';
+
+    let query = {
+      user: userId,
+    };
+
+    // Search by YOUR orderId field (UUID)
+    if (search) {
+      query.orderId = { $regex: search, $options: 'i' };
+    }
+
+    const orders = await Order.find(query)
+      .sort({ createdAt: -1 })
+      .lean();
 
     let noResultsMessage = null;
-
     if (search && orders.length === 0) {
       noResultsMessage = `No orders found with Order ID "${search}"`;
     }
 
     res.render('orders', {
+      user: sessionUser,
       orders,
       search,
       noResultsMessage,
     });
+
   } catch (err) {
-    console.log('Orders Page Error:', err);
-    res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
+    console.error('Orders Page Error:', err);
+    res.status(500).render('notFound');
   }
 };
+

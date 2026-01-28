@@ -86,3 +86,19 @@ function confirmReturn(orderId, itemId) {
     }
   });
 }
+
+function retryPayment(orderId) {
+  Swal.fire({
+    title: 'Retry Payment?',
+    text: 'You will be redirected to payment checkout.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Retry',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#dc2626',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.location.href = `/checkout/payment?retry=db&orderId=${orderId}`;
+    }
+  });
+}

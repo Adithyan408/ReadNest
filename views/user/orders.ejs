@@ -109,15 +109,38 @@
                             </h2>
                         </div>
 
-                        <%
-                            let badgeStyles = "bg-green-100 text-green-700 border-green-200";
-                            if(order.status === 'processing') badgeStyles = "bg-amber-100 text-amber-700 border-amber-200";
-                            else if(order.status === 'cancelled') badgeStyles = "bg-rose-100 text-rose-700 border-rose-200";
-                            else if(order.status === 'partially_cancelled') badgeStyles = "bg-orange-100 text-orange-700 border-orange-200";
-                        %>
-                        <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border <%= badgeStyles %> shadow-sm">
-                            <%= order.status %>
-                        </span>
+<%
+  let badgeStyles = "bg-green-100 text-green-700 border-green-200";
+  let statusIcon = "";
+  let statusText = order.status.replace('_', ' ');
+
+  if (order.paymentStatus === 'failed') {
+    badgeStyles = "bg-red-100 text-red-700 border-red-300";
+    statusIcon = "fa-circle-xmark";
+    statusText = "Payment Failed";
+  } 
+  else if (order.status === 'processing') {
+    badgeStyles = "bg-amber-100 text-amber-700 border-amber-200";
+    statusText = "Processing";
+  } 
+  else if (order.status === 'cancelled') {
+    badgeStyles = "bg-rose-100 text-rose-700 border-rose-200";
+    statusText = "Cancelled";
+  } 
+  else if (order.status === 'partially_cancelled') {
+    badgeStyles = "bg-orange-100 text-orange-700 border-orange-200";
+    statusText = "Partially Cancelled";
+  }
+%>
+
+
+                        <span class="flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border <%= badgeStyles %> shadow-sm">
+  <% if (statusIcon) { %>
+    <i class="fa-solid <%= statusIcon %> text-red-600"></i>
+  <% } %>
+  <%= statusText %>
+</span>
+
                     </div>
 
                     <div class="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
