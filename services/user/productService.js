@@ -212,8 +212,7 @@ export const productDetails = async (req, res) => {
   try {
     const productId = req.query.id;
     const page = req.query.page || 1;
-    const userId = req.session.user._id;
-
+    const userId = req.session.user?._id;
     const q = { ...req.query };
     delete q.id;
 

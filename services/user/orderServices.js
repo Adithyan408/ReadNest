@@ -607,7 +607,6 @@ export const getListOrders = async (req, res) => {
       user: userId,
     };
 
-    // Search by YOUR orderId field (UUID)
     if (search) {
       query.orderId = { $regex: search, $options: 'i' };
     }
@@ -627,6 +626,6 @@ export const getListOrders = async (req, res) => {
     });
   } catch (err) {
     console.error('Orders Page Error:', err);
-    res.status(500).render('notFound');
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
   }
 };
