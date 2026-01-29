@@ -34,7 +34,7 @@ export const loadPayment = async (req, res) => {
     }
 
     const retryType = req.query.retry;
-   
+
     if (!retryType) {
       await clearPaymentState(userId);
     }
@@ -94,33 +94,32 @@ export const loadPayment = async (req, res) => {
       }
 
       let coupons = [];
-        let appliedCoupon = null;
-         let discount = order.discount || 0;
+      let appliedCoupon = null;
+      let discount = order.discount || 0;
 
-if (order.couponCode) {
-  const coupon = await Coupon.findOne({
-    code: order.couponCode,
-  }).lean();
+      if (order.couponCode) {
+        const coupon = await Coupon.findOne({
+          code: order.couponCode,
+        }).lean();
 
-  if (coupon) {
-    const alreadyUsed = await couponUsage.findOne({
-      userId,
-      couponId: coupon._id,
-      used: true,
-      orderId: { $ne: order._id }, 
-    });
+        if (coupon) {
+          const alreadyUsed = await couponUsage.findOne({
+            userId,
+            couponId: coupon._id,
+            used: true,
+            orderId: { $ne: order._id },
+          });
 
-    if (!alreadyUsed) {
-      
-      coupons = [coupon];
-      appliedCoupon = coupon.code;
-    } else {
-      coupons = [];
-      appliedCoupon = null;
-      discount = 0;
-    }
-  }
-}
+          if (!alreadyUsed) {
+            coupons = [coupon];
+            appliedCoupon = coupon.code;
+          } else {
+            coupons = [];
+            appliedCoupon = null;
+            discount = 0;
+          }
+        }
+      }
 
       for (const item of order.items) {
         const product = await Product.findById(item.product).lean();
@@ -146,7 +145,7 @@ if (order.couponCode) {
         subtotal: order.subtotal,
         discount,
         shippingCharge: order.shippingCharge,
-        payableAmount:   order.subtotal - discount + order.shippingCharge,
+        payableAmount: order.subtotal - discount + order.shippingCharge,
         coupons,
         appliedCoupon,
         selectedPaymentMethod: order.paymentMethod || null,
@@ -156,7 +155,6 @@ if (order.couponCode) {
 
       return res.redirect(303, '/checkout/payment?retry=redis');
     }
-
 
     const calculateOffer = async (product) => {
       const now = new Date();
@@ -265,9 +263,51 @@ if (order.couponCode) {
     const payableAmount = subtotal + shippingCharge;
 
     const now = new Date();
-    const coupons = await Coupon.find({ expiry: { $gte: now } }).lean();
+    
+     const coupons = await Coupon.find({
+      expiry: { $gte: now },
+    }).lean();
 
-    const normalizedCoupons = normalizeCoupons(coupons);
+    const referralRewards = await ReferralReward.find({
+      referrerId: userId,
+      used: false,
+    }).select('couponCode');
+
+    const availableReferralCodes = referralRewards.map((r) => r.couponCode);
+
+    const usedCoupons = await couponUsage
+      .find({ userId, used: true })
+      .select('couponId')
+      .lean();
+
+    const usedCouponIds = usedCoupons.map((c) => c.couponId.toString());
+
+    const applicableCoupons = coupons.filter((coupon) => {
+      const couponId = coupon._id.toString();
+      const minPurchase = coupon.minPurchase || 0;
+
+      if (usedCouponIds.includes(couponId)) {
+        return false;
+      }
+
+      if (subtotal < minPurchase) {
+        return false;
+      }
+
+      if (coupon.type === 'referral') {
+        if (!availableReferralCodes.includes(coupon.code)) {
+          return false;
+        }
+
+        if (coupon.userId?.toString() !== userId.toString()) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    const normalizedCoupons = normalizeCoupons(applicableCoupons);
 
     const addressDoc = await Address.findOne({ userId }).lean();
     const addresses = addressDoc?.addresses || [];
@@ -373,6 +413,19 @@ export const postCoupon = async (req, res) => {
           message: 'Invalid or already used referral coupon',
         });
       }
+    }
+
+    const alreadyUsed = await couponUsage.findOne({
+      userId,
+      couponId: couponDoc._id,
+      used: true,
+    });
+
+    if (alreadyUsed) {
+      return res.json({
+        success: false,
+        message: 'You have already used this coupon',
+      });
     }
 
     const percentageDiscount = Math.round(
@@ -641,10 +694,9 @@ export const paymentFailed = async (req, res) => {
     const existingAttempt = await PaymentAttempt.findOne({
       user: userId,
       status: 'failed',
-      createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }, 
+      createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) },
     });
 
-  
     const attemptItems = [];
 
     for (const item of cached.cart) {
@@ -655,13 +707,13 @@ export const paymentFailed = async (req, res) => {
       attemptItems.push({
         product: item._id,
         productName: item.name,
-        category: productDoc?.category || 'Unknown', 
+        category: productDoc?.category || 'Unknown',
         regularPrice: item.regularPrice || item.price,
         unitPrice: item.price,
         quantity: item.quantity,
         subtotal: item.price * item.quantity,
         productImage: [item.image],
-        stock: item.quantity, 
+        stock: item.quantity,
       });
     }
 
@@ -686,7 +738,7 @@ export const paymentFailed = async (req, res) => {
       items: attemptItems.map((i) => ({
         product: i.product,
         productName: i.productName,
-        category: i.category, 
+        category: i.category,
         regularPrice: i.regularPrice,
         unitPrice: i.unitPrice,
         quantity: i.quantity,
@@ -702,16 +754,14 @@ export const paymentFailed = async (req, res) => {
       finalPayable: cached.payableAmount,
       couponCode: cached.appliedCoupon || null,
       paymentMethod,
-      paymentStatus: 'failed', 
-      status: 'processing', 
+      paymentStatus: 'failed',
+      status: 'processing',
       address: cached.selectedAddress || null,
     });
 
-    
     req.session.paymentSuccess = null;
     req.session.razorpayPaymentId = null;
 
-    
     return res.render('failedPayment', {
       user: req.session.user,
       reason: req.query.reason || 'Your payment could not be completed.',

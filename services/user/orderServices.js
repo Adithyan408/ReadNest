@@ -4,9 +4,7 @@ import Coupon from '../../models/couponSchema.js';
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
-import {
-  creditWallet,
-} from '../../middlewares/walletHandler.js';
+import { creditWallet } from '../../middlewares/walletHandler.js';
 import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
 import { HttpStatus } from '../../helpers/statusCodes.js';
 import User from '../../models/userSchema.js';
@@ -31,12 +29,18 @@ export const getOrderDetailsPage = async (req, res) => {
 
     let isInvoiceAvailable = false;
 
-    if (order.paymentMethod === 'COD') {
-      isInvoiceAvailable = order.items.some(
-        (item) => item.status === 'delivered',
-      );
-    } else {
-      isInvoiceAvailable = true;
+    const allItemsCancelled = order.items.every(
+      (item) => item.status === 'cancelled',
+    );
+
+    if (!allItemsCancelled) {
+      if (order.paymentMethod === 'COD') {
+        isInvoiceAvailable = order.items.some(
+          (item) => item.status === 'delivered',
+        );
+      } else {
+        isInvoiceAvailable = true;
+      }
     }
 
     let canCancelIndividually = true;
@@ -59,10 +63,10 @@ export const getOrderDetailsPage = async (req, res) => {
 
     const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
 
-  const isRetryEligible =
-  order.paymentStatus === 'failed' &&
-  !['cancelled'].includes(order.status) &&
-  Date.now() - new Date(order.createdAt).getTime() <= SEVEN_DAYS;
+    const isRetryEligible =
+      order.paymentStatus === 'failed' &&
+      !['cancelled'].includes(order.status) &&
+      Date.now() - new Date(order.createdAt).getTime() <= SEVEN_DAYS;
 
     return res.render('orderDetails', {
       order,
@@ -131,12 +135,12 @@ export const cancelOrderItem = async (req, res) => {
       (sum, i) => sum + safeNumber(i.subtotal),
       0,
     );
-    
+
     const itemBaseAmount = safeNumber(item.subtotal); // ORIGINAL price
     // const itemFinalAmount = safeNumber(item.finalAmount || item.subtotal); // discounted price
-    
+
     const subtotalAfter = subtotalBefore - itemBaseAmount;
-    
+
     if (order.couponCode) {
       const coupon = await Coupon.findOne({ code: order.couponCode });
 
@@ -218,7 +222,6 @@ export const cancelOrderItem = async (req, res) => {
 
     await order.save();
 
-    /* -------- WALLET REFUND -------- */
     if (['Razorpay', 'WALLET'].includes(order.paymentMethod)) {
       await creditWallet({
         userId: order.user,
@@ -352,7 +355,7 @@ export const returnOrderItem = async (req, res) => {
 
 export const downloadInvoice = async (req, res) => {
   try {
-    const orderId = req.params.orderId;
+    const { orderId } = req.params;
 
     const order = await Order.findOne({ orderId }).lean();
     if (!order) {
@@ -362,7 +365,11 @@ export const downloadInvoice = async (req, res) => {
       });
     }
 
-    if (order.status === 'cancelled') {
+    const allItemsCancelled = order.items.every(
+      (item) => item.status === 'cancelled',
+    );
+
+    if (order.status === 'cancelled' || allItemsCancelled) {
       return res.status(HttpStatus.FORBIDDEN).json({
         success: false,
         message: 'Invoice not available for cancelled orders',
@@ -372,7 +379,7 @@ export const downloadInvoice = async (req, res) => {
     let isInvoiceAvailable = false;
 
     if (order.paymentMethod === 'COD') {
-      isInvoiceAvailable = order.items?.some(
+      isInvoiceAvailable = order.items.some(
         (item) => item.status === 'delivered',
       );
     } else {
@@ -586,7 +593,6 @@ Phone: ${a.phone}`;
   }
 };
 
-
 export const getListOrders = async (req, res) => {
   try {
     const sessionUser = req.session.user;
@@ -607,9 +613,7 @@ export const getListOrders = async (req, res) => {
       query.orderId = { $regex: search, $options: 'i' };
     }
 
-    const orders = await Order.find(query)
-      .sort({ createdAt: -1 })
-      .lean();
+    const orders = await Order.find(query).sort({ createdAt: -1 }).lean();
 
     let noResultsMessage = null;
     if (search && orders.length === 0) {
@@ -622,10 +626,8 @@ export const getListOrders = async (req, res) => {
       search,
       noResultsMessage,
     });
-
   } catch (err) {
     console.error('Orders Page Error:', err);
     res.status(500).render('notFound');
   }
 };
-
