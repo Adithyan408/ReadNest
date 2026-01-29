@@ -59,3 +59,34 @@ document.getElementById('priceFilterForm')?.addEventListener('submit', (e) => {
   }
 
 });
+
+ document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.wishlist-btn');
+    if (!btn) return;
+
+    e.stopPropagation();
+    e.preventDefault();
+
+    const productId = btn.dataset.productId;
+    const icon = btn.querySelector('i');
+
+    const res = await fetch('/wishlist/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId }),
+    });
+
+    if (res.status === 401) {
+      return (window.location.href = '/login');
+    }
+
+    const data = await res.json();
+
+    if (data.inWishlist) {
+      icon.classList.remove('fa-regular', 'text-black');
+      icon.classList.add('fa-solid', 'text-red-500');
+    } else {
+      icon.classList.add('fa-regular', 'text-black');
+      icon.classList.remove('fa-solid', 'text-red-500');
+    }
+  });
