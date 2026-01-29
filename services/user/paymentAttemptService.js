@@ -4,6 +4,7 @@ import Order from '../../models/orderSchema.js';
 import crypto from 'crypto';
 import Product from '../../models/productsSchema.js';
 import mongoose from 'mongoose';
+import { HttpStatus } from '../../helpers/statusCodes.js';
 
 
 const razorpay = new Razorpay({
@@ -37,7 +38,7 @@ export const retryPayment = async (req, res) => {
     const userId = req.session.user?._id;
 
     if (!userId) {
-      return res.status(401).json({ success: false });
+      return res.status(HttpStatus.UNAUTHORIZED).json({ success: false });
     }
 
     const attempt = await paymentAttempt.findOne({
@@ -48,7 +49,7 @@ export const retryPayment = async (req, res) => {
       .populate('items.product');
 
     if (!attempt) {
-      return res.status(404).json({
+      return res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: 'Retry session expired',
       });
@@ -56,14 +57,14 @@ export const retryPayment = async (req, res) => {
 
     const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
     if (Date.now() - attempt.createdAt.getTime() > SEVEN_DAYS) {
-      return res.status(400).json({
+      return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message: 'Retry period expired',
       });
     }
 
     if (attempt.retryCount >= 3) {
-      return res.status(400).json({
+      return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message: 'Maximum retry attempts reached',
       });
@@ -97,7 +98,7 @@ export const retryPayment = async (req, res) => {
 
   } catch (error) {
     console.error('Retry Payment Error:', error);
-    res.status(500).json({ success: false });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
@@ -120,7 +121,7 @@ export const verifyRetryPayment = async (req, res) => {
 
     if (!attempt || attempt.status !== 'failed') {
       await session.abortTransaction();
-      return res.status(400).json({ success: false, message: 'Invalid attempt' });
+      return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: 'Invalid attempt' });
     }
 
     if (attempt.expiresAt < new Date()) {
@@ -128,7 +129,7 @@ export const verifyRetryPayment = async (req, res) => {
       await attempt.save({ session });
       await session.commitTransaction();
 
-      return res.status(400).json({
+      return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message: 'Payment retry window expired',
       });
@@ -143,13 +144,13 @@ export const verifyRetryPayment = async (req, res) => {
 
     if (expectedSign !== razorpay_signature) {
       await session.abortTransaction();
-      return res.status(400).json({ success: false, message: 'Verification failed' });
+      return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: 'Verification failed' });
     }
 
     for (const item of attempt.items) {
       if (!item.product || item.product.stock < item.quantity) {
         await session.abortTransaction();
-        return res.status(400).json({
+        return res.status(HttpStatus.BAD_REQUEST).json({
           success: false,
           message: `${item.productName} is out of stock`,
         });
@@ -218,6 +219,6 @@ export const verifyRetryPayment = async (req, res) => {
     session.endSession();
 
     console.error('Retry Payment Verify Error:', error);
-    return res.status(500).json({ success: false });
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };

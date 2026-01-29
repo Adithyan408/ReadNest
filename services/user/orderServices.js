@@ -7,7 +7,6 @@ import path from 'path';
 import { creditWallet } from '../../middlewares/walletHandler.js';
 import { ERROR_MESSAGES } from '../../helpers/errorMessages.js';
 import { HttpStatus } from '../../helpers/statusCodes.js';
-import User from '../../models/userSchema.js';
 
 export const getOrderDetailsPage = async (req, res) => {
   try {
