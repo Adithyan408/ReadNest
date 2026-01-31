@@ -43,6 +43,11 @@ function toggleProfileEdit() {
     return;
   }
 
+  if (first.value.trim().length < 3) {
+    Swal.fire('Error', 'First name should have atleast 3 charracters', 'error');
+    return;
+  }
+
   const nameRegex = /^[A-Za-z ]+$/;
 
   if (!nameRegex.test(first.value.trim())) {
