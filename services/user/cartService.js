@@ -95,7 +95,10 @@ export const addcart = async (req, res) => {
 
     const product = await Product.findById(productId);
     if (!product) {
-      return res.status(HttpStatus.NOT_FOUND).send('Product not found');
+      return res.status(HttpStatus.NOT_FOUND).json({
+      success: false,
+      message: 'Product not found',
+    });
     }
 
     const categoryDoc = await Category.findOne({
@@ -130,18 +133,35 @@ export const addcart = async (req, res) => {
     );
 
     if (existingItem) {
-      if (existingItem.quantity >= 10) {
-        return res.redirect('/cart?error=max-limit');
-      }
-      existingItem.quantity += 1;
-    } else {
+
+  if (existingItem.quantity >= product.stock) {
+    return res.status(HttpStatus.BAD_REQUEST).json({
+      success: false,
+      message: 'Only limited stock available',
+    });
+  }
+
+  if (existingItem.quantity >= 10) {
+    return res.status(HttpStatus.BAD_REQUEST).json({
+      success: false,
+      message: 'Maximum quantity reached (10)',
+    });
+  }
+
+  existingItem.quantity += 1;
+
+}
+ else {
       cart.items.push({
         productId,
         quantity: 1,
       });
     }
     if (cart.items.length >= 10 && !existingItem) {
-      return res.redirect('/cart?error=max-products');
+      return res.status(400).json({
+      success: false,
+      message: 'Maximum 10 products allowed in cart',
+    });
     }
 
     await cart.save();

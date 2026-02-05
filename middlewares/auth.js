@@ -1,24 +1,26 @@
 import User from '../models/userSchema.js';
 
-export const userAuth = (req, res, next) => {
-    if(req.session.user){
-        User.findById(req.session.user)
-        .then(data => {
-            if(data && !data.isBlocked){
-                next();
-            } else {
-                res.redirect('/login');
-            }
-        })
-        // eslint-disable-next-line no-unused-vars
-        .catch(error => {
-            console.log('Error in User Authentication');
-            res.status(500).send('Internal Server Error');
-        });
-    } else {
-        res.redirect('/login');
+export const userAuth = async (req, res, next) => {
+  try {
+    if (!req.session.user) {
+      return res.redirect('/login');
     }
+
+    const user = await User.findById(req.session.user);
+
+    if (!user || user.isBlocked) {
+      req.session.destroy(() => {
+        res.redirect('/login');
+      });
+      return;
+    }
+    next();
+  } catch (err) {
+    console.log('Auth error:', err);
+    res.redirect('/login');
+  }
 };
+
 
 export const adminAuth = async (req, res, next) => {
     try {

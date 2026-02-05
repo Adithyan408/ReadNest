@@ -57,7 +57,7 @@ router.get('/login', nocache(), loadLogin);
 router.get('/verify-otp', nocache(), loadVerify);
 router.get('/auth/google', googleAuth);
 router.get('/auth/google/callback', googleAuthCallback);
-router.get('/account', loadProfile);
+router.get('/account', userAuth , loadProfile);
 router.get('/logout', nocache(), logout);
 router.get('/account/delete-profile-image', deleteProfileImage);
 router.get('/address', getAddress);
@@ -68,66 +68,66 @@ router.post('/resend-otp', resendOtp);
 router.post('/login', login);
 router.post('/account/update-profile', userAuth, profileUpdate);
 router.post('/account/set-password', setPassword);
-router.post('/account/verifypassword', verifyPassword);
+router.post('/account/verifypassword', userAuth, verifyPassword);
 router.post('/account/change-password', changePassword);
 router.post('/account/email-update', updateEmail);
 router.post('/account/verify-email-update', updateVerifyEmail);
 router.post('/account/profile-image', upload.single('profileImage'), uploadProfileImage);
 router.post('/account/add-address', addAddress);
-router.get('/account/address/:id', getSingleAddress);
-router.put('/account/address/update/:id', updateAddress);
-router.get('/account/address/delete/:id', deleteAddress);
-router.get('/wishlist', getWishlist);
-router.post('/wishlist/toggle', toggleWishlist);
-router.post('/wishlist/move-to-cart',  moveToCart);
-router.post('/wishlist/move-all-to-cart',  moveAllCart);
-router.post('/wishlist/remove', removeItem);
-router.post('/wishlist/remove-all', removeAll);
+router.get('/account/address/:id', userAuth, getSingleAddress);
+router.put('/account/address/update/:id', userAuth, updateAddress);
+router.get('/account/address/delete/:id', userAuth, deleteAddress);
+router.get('/wishlist', userAuth, getWishlist);
+router.post('/wishlist/toggle', userAuth, toggleWishlist);
+router.post('/wishlist/move-to-cart',  userAuth, moveToCart);
+router.post('/wishlist/move-all-to-cart', userAuth, moveAllCart);
+router.post('/wishlist/remove', userAuth, removeItem);
+router.post('/wishlist/remove-all',userAuth, removeAll);
 
-router.get('/cart', getCart);
-router.post('/addcart', postCart);
-router.get('/remove-from-cart', removeCart);
-router.post('/update-cart-quantity', cartUpdate);
-router.get('/cart/validate', validateCart);
+router.get('/cart', userAuth, getCart);
+router.post('/addcart', userAuth, postCart);
+router.get('/remove-from-cart', userAuth, removeCart);
+router.post('/update-cart-quantity', userAuth, cartUpdate);
+router.get('/cart/validate', userAuth, validateCart);
 
-router.get('/checkout', loadCheckout);
-router.post('/set-address', addresChoose);
-router.post('/add-address', addAddressNew);
-router.post('/save-address', postAddress);
+router.get('/checkout', userAuth, loadCheckout);
+router.post('/set-address', userAuth, addresChoose);
+router.post('/add-address', userAuth, addAddressNew);
+router.post('/save-address', userAuth, postAddress);
 
-router.get('/checkout/payment', getPayment);
-router.post('/checkout/update-quantity', checkoutUpdate);
-router.post('/apply-coupon', applyCoupon);
-router.get('/place-order', loadPlace);
-router.post('/remove-coupon', removeCoupon);
-router.get('/payment-failed', loadFailed);
-router.post('/create-razorpay-order', razorpay_order);
-router.post('/verify-razorpay-payment', razorpay_verify);
+router.get('/checkout/payment',userAuth, getPayment);
+router.post('/checkout/update-quantity',userAuth, checkoutUpdate);
+router.post('/apply-coupon',userAuth, applyCoupon);
+router.get('/place-order',userAuth, loadPlace);
+router.post('/remove-coupon',userAuth, removeCoupon);
+router.get('/payment-failed',userAuth, loadFailed);
+router.post('/create-razorpay-order',userAuth, razorpay_order);
+router.post('/verify-razorpay-payment',userAuth, razorpay_verify);
 
-router.get('/orders/:orderId',  loadOrderDetails);
-router.get('/orders/:orderId/invoice', invoicedownload);
-router.get('/orders',  listOrders);
+router.get('/orders/:orderId',userAuth,  loadOrderDetails);
+router.get('/orders/:orderId/invoice',userAuth, invoicedownload);
+router.get('/orders',userAuth,  listOrders);
 
 router.post('/orders/:orderId/items/:itemId/cancel', nocache(), cancelOrder);
 router.post('/orders/:orderId/items/:itemId/return', returnOrder);
 router.post('/orders/:orderId/cancel', fullOrderCancel);
 
-router.get('/forgot-password', getForgotPassword);
-router.post('/forgot-password', forgotEmailValid);
+router.get('/forgot-password',userAuth, getForgotPassword);
+router.post('/forgot-password',userAuth, forgotEmailValid);
 
 router.get('/reset-password', nocache(), getResetPassword);
 router.post('/reset-password', postResetPassword);
 
-router.get('/wallet', walletLoad);
-router.post('/wallet/create-razorpay-order', createWalletRazorpayOrder);
-router.post('/wallet/verify-razorpay-payment', verifyWalletRazorpayPayment);
-router.post('/pay-with-wallet', payWithWallet);
+router.get('/wallet',userAuth, walletLoad);
+router.post('/wallet/create-razorpay-order',userAuth, createWalletRazorpayOrder);
+router.post('/wallet/verify-razorpay-payment',userAuth, verifyWalletRazorpayPayment);
+router.post('/pay-with-wallet',userAuth, payWithWallet);
 
 router.post('/forgot-verify-otp', forgotVerifyOtp);
 
-router.get('/product', getProductsDetails);
-router.get('/status/:productId', getProductStatus);
-router.get('/live-search', liveSearch);
+router.get('/product',userAuth, getProductsDetails);
+router.get('/status/:productId',userAuth, getProductStatus);
+router.get('/live-search',userAuth, liveSearch);
 
 router.get('/blog', userAuth, blogList);
 router.get('/blog/addBlog', userAuth, loadAddBlog);

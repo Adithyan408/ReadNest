@@ -6,10 +6,9 @@ export const creditWallet = async ({
   note,
   orderId = null,
   paymentId = null,
-  itemId = null,      // ✅ NEW
-  source = 'refund',  // refund | return_refund | cancel_refund | webhook_refund
+  itemId = null,      
+  source = 'refund',  
 }) => {
-  // 1️⃣ Validate amount
   if (!Number.isFinite(amount) || amount <= 0) {
     console.log('Invalid wallet credit amount:', amount);
     return;
@@ -17,15 +16,13 @@ export const creditWallet = async ({
 
   const wallet = await Wallet.findOne({ user: userId });
 
-  // 2️⃣ DUPLICATE PROTECTION (correct logic)
   if (wallet && wallet.transactions?.length) {
     const isDuplicate = wallet.transactions.some((tx) => {
-      // 🔐 Razorpay / webhook protection
+ 
       if (paymentId && source === 'webhook_refund') {
         return tx.paymentId === paymentId && tx.source === source;
       }
 
-      // 🔁 Item-wise refund protection
       if (paymentId && itemId) {
         return (
           tx.paymentId === paymentId &&
@@ -47,7 +44,6 @@ export const creditWallet = async ({
     }
   }
 
-  // 3️⃣ CREDIT WALLET
   await Wallet.findOneAndUpdate(
     { user: userId },
     {
@@ -100,27 +96,23 @@ export const debitWallet = async ({
   orderId = null,
   paymentId = null,
 }) => {
-  // 1️⃣ Validate amount
+ 
   if (!Number.isFinite(amount) || amount <= 0) {
     throw new Error('Invalid wallet debit amount');
   }
 
-  // 2️⃣ Fetch wallet
   const wallet = await Wallet.findOne({ user: userId });
 
   if (!wallet) {
     throw new Error('Wallet not found');
   }
 
-  // 3️⃣ Balance check
   if (wallet.balance < amount) {
     throw new Error('Insufficient wallet balance');
   }
 
-  // 4️⃣ Debit wallet
   wallet.balance = Number(wallet.balance) - Number(amount);
 
-  // 5️⃣ Record transaction
   wallet.transactions.push({
     type: 'debit',
     amount: Number(amount),
@@ -129,7 +121,6 @@ export const debitWallet = async ({
     paymentId,
   });
 
-  // 6️⃣ Save
   await wallet.save();
 
   return {

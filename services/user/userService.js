@@ -280,7 +280,8 @@ export const profileLoad = async (req, res) => {
 
 export const logoutLoad = async (req, res) => {
   try {
-    delete req.session.user;
+    req.session.user = null;
+    req.session.userData = null;
     return res.redirect('/');
   } catch (error) {
     console.log(error);

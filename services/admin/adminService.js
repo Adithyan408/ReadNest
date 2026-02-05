@@ -337,8 +337,8 @@ export const getDashboard = async (req, res) => {
 
 export const postLogout = async (req, res) => {
   try {
-    delete req.session.admin;
-    delete req.session.adminData;
+    req.session.admin = null;
+    req.session.adminData = null;
 
     return res.redirect('/admin/login');
   } catch (error) {
