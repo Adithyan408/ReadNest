@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-undef */
 
-const isFromForgotPassword = '<%= fromForgotPassword %>' === 'true';
+
 const otpInputs = document.querySelectorAll('.otp-input');
 const confirmBtn = document.getElementById('confirmBtn');
 const timerElement = document.getElementById('timer');
@@ -66,6 +66,8 @@ function setupOTPLogic() {
     });
   });
 }
+const { forgotPass, email } = window.APP_CONFIG;
+
 
 async function verifyCode() {
   const otp = Array.from(otpInputs)
@@ -86,7 +88,7 @@ async function verifyCode() {
 
   try {
     const res = await fetch(
-      isFromForgotPassword ? '/forgot-verify-otp' : '/verify-otp',
+      forgotPass ? '/forgot-verify-otp' : '/verify-otp',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -98,7 +100,7 @@ async function verifyCode() {
     if (data.success) {
       showSuccess(data.message || 'Identity Verified!');
       setTimeout(() => {
-        window.location.href = isFromForgotPassword
+        window.location.href = forgotPass
           ? `/reset-password?email=${encodeURIComponent('<%= email %>')}`
           : '/';
       }, 1000);

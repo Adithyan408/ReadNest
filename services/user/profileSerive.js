@@ -41,7 +41,7 @@ export const forgotEmail = async(req, res) => {
           expiresAt: Date.now() + 5 * 60 * 1000, 
         };
         req.session.userData = { email };
-    
+       
         res.redirect(`/verify-otp?forgot=true&email=${encodeURIComponent(email)}`);
         console.log('otp sent', otp);
       } catch (error) {
@@ -64,7 +64,7 @@ export const forgotVerify = async (req, res) => {
     if (otp === storedOtp.code) {
       const email = req.session.userData.email;
       req.session.userOtp = null;
-      req.session.userData = null;
+      
 
       return res.json({
         success: true,
@@ -93,7 +93,8 @@ export const resetPassword = async (req, res) => {
 
 export const resetPasswordPost = async (req, res) => {
   try {
-    const { email, newPassword, confirmPassword } = req.body;
+    const {  newPassword, confirmPassword } = req.body;
+    const email = req.session.userData?.email;
 
     if (newPassword !== confirmPassword) {
       return res.render('reset-password', {
@@ -101,7 +102,6 @@ export const resetPasswordPost = async (req, res) => {
         email,
       });
     }
-
     if (newPassword.length < 6) {
       return res.render('reset-password', {
         message: 'Password must be at least 6 characters long.',
@@ -113,7 +113,7 @@ export const resetPasswordPost = async (req, res) => {
       { email },
       { password: hashedPassword },
     );
-
+    
     if (result.modifiedCount === 0) {
       return res.render('reset-password', { message: 'User not found.' });
     }

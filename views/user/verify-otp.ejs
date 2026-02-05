@@ -59,6 +59,12 @@
             </div>
         </div>
     </div>
+    <script>
+  window.APP_CONFIG = {
+    forgotPass: <%- JSON.stringify(fromForgotPassword) %>,
+    email: <%- JSON.stringify(email) %>
+  };
+</script>
 
    <script src="/user/js/verify-otp.js"></script>
 </body>

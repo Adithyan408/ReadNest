@@ -135,8 +135,7 @@ export const cancelOrderItem = async (req, res) => {
       0,
     );
 
-    const itemBaseAmount = safeNumber(item.subtotal); // ORIGINAL price
-    // const itemFinalAmount = safeNumber(item.finalAmount || item.subtotal); // discounted price
+    const itemBaseAmount = safeNumber(item.subtotal); 
 
     const subtotalAfter = subtotalBefore - itemBaseAmount;
 
