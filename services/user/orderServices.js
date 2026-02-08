@@ -225,7 +225,7 @@ export const cancelOrderItem = async (req, res) => {
         userId: order.user,
         amount: refundAmount,
         note: 'Refund after item cancellation (coupon adjusted)',
-        orderId: order.orderId,
+        orderId: order.orderId.toString(),
         paymentId: order.paymentId || null,
         source: 'cancel_refund',
       });
@@ -303,7 +303,7 @@ export const cancelFullOrder = async (req, res) => {
         userId: order.user,
         amount: refundAmount,
         note: 'Full order cancellation refund',
-        orderId: order.orderId,
+        orderId: order.orderId.toString(),
         paymentId: order.paymentId || null,
         source: 'full_order_cancel',
       });

@@ -280,7 +280,7 @@ export const approveReturn = async (req, res) => {
       userId: order.user,
       amount: refundAmount,
       note: 'Refund for returned item (shipping excluded)',
-      orderId: order.orderId,
+      orderId: order.orderId.toString(),
       paymentId: order.paymentId || null,
       itemId: item._id.toString(),
       source: 'return_refund',

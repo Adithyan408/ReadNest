@@ -107,14 +107,27 @@
                                             <p class="text-[9px] text-gray-400 font-medium uppercase"><%= new Date(tx.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %></p>
                                         </td>
                                         <td class="px-4 py-4">
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-2 h-2 rounded-full <%= tx.type === 'credit' ? 'bg-emerald-500' : 'bg-rose-500' %>"></div>
-                                                <div>
-                                                    <p class="text-xs font-black text-gray-700 uppercase tracking-tighter"><%= tx.type %></p>
-                                                    <p class="text-[11px] text-gray-500 truncate max-w-[120px] sm:max-w-xs"><%= tx.note %></p>
-                                                </div>
-                                            </div>
-                                        </td>
+  <div class="flex items-center gap-3">
+    <div class="w-2 h-2 rounded-full <%= tx.type === 'credit' ? 'bg-emerald-500' : 'bg-rose-500' %>"></div>
+
+    <div>
+      <p class="text-xs font-black text-gray-700 uppercase tracking-tighter">
+        <%= tx.type %>
+      </p>
+
+      <p class="text-[11px] text-gray-500 truncate max-w-[120px] sm:max-w-xs">
+        <%= tx.note %>
+      </p>
+
+      <% if (tx.orderId) { %>
+        <p class="text-[10px] text-gray-400 mt-1 font-mono">
+          Order ID: <span class="font-semibold"><%= tx.orderId %></span>
+        </p>
+      <% } %>
+    </div>
+  </div>
+</td>
+
                                         <td class="px-4 py-4 text-right rounded-r-xl">
                                             <p class="text-sm font-black <%= tx.type === 'credit' ? 'text-emerald-600' : 'text-rose-600' %>">
                                                 <%= tx.type === 'credit' ? '+' : '-' %>₹<%= tx.amount.toFixed(0) %>
