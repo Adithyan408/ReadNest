@@ -46,7 +46,12 @@ export const postCategory = async (req, res) => {
         category: { categoryName },
       });
     }
-    const existingCategory = await Category.findOne({ categoryName });
+     const normalizedName = categoryName
+      .toLowerCase()
+      .replace(/\s+/g, '')
+      .trim();
+      
+    const existingCategory = await Category.findOne({ normalizedName });
     if (existingCategory) {
       return res.status(400).render('addCategory', {
         errorMessage: 'Category already exists.',
@@ -55,7 +60,8 @@ export const postCategory = async (req, res) => {
     }
 
     const newCategory = new Category({
-      categoryName,
+      categoryName: categoryName.trim(),
+      normalizedName,
       offer: {
         isOffer: isOffer === 'true',
         discountValue: isOffer === 'true' ? Number(discountValue) : 0,

@@ -23,11 +23,22 @@ function toggleOfferFields() {
 offerSelect.addEventListener('change', toggleOfferFields);
 toggleOfferFields();
 
+function normalizeCategory(name) {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .trim();
+}
+
+
 form.addEventListener('submit', function (e) {
   let hasError = false;
   clearErrors();
 
-  const name = categoryNameInput.value.trim();
+  const rawName = categoryNameInput.value;
+  const name = rawName.trim();
+  const normalizedName = normalizeCategory(rawName);
+
   const isOffer = offerSelect.value === 'true';
   const discountValue = Number(form.discountValue.value);
   const startDateValue = form.startDate.value;
@@ -36,17 +47,23 @@ form.addEventListener('submit', function (e) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+ categoryNameInput.classList.remove('border-red-500', 'bg-red-50');
   if (!name) {
     hasError = true;
-    errorMsg.textContent =
-      'Please provide a category name before submitting.';
+    errorMsg.textContent = 'Please provide a category name.';
     errorMsg.classList.remove('hidden');
 
     categoryNameInput.classList.add('border-red-500', 'bg-red-50');
-    setTimeout(() => {
-      categoryNameInput.classList.remove('border-red-500', 'bg-red-50');
-    }, 2000);
   }
+
+  else if (!normalizedName) {
+  hasError = true;
+  errorMsg.textContent =
+    'Category name cannot contain only spaces or special formatting.';
+  errorMsg.classList.remove('hidden');
+
+  categoryNameInput.classList.add('border-red-500', 'bg-red-50');
+}
 
   if (isOffer) {
     if (Number.isNaN(discountValue) || discountValue < 5 || discountValue > 95) {
