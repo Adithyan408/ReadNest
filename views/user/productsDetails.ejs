@@ -75,13 +75,15 @@
                             <span class="text-3xl font-black text-gray-400 line-through">₹<%= product.regularPrice %></span>
                             <span class="bg-red-100 text-red-600 px-4 py-1 rounded-full text-xs font-black uppercase">Out of Stock</span>
                         <% } else { %>
-                            <% if (product.offerPrice < product.regularPrice) { %>
-                                <span class="text-4xl font-black text-gray-900">₹<%= product.offerPrice %></span>
-                                <span class="text-xl text-gray-400 line-through">₹<%= product.regularPrice %></span>
-                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-xs font-black"><%= product.bestDiscount %>% OFF</span>
-                            <% } else { %>
-                                <span class="text-4xl font-black text-gray-900">₹<%= product.regularPrice %></span>
-                            <% } %>
+                           <% if (product.offerPrice && product.offerPrice < product.regularPrice) { %>
+              <span class="text-4xl font-black text-gray-900"> ₹<%= product.offerPrice %></span>
+
+            <span class="text-xl text-gray-400 line-through ml-2"> ₹<%= product.regularPrice %> </span>
+
+            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-xs font-black ml-2"> <%= product.bestDiscount %>% OFF </span>
+            <% } else { %>
+            <span class="text-4xl font-black text-gray-900"> ₹<%= product.regularPrice %> </span>
+            <% } %>
                         <% } %>
                         <div class="rating-badge"><%= product.rating || "4.5" %>★</div>
                     </div>
