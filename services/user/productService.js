@@ -38,17 +38,14 @@ export const homeLoad = async (req, res) => {
     const limit = 20;
     const skip = (page - 1) * limit;
 
-    const products = await Product.find(filter)
-      .skip(skip)
-      .limit(limit);
+    const products = await Product.find(filter).lean();
+
+    const now = new Date();
 
     let processedProducts = await Promise.all(
       products.map(async (p) => {
-        const productObj = p.toObject();
-        const now = new Date();
-        const regularPrice = p.regularPrice;
-
         let productDiscount = 0;
+
         if (p.offer?.isOffer) {
           const valid =
             (!p.offer.startDate || now >= new Date(p.offer.startDate)) &&
@@ -59,7 +56,7 @@ export const homeLoad = async (req, res) => {
         let categoryDiscount = 0;
         const categoryDoc = await Category.findOne({
           categoryName: p.category,
-        });
+        }).lean();
 
         if (categoryDoc?.offer?.isOffer) {
           const valid =
@@ -72,67 +69,70 @@ export const homeLoad = async (req, res) => {
 
         const bestDiscount = Math.max(productDiscount, categoryDiscount);
 
-        productObj.offerPrice =
+        const offerPrice =
           bestDiscount > 0
-            ? Math.round(regularPrice - (regularPrice * bestDiscount) / 100)
+            ? Math.round(p.regularPrice - (p.regularPrice * bestDiscount) / 100)
             : null;
 
-        productObj.effectivePrice =
-          productObj.offerPrice ?? regularPrice;
-
-        return productObj;
+        return {
+          ...p,
+          offerPrice,
+          effectivePrice: offerPrice ?? p.regularPrice,
+        };
       }),
     );
+
+    let filteredProducts = processedProducts;
 
     if (min || max) {
       const minVal = min ? parseInt(min) : null;
       const maxVal = max ? parseInt(max) : null;
 
-      processedProducts = processedProducts.filter((p) => {
+      filteredProducts = filteredProducts.filter((p) => {
         if (minVal !== null && p.effectivePrice < minVal) return false;
         if (maxVal !== null && p.effectivePrice > maxVal) return false;
         return true;
       });
     }
 
-    if (sort === 'priceAsc') {
-      processedProducts.sort((a, b) => a.effectivePrice - b.effectivePrice);
+    switch (sort) {
+      case 'priceAsc':
+        filteredProducts.sort((a, b) => a.effectivePrice - b.effectivePrice);
+        break;
+
+      case 'priceDesc':
+        filteredProducts.sort((a, b) => b.effectivePrice - a.effectivePrice);
+        break;
+
+      case 'nameAsc':
+        filteredProducts.sort((a, b) =>
+          a.productName.localeCompare(b.productName),
+        );
+        break;
+
+      case 'nameDesc':
+        filteredProducts.sort((a, b) =>
+          b.productName.localeCompare(a.productName),
+        );
+        break;
+
+      case 'newest':
+        filteredProducts.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        );
+        break;
+
+      case 'oldest':
+        filteredProducts.sort(
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+        );
+        break;
     }
 
-    if (sort === 'priceDesc') {
-      processedProducts.sort((a, b) => b.effectivePrice - a.effectivePrice);
-    }
-
-    if (sort === 'nameAsc') {
-      processedProducts.sort((a, b) =>
-        a.productName.localeCompare(b.productName),
-      );
-    }
-
-    if (sort === 'nameDesc') {
-      processedProducts.sort((a, b) =>
-        b.productName.localeCompare(a.productName),
-      );
-    }
-
-    if (sort === 'newest') {
-      processedProducts.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-      );
-    }
-
-    if (sort === 'oldest') {
-      processedProducts.sort(
-        (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-      );
-    }
-
-    const totalProducts =
-      min || max
-        ? processedProducts.length
-        : await Product.countDocuments(filter);
-
+    const totalProducts = filteredProducts.length;
     const totalPages = Math.ceil(totalProducts / limit);
+
+    const paginatedProducts = filteredProducts.slice(skip, skip + limit);
 
     let wishlistProducts = [];
     let userData = null;
@@ -161,7 +161,7 @@ export const homeLoad = async (req, res) => {
 
     res.render('home', {
       user: userData,
-      products: processedProducts,
+      products: paginatedProducts,
       totalPages,
       currentPage: page,
       categories,
@@ -204,7 +204,9 @@ export const getProductStatus = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Status check failed' });
+    res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({ message: 'Status check failed' });
   }
 };
 
@@ -368,11 +370,7 @@ export const searchLive = async (req, res) => {
     const products = await Product.find({
       isListed: true,
       stock: { $gt: 0 },
-      $or: [
-        { productName: regex },
-        { author: regex },
-        { category: regex },
-      ],
+      $or: [{ productName: regex }, { author: regex }, { category: regex }],
     })
       .select('_id productName author productImage')
       .sort({ createdAt: -1 })
