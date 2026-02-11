@@ -18,8 +18,11 @@ async (accessToken, refreshToken, profile, done) => {
         name: profile.displayName,
         email: profile.emails[0].value,
       });
-      await user.save();
     }
+
+     if (user.isBlocked) {
+        return done(null, false, { message: 'User is Blocked by Admin' });
+      }
 
     return done(null, user);
   } catch (err) {
@@ -30,8 +33,12 @@ async (accessToken, refreshToken, profile, done) => {
 passport.serializeUser((user, done) => done(null, user.id));
 
 passport.deserializeUser(async (id, done) => {
-  const user = await User.findById(id);
-  done(null, user);
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
 });
 
 export default passport;

@@ -21,6 +21,7 @@ dotenv.config();
 connectDB();
 
 const app = express();
+app.set('trust proxy', 1);
 
 app.use((req, res, next) => {
   logger.http(`${req.method} ${req.url}`);
@@ -30,20 +31,31 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-      secure: false,
-      httpOnly: true,
-       maxAge: Number(process.env.SESSION_MAX_AGE),
-    },
-  }),
-);
-app.use(passport.initialize());
-app.use(passport.session());
+const adminSession = session({
+  name: 'admin.sid',
+  secret: process.env.ADMIN_SESSION_SECRET || 'adminSecret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: Number(process.env.ADMIN_SESSION_MAX_AGE) || 24 * 60 * 60 * 1000,
+  },
+});
+
+const userSession = session({
+  name: 'user.sid',
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: Number(process.env.SESSION_MAX_AGE),
+  },
+});
+
+
 
 app.set('view engine', 'ejs');
 app.set('views', [
@@ -56,9 +68,17 @@ app.use(generateBreadcrumbs);
 
 app.use(userSessionMiddleware);
 
-app.use(cartCountMiddleware);
-app.use('/', router);
-app.use('/admin', adminRouter);
+app.use('/admin', adminSession, adminRouter);
+
+app.use(
+  '/',
+  userSession,
+  passport.initialize(),
+  passport.session(),
+  userSessionMiddleware,
+  cartCountMiddleware,
+  router,
+);
 app.use(errorHandler);
 
 app.listen(process.env.PORT, () => {

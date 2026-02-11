@@ -244,20 +244,29 @@ export const otpResend = async (req, res) => {
   }
 };
 
-export const authGoogle = (req, res) => {
-  passport.authenticate('google', { failureRedirect: '/signup' })(
-    req,
-    res,
-    () => {
-      if (!req.user) {
-        console.error(' Google OAuth failed: req.user is undefined');
+export const authGoogle = (req, res, next) => {
+  passport.authenticate('google', (err, user, info) => {
+    if (err) {
+      console.error('Google Auth Error:', err);
+      return res.redirect('/signup');
+    }
+    if (!user) {
+      if (info && info.message) {
+        req.session.message = info.message;
+        return res.redirect('/login');
+      }
+      return res.redirect('/signup');
+    }
+
+    req.logIn(user, (err) => {
+      if (err) {
+        console.error('Login Error:', err);
         return res.redirect('/signup');
       }
-
-      req.session.user = { _id: req.user._id };
+      req.session.user = { _id: user._id };
       res.redirect('/');
-    },
-  );
+    });
+  })(req, res, next);
 };
 
 export const profileLoad = async (req, res) => {
@@ -278,13 +287,20 @@ export const profileLoad = async (req, res) => {
   }
 };
 
-export const logoutLoad = async (req, res) => {
-  try {
-    req.session.user = null;
-    req.session.userData = null;
-    return res.redirect('/');
-  } catch (error) {
-    console.log(error);
-    res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect('/notfound');
-  }
+export const logoutLoad = (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
+    }
+
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destroy error:', err);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('notFound');
+      }
+      res.clearCookie('user.sid');
+      return res.redirect('/');
+    });
+  });
 };

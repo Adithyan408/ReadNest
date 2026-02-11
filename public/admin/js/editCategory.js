@@ -76,14 +76,31 @@ form.addEventListener('submit', function (e) {
   today.setHours(0, 0, 0, 0);
 
   /* ---------- CATEGORY NAME ---------- */
+   function normalizeCategory(name) {
+    return name
+      .toLowerCase()
+      .replace(/\s+/g, '')
+      .trim();
+  }
+
+  const normalizedName = normalizeCategory(categoryName);
+
   if (!categoryName) {
     showError('categoryName', 'Category name is required');
     categoryNameInput.classList.add('border-red-500', 'bg-red-50');
+    hasError = true;
+  } else if (!normalizedName) {
+    showError('categoryName', 'Invalid category name format');
+    categoryNameInput.classList.add('border-red-500', 'bg-red-50');
+    hasError = true;
+  }
+
+   if (hasError) {
     setTimeout(() => {
       categoryNameInput.classList.remove('border-red-500', 'bg-red-50');
     }, 2000);
-    hasError = true;
   }
+
 
   /* ---------- OFFER VALIDATION ---------- */
   if (isOffer) {

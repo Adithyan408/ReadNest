@@ -165,8 +165,36 @@ export const postEditCategory = async (req, res) => {
     const { categoryName, isOffer, discountValue, startDate, endDate } =
       req.body;
 
+    const normalizedName = categoryName
+      .toLowerCase()
+      .replace(/\s+/g, '')
+      .trim();
+
+    const existingCategory = await Category.findOne({
+      normalizedName,
+      _id: { $ne: id },
+    });
+
+    if (existingCategory) {
+      const category = await Category.findById(id);
+      return res.status(400).render('editCategory', {
+        errorMessage: 'Category already exists.',
+        category: {
+          ...category._doc,
+          categoryName, // specific input name
+          startDate: category.startDate
+            ? category.startDate.toISOString().split('T')[0]
+            : '',
+          endDate: category.endDate
+            ? category.endDate.toISOString().split('T')[0]
+            : '',
+        },
+      });
+    }
+
     const updatedFields = {
-      categoryName,
+      categoryName: categoryName.trim(),
+      normalizedName,
       offer: {},
     };
 

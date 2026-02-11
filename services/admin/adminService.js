@@ -335,17 +335,22 @@ export const getDashboard = async (req, res) => {
   }
 };
 
-export const postLogout = async (req, res) => {
+export const postLogout = (req, res) => {
   try {
-    req.session.admin = null;
-    req.session.adminData = null;
-
-    return res.redirect('/admin/login');
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Admin logout destroy error:', err);
+        return res.redirect('/pageerror');
+      }
+      res.clearCookie('admin.sid');
+      return res.redirect('/admin/login');
+    });
   } catch (error) {
     console.log('Admin Logout error', error);
     res.redirect('/pageerror');
   }
 };
+
 
 export const salesReport = async (req, res) => {
   try {
