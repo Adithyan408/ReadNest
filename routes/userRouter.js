@@ -112,8 +112,8 @@ router.post('/orders/:orderId/items/:itemId/cancel', nocache(), cancelOrder);
 router.post('/orders/:orderId/items/:itemId/return', returnOrder);
 router.post('/orders/:orderId/cancel', fullOrderCancel);
 
-router.get('/forgot-password',userAuth, getForgotPassword);
-router.post('/forgot-password',userAuth, forgotEmailValid);
+router.get('/forgot-password', getForgotPassword);
+router.post('/forgot-password', forgotEmailValid);
 
 router.get('/reset-password', nocache(), getResetPassword);
 router.post('/reset-password', postResetPassword);
